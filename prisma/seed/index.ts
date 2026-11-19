@@ -7,6 +7,9 @@ import { reglas } from "./reglas";
 import { ciiu } from "./ciiu";
 import { peligros } from "./biblioteca/peligros";
 import { zonas, tareas, cargos, sectores, zonasTarea } from "./biblioteca/estructura";
+import { peligrosAmpliacion } from "./biblioteca/peligros-ampliacion";
+import { zonasAmp, tareasAmp, cargosAmp, sectoresAmp } from "./biblioteca/estructura-ampliacion";
+import { itemsCatalogo } from "./biblioteca/catalogos";
 import { parsePlantilla } from "../../src/lib/generador/plantilla";
 
 const db = new PrismaClient();
@@ -60,61 +63,91 @@ async function main() {
   }
   console.log(`Plantillas: ${archivos.length}`);
 
-  // Biblioteca: solo se siembra si está vacía (para no pisar lo validado por la consultora)
-  if ((await db.peligroCatalogo.count()) === 0) {
-    const pid: Record<string, string> = {};
-    for (const [k, p] of Object.entries(peligros)) {
-      const r = await db.peligroCatalogo.create({ data: {
-        clasificacion: p.clasificacion, subclasificacion: p.sub, descripcion: p.descripcion, efectosPosibles: p.efectos,
-        ndDefault: p.nd, neDefault: p.ne, ncDefault: p.nc, controlesFuente: p.fuente, controlesMedio: p.medio, controlesIndividuo: p.individuo,
-        medidaEliminacion: p.eliminacion, medidaSustitucion: p.sustitucion, medidaIngenieria: p.ingenieria, medidaAdministrativa: p.administrativa, medidaEpp: p.epp,
-        eppSugerido: p.eppLista ?? [], examenesSugeridos: p.examenes ?? [], capacitacionesSugeridas: p.capacitaciones ?? [], normas: p.normas ?? [],
-        pveAsociado: p.pve, requisitoLegalEspecifico: p.requisitoLegal ?? false,
-      } });
-      pid[k] = r.id;
-    }
-    const zid: Record<string, string> = {};
-    for (const [k, z] of Object.entries(zonas)) {
-      const r = await db.zonaTipo.create({ data: { nombre: z.nombre, descripcion: z.descripcion, peligros: { create: z.peligros.map((p) => ({ peligroId: req(pid, p) })) } } });
-      zid[k] = r.id;
-    }
-    const tid: Record<string, string> = {};
-    for (const [k, t] of Object.entries(tareas)) {
-      const r = await db.tareaTipo.create({ data: {
-        nombre: t.nombre, actividad: t.actividad, rutinaria: t.rutinaria ?? true, altoRiesgo: t.altoRiesgo,
-        peligros: { create: t.peligros.map((x) => (typeof x === "string" ? { peligroId: req(pid, x) } : { peligroId: req(pid, x.p), nd: x.nd, ne: x.ne, nc: x.nc })) },
-      } });
-      tid[k] = r.id;
-    }
-    for (const s of sectores) {
-      const sector = await db.sectorTipo.create({ data: { nombre: s.nombre, ciius: s.ciius, descripcion: s.descripcion, zonas: { create: s.zonas.map((z) => ({ zonaTipoId: req(zid, z) })) } } });
-      for (const p of s.procesos) await db.procesoTipo.create({ data: { nombre: p.nombre, descripcion: p.descripcion, sectorTipoId: sector.id, tareasTipo: { create: p.tareas.map((t) => ({ tareaTipoId: req(tid, t) })) } } });
-      for (const c of s.cargos) {
-        const ct = cargos[c];
-        if (!ct) throw new Error(`Cargo tipo no existe: ${c}`);
-        await db.cargoTipo.create({ data: {
-          nombre: ct.nombre, descripcion: ct.descripcion, sectorTipoId: sector.id,
-          tareas: { create: ct.tareas.map((t) => ({ tareaTipoId: req(tid, t) })) },
-          peligros: { create: (ct.peligros ?? []).map((p) => ({ peligroId: req(pid, p) })) },
-        } });
-      }
-    }
-    // Vincular procesos tipo con tareas tipo (tarea_tipo.proceso_tipo_id se deja nulo: una tarea puede servir a varios procesos;
-    // la relación proceso→tareas se guarda en el JSON de sectores y se aplica al instanciar).
-    console.log(`Biblioteca: ${Object.keys(peligros).length} peligros, ${Object.keys(zonas).length} zonas, ${Object.keys(tareas).length} tareas, ${sectores.length} sectores`);
-  } else console.log("Biblioteca ya existente: no se modifica.");
-
-  // Zonas preferidas por tarea (actualización no destructiva por nombre)
-  for (const [k, zs] of Object.entries(zonasTarea)) {
-    const t = tareas[k]; if (!t) throw new Error(`Tarea no existe: ${k}`);
-    await db.tareaTipo.updateMany({ where: { nombre: t.nombre, zonasPreferidas: { isEmpty: true } }, data: { zonasPreferidas: zs.map((z) => zonas[z].nombre) } });
-  }
+  await sembrarBiblioteca();
 
   // Consultora por defecto
   if ((await db.consultora.count()) === 0) {
     await db.consultora.create({ data: { nombre: "Mi consultora SST", profesional: "Nombre de la profesional", licenciaSst: "" } });
     console.log("Consultora por defecto creada.");
   }
+}
+
+/** Siembra aditiva: crea lo que falta (por nombre) y nunca modifica ni borra lo existente. */
+async function sembrarBiblioteca() {
+  const conteo = { peligros: 0, zonas: 0, tareas: 0, sectores: 0, procesos: 0, cargos: 0, catalogo: 0 };
+  const todosPeligros = { ...peligros, ...peligrosAmpliacion };
+  const pid: Record<string, string> = {};
+  for (const [k, p] of Object.entries(todosPeligros)) {
+    const prev = await db.peligroCatalogo.findFirst({ where: { descripcion: p.descripcion } });
+    if (prev) { pid[k] = prev.id; continue; }
+    const r = await db.peligroCatalogo.create({ data: {
+      clasificacion: p.clasificacion, subclasificacion: p.sub, descripcion: p.descripcion, efectosPosibles: p.efectos,
+      ndDefault: p.nd, neDefault: p.ne, ncDefault: p.nc, controlesFuente: p.fuente, controlesMedio: p.medio, controlesIndividuo: p.individuo,
+      medidaEliminacion: p.eliminacion, medidaSustitucion: p.sustitucion, medidaIngenieria: p.ingenieria, medidaAdministrativa: p.administrativa, medidaEpp: p.epp,
+      eppSugerido: p.eppLista ?? [], examenesSugeridos: p.examenes ?? [], capacitacionesSugeridas: p.capacitaciones ?? [], normas: p.normas ?? [],
+      pveAsociado: p.pve, requisitoLegalEspecifico: p.requisitoLegal ?? false,
+    } });
+    pid[k] = r.id; conteo.peligros++;
+  }
+
+  const todasZonas = { ...zonas, ...zonasAmp };
+  const zid: Record<string, string> = {};
+  for (const [k, z] of Object.entries(todasZonas)) {
+    let zt = await db.zonaTipo.findUnique({ where: { nombre: z.nombre } });
+    if (!zt) { zt = await db.zonaTipo.create({ data: { nombre: z.nombre, descripcion: z.descripcion } }); conteo.zonas++; }
+    zid[k] = zt.id;
+    for (const p of z.peligros) await db.zonaTipoPeligro.upsert({ where: { zonaTipoId_peligroId: { zonaTipoId: zt.id, peligroId: req(pid, p) } }, update: {}, create: { zonaTipoId: zt.id, peligroId: req(pid, p) } });
+  }
+
+  const zonasDeTarea: Record<string, string[]> = { ...zonasTarea, ...Object.fromEntries(Object.entries(tareasAmp).map(([k, t]) => [k, t.zonas])) };
+  const todasTareas = { ...tareas, ...tareasAmp };
+  const tid: Record<string, string> = {};
+  for (const [k, t] of Object.entries(todasTareas)) {
+    let tt = await db.tareaTipo.findFirst({ where: { nombre: t.nombre } });
+    if (!tt) {
+      tt = await db.tareaTipo.create({ data: { nombre: t.nombre, actividad: t.actividad, rutinaria: t.rutinaria ?? true, altoRiesgo: t.altoRiesgo, zonasPreferidas: (zonasDeTarea[k] ?? []).map((z) => todasZonas[z].nombre) } });
+      conteo.tareas++;
+    } else if (!tt.zonasPreferidas.length && zonasDeTarea[k]) {
+      await db.tareaTipo.update({ where: { id: tt.id }, data: { zonasPreferidas: zonasDeTarea[k].map((z) => todasZonas[z].nombre) } });
+    }
+    tid[k] = tt.id;
+    for (const x of t.peligros) {
+      const [p, o] = typeof x === "string" ? [x, {}] : [x.p, x];
+      await db.tareaTipoPeligro.upsert({ where: { tareaTipoId_peligroId: { tareaTipoId: tt.id, peligroId: req(pid, p) } }, update: {}, create: { tareaTipoId: tt.id, peligroId: req(pid, p), nd: (o as { nd?: number }).nd, ne: (o as { ne?: number }).ne, nc: (o as { nc?: number }).nc } });
+    }
+  }
+
+  const todosCargos = { ...cargos, ...cargosAmp };
+  for (const s of [...sectores, ...sectoresAmp]) {
+    let sector = await db.sectorTipo.findFirst({ where: { nombre: s.nombre } });
+    if (!sector) { sector = await db.sectorTipo.create({ data: { nombre: s.nombre, ciius: s.ciius, descripcion: s.descripcion } }); conteo.sectores++; }
+    for (const z of s.zonas) await db.sectorZonaTipo.upsert({ where: { sectorTipoId_zonaTipoId: { sectorTipoId: sector.id, zonaTipoId: req(zid, z) } }, update: {}, create: { sectorTipoId: sector.id, zonaTipoId: req(zid, z) } });
+    for (const p of s.procesos) {
+      let pt = await db.procesoTipo.findFirst({ where: { nombre: p.nombre, sectorTipoId: sector.id } });
+      if (!pt) { pt = await db.procesoTipo.create({ data: { nombre: p.nombre, descripcion: p.descripcion, sectorTipoId: sector.id } }); conteo.procesos++; }
+      for (const t of p.tareas) await db.procesoTipoTarea.upsert({ where: { procesoTipoId_tareaTipoId: { procesoTipoId: pt.id, tareaTipoId: req(tid, t) } }, update: {}, create: { procesoTipoId: pt.id, tareaTipoId: req(tid, t) } });
+    }
+    for (const c of s.cargos) {
+      const ct = todosCargos[c];
+      if (!ct) throw new Error(`Cargo tipo no existe: ${c}`);
+      let cargo = await db.cargoTipo.findFirst({ where: { nombre: ct.nombre, sectorTipoId: sector.id } });
+      if (!cargo) { cargo = await db.cargoTipo.create({ data: { nombre: ct.nombre, descripcion: ct.descripcion, sectorTipoId: sector.id } }); conteo.cargos++; }
+      for (const t of ct.tareas) await db.cargoTipoTarea.upsert({ where: { cargoTipoId_tareaTipoId: { cargoTipoId: cargo.id, tareaTipoId: req(tid, t) } }, update: {}, create: { cargoTipoId: cargo.id, tareaTipoId: req(tid, t) } });
+      for (const p of ct.peligros ?? []) await db.cargoTipoPeligro.upsert({ where: { cargoTipoId_peligroId: { cargoTipoId: cargo.id, peligroId: req(pid, p) } }, update: {}, create: { cargoTipoId: cargo.id, peligroId: req(pid, p) } });
+    }
+  }
+
+  // Catálogos (exámenes, EPP, capacitaciones) + cualquier texto usado en peligros que aún no esté en el catálogo
+  const items: { tipo: string; nombre: string; descripcion: string; detalle: Record<string, unknown>; normas: string[] }[] = itemsCatalogo();
+  const todos = await db.peligroCatalogo.findMany({ select: { eppSugerido: true, examenesSugeridos: true, capacitacionesSugeridas: true } });
+  const extra = (tipo: string, xs: string[]) => xs.filter((n) => !items.some((i) => i.tipo === tipo && i.nombre === n)).map((nombre) => ({ tipo, nombre, descripcion: "", detalle: {}, normas: [] as string[] }));
+  items.push(...extra("EXAMEN", [...new Set(todos.flatMap((p) => p.examenesSugeridos))]), ...extra("EPP", [...new Set(todos.flatMap((p) => p.eppSugerido))]), ...extra("CAPACITACION", [...new Set(todos.flatMap((p) => p.capacitacionesSugeridas))]));
+  for (const it of items) {
+    const prev = await db.catalogoItem.findUnique({ where: { tipo_nombre: { tipo: it.tipo, nombre: it.nombre } } });
+    if (!prev) { await db.catalogoItem.create({ data: { ...it, detalle: it.detalle as object } }); conteo.catalogo++; }
+  }
+  const total = { peligros: await db.peligroCatalogo.count(), tareas: await db.tareaTipo.count(), cargos: await db.cargoTipo.count(), sectores: await db.sectorTipo.count(), zonas: await db.zonaTipo.count(), catalogo: await db.catalogoItem.count() };
+  console.log("Biblioteca — nuevos:", conteo, "· totales:", total);
 }
 
 function req(m: Record<string, string>, k: string) {

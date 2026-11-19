@@ -129,7 +129,8 @@ export function IntakeWizard({ sectores, cargosTipo, ciius, inicial, empresaId, 
   const sumaCargos = d.cargos.reduce((s, c) => s + (Number(c.nPersonas) || 0), 0);
 
   function elegirCiiu(c: Ciiu) {
-    const sector = sectores.find((s) => s.ciius.includes(c.codigo.slice(0, 2)));
+    // Primero la clase exacta de 4 dígitos (más específica), luego la división de 2 dígitos.
+    const sector = sectores.find((s) => s.ciius.includes(c.codigo)) ?? sectores.find((s) => s.ciius.includes(c.codigo.slice(0, 2)));
     setD((x) => ({ ...x, ciiu: c.codigo, descripcionActividad: c.descripcion, claseRiesgo: c.claseRiesgo, sectorTipoId: sector?.id ?? x.sectorTipoId }));
     setBusq("");
   }

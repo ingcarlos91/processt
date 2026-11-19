@@ -37,6 +37,10 @@ IA opcional: agregar `AI_GATEWAY_API_KEY=...` en `.env`. Sin clave, “Sugerir t
 - Datos de la profesional en “Mi consultora”: se precargan como responsable del SG-SST y firman como “Elaboró”.
 - Logo por empresa (PNG/JPG, 2 MB) en el encabezado de Word y Excel; se guarda en `uploads/logos/` (fuera de git).
 
+- Biblioteca ampliada: 25 sectores, 177 cargos tipo, 115 tareas, 89 peligros, 29 zonas y 166 elementos de catálogo (43 exámenes, 59 EPP, 64 capacitaciones). Semilla aditiva: `npx prisma db seed` agrega lo nuevo sin tocar lo validado.
+- Biblioteca editable desde la app: crear sectores, cargos tipo, tareas tipo (con peligros y zonas) y peligros; catálogos de exámenes, EPP y capacitaciones.
+- “Ampliar con IA” por sector (requiere AI_GATEWAY_API_KEY): la IA crea cargos, tareas y peligros sin validar.
+
 ## Pendiente
 
 - Archivos de la fuente BW Modelica en `public/fonts/bw-modelica/`.

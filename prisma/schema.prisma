@@ -701,3 +701,18 @@ model Acta {
 
   @@map("acta")
 }
+
+// Catálogos parametrizables de la biblioteca: exámenes médicos, EPP y capacitaciones.
+model CatalogoItem {
+  id          String   @id @default(cuid())
+  tipo        String // EXAMEN | EPP | CAPACITACION
+  nombre      String
+  descripcion String?
+  detalle     Json     @default("{}") // EXAMEN: { momento: ["ingreso","periodico","retiro"], periodicidad, enfasis } · EPP: { normaTecnica, reposicion, parteCuerpo } · CAPACITACION: { intensidadHoras, dirigidoA, periodicidad, certificacion }
+  normas      String[] @default([])
+  validado    Boolean  @default(false)
+  creadoEn    DateTime @default(now()) @map("creado_en")
+
+  @@unique([tipo, nombre])
+  @@map("catalogo_item")
+}
