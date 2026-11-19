@@ -1,12 +1,11 @@
 import Link from "next/link";
-import Image from "next/image";
 import { Plus } from "lucide-react";
 import { db } from "@/lib/db";
 import { Page, PageHeader, Section, Stat } from "@/components/app/ui";
 import { buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
+import { EstadoVacio } from "@/components/app/ilustraciones";
 
 export const dynamic = "force-dynamic";
 
@@ -33,14 +32,7 @@ export default async function Home() {
         <Stat label="Documentos generados" value={empresas.reduce((s, e) => s + e._count.documentos, 0)} />
       </div>
       {empresas.length === 0 ? (
-        <Empty className="border bg-background">
-          <EmptyHeader>
-            <EmptyMedia><Image src="/brand/icono.png" alt="" width={56} height={52} className="h-auto" /></EmptyMedia>
-            <EmptyTitle>Aún no hay empresas</EmptyTitle>
-            <EmptyDescription>Cree la primera empresa y el sistema generará su SG-SST completo según la norma.</EmptyDescription>
-          </EmptyHeader>
-          <EmptyContent>{nueva}</EmptyContent>
-        </Empty>
+        <EstadoVacio ilustracion="empresas" titulo={<>Aún no hay empresas</>} descripcion={<>Cree la primera empresa y el sistema generará su SG-SST completo según la norma.</>}>{nueva}</EstadoVacio>
       ) : (
         <Section contentClassName="px-0">
           <Table>

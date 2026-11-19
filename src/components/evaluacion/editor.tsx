@@ -3,7 +3,7 @@ import { BotonDescarga } from "@/components/app/boton-descarga";
 import Link from "next/link";
 import { useTransition } from "react";
 import { toast } from "sonner";
-import { ClipboardCheck, Download, Lock, LockOpen, Plus, Trash2, Paperclip, Upload } from "lucide-react";
+import { Download, Lock, LockOpen, Plus, Trash2, Paperclip, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
+import { EstadoVacio } from "@/components/app/ilustraciones";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Section, Stat, NormaRef } from "@/components/app/ui";
 import { Confirmar } from "@/components/app/confirmar";
@@ -45,14 +45,7 @@ export function EvaluacionEditor({ empresaId, nivel, evaluaciones, actual }: {
   );
 
   if (!actual) return (
-    <Empty className="border bg-background">
-      <EmptyHeader>
-        <EmptyMedia variant="icon"><ClipboardCheck /></EmptyMedia>
-        <EmptyTitle>Sin evaluación de estándares mínimos</EmptyTitle>
-        <EmptyDescription>Aplican {nivel} estándares. La evaluación inicial se precarga con lo marcado en “Estado actual” del cuestionario (Decreto 1072/2015 art. 2.2.4.6.16; Res. 0312/2019 art. 27).</EmptyDescription>
-      </EmptyHeader>
-      <EmptyContent>{nueva}</EmptyContent>
-    </Empty>
+    <EstadoVacio ilustracion="evaluacion" titulo={<>Sin evaluación de estándares mínimos</>} descripcion={<>Aplican {nivel} estándares. La evaluación inicial se precarga con lo marcado en “Estado actual” del cuestionario (Decreto 1072/2015 art. 2.2.4.6.16; Res. 0312/2019 art. 27).</>}>{nueva}</EstadoVacio>
   );
 
   const grupos = [...new Set(actual.items.map((i) => i.grupo))];

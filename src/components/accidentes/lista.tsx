@@ -3,15 +3,15 @@ import { useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { AlertTriangle, ChevronRight, FileText, Paperclip, Plus, ShieldAlert, ListChecks } from "lucide-react";
+import { AlertTriangle, ChevronRight, FileText, Paperclip, Plus, ListChecks } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Spinner } from "@/components/ui/spinner";
-import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
+import { Selector } from "@/components/app/selector";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
+import { EstadoVacio } from "@/components/app/ilustraciones";
 import { Section, Stat, NormaRef } from "@/components/app/ui";
 import { EventoForm, type CargoOpcion } from "@/components/accidentes/evento-form";
 import { TIPOS_EVENTO, GRAVEDAD, COLOR_PLAZO } from "@/lib/eventos";
@@ -55,7 +55,7 @@ export function EventosLista({ empresaId, anio, anios, eventos, cargos, acciones
       <div className="flex flex-wrap items-center gap-2">
         <p className="max-w-3xl text-sm text-muted-foreground">Registro, reporte e investigación de cada evento, con sus acciones. Alimenta los indicadores, el registro estadístico (FOR-08), las acciones correctivas (FOR-06) y la revisión por la dirección (ACT-06).</p>
         <div className="flex-1" />
-        <NativeSelect value={anio} aria-label="Año" onChange={(e) => router.push(`?anio=${e.target.value}`)}>{anios.map((y) => <NativeSelectOption key={y} value={y}>{y}</NativeSelectOption>)}</NativeSelect>
+        <Selector className="w-28" value={String(anio)} onChange={(v) => router.push(`?anio=${v}`)} opciones={anios.map((y) => ({ valor: String(y), etiqueta: String(y) }))} />
         <Button onClick={() => setAbierto(true)}><Plus /> Registrar evento</Button>
       </div>
 
@@ -83,20 +83,10 @@ export function EventosLista({ empresaId, anio, anios, eventos, cargos, acciones
       </div>
 
       {eventos.length === 0 ? (
-        <Empty className="border bg-background">
-          <EmptyHeader>
-            <EmptyMedia variant="icon"><ShieldAlert /></EmptyMedia>
-            <EmptyTitle>Sin eventos registrados</EmptyTitle>
-            <EmptyDescription>Cuando ocurra un accidente, incidente o se califique una enfermedad laboral, regístrelo aquí: el sistema le recuerda los plazos de reporte e investigación y le genera el informe.</EmptyDescription>
-          </EmptyHeader>
-          <EmptyContent><Button onClick={() => setAbierto(true)}><Plus /> Registrar evento</Button></EmptyContent>
-        </Empty>
+        <EstadoVacio ilustracion="sinAccidentes" titulo={<>Sin eventos registrados</>} descripcion={<>Cuando ocurra un accidente, incidente o se califique una enfermedad laboral, regístrelo aquí: el sistema le recuerda los plazos de reporte e investigación y le genera el informe.</>}><Button onClick={() => setAbierto(true)}><Plus /> Registrar evento</Button></EstadoVacio>
       ) : (
         <Section title={`Eventos de ${anio}`} actions={
-          <NativeSelect size="sm" value={tipo} aria-label="Filtrar por tipo" onChange={(e) => setTipo(e.target.value)}>
-            <NativeSelectOption value="todos">Todos los tipos</NativeSelectOption>
-            {Object.entries(TIPOS_EVENTO).map(([k, t]) => <NativeSelectOption key={k} value={k}>{t.t}</NativeSelectOption>)}
-          </NativeSelect>
+          <Selector className="w-56" value={tipo} onChange={setTipo} opciones={[{ valor: "todos", etiqueta: "Todos los tipos" }, ...Object.entries(TIPOS_EVENTO).map(([k, t]) => ({ valor: k, etiqueta: t.t }))]} />
         } contentClassName="px-0">
           <Table className="[&_td]:align-top">
             <TableHeader><TableRow><TableHead className="pl-6">Fecha</TableHead><TableHead>Evento</TableHead><TableHead>Persona</TableHead><TableHead>Plazos</TableHead><TableHead>Investigación</TableHead><TableHead className="pr-6 w-10" /></TableRow></TableHeader>

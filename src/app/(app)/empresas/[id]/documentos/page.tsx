@@ -1,13 +1,13 @@
 import Link from "next/link";
 import { BotonDescarga } from "@/components/app/boton-descarga";
-import { Download, FileText, PenLine } from "lucide-react";
+import { Download, PenLine } from "lucide-react";
 import { db } from "@/lib/db";
 import { recalcularEmpresa } from "@/lib/empresa";
 import { Section, NormaRef } from "@/components/app/ui";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
+import { EstadoVacio } from "@/components/app/ilustraciones";
 import { BotonGenerarTodo } from "@/components/empresa/acciones";
 import { Porque } from "@/components/app/porque";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -47,14 +47,7 @@ export default async function Documentos({ params }: PageProps<"/empresas/[id]/d
     </div>
   );
   if (!docs.length) return (
-    <Empty className="border bg-background">
-      <EmptyHeader>
-        <EmptyMedia variant="icon"><FileText /></EmptyMedia>
-        <EmptyTitle>{rr.documentos.length} documentos aplicables, ninguno generado</EmptyTitle>
-        <EmptyDescription>El sistema los redacta con los datos de la empresa, la matriz de peligros, la evaluación y el plan anual. Todo queda editable.</EmptyDescription>
-      </EmptyHeader>
-      <EmptyContent><BotonGenerarTodo empresaId={id} /></EmptyContent>
-    </Empty>
+    <EstadoVacio ilustracion="documentos" titulo={<>{rr.documentos.length} documentos aplicables, ninguno generado</>} descripcion={<>El sistema los redacta con los datos de la empresa, la matriz de peligros, la evaluación y el plan anual. Todo queda editable.</>}><BotonGenerarTodo empresaId={id} /></EstadoVacio>
   );
   return (
     <>

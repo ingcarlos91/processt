@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Spinner } from "@/components/ui/spinner";
-import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
+import { Selector } from "@/components/app/selector";
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -178,9 +178,7 @@ export function EventoDetalle({ empresaId, ev, cargos, peligros, peligrosEnMatri
                   <div key={i} className="grid grid-cols-[1fr_1fr_14rem_auto] items-center gap-1.5">
                     <Input value={m.nombre} placeholder="Nombre" disabled={cerrada} onChange={(e) => setEquipo(equipo.map((x, j) => (j === i ? { ...x, nombre: e.target.value } : x)))} />
                     <Input value={m.cargo ?? ""} placeholder="Cargo" disabled={cerrada} onChange={(e) => setEquipo(equipo.map((x, j) => (j === i ? { ...x, cargo: e.target.value } : x)))} />
-                    <NativeSelect className="w-full" value={m.rol} disabled={cerrada} onChange={(e) => setEquipo(equipo.map((x, j) => (j === i ? { ...x, rol: e.target.value } : x)))}>
-                      {Object.entries(ROLES_EQUIPO).map(([k, r]) => <NativeSelectOption key={k} value={k}>{r}</NativeSelectOption>)}
-                    </NativeSelect>
+                    <Selector value={m.rol} disabled={cerrada} onChange={(v) => setEquipo(equipo.map((x, j) => (j === i ? { ...x, rol: v } : x)))} opciones={Object.entries(ROLES_EQUIPO).map(([k, r]) => ({ valor: k, etiqueta: r }))} />
                     <Button size="icon-sm" variant="ghost" aria-label="Quitar del equipo" disabled={cerrada} onClick={() => setEquipo(equipo.filter((_, j) => j !== i))}><X /></Button>
                   </div>
                 ))}
@@ -303,8 +301,8 @@ export function EventoDetalle({ empresaId, ev, cargos, peligros, peligrosEnMatri
               <Field className="sm:col-span-2"><FieldLabel htmlFor="a-d">Medida</FieldLabel><Textarea id="a-d" rows={2} value={acc.descripcion} onChange={(e) => setAcc({ ...acc, descripcion: e.target.value })} /></Field>
               <Field className="sm:col-span-2"><FieldLabel htmlFor="a-h">Hallazgo</FieldLabel><Input id="a-h" value={acc.hallazgo} onChange={(e) => setAcc({ ...acc, hallazgo: e.target.value })} /></Field>
               <Field className="sm:col-span-2"><FieldLabel htmlFor="a-c">Causa que ataca</FieldLabel><Combo id="a-c" value={acc.causa} onChange={(v) => setAcc({ ...acc, causa: v })} grupos={[{ titulo: "Causas básicas", opciones: [...(an.personales ?? []), ...(an.trabajo ?? [])].filter(Boolean).map((c) => ({ valor: c })) }, { titulo: "Causas inmediatas", opciones: [...(an.actos ?? []), ...(an.condiciones ?? [])].filter(Boolean).map((c) => ({ valor: c })) }]} /></Field>
-              <Field><FieldLabel htmlFor="a-t">Tipo</FieldLabel><NativeSelect id="a-t" className="w-full" value={acc.tipo} onChange={(e) => setAcc({ ...acc, tipo: e.target.value })}><NativeSelectOption value="correctiva">Correctiva</NativeSelectOption><NativeSelectOption value="preventiva">Preventiva</NativeSelectOption><NativeSelectOption value="mejora">De mejora</NativeSelectOption></NativeSelect></Field>
-              <Field><FieldLabel htmlFor="a-j" className="flex items-center gap-1">Jerarquía <Ayuda k="evJerarquia" /></FieldLabel><NativeSelect id="a-j" className="w-full" value={acc.jerarquia} onChange={(e) => setAcc({ ...acc, jerarquia: e.target.value })}>{Object.entries(JERARQUIA).map(([k, v]) => <NativeSelectOption key={k} value={k}>{v}</NativeSelectOption>)}</NativeSelect></Field>
+              <Field><FieldLabel htmlFor="a-t">Tipo</FieldLabel><Selector id="a-t" value={acc.tipo} onChange={(v) => setAcc({ ...acc, tipo: v })} opciones={[{ valor: "correctiva", etiqueta: "Correctiva" }, { valor: "preventiva", etiqueta: "Preventiva" }, { valor: "mejora", etiqueta: "De mejora" }]} /></Field>
+              <Field><FieldLabel htmlFor="a-j" className="flex items-center gap-1">Jerarquía <Ayuda k="evJerarquia" /></FieldLabel><Selector id="a-j" value={acc.jerarquia} onChange={(v) => setAcc({ ...acc, jerarquia: v })} opciones={Object.entries(JERARQUIA).map(([k, v]) => ({ valor: k, etiqueta: v }))} /></Field>
               <Field><FieldLabel htmlFor="a-r">Responsable</FieldLabel><Combo id="a-r" value={acc.responsable} onChange={(v) => setAcc({ ...acc, responsable: v })} grupos={[{ titulo: "Personas registradas", opciones: personas.map((p) => ({ valor: p })) }]} /></Field>
               <Field><FieldLabel htmlFor="a-f">Fecha límite</FieldLabel><Input id="a-f" type="date" value={acc.fechaLimite} onChange={(e) => setAcc({ ...acc, fechaLimite: e.target.value })} /></Field>
             </div>

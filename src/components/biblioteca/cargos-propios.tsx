@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
+import { EstadoVacio } from "@/components/app/ilustraciones";
 import { Confirmar } from "@/components/app/confirmar";
 import * as A from "@/app/actions/biblioteca";
 import { Buscador } from "@/components/app/buscador";
@@ -27,9 +27,7 @@ export function CargosPropios({ empresaId, sectorTipoId, cargos, tareas }: { emp
   return (
     <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-3">
       {cargos.length === 0 && (
-        <Empty className="border md:col-span-2 xl:col-span-2">
-          <EmptyHeader><EmptyTitle>Sin cargos tipo propios</EmptyTitle><EmptyDescription>Cree aquí un cargo que solo existe en esta empresa, o use “Guardar en biblioteca” en un cargo de la matriz.</EmptyDescription></EmptyHeader>
-        </Empty>
+        <EstadoVacio ilustracion="usuarios" compacto titulo={<>Sin cargos tipo propios</>} descripcion={<>Cree aquí un cargo que solo existe en esta empresa, o use “Guardar en biblioteca” en un cargo de la matriz.</>} />
       )}
       {cargos.map((c) => (
         <Card key={c.id} size="sm" className="gap-2">

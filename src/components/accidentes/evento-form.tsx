@@ -1,7 +1,7 @@
 "use client";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
+import { Selector } from "@/components/app/selector";
 import { Field, FieldDescription, FieldGroup, FieldLabel, FieldLegend, FieldSet } from "@/components/ui/field";
 import { Ayuda } from "@/components/app/ayuda";
 import { TIPOS_EVENTO, GRAVEDAD, VINCULACION } from "@/lib/eventos";
@@ -38,16 +38,12 @@ export function EventoForm({ d, set, cargos, cat, lugares }: { d: DatosEvento; s
         <div className="grid gap-4 sm:grid-cols-3">
           <Field>
             <Etiqueta htmlFor="ev-t" k="evTipo">Tipo</Etiqueta>
-            <NativeSelect id="ev-t" className="w-full" value={d.tipo} onChange={(e) => u("tipo", e.target.value)}>
-              {Object.entries(TIPOS_EVENTO).map(([k, t]) => <NativeSelectOption key={k} value={k}>{t.t}</NativeSelectOption>)}
-            </NativeSelect>
+            <Selector id="ev-t" value={d.tipo} onChange={(v) => u("tipo", v)} opciones={Object.entries(TIPOS_EVENTO).map(([k, t]) => ({ valor: k, etiqueta: t.t }))} />
           </Field>
           {esAT && (
             <Field>
               <Etiqueta htmlFor="ev-g" k="evGravedad">Gravedad</Etiqueta>
-              <NativeSelect id="ev-g" className="w-full" value={d.gravedad ?? "leve"} onChange={(e) => u("gravedad", e.target.value)}>
-                {Object.entries(GRAVEDAD).map(([k, g]) => <NativeSelectOption key={k} value={k}>{g.t}</NativeSelectOption>)}
-              </NativeSelect>
+              <Selector id="ev-g" value={d.gravedad ?? "leve"} onChange={(v) => u("gravedad", v)} opciones={Object.entries(GRAVEDAD).map(([k, g]) => ({ valor: k, etiqueta: g.t }))} />
             </Field>
           )}
           <Field><Etiqueta htmlFor="ev-f">{d.tipo === "EL" ? "Fecha del diagnóstico" : "Fecha"}</Etiqueta><Input id="ev-f" type="date" value={d.fecha} onChange={(e) => u("fecha", e.target.value)} /></Field>
@@ -64,17 +60,11 @@ export function EventoForm({ d, set, cargos, cat, lugares }: { d: DatosEvento; s
           <Field><Etiqueta htmlFor="ev-c">Cédula</Etiqueta><Input id="ev-c" value={d.trabajadorCedula ?? ""} onChange={(e) => u("trabajadorCedula", e.target.value)} /></Field>
           <Field>
             <Etiqueta htmlFor="ev-v" k="evVinculacion">Vinculación</Etiqueta>
-            <NativeSelect id="ev-v" className="w-full" value={d.vinculacion ?? ""} onChange={(e) => u("vinculacion", e.target.value)}>
-              <NativeSelectOption value="">Seleccione…</NativeSelectOption>
-              {Object.entries(VINCULACION).map(([k, t]) => <NativeSelectOption key={k} value={k}>{t}</NativeSelectOption>)}
-            </NativeSelect>
+            <Selector id="ev-v" value={d.vinculacion} onChange={(v) => u("vinculacion", v)} opciones={Object.entries(VINCULACION).map(([k, t]) => ({ valor: k, etiqueta: t }))} />
           </Field>
           <Field>
             <Etiqueta htmlFor="ev-cg">Cargo</Etiqueta>
-            <NativeSelect id="ev-cg" className="w-full" value={d.cargoId ?? ""} onChange={(e) => set({ ...d, cargoId: e.target.value, cargo: cargos.find((c) => c.id === e.target.value)?.nombre ?? "" })}>
-              <NativeSelectOption value="">Seleccione…</NativeSelectOption>
-              {cargos.map((c) => <NativeSelectOption key={c.id} value={c.id}>{c.nombre}</NativeSelectOption>)}
-            </NativeSelect>
+            <Selector id="ev-cg" value={d.cargoId} onChange={(v) => set({ ...d, cargoId: v, cargo: cargos.find((c) => c.id === v)?.nombre ?? "" })} opciones={cargos.map((c) => ({ valor: c.id, etiqueta: c.nombre }))} />
             <FieldDescription>Se usa para revisar su matriz de peligros.</FieldDescription>
           </Field>
           {!esAus && <Field><Etiqueta htmlFor="ev-a">Antigüedad en el cargo</Etiqueta><Input id="ev-a" value={d.antiguedad ?? ""} placeholder="Ej: 8 meses" onChange={(e) => u("antiguedad", e.target.value)} /></Field>}
@@ -111,10 +101,7 @@ export function EventoForm({ d, set, cargos, cat, lugares }: { d: DatosEvento; s
             {d.tipo === "EL" && (
               <Field>
                 <Etiqueta htmlFor="ev-cn">Caso</Etiqueta>
-                <NativeSelect id="ev-cn" className="w-full" value={d.casoNuevo === false ? "antiguo" : "nuevo"} onChange={(e) => u("casoNuevo", e.target.value === "nuevo")}>
-                  <NativeSelectOption value="nuevo">Nuevo en el periodo</NativeSelectOption>
-                  <NativeSelectOption value="antiguo">Antiguo (ya diagnosticado)</NativeSelectOption>
-                </NativeSelect>
+                <Selector id="ev-cn" value={d.casoNuevo === false ? "antiguo" : "nuevo"} onChange={(v) => u("casoNuevo", v === "nuevo")} opciones={[{ valor: "nuevo", etiqueta: "Nuevo en el periodo" }, { valor: "antiguo", etiqueta: "Antiguo (ya diagnosticado)" }]} />
                 <FieldDescription>Prevalencia cuenta todos; incidencia, solo los nuevos.</FieldDescription>
               </Field>
             )}

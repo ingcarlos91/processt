@@ -2,7 +2,7 @@
 import { BotonDescarga } from "@/components/app/boton-descarga";
 import { useMemo, useState, useTransition } from "react";
 import { toast } from "sonner";
-import { CalendarDays, Check, Plus, Sparkles, Trash2, Download, Paperclip, Upload } from "lucide-react";
+import { Check, Plus, Sparkles, Trash2, Download, Paperclip, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -10,7 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
+import { EstadoVacio } from "@/components/app/ilustraciones";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Section, Stat, NormaRef } from "@/components/app/ui";
 import { Confirmar } from "@/components/app/confirmar";
@@ -46,14 +46,7 @@ export function PlanEditor({ empresaId, anio, actividades }: { empresaId: string
   const generar = <Button tooltip="Crea las actividades del año a partir de los estándares, la matriz de peligros y los comités; no borra las que usted agregó" disabled={pend} onClick={() => run(async () => { const n = await A.generarPlanAnual(empresaId, anio); toast.success(`${n} actividades generadas; PLN-01 actualizado`); })}><Sparkles /> {actividades.length ? "Regenerar pendientes" : `Generar plan anual ${anio}`}</Button>;
 
   if (!actividades.length) return (
-    <Empty className="border bg-background">
-      <EmptyHeader>
-        <EmptyMedia variant="icon"><CalendarDays /></EmptyMedia>
-        <EmptyTitle>Sin plan anual {anio}</EmptyTitle>
-        <EmptyDescription>Se genera desde el nivel de estándares, los comités, la matriz de peligros, el plan de mejoramiento y las obligaciones periódicas. Cada actividad cita su norma (Decreto 1072/2015 art. 2.2.4.6.17; Res. 0312/2019 art. 26).</EmptyDescription>
-      </EmptyHeader>
-      <EmptyContent>{generar}</EmptyContent>
-    </Empty>
+    <EstadoVacio ilustracion="plan" titulo={<>Sin plan anual {anio}</>} descripcion={<>Se genera desde el nivel de estándares, los comités, la matriz de peligros, el plan de mejoramiento y las obligaciones periódicas. Cada actividad cita su norma (Decreto 1072/2015 art. 2.2.4.6.17; Res. 0312/2019 art. 26).</>}>{generar}</EstadoVacio>
   );
 
   const fila = (a: Act) => (

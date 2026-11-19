@@ -2,14 +2,14 @@
 import Link from "next/link";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
-import { Plus, Trash2, Users, FileText } from "lucide-react";
+import { Plus, Trash2, FileText } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
+import { EstadoVacio } from "@/components/app/ilustraciones";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { NormaRef } from "@/components/app/ui";
 import { Confirmar } from "@/components/app/confirmar";
@@ -49,10 +49,7 @@ export function ComitesEditor({ empresaId, requeridos, comites, composicion, ref
             </CardHeader>
             <CardContent>
               {!c ? (
-                <Empty className="p-6">
-                  <EmptyHeader><EmptyMedia variant="icon"><Users /></EmptyMedia><EmptyTitle>No registrado</EmptyTitle><EmptyDescription>Registre la fecha de conformación para controlar el periodo.</EmptyDescription></EmptyHeader>
-                  <EmptyContent><NuevoComite onCrear={(f) => run(() => A.crearComite(empresaId, tipo, f), "Comité registrado")} /></EmptyContent>
-                </Empty>
+                <EstadoVacio ilustracion="comites" compacto titulo={<>No registrado</>} descripcion={<>Registre la fecha de conformación para controlar el periodo.</>}><NuevoComite onCrear={(f) => run(() => A.crearComite(empresaId, tipo, f), "Comité registrado")} /></EstadoVacio>
               ) : (
                 <div className="space-y-3">
                   <div className="flex flex-wrap gap-2 text-sm">
