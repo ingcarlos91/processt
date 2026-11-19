@@ -48,6 +48,9 @@ IA opcional: agregar `AI_GATEWAY_API_KEY=...` en `.env`. Sin clave, “Sugerir t
 
 - Login propio (sin servicios externos): usuarios con contraseña cifrada (scrypt), sesión firmada en cookie httpOnly (jose, 7 días), `proxy.ts` protege páginas y descargas, y cada server action verifica la sesión. Página Usuarios (admin) y cambio de contraseña en Mi consultora.
 
+- Documentos diligenciados: integrantes de comités, datos de la elección del COPASST y “Datos para los documentos” (emergencias, contactos, inventarios, presupuesto) en la pestaña Datos; aviso de datos faltantes en Documentos.
+- Editor visual (Tiptap) tipo Word para las secciones, con tablas editables; guarda Markdown. Modo avanzado opcional.
+
 ## Pendiente
 
 - Archivos de la fuente BW Modelica en `public/fonts/bw-modelica/`.

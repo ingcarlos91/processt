@@ -11,6 +11,8 @@ import { Alert, AlertAction, AlertDescription, AlertTitle } from "@/components/u
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
 import { NormaRef } from "@/components/app/ui";
 import * as A from "@/app/actions/sgsst";
+import dynamic from "next/dynamic";
+const EditorVisual = dynamic(() => import("./editor-visual").then((m) => m.EditorVisual), { ssr: false, loading: () => <div className="min-h-64 rounded-lg border bg-muted/30 animate-pulse" /> });
 
 type Sec = { id: string; titulo: string; generado: string; editado: string | null; revisar: boolean; html: string };
 
@@ -44,7 +46,11 @@ export function DocumentoEditor({ empresaId, doc, normas, secciones }: {
 
 function Seccion({ s, empresaId, run, pend }: { s: Sec; empresaId: string; run: (fn: () => Promise<unknown>, ok?: string) => void; pend: boolean }) {
   const [editando, setEditando] = useState(false);
+  const [avanzado, setAvanzado] = useState(false);
   const [texto, setTexto] = useState(s.editado ?? s.generado);
+  const [cambio, setCambio] = useState(false);
+  const abrir = () => { setTexto(s.editado ?? s.generado); setCambio(false); setAvanzado(false); setEditando(true); };
+  const guardar = () => { if (cambio) run(() => A.guardarSeccion(empresaId, s.id, texto), "Sección guardada"); setEditando(false); };
   return (
     <Card>
       {s.titulo && (
@@ -52,7 +58,7 @@ function Seccion({ s, empresaId, run, pend }: { s: Sec; empresaId: string; run: 
           <CardTitle>{s.titulo}</CardTitle>
           {s.editado && <CardDescription><Badge variant="secondary">Editado manualmente</Badge></CardDescription>}
           <CardAction className="flex gap-1">
-            {!editando && <Button size="sm" variant="ghost" onClick={() => { setTexto(s.editado ?? s.generado); setEditando(true); }}><PenLine /> Editar</Button>}
+            {!editando && <Button size="sm" variant="ghost" onClick={abrir}><PenLine /> Editar</Button>}
             {s.editado && !editando && <Button size="sm" variant="ghost" disabled={pend} onClick={() => run(() => A.restaurarSeccion(empresaId, s.id), "Se restauró el texto generado")}><RotateCcw /> Restaurar generado</Button>}
           </CardAction>
         </CardHeader>
@@ -67,15 +73,18 @@ function Seccion({ s, empresaId, run, pend }: { s: Sec; empresaId: string; run: 
         )}
         {editando ? (
           <div className="space-y-2">
-            <Textarea className="font-mono text-xs min-h-64" value={texto} onChange={(e) => setTexto(e.target.value)} />
-            <div className="flex gap-2">
-              <Button size="sm" disabled={pend} onClick={() => { run(() => A.guardarSeccion(empresaId, s.id, texto), "Sección guardada"); setEditando(false); }}><Save /> Guardar</Button>
+            {avanzado
+              ? <Textarea className="font-mono text-xs min-h-64" value={texto} onChange={(e) => { setTexto(e.target.value); setCambio(true); }} />
+              : <EditorVisual markdown={texto} onChange={(md) => { setTexto(md); setCambio(true); }} />}
+            <div className="flex flex-wrap items-center gap-2">
+              <Button size="sm" disabled={pend} onClick={guardar}><Save /> {cambio ? "Guardar cambios" : "Cerrar"}</Button>
               <Button size="sm" variant="outline" onClick={() => setEditando(false)}>Cancelar</Button>
+              <div className="flex-1" />
+              <Button size="xs" variant="link" onClick={() => setAvanzado(!avanzado)}>{avanzado ? "Volver al editor visual" : "Modo avanzado (Markdown)"}</Button>
             </div>
-            <p className="text-xs text-muted-foreground">Formato Markdown: **negrita**, listas con “-” o “1.”, tablas con “|”.</p>
           </div>
         ) : (
-          <div className="prose-doc" dangerouslySetInnerHTML={{ __html: s.html }} />
+          <div className="prose-doc cursor-text" onDoubleClick={abrir} dangerouslySetInnerHTML={{ __html: s.html }} />
         )}
       </CardContent>
     </Card>
