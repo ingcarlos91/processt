@@ -16,7 +16,8 @@ import { Section } from "@/components/app/ui";
 import { Ayuda } from "@/components/app/ayuda";
 import { CLASIFICACIONES, CLASIFICACION_ETIQUETA, ND, NE, NC, calcular, COLOR_NIVEL } from "@/lib/gtc45";
 import { actualizarPeligroCatalogo } from "@/app/actions/sgsst";
-import { crearPeligro, eliminarPeligroCatalogo } from "@/app/actions/biblioteca";
+import { crearPeligro, eliminarPeligroCatalogo, publicarEnGeneral } from "@/app/actions/biblioteca";
+import { Upload } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Plus, Trash2 } from "lucide-react";
 import { Confirmar } from "@/components/app/confirmar";
@@ -26,7 +27,7 @@ import { cn } from "@/lib/utils";
 type P = { id: string; clasificacion: string; sub: string; descripcion: string; efectos: string; nd: number; ne: number; nc: number; ingenieria: string; administrativa: string; epp: string[]; examenes: string[]; capacitaciones: string[]; normas: string[]; pve: string; validado: boolean; usos: number; enTareas: number };
 type S = { id: string; nombre: string; descripcion: string; ciius: string[]; procesos: string[]; cargos: { nombre: string; tareas: string[] }[] };
 
-export function BibliotecaEditor({ peligros, sectores = [], catalogo = [] }: { peligros: P[]; sectores?: S[]; catalogo?: { tipo: string; nombre: string }[] }) {
+export function BibliotecaEditor({ peligros, sectores = [], catalogo = [], empresaId }: { peligros: P[]; sectores?: S[]; catalogo?: { tipo: string; nombre: string }[]; empresaId?: string }) {
   const [nuevo, setNuevo] = useState({ clasificacion: "Condiciones de seguridad", descripcion: "", efectosPosibles: "", ndDefault: 2, neDefault: 2, ncDefault: 25 });
   const [pend, start] = useTransition();
   const [q, setQ] = useState("");
@@ -41,7 +42,7 @@ export function BibliotecaEditor({ peligros, sectores = [], catalogo = [] }: { p
   return (
     <Tabs defaultValue="peligros">
       <TabsContent value="peligros" className="mt-4 space-y-4">
-        <Section title="Nuevo peligro" description="Use la clasificación y escalas de la GTC 45. Después de crearlo, ábralo para completar controles, EPP, exámenes y capacitaciones.">
+        <Section title={empresaId ? "Nuevo peligro propio de esta empresa" : "Nuevo peligro"} description="Use la clasificación y escalas de la GTC 45. Después de crearlo, ábralo para completar controles, EPP, exámenes y capacitaciones.">
           <div className="grid md:grid-cols-[200px_1fr_1fr_80px_80px_90px_auto] gap-2 items-end">
             <Field><FieldLabel className="text-xs gap-1">Clasificación <Ayuda k="clasificacionPeligro" /></FieldLabel><NativeSelect className="w-full" value={nuevo.clasificacion} onChange={(e) => setNuevo({ ...nuevo, clasificacion: e.target.value })}>{CLASIFICACIONES.map((c) => <NativeSelectOption key={c} value={c}>{CLASIFICACION_ETIQUETA[c]}</NativeSelectOption>)}</NativeSelect></Field>
             <Field><FieldLabel className="text-xs gap-1">Peligro <Ayuda k="descripcionPeligro" /></FieldLabel><Input value={nuevo.descripcion} onChange={(e) => setNuevo({ ...nuevo, descripcion: e.target.value })} /></Field>
@@ -49,7 +50,7 @@ export function BibliotecaEditor({ peligros, sectores = [], catalogo = [] }: { p
             <Field><FieldLabel className="text-xs gap-1">ND <Ayuda k="nd" /></FieldLabel><NativeSelect className="w-full" value={nuevo.ndDefault} onChange={(e) => setNuevo({ ...nuevo, ndDefault: Number(e.target.value) })}>{ND.map((x) => <NativeSelectOption key={x.valor} value={x.valor}>{x.valor}</NativeSelectOption>)}</NativeSelect></Field>
             <Field><FieldLabel className="text-xs gap-1">NE <Ayuda k="ne" /></FieldLabel><NativeSelect className="w-full" value={nuevo.neDefault} onChange={(e) => setNuevo({ ...nuevo, neDefault: Number(e.target.value) })}>{NE.map((x) => <NativeSelectOption key={x.valor} value={x.valor}>{x.valor}</NativeSelectOption>)}</NativeSelect></Field>
             <Field><FieldLabel className="text-xs gap-1">NC <Ayuda k="nc" /></FieldLabel><NativeSelect className="w-full" value={nuevo.ncDefault} onChange={(e) => setNuevo({ ...nuevo, ncDefault: Number(e.target.value) })}>{NC.map((x) => <NativeSelectOption key={x.valor} value={x.valor}>{x.valor}</NativeSelectOption>)}</NativeSelect></Field>
-            <Button disabled={!nuevo.descripcion || pend} onClick={() => start(async () => { const r = await crearPeligro(nuevo); if ("error" in r) toast.error(r.error); else { toast.success("Peligro creado"); setNuevo({ ...nuevo, descripcion: "", efectosPosibles: "" }); setAbierto(r.id); } })}><Plus /> Crear</Button>
+            <Button disabled={!nuevo.descripcion || pend} onClick={() => start(async () => { const r = await crearPeligro({ ...nuevo, empresaId }); if ("error" in r) toast.error(r.error); else { toast.success("Peligro creado"); setNuevo({ ...nuevo, descripcion: "", efectosPosibles: "" }); setAbierto(r.id); } })}><Plus /> Crear</Button>
           </div>
         </Section>
         <Section
@@ -98,7 +99,7 @@ export function BibliotecaEditor({ peligros, sectores = [], catalogo = [] }: { p
                               </Field>
                             ))}
                             <Field><FieldLabel className="text-xs gap-1">Códigos de normas (uno por línea) <Ayuda k="normasPeligro" /></FieldLabel><Textarea className="text-xs min-h-16" defaultValue={p.normas.join("\n")} onBlur={(e) => e.target.value !== p.normas.join("\n") && upd(p.id, { normas: aLista(e.target.value) })} /></Field>
-                            <div className="flex items-end"><Confirmar trigger={<Button size="xs" variant="destructive" />} titulo="Eliminar peligro" descripcion="Solo es posible si ninguna matriz lo usa." destructivo accion="Eliminar" onConfirm={() => start(async () => { const r = await eliminarPeligroCatalogo(p.id); if ("error" in r) toast.error(r.error); else toast.success("Peligro eliminado"); })}><Trash2 /> Eliminar peligro</Confirmar></div>
+                            <div className="flex items-end gap-2">{empresaId && <Button size="xs" variant="secondary" onClick={() => start(async () => { const r = await publicarEnGeneral("peligro", p.id); if ("error" in r) toast.error(r.error); else toast.success("Publicado en la biblioteca general"); })}><Upload /> Publicar en general</Button>}<Confirmar trigger={<Button size="xs" variant="destructive" />} titulo="Eliminar peligro" descripcion="Solo es posible si ninguna matriz lo usa." destructivo accion="Eliminar" onConfirm={() => start(async () => { const r = await eliminarPeligroCatalogo(p.id); if ("error" in r) toast.error(r.error); else toast.success("Peligro eliminado"); })}><Trash2 /> Eliminar peligro</Confirmar></div>
                           </div>
                         </TableCell>
                       </TableRow>

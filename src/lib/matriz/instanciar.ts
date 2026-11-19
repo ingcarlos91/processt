@@ -89,14 +89,15 @@ export async function agregarPeligroCatalogo(empresaId: string, origen: "tarea" 
 }
 
 /** Sugiere un cargo tipo por similitud de nombre (dentro del sector y luego en toda la biblioteca). */
-export async function sugerirCargoTipo(nombre: string, sectorTipoId?: string | null) {
+export async function sugerirCargoTipo(nombre: string, sectorTipoId?: string | null, empresaId?: string | null) {
   const norm = (s: string) => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/\(.*?\)/g, "");
   const palabras = norm(nombre).split(/[^a-z]+/).filter((w) => w.length > 3);
-  const tipos = await db.cargoTipo.findMany({ orderBy: { nombre: "asc" } });
+  const tipos = await db.cargoTipo.findMany({ where: { OR: [{ empresaId: null }, ...(empresaId ? [{ empresaId }] : [])] }, orderBy: { nombre: "asc" } });
   const puntuar = (t: { nombre: string; sectorTipoId: string | null }) => {
     const n = norm(t.nombre);
     let s = palabras.filter((w) => n.includes(w)).length * 10;
     if (sectorTipoId && t.sectorTipoId === sectorTipoId) s += 3;
+    if (empresaId && (t as { empresaId?: string | null }).empresaId === empresaId) s += 5;
     return s;
   };
   const mejor = tipos.map((t) => ({ t, s: puntuar(t) })).filter((x) => x.s >= 10).sort((a, b) => b.s - a.s)[0];

@@ -4,7 +4,7 @@ import { usePathname } from "next/navigation";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const TABS = [
-  ["", "Resumen"], ["/datos", "Datos"], ["/matriz", "Cargos y matriz"], ["/evaluacion", "Evaluación"],
+  ["", "Resumen"], ["/datos", "Datos"], ["/matriz", "Cargos y matriz"], ["/biblioteca", "Biblioteca propia"], ["/evaluacion", "Evaluación"],
   ["/documentos", "Documentos"], ["/plan", "Plan anual"], ["/comites", "Comités"], ["/indicadores", "Indicadores"],
 ] as const;
 

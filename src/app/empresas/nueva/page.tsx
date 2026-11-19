@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 export default async function NuevaEmpresa() {
   const [sectores, cargosTipo, ciius, consultora] = await Promise.all([
     db.sectorTipo.findMany({ orderBy: { nombre: "asc" }, select: { id: true, nombre: true, ciius: true } }),
-    db.cargoTipo.findMany({ orderBy: { nombre: "asc" }, select: { id: true, nombre: true, sectorTipoId: true } }),
+    db.cargoTipo.findMany({ where: { empresaId: null }, orderBy: { nombre: "asc" }, select: { id: true, nombre: true, sectorTipoId: true } }),
     db.ciiuClaseRiesgo.findMany({ orderBy: { codigo: "asc" }, select: { codigo: true, descripcion: true, claseRiesgo: true } }),
     consultoraActual(),
   ]);

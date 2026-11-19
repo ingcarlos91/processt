@@ -11,18 +11,18 @@ export const dynamic = "force-dynamic";
 
 export default async function Biblioteca() {
   const [peligros, sectores, tareas, zonas, catalogo] = await Promise.all([
-    db.peligroCatalogo.findMany({ orderBy: [{ clasificacion: "asc" }, { descripcion: "asc" }], include: { _count: { select: { tareas: true, evaluados: true } } } }),
-    db.sectorTipo.findMany({ orderBy: { nombre: "asc" }, include: { cargos: { orderBy: { nombre: "asc" }, include: { tareas: { select: { tareaTipoId: true } }, _count: { select: { cargos: true } } } }, procesos: { orderBy: { nombre: "asc" } }, zonas: { select: { zonaTipoId: true } }, _count: { select: { empresas: true } } } }),
-    db.tareaTipo.findMany({ orderBy: { nombre: "asc" }, include: { peligros: { select: { peligroId: true } }, _count: { select: { tareas: true, cargos: true } } } }),
+    db.peligroCatalogo.findMany({ where: { empresaId: null }, orderBy: [{ clasificacion: "asc" }, { descripcion: "asc" }], include: { _count: { select: { tareas: true, evaluados: true } } } }),
+    db.sectorTipo.findMany({ orderBy: { nombre: "asc" }, include: { cargos: { where: { empresaId: null }, orderBy: { nombre: "asc" }, include: { tareas: { select: { tareaTipoId: true } }, _count: { select: { cargos: true } } } }, procesos: { orderBy: { nombre: "asc" } }, zonas: { select: { zonaTipoId: true } }, _count: { select: { empresas: true } } } }),
+    db.tareaTipo.findMany({ where: { empresaId: null }, orderBy: { nombre: "asc" }, include: { peligros: { select: { peligroId: true } }, _count: { select: { tareas: true, cargos: true } } } }),
     db.zonaTipo.findMany({ orderBy: { nombre: "asc" }, select: { id: true, nombre: true } }),
-    db.catalogoItem.findMany({ orderBy: [{ tipo: "asc" }, { nombre: "asc" }] }),
+    db.catalogoItem.findMany({ where: { empresaId: null }, orderBy: [{ tipo: "asc" }, { nombre: "asc" }] }),
   ]);
   const cuenta = (t: string) => catalogo.filter((c) => c.tipo === t).length;
   const peligrosLite = peligros.map((p) => ({ id: p.id, clasificacion: p.clasificacion, descripcion: p.descripcion }));
   const catalogoLite = catalogo.map((c) => ({ tipo: c.tipo, nombre: c.nombre }));
   return (
     <Page>
-      <PageHeader title="Biblioteca" description="Todo lo que el sistema precarga en las empresas: sectores, cargos tipo, tareas tipo, peligros (GTC 45), exámenes médicos, EPP y capacitaciones. Puede crear, editar y validar cada elemento. Lo marcado “sin validar” viene de la semilla o de la IA y espera su revisión." />
+      <PageHeader title="Biblioteca general" description="Sirve para todas las empresas. Lo propio de un cliente se maneja en la pestaña “Biblioteca propia” de esa empresa y se puede publicar aquí. Todo lo que el sistema precarga en las empresas: sectores, cargos tipo, tareas tipo, peligros (GTC 45), exámenes médicos, EPP y capacitaciones. Puede crear, editar y validar cada elemento. Lo marcado “sin validar” viene de la semilla o de la IA y espera su revisión." />
       <div className="grid grid-cols-2 lg:grid-cols-6 gap-4">
         <Stat label="Sectores" value={sectores.length} />
         <Stat label="Cargos tipo" value={sectores.reduce((s, x) => s + x.cargos.length, 0)} />

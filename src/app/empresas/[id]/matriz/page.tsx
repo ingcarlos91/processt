@@ -15,9 +15,9 @@ export default async function Matriz({ params }: PageProps<"/empresas/[id]/matri
         peligros: { orderBy: { creadoEn: "asc" } },
       },
     }),
-    db.cargoTipo.findMany({ orderBy: { nombre: "asc" }, select: { id: true, nombre: true, sectorTipoId: true } }),
-    db.tareaTipo.findMany({ orderBy: { nombre: "asc" }, select: { id: true, nombre: true, actividad: true } }),
-    db.peligroCatalogo.findMany({ orderBy: [{ clasificacion: "asc" }, { descripcion: "asc" }], select: { id: true, clasificacion: true, descripcion: true } }),
+    db.cargoTipo.findMany({ where: { OR: [{ empresaId: null }, { empresaId: id }] }, orderBy: { nombre: "asc" }, select: { id: true, nombre: true, sectorTipoId: true, empresaId: true } }),
+    db.tareaTipo.findMany({ where: { OR: [{ empresaId: null }, { empresaId: id }] }, orderBy: { nombre: "asc" }, select: { id: true, nombre: true, actividad: true, empresaId: true } }),
+    db.peligroCatalogo.findMany({ where: { OR: [{ empresaId: null }, { empresaId: id }] }, orderBy: [{ clasificacion: "asc" }, { descripcion: "asc" }], select: { id: true, clasificacion: true, descripcion: true, empresaId: true } }),
     db.zonaTipo.findMany({ orderBy: { nombre: "asc" }, select: { id: true, nombre: true } }),
   ]);
   return (

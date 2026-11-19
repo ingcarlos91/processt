@@ -41,6 +41,8 @@ IA opcional: agregar `AI_GATEWAY_API_KEY=...` en `.env`. Sin clave, “Sugerir t
 - Biblioteca editable desde la app: crear sectores, cargos tipo, tareas tipo (con peligros y zonas) y peligros; catálogos de exámenes, EPP y capacitaciones.
 - “Ampliar con IA” por sector (requiere AI_GATEWAY_API_KEY): la IA crea cargos, tareas y peligros sin validar.
 
+- Biblioteca en dos niveles: general (todas las empresas) y propia de cada empresa (pestaña “Biblioteca propia”). Lo propio no aparece en otras empresas; “Publicar en general” lo comparte. Al guardar desde la matriz se elige el nivel.
+
 ## Pendiente
 
 - Archivos de la fuente BW Modelica en `public/fonts/bw-modelica/`.

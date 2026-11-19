@@ -5,15 +5,17 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { iaDisponible, MODELO } from "@/lib/ia";
 
-const rv = () => revalidatePath("/biblioteca", "layout");
+const rv = (empresaId?: string | null) => { revalidatePath("/biblioteca", "layout"); if (empresaId) revalidatePath(`/empresas/${empresaId}`, "layout"); };
+/** Alcance de búsqueda: biblioteca general o la de una empresa. */
+const alcance = (empresaId?: string | null) => ({ empresaId: empresaId ?? null });
 const CLASIF = ["Biologico", "Fisico", "Quimico", "Psicosocial", "Biomecanico", "Condiciones de seguridad", "Fenomenos naturales"] as const;
 
 // ───────── Peligros ─────────
-export async function crearPeligro(d: { clasificacion: string; descripcion: string; efectosPosibles: string; ndDefault: number; neDefault: number; ncDefault: number }) {
+export async function crearPeligro(d: { clasificacion: string; descripcion: string; efectosPosibles: string; ndDefault: number; neDefault: number; ncDefault: number; empresaId?: string | null }) {
   if (!d.descripcion.trim()) return { error: "La descripción es obligatoria." };
-  if (await db.peligroCatalogo.findFirst({ where: { descripcion: d.descripcion.trim() } })) return { error: "Ya existe un peligro con esa descripción." };
-  const p = await db.peligroCatalogo.create({ data: { ...d, descripcion: d.descripcion.trim(), validado: true } });
-  rv();
+  if (await db.peligroCatalogo.findFirst({ where: { descripcion: d.descripcion.trim(), ...alcance(d.empresaId) } })) return { error: "Ya existe un peligro con esa descripción." };
+  const p = await db.peligroCatalogo.create({ data: { ...d, empresaId: d.empresaId ?? null, descripcion: d.descripcion.trim(), validado: true } });
+  rv(d.empresaId);
   return { id: p.id };
 }
 
@@ -26,14 +28,14 @@ export async function eliminarPeligroCatalogo(id: string) {
 }
 
 // ───────── Tareas tipo ─────────
-export async function crearTareaTipo(d: { nombre: string; actividad?: string; rutinaria?: boolean; altoRiesgo?: string | null; zonasPreferidas?: string[]; peligroIds?: string[] }) {
+export async function crearTareaTipo(d: { nombre: string; actividad?: string; rutinaria?: boolean; altoRiesgo?: string | null; zonasPreferidas?: string[]; peligroIds?: string[]; empresaId?: string | null }) {
   if (!d.nombre.trim()) return { error: "El nombre es obligatorio." };
-  if (await db.tareaTipo.findFirst({ where: { nombre: d.nombre.trim() } })) return { error: "Ya existe una tarea con ese nombre." };
+  if (await db.tareaTipo.findFirst({ where: { nombre: d.nombre.trim(), ...alcance(d.empresaId) } })) return { error: "Ya existe una tarea con ese nombre." };
   const t = await db.tareaTipo.create({ data: {
-    nombre: d.nombre.trim(), actividad: d.actividad, rutinaria: d.rutinaria ?? true, altoRiesgo: d.altoRiesgo || null, zonasPreferidas: d.zonasPreferidas ?? [], validado: true,
+    empresaId: d.empresaId ?? null, nombre: d.nombre.trim(), actividad: d.actividad, rutinaria: d.rutinaria ?? true, altoRiesgo: d.altoRiesgo || null, zonasPreferidas: d.zonasPreferidas ?? [], validado: true,
     peligros: { create: (d.peligroIds ?? []).map((peligroId) => ({ peligroId })) },
   } });
-  rv();
+  rv(d.empresaId);
   return { id: t.id };
 }
 
@@ -57,10 +59,10 @@ export async function eliminarTareaTipo(id: string) {
 }
 
 // ───────── Cargos tipo y sectores ─────────
-export async function crearCargoTipo(d: { nombre: string; descripcion?: string; sectorTipoId?: string | null; tareaIds?: string[] }) {
+export async function crearCargoTipo(d: { nombre: string; descripcion?: string; sectorTipoId?: string | null; tareaIds?: string[]; empresaId?: string | null }) {
   if (!d.nombre.trim()) return { error: "El nombre es obligatorio." };
-  const c = await db.cargoTipo.create({ data: { nombre: d.nombre.trim(), descripcion: d.descripcion, sectorTipoId: d.sectorTipoId || null, validado: true, tareas: { create: (d.tareaIds ?? []).map((tareaTipoId) => ({ tareaTipoId })) } } });
-  rv();
+  const c = await db.cargoTipo.create({ data: { empresaId: d.empresaId ?? null, nombre: d.nombre.trim(), descripcion: d.descripcion, sectorTipoId: d.sectorTipoId || null, validado: true, tareas: { create: (d.tareaIds ?? []).map((tareaTipoId) => ({ tareaTipoId })) } } });
+  rv(d.empresaId);
   return { id: c.id };
 }
 
@@ -95,13 +97,13 @@ export async function vincularZonaSector(sectorTipoId: string, zonaTipoId: strin
 }
 
 // ───────── Catálogos (exámenes, EPP, capacitaciones) ─────────
-export async function guardarCatalogoItem(d: { id?: string; tipo: string; nombre: string; descripcion?: string; detalle?: Record<string, unknown>; normas?: string[]; validado?: boolean }) {
+export async function guardarCatalogoItem(d: { id?: string; tipo: string; nombre: string; descripcion?: string; detalle?: Record<string, unknown>; normas?: string[]; validado?: boolean; empresaId?: string | null }) {
   if (!d.nombre.trim()) return { error: "El nombre es obligatorio." };
-  const data = { tipo: d.tipo, nombre: d.nombre.trim(), descripcion: d.descripcion, detalle: (d.detalle ?? {}) as object, normas: d.normas ?? [], validado: d.validado ?? true };
+  const data = { empresaId: d.empresaId ?? null, tipo: d.tipo, nombre: d.nombre.trim(), descripcion: d.descripcion, detalle: (d.detalle ?? {}) as object, normas: d.normas ?? [], validado: d.validado ?? true };
   if (d.id) await db.catalogoItem.update({ where: { id: d.id }, data });
-  else if (await db.catalogoItem.findUnique({ where: { tipo_nombre: { tipo: d.tipo, nombre: data.nombre } } })) return { error: "Ya existe con ese nombre." };
+  else if (await db.catalogoItem.findFirst({ where: { tipo: d.tipo, nombre: data.nombre, ...alcance(d.empresaId) } })) return { error: "Ya existe con ese nombre." };
   else await db.catalogoItem.create({ data });
-  rv();
+  rv(d.empresaId);
   return { ok: true };
 }
 
@@ -133,9 +135,9 @@ export async function ampliarSectorConIA(sectorTipoId: string, instrucciones: st
   if (!iaDisponible()) return { error: "La IA no está configurada: agregue AI_GATEWAY_API_KEY en el archivo .env y reinicie." };
   const sector = await db.sectorTipo.findUniqueOrThrow({ where: { id: sectorTipoId }, include: { cargos: true, procesos: true } });
   const [tareas, peligros, catalogo] = await Promise.all([
-    db.tareaTipo.findMany({ select: { id: true, nombre: true } }),
-    db.peligroCatalogo.findMany({ select: { id: true, clasificacion: true, descripcion: true } }),
-    db.catalogoItem.findMany({ select: { tipo: true, nombre: true } }),
+    db.tareaTipo.findMany({ where: { empresaId: null }, select: { id: true, nombre: true } }),
+    db.peligroCatalogo.findMany({ where: { empresaId: null }, select: { id: true, clasificacion: true, descripcion: true } }),
+    db.catalogoItem.findMany({ where: { empresaId: null }, select: { tipo: true, nombre: true } }),
   ]);
   try {
     const { output } = await generateText({
@@ -160,6 +162,34 @@ export async function ampliarSectorConIA(sectorTipoId: string, instrucciones: st
   }
 }
 
+/** Publica un elemento de la biblioteca de una empresa en la biblioteca general (queda disponible para todas). */
+export async function publicarEnGeneral(tipo: "peligro" | "tarea" | "cargo" | "catalogo", id: string) {
+  const empresaId = tipo === "peligro" ? (await db.peligroCatalogo.findUnique({ where: { id } }))?.empresaId
+    : tipo === "tarea" ? (await db.tareaTipo.findUnique({ where: { id } }))?.empresaId
+    : tipo === "cargo" ? (await db.cargoTipo.findUnique({ where: { id } }))?.empresaId
+    : (await db.catalogoItem.findUnique({ where: { id } }))?.empresaId;
+  if (tipo === "peligro") {
+    const p = await db.peligroCatalogo.findUniqueOrThrow({ where: { id } });
+    if (await db.peligroCatalogo.findFirst({ where: { descripcion: p.descripcion, empresaId: null } })) return { error: "Ya existe un peligro general con esa descripción." };
+    await db.peligroCatalogo.update({ where: { id }, data: { empresaId: null } });
+  } else if (tipo === "tarea") {
+    const t = await db.tareaTipo.findUniqueOrThrow({ where: { id }, include: { peligros: { include: { peligro: true } } } });
+    if (await db.tareaTipo.findFirst({ where: { nombre: t.nombre, empresaId: null } })) return { error: "Ya existe una tarea general con ese nombre." };
+    if (t.peligros.some((x) => x.peligro.empresaId)) return { error: "Primero publique los peligros propios de esta tarea." };
+    await db.tareaTipo.update({ where: { id }, data: { empresaId: null } });
+  } else if (tipo === "cargo") {
+    const c = await db.cargoTipo.findUniqueOrThrow({ where: { id }, include: { tareas: { include: { tareaTipo: true } } } });
+    if (c.tareas.some((x) => x.tareaTipo.empresaId)) return { error: "Primero publique las tareas propias de este cargo." };
+    await db.cargoTipo.update({ where: { id }, data: { empresaId: null } });
+  } else {
+    const i = await db.catalogoItem.findUniqueOrThrow({ where: { id } });
+    if (await db.catalogoItem.findFirst({ where: { tipo: i.tipo, nombre: i.nombre, empresaId: null } })) return { error: "Ya existe en el catálogo general." };
+    await db.catalogoItem.update({ where: { id }, data: { empresaId: null } });
+  }
+  rv(empresaId);
+  return { ok: true };
+}
+
 async function guardarAmpliacion(sectorTipoId: string, s: z.infer<typeof esquemaAmpliacion>) {
   const conteo = { cargos: 0, tareas: 0, peligros: 0 };
   for (const c of s.cargos) {
@@ -168,13 +198,13 @@ async function guardarAmpliacion(sectorTipoId: string, s: z.infer<typeof esquema
     conteo.cargos++;
     for (const t of c.tareas) {
       let tareaId = t.tareaTipoId && (await db.tareaTipo.findUnique({ where: { id: t.tareaTipoId } }))?.id;
-      if (!tareaId) tareaId = (await db.tareaTipo.findFirst({ where: { nombre: t.nombre } }))?.id;
+      if (!tareaId) tareaId = (await db.tareaTipo.findFirst({ where: { nombre: t.nombre, empresaId: null } }))?.id;
       if (!tareaId) {
         tareaId = (await db.tareaTipo.create({ data: { nombre: t.nombre, actividad: t.actividad, rutinaria: t.rutinaria, altoRiesgo: t.altoRiesgo, validado: false } })).id;
         conteo.tareas++;
         for (const p of t.peligros) {
           let peligroId = p.peligroId && (await db.peligroCatalogo.findUnique({ where: { id: p.peligroId } }))?.id;
-          if (!peligroId) peligroId = (await db.peligroCatalogo.findFirst({ where: { descripcion: p.descripcion } }))?.id;
+          if (!peligroId) peligroId = (await db.peligroCatalogo.findFirst({ where: { descripcion: p.descripcion, empresaId: null } }))?.id;
           if (!peligroId) {
             peligroId = (await db.peligroCatalogo.create({ data: {
               clasificacion: p.clasificacion, descripcion: p.descripcion, efectosPosibles: p.efectos, ndDefault: p.nd, neDefault: p.ne, ncDefault: p.nc,

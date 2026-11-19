@@ -7,6 +7,20 @@ import { sugerirTareasYPeligros, type Sugerencia } from "@/lib/ia";
 
 const rv = (id: string) => revalidatePath(`/empresas/${id}`, "layout");
 
+/** Guarda un cargo de la empresa (con sus tareas) como cargo tipo de la biblioteca de la empresa o general. */
+export async function guardarCargoEnBiblioteca(empresaId: string, cargoId: string, alcance: "empresa" | "general" = "empresa") {
+  const c = await db.cargo.findUniqueOrThrow({ where: { id: cargoId }, include: { tareas: { include: { tarea: true } }, empresa: { select: { sectorTipoId: true } } } });
+  const sinTipo = c.tareas.filter((x) => !x.tarea.tareaTipoId);
+  for (const x of sinTipo) await guardarTareaEnBiblioteca(empresaId, x.tareaId, alcance);
+  const tareas = await db.tarea.findMany({ where: { id: { in: c.tareas.map((x) => x.tareaId) } }, select: { tareaTipoId: true } });
+  const ct = await db.cargoTipo.create({ data: {
+    empresaId: alcance === "empresa" ? empresaId : null, sectorTipoId: c.empresa.sectorTipoId, nombre: c.nombre, descripcion: c.descripcionFunciones, validado: true,
+    tareas: { create: [...new Set(tareas.map((t) => t.tareaTipoId).filter(Boolean) as string[])].map((tareaTipoId) => ({ tareaTipoId })) },
+  } });
+  await db.cargo.update({ where: { id: cargoId }, data: { cargoTipoId: ct.id } });
+  rv(empresaId);
+}
+
 export async function agregarCargo(empresaId: string, d: { nombre: string; nPersonas: number; cargoTipoId?: string; funciones?: string }) {
   const c = await db.cargo.create({ data: { empresaId, nombre: d.nombre.trim(), nPersonas: Math.max(1, Number(d.nPersonas) || 1), descripcionFunciones: d.funciones || null } });
   if (d.cargoTipoId) await aplicarCargoTipo(empresaId, c.id, d.cargoTipoId, "aprobado");
@@ -153,13 +167,13 @@ export async function aplicarSugerencia(empresaId: string, cargoId: string, s: S
 }
 
 /** Guarda un peligro evaluado (nuevo) en la biblioteca para reutilizarlo. */
-export async function guardarPeligroEnBiblioteca(empresaId: string, peligroEvaluadoId: string) {
+export async function guardarPeligroEnBiblioteca(empresaId: string, peligroEvaluadoId: string, alcance: "empresa" | "general" = "empresa") {
   const p = await db.peligroEvaluado.findUniqueOrThrow({ where: { id: peligroEvaluadoId }, include: { tarea: true } });
   const cat = await db.peligroCatalogo.create({ data: {
     clasificacion: p.clasificacion, descripcion: p.descripcion, efectosPosibles: p.efectosPosibles ?? "", ndDefault: p.nd, neDefault: p.ne, ncDefault: p.nc,
     controlesFuente: p.controlesFuente, controlesMedio: p.controlesMedio, controlesIndividuo: p.controlesIndividuo,
     medidaEliminacion: p.medidaEliminacion, medidaSustitucion: p.medidaSustitucion, medidaIngenieria: p.medidaIngenieria, medidaAdministrativa: p.medidaAdministrativa, medidaEpp: p.medidaEpp,
-    requisitoLegalEspecifico: p.requisitoLegal, validado: true,
+    requisitoLegalEspecifico: p.requisitoLegal, validado: true, empresaId: alcance === "empresa" ? empresaId : null,
   } });
   await db.peligroEvaluado.update({ where: { id: p.id }, data: { peligroId: cat.id } });
   if (p.tarea?.tareaTipoId) await db.tareaTipoPeligro.create({ data: { tareaTipoId: p.tarea.tareaTipoId, peligroId: cat.id } }).catch(() => null);
@@ -167,13 +181,14 @@ export async function guardarPeligroEnBiblioteca(empresaId: string, peligroEvalu
 }
 
 /** Guarda una tarea nueva (con sus peligros) como tarea tipo de la biblioteca. */
-export async function guardarTareaEnBiblioteca(empresaId: string, tareaId: string) {
+export async function guardarTareaEnBiblioteca(empresaId: string, tareaId: string, alcance: "empresa" | "general" = "empresa") {
+  const scope = alcance === "empresa" ? empresaId : null;
   const t = await db.tarea.findUniqueOrThrow({ where: { id: tareaId }, include: { peligros: true, zona: { include: { zonaTipo: true } } } });
-  const tt = await db.tareaTipo.create({ data: { nombre: t.nombre, actividad: t.actividad, rutinaria: t.rutinaria, altoRiesgo: t.altoRiesgo, validado: true, zonasPreferidas: t.zona?.zonaTipo ? [t.zona.zonaTipo.nombre] : [] } });
+  const tt = await db.tareaTipo.create({ data: { empresaId: scope, nombre: t.nombre, actividad: t.actividad, rutinaria: t.rutinaria, altoRiesgo: t.altoRiesgo, validado: true, zonasPreferidas: t.zona?.zonaTipo ? [t.zona.zonaTipo.nombre] : [] } });
   for (const p of t.peligros) {
     let pid = p.peligroId;
     if (!pid) {
-      const cat = await db.peligroCatalogo.create({ data: { clasificacion: p.clasificacion, descripcion: p.descripcion, efectosPosibles: p.efectosPosibles ?? "", ndDefault: p.nd, neDefault: p.ne, ncDefault: p.nc, medidaIngenieria: p.medidaIngenieria, medidaAdministrativa: p.medidaAdministrativa, medidaEpp: p.medidaEpp, validado: true } });
+      const cat = await db.peligroCatalogo.create({ data: { empresaId: scope, clasificacion: p.clasificacion, descripcion: p.descripcion, efectosPosibles: p.efectosPosibles ?? "", ndDefault: p.nd, neDefault: p.ne, ncDefault: p.nc, medidaIngenieria: p.medidaIngenieria, medidaAdministrativa: p.medidaAdministrativa, medidaEpp: p.medidaEpp, validado: true } });
       pid = cat.id;
       await db.peligroEvaluado.update({ where: { id: p.id }, data: { peligroId: pid } });
     }

@@ -12,6 +12,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription }
 import { Section } from "@/components/app/ui";
 import { Confirmar } from "@/components/app/confirmar";
 import * as A from "@/app/actions/biblioteca";
+import { Upload } from "lucide-react";
 
 type It = { id: string; tipo: string; nombre: string; descripcion: string; detalle: Record<string, unknown>; normas: string[]; validado: boolean };
 
@@ -21,23 +22,23 @@ const COLS: Record<string, { titulo: string; desc: string; campos: [string, stri
   CAPACITACION: { titulo: "Capacitaciones", desc: "Alimentan el programa de capacitación y el plan anual (Decreto 1072/2015 art. 2.2.4.6.11).", campos: [["dirigidoA", "Dirigido a"], ["intensidadHoras", "Horas"], ["periodicidad", "Periodicidad"]] },
 };
 
-export function CatalogosTab({ items }: { items: It[] }) {
+export function CatalogosTab({ items, empresaId }: { items: It[]; empresaId?: string }) {
   return (
     <Tabs defaultValue="EXAMEN">
       <TabsList variant="line">{Object.entries(COLS).map(([k, v]) => <TabsTrigger key={k} value={k}>{v.titulo} ({items.filter((i) => i.tipo === k).length})</TabsTrigger>)}</TabsList>
-      {Object.keys(COLS).map((k) => <TabsContent key={k} value={k} className="mt-4"><Lista tipo={k} items={items.filter((i) => i.tipo === k)} /></TabsContent>)}
+      {Object.keys(COLS).map((k) => <TabsContent key={k} value={k} className="mt-4"><Lista tipo={k} items={items.filter((i) => i.tipo === k)} empresaId={empresaId} /></TabsContent>)}
     </Tabs>
   );
 }
 
-function Lista({ tipo, items }: { tipo: string; items: It[] }) {
+function Lista({ tipo, items, empresaId }: { tipo: string; items: It[]; empresaId?: string }) {
   const cfg = COLS[tipo];
   const [pend, start] = useTransition();
   const [q, setQ] = useState("");
   const [nuevo, setNuevo] = useState<Record<string, string>>({ nombre: "", descripcion: "" });
   const lista = useMemo(() => items.filter((i) => !q || (i.nombre + i.descripcion).toLowerCase().includes(q.toLowerCase())), [items, q]);
   const run = (fn: () => Promise<unknown>, ok?: string) => start(async () => { const r = await fn(); if (r && typeof r === "object" && "error" in r) toast.error(String(r.error)); else if (ok) toast.success(ok); });
-  const guardar = (i: It, cambio: Partial<It> & { detalle?: Record<string, unknown> }) => run(() => A.guardarCatalogoItem({ id: i.id, tipo, nombre: cambio.nombre ?? i.nombre, descripcion: cambio.descripcion ?? i.descripcion, detalle: { ...i.detalle, ...(cambio.detalle ?? {}) }, normas: i.normas, validado: cambio.validado ?? i.validado }));
+  const guardar = (i: It, cambio: Partial<It> & { detalle?: Record<string, unknown> }) => run(() => A.guardarCatalogoItem({ id: i.id, empresaId, tipo, nombre: cambio.nombre ?? i.nombre, descripcion: cambio.descripcion ?? i.descripcion, detalle: { ...i.detalle, ...(cambio.detalle ?? {}) }, normas: i.normas, validado: cambio.validado ?? i.validado }));
   return (
     <div className="space-y-4">
       <Card size="sm">
@@ -47,7 +48,7 @@ function Lista({ tipo, items }: { tipo: string; items: It[] }) {
           <Input placeholder="Descripción" value={nuevo.descripcion} onChange={(e) => setNuevo({ ...nuevo, descripcion: e.target.value })} />
           {cfg.campos.map(([c, l]) => <Input key={c} placeholder={l} value={nuevo[c] ?? ""} onChange={(e) => setNuevo({ ...nuevo, [c]: e.target.value })} />)}
         </CardContent>
-        <CardFooter><Button size="sm" disabled={!nuevo.nombre || pend} onClick={() => { const { nombre, descripcion, ...detalle } = nuevo; run(() => A.guardarCatalogoItem({ tipo, nombre, descripcion, detalle }), "Agregado al catálogo"); setNuevo({ nombre: "", descripcion: "" }); }}><Plus /> Agregar</Button></CardFooter>
+        <CardFooter><Button size="sm" disabled={!nuevo.nombre || pend} onClick={() => { const { nombre, descripcion, ...detalle } = nuevo; run(() => A.guardarCatalogoItem({ tipo, nombre, descripcion, detalle, empresaId }), "Agregado al catálogo"); setNuevo({ nombre: "", descripcion: "" }); }}><Plus /> Agregar</Button></CardFooter>
       </Card>
       <Section title={cfg.titulo} actions={<InputGroup className="w-72"><InputGroupAddon><Search /></InputGroupAddon><InputGroupInput placeholder="Buscar…" value={q} onChange={(e) => setQ(e.target.value)} /></InputGroup>} contentClassName="px-0">
         <Table className="[&_td]:whitespace-normal [&_td]:align-top">
@@ -59,7 +60,7 @@ function Lista({ tipo, items }: { tipo: string; items: It[] }) {
                 <TableCell className="min-w-64"><Input className="h-7" defaultValue={i.descripcion} onBlur={(e) => e.target.value !== i.descripcion && guardar(i, { descripcion: e.target.value })} /></TableCell>
                 {cfg.campos.map(([c]) => <TableCell key={c}><Input className="h-7" defaultValue={String(i.detalle[c] ?? "")} onBlur={(e) => e.target.value !== String(i.detalle[c] ?? "") && guardar(i, { detalle: { [c]: e.target.value } })} /></TableCell>)}
                 <TableCell><Switch checked={i.validado} onCheckedChange={(v) => guardar(i, { validado: v })} aria-label="Validado" /></TableCell>
-                <TableCell className="pr-6"><Confirmar trigger={<Button size="icon-xs" variant="ghost" aria-label="Eliminar" />} titulo={`Eliminar “${i.nombre}”`} descripcion="Los peligros que lo mencionan conservan el texto." destructivo accion="Eliminar" onConfirm={() => run(() => A.eliminarCatalogoItem(i.id))}><Trash2 /></Confirmar></TableCell>
+                <TableCell className="pr-6 whitespace-nowrap">{empresaId && <Button size="icon-xs" variant="ghost" aria-label="Publicar en general" title="Publicar en general" onClick={() => run(() => A.publicarEnGeneral("catalogo", i.id), "Publicado en el catálogo general")}><Upload /></Button>}<Confirmar trigger={<Button size="icon-xs" variant="ghost" aria-label="Eliminar" />} titulo={`Eliminar “${i.nombre}”`} descripcion="Los peligros que lo mencionan conservan el texto." destructivo accion="Eliminar" onConfirm={() => run(() => A.eliminarCatalogoItem(i.id))}><Trash2 /></Confirmar></TableCell>
               </TableRow>
             ))}
           </TableBody>

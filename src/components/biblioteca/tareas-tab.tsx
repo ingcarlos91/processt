@@ -16,13 +16,14 @@ import { Confirmar } from "@/components/app/confirmar";
 import { Ayuda } from "@/components/app/ayuda";
 import { CLASIFICACIONES, CLASIFICACION_ETIQUETA } from "@/lib/gtc45";
 import * as A from "@/app/actions/biblioteca";
+import { Upload } from "lucide-react";
 
 type T = { id: string; nombre: string; actividad: string; rutinaria: boolean; altoRiesgo: string | null; zonasPreferidas: string[]; validado: boolean; peligroIds: string[]; usos: number; enCargos: number };
 type P = { id: string; clasificacion: string; descripcion: string };
 type Z = { id: string; nombre: string };
 const ALTO = [["", "No"], ["alturas", "Alturas"], ["confinado", "Espacio confinado"], ["electrico", "Eléctrico"], ["izaje", "Izaje de cargas"], ["caliente", "Trabajo en caliente"]];
 
-export function TareasTab({ tareas, peligros, zonas }: { tareas: T[]; peligros: P[]; zonas: Z[] }) {
+export function TareasTab({ tareas, peligros, zonas, empresaId }: { tareas: T[]; peligros: (P & { propio?: boolean })[]; zonas: Z[]; empresaId?: string }) {
   const [pend, start] = useTransition();
   const [q, setQ] = useState("");
   const [abierta, setAbierta] = useState<string | null>(null);
@@ -34,13 +35,13 @@ export function TareasTab({ tareas, peligros, zonas }: { tareas: T[]; peligros: 
   return (
     <div className="space-y-4">
       <Card size="sm">
-        <CardHeader><CardTitle className="text-sm flex items-center gap-1">Nueva tarea tipo <Ayuda ayuda={{ titulo: "Tarea tipo", que: "Una actividad concreta que hace un trabajador (por ejemplo, “Recibo y descargue de mercancía”).", para: "Cada tarea trae sus peligros. Al asignarla a un cargo en cualquier empresa, sus peligros entran a la matriz con los valores sugeridos.", ejemplo: "Limpieza de tanques de agua" }} /></CardTitle></CardHeader>
+        <CardHeader><CardTitle className="text-sm flex items-center gap-1">{empresaId ? "Nueva tarea propia de esta empresa" : "Nueva tarea tipo"} <Ayuda ayuda={{ titulo: "Tarea tipo", que: "Una actividad concreta que hace un trabajador (por ejemplo, “Recibo y descargue de mercancía”).", para: "Cada tarea trae sus peligros. Al asignarla a un cargo en cualquier empresa, sus peligros entran a la matriz con los valores sugeridos.", ejemplo: "Limpieza de tanques de agua" }} /></CardTitle></CardHeader>
         <CardContent className="grid md:grid-cols-[1fr_1fr_200px] gap-2">
           <Input placeholder="Nombre de la tarea" value={nueva.nombre} onChange={(e) => setNueva({ ...nueva, nombre: e.target.value })} />
           <Input placeholder="Actividad (agrupa tareas en la matriz)" value={nueva.actividad} onChange={(e) => setNueva({ ...nueva, actividad: e.target.value })} />
           <NativeSelect className="w-full" value={nueva.altoRiesgo} onChange={(e) => setNueva({ ...nueva, altoRiesgo: e.target.value })}>{ALTO.map(([v, l]) => <NativeSelectOption key={v} value={v}>{v ? `Alto riesgo: ${l}` : "Sin tarea de alto riesgo"}</NativeSelectOption>)}</NativeSelect>
         </CardContent>
-        <CardFooter><Button size="sm" disabled={!nueva.nombre || pend} onClick={() => run(async () => { const r = await A.crearTareaTipo({ ...nueva, altoRiesgo: nueva.altoRiesgo || null }); if (!("error" in r)) { setNueva({ nombre: "", actividad: "", altoRiesgo: "" }); setAbierta(r.id); } return r; }, "Tarea creada: agréguele sus peligros")}><Plus /> Crear tarea</Button></CardFooter>
+        <CardFooter><Button size="sm" disabled={!nueva.nombre || pend} onClick={() => run(async () => { const r = await A.crearTareaTipo({ ...nueva, altoRiesgo: nueva.altoRiesgo || null, empresaId }); if (!("error" in r)) { setNueva({ nombre: "", actividad: "", altoRiesgo: "" }); setAbierta(r.id); } return r; }, "Tarea creada: agréguele sus peligros")}><Plus /> Crear tarea</Button></CardFooter>
       </Card>
 
       <Section title={`Tareas tipo (${lista.length})`} actions={<InputGroup className="w-72"><InputGroupAddon><Search /></InputGroupAddon><InputGroupInput placeholder="Buscar tarea…" value={q} onChange={(e) => setQ(e.target.value)} /></InputGroup>} contentClassName="px-0">
@@ -83,9 +84,11 @@ export function TareasTab({ tareas, peligros, zonas }: { tareas: T[]; peligros: 
                         </div>
                         <NativeSelect className="w-full max-w-2xl" value="" onChange={(e) => e.target.value && run(() => A.vincularPeligroTarea(t.id, e.target.value), "Peligro agregado a la tarea")}>
                           <NativeSelectOption value="">+ Agregar peligro del catálogo…</NativeSelectOption>
-                          {CLASIFICACIONES.map((c) => <NativeSelectOptGroup key={c} label={CLASIFICACION_ETIQUETA[c]}>{peligros.filter((p) => p.clasificacion === c && !t.peligroIds.includes(p.id)).map((p) => <NativeSelectOption key={p.id} value={p.id}>{p.descripcion}</NativeSelectOption>)}</NativeSelectOptGroup>)}
+                          {peligros.some((p) => p.propio) && <NativeSelectOptGroup label="Propios de esta empresa">{peligros.filter((p) => p.propio && !t.peligroIds.includes(p.id)).map((p) => <NativeSelectOption key={p.id} value={p.id}>{p.descripcion}</NativeSelectOption>)}</NativeSelectOptGroup>}
+                          {CLASIFICACIONES.map((c) => <NativeSelectOptGroup key={c} label={CLASIFICACION_ETIQUETA[c]}>{peligros.filter((p) => !p.propio && p.clasificacion === c && !t.peligroIds.includes(p.id)).map((p) => <NativeSelectOption key={p.id} value={p.id}>{p.descripcion}</NativeSelectOption>)}</NativeSelectOptGroup>)}
                         </NativeSelect>
                       </Field>
+                      {empresaId && <Button size="xs" variant="secondary" className="mr-2" onClick={() => run(() => A.publicarEnGeneral("tarea", t.id), "Publicada en la biblioteca general")}><Upload /> Publicar en general</Button>}
                       <Confirmar trigger={<Button size="xs" variant="destructive" />} titulo={`Eliminar “${t.nombre}”`} descripcion="Solo se puede si ninguna empresa la usa." destructivo accion="Eliminar" onConfirm={() => run(() => A.eliminarTareaTipo(t.id), "Tarea eliminada")}><Trash2 /> Eliminar tarea</Confirmar>
                     </TableCell>
                   </TableRow>

@@ -90,6 +90,10 @@ model Empresa {
   eventos         Evento[]
   trabajadoresMes TrabajadoresMes[]
   comites         Comite[]
+  peligrosPropios PeligroCatalogo[] @relation("BibliotecaPeligroCatalogo")
+  tareasPropias   TareaTipo[]       @relation("BibliotecaTareaTipo")
+  cargosPropios   CargoTipo[]       @relation("BibliotecaCargoTipo")
+  catalogoPropio  CatalogoItem[]    @relation("BibliotecaCatalogoItem")
 
   @@map("empresa")
 }
@@ -264,6 +268,10 @@ model CargoTipo {
   peligros     CargoTipoPeligro[]
   cargos       Cargo[]
 
+  // Alcance: null = biblioteca general; con valor = solo para esa empresa.
+  empresaId String?  @map("empresa_id")
+  empresa   Empresa? @relation("BibliotecaCargoTipo", fields: [empresaId], references: [id], onDelete: Cascade)
+
   @@map("cargo_tipo")
 }
 
@@ -281,6 +289,10 @@ model TareaTipo {
   cargos          CargoTipoTarea[]
   procesosTipo    ProcesoTipoTarea[]
   tareas          Tarea[]
+
+  // Alcance: null = biblioteca general; con valor = solo para esa empresa.
+  empresaId String?  @map("empresa_id")
+  empresa   Empresa? @relation("BibliotecaTareaTipo", fields: [empresaId], references: [id], onDelete: Cascade)
 
   @@map("tarea_tipo")
 }
@@ -324,6 +336,10 @@ model PeligroCatalogo {
   zonas                    ZonaTipoPeligro[]
   cargos                   CargoTipoPeligro[]
   evaluados                PeligroEvaluado[]
+
+  // Alcance: null = biblioteca general; con valor = solo para esa empresa.
+  empresaId String?  @map("empresa_id")
+  empresa   Empresa? @relation("BibliotecaPeligroCatalogo", fields: [empresaId], references: [id], onDelete: Cascade)
 
   @@map("peligro_catalogo")
 }
@@ -712,7 +728,10 @@ model CatalogoItem {
   normas      String[] @default([])
   validado    Boolean  @default(false)
   creadoEn    DateTime @default(now()) @map("creado_en")
+  // Alcance: null = biblioteca general; con valor = solo para esa empresa.
+  empresaId   String?  @map("empresa_id")
+  empresa     Empresa? @relation("BibliotecaCatalogoItem", fields: [empresaId], references: [id], onDelete: Cascade)
 
-  @@unique([tipo, nombre])
+  @@unique([tipo, nombre, empresaId])
   @@map("catalogo_item")
 }

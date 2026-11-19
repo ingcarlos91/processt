@@ -35,8 +35,9 @@ export type Sugerencia = z.infer<typeof schema>;
 export async function sugerirTareasYPeligros(empresaId: string, cargoId: string, funciones: string): Promise<{ fuente: "ia" | "biblioteca"; sugerencia: Sugerencia }> {
   const e = await db.empresa.findUniqueOrThrow({ where: { id: empresaId }, include: { procesos: true, zonas: true, sectorTipo: true } });
   const cargo = await db.cargo.findUniqueOrThrow({ where: { id: cargoId } });
-  const tareasTipo = await db.tareaTipo.findMany({ include: { peligros: { include: { peligro: true } } } });
-  const catalogo = await db.peligroCatalogo.findMany();
+  const alcance = { OR: [{ empresaId: null }, { empresaId }] };
+  const tareasTipo = await db.tareaTipo.findMany({ where: alcance, include: { peligros: { include: { peligro: true } } } });
+  const catalogo = await db.peligroCatalogo.findMany({ where: alcance });
 
   if (!iaDisponible()) return { fuente: "biblioteca", sugerencia: porPalabrasClave(funciones, tareasTipo, e.procesos[0]?.nombre ?? "", e.zonas[0]?.nombre ?? "") };
 

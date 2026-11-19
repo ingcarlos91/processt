@@ -17,6 +17,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Item as UiItem, ItemActions, ItemContent, ItemDescription, ItemGroup, ItemTitle } from "@/components/ui/item";
 import { Confirmar, Pedir } from "@/components/app/confirmar";
+import { GuardarEnBiblioteca } from "@/components/app/guardar-biblioteca";
 import { ND, NE, NC, CLASIFICACIONES, CLASIFICACION_ETIQUETA, calcular, COLOR_NIVEL, explicarRiesgo } from "@/lib/gtc45";
 import { Porque } from "@/components/app/porque";
 import { Ayuda } from "@/components/app/ayuda";
@@ -37,8 +38,8 @@ type Item = { id: string; nombre: string };
 export function MatrizEditor(props: {
   empresaId: string; sectorTipoId: string | null; version: { numero: number; fecha: string; motivo: string } | null;
   procesos: Item[]; zonas: Item[]; cargos: Cargo[]; tareas: Tarea[]; peligros: Peligro[];
-  cargosTipo: { id: string; nombre: string; sectorTipoId: string | null }[]; tareasTipo: { id: string; nombre: string; actividad: string | null }[];
-  catalogo: { id: string; clasificacion: string; descripcion: string }[]; zonasTipo: Item[];
+  cargosTipo: { id: string; nombre: string; sectorTipoId: string | null; empresaId: string | null }[]; tareasTipo: { id: string; nombre: string; actividad: string | null; empresaId: string | null }[];
+  catalogo: { id: string; clasificacion: string; descripcion: string; empresaId: string | null }[]; zonasTipo: Item[];
 }) {
   const { empresaId, cargos, tareas, peligros, procesos, zonas } = props;
   const [pend, start] = useTransition();
@@ -182,7 +183,7 @@ function DetallePeligro({ p, empresaId, run }: { p: Peligro; empresaId: string; 
           {campo("medidaEpp", "Medida: EPP")}
           <div className="space-y-2">
             <Field orientation="horizontal"><Checkbox id={`rl-${p.id}`} defaultChecked={p.requisitoLegal} onCheckedChange={(v) => run(() => A.actualizarPeligro(empresaId, p.id, { requisitoLegal: !!v }))} /><FieldLabel htmlFor={`rl-${p.id}`} className="font-normal">Existe requisito legal específico</FieldLabel></Field>
-            {!p.peligroId && <Button size="sm" variant="outline" onClick={() => run(() => A.guardarPeligroEnBiblioteca(empresaId, p.id), "Peligro guardado en la biblioteca")}><BookmarkPlus /> Guardar en biblioteca</Button>}
+            {!p.peligroId && <GuardarEnBiblioteca que="este peligro" trigger={<Button size="sm" variant="outline" />} onGuardar={(a) => run(() => A.guardarPeligroEnBiblioteca(empresaId, p.id, a), a === "empresa" ? "Guardado en la biblioteca de esta empresa" : "Guardado en la biblioteca general")} />}
           </div>
         </div>
       </TableCell>
@@ -218,7 +219,7 @@ function Estructura({ empresaId, procesos, zonas, zonasTipo, run, pend }: { empr
 }
 
 function CargoCard({ c, empresaId, tareas, tareasTipo, cargosTipo, procesos, zonas, sectorTipoId, run, pend, activo, onFiltrar }: {
-  c: Cargo; empresaId: string; tareas: Tarea[]; tareasTipo: { id: string; nombre: string }[]; cargosTipo: { id: string; nombre: string; sectorTipoId: string | null }[];
+  c: Cargo; empresaId: string; tareas: Tarea[]; tareasTipo: { id: string; nombre: string; empresaId: string | null }[]; cargosTipo: { id: string; nombre: string; sectorTipoId: string | null; empresaId: string | null }[];
   procesos: Item[]; zonas: Item[]; sectorTipoId: string | null; run: Run; pend: boolean; activo: boolean; onFiltrar: () => void;
 }) {
   const [abierto, setAbierto] = useState(false);
@@ -249,8 +250,9 @@ function CargoCard({ c, empresaId, tareas, tareasTipo, cargosTipo, procesos, zon
             </div>
             <NativeSelect className="w-full" defaultValue="" onChange={(e) => e.target.value && run(() => A.aplicarTipo(empresaId, c.id, e.target.value), "Tareas y peligros del cargo tipo agregados")}>
               <NativeSelectOption value="">Aplicar tareas de un cargo tipo…</NativeSelectOption>
-              {cargosTipo.filter((t) => !sectorTipoId || t.sectorTipoId === sectorTipoId).map((t) => <NativeSelectOption key={t.id} value={t.id}>{t.nombre}</NativeSelectOption>)}
-              <NativeSelectOptGroup label="Otros sectores">{cargosTipo.filter((t) => sectorTipoId && t.sectorTipoId !== sectorTipoId).map((t) => <NativeSelectOption key={t.id} value={t.id}>{t.nombre}</NativeSelectOption>)}</NativeSelectOptGroup>
+              {cargosTipo.some((t) => t.empresaId) && <NativeSelectOptGroup label="Propios de esta empresa">{cargosTipo.filter((t) => t.empresaId).map((t) => <NativeSelectOption key={t.id} value={t.id}>{t.nombre}</NativeSelectOption>)}</NativeSelectOptGroup>}
+              {cargosTipo.filter((t) => !t.empresaId && (!sectorTipoId || t.sectorTipoId === sectorTipoId)).map((t) => <NativeSelectOption key={t.id} value={t.id}>{t.nombre}</NativeSelectOption>)}
+              <NativeSelectOptGroup label="Otros sectores">{cargosTipo.filter((t) => !t.empresaId && sectorTipoId && t.sectorTipoId !== sectorTipoId).map((t) => <NativeSelectOption key={t.id} value={t.id}>{t.nombre}</NativeSelectOption>)}</NativeSelectOptGroup>
             </NativeSelect>
 
             <Field>
@@ -263,7 +265,7 @@ function CargoCard({ c, empresaId, tareas, tareasTipo, cargosTipo, procesos, zon
                       <ItemDescription className="text-[11px]">{procesos.find((p) => p.id === t.procesoId)?.nombre ?? "Sin proceso"} · {zonas.find((z) => z.id === t.zonaId)?.nombre ?? "Sin zona"}{t.altoRiesgo ? ` · alto riesgo: ${t.altoRiesgo}` : ""}</ItemDescription>
                     </ItemContent>
                     <ItemActions className="gap-0">
-                      {!t.tareaTipoId && <Button variant="ghost" size="icon-xs" aria-label="Guardar en biblioteca" onClick={() => run(() => A.guardarTareaEnBiblioteca(empresaId, t.id), "Tarea guardada en la biblioteca")}><BookmarkPlus /></Button>}
+                      {!t.tareaTipoId && <GuardarEnBiblioteca que="esta tarea" trigger={<Button variant="ghost" size="icon-xs" aria-label="Guardar en biblioteca" />} onGuardar={(a) => run(() => A.guardarTareaEnBiblioteca(empresaId, t.id, a), a === "empresa" ? "Tarea guardada en la biblioteca de esta empresa" : "Tarea guardada en la biblioteca general")} />}
                       <Button variant="ghost" size="icon-xs" aria-label="Quitar del cargo" onClick={() => run(() => A.quitarTarea(empresaId, c.id, t.id))}><X /></Button>
                     </ItemActions>
                   </UiItem>
@@ -273,7 +275,8 @@ function CargoCard({ c, empresaId, tareas, tareasTipo, cargosTipo, procesos, zon
                 <NativeSelect className="w-full" value={tt} onChange={(e) => setTt(e.target.value)}>
                   <NativeSelectOption value="">Agregar tarea…</NativeSelectOption>
                   {otras.length > 0 && <NativeSelectOptGroup label="Tareas de otros cargos">{otras.map((t) => <NativeSelectOption key={t.id} value={`e:${t.id}`}>{t.nombre}</NativeSelectOption>)}</NativeSelectOptGroup>}
-                  <NativeSelectOptGroup label="Biblioteca">{tareasTipo.map((t) => <NativeSelectOption key={t.id} value={`b:${t.id}`}>{t.nombre}</NativeSelectOption>)}</NativeSelectOptGroup>
+                  {tareasTipo.some((t) => t.empresaId) && <NativeSelectOptGroup label="Biblioteca de esta empresa">{tareasTipo.filter((t) => t.empresaId).map((t) => <NativeSelectOption key={t.id} value={`b:${t.id}`}>{t.nombre}</NativeSelectOption>)}</NativeSelectOptGroup>}
+                  <NativeSelectOptGroup label="Biblioteca general">{tareasTipo.filter((t) => !t.empresaId).map((t) => <NativeSelectOption key={t.id} value={`b:${t.id}`}>{t.nombre}</NativeSelectOption>)}</NativeSelectOptGroup>
                 </NativeSelect>
                 <Button size="icon" variant="outline" aria-label="Agregar tarea" disabled={!tt || pend} onClick={() => { const [k, id] = tt.split(":"); run(() => (k === "e" ? A.vincularTarea(empresaId, c.id, id) : A.agregarTareaDeBiblioteca(empresaId, c.id, id))); setTt(""); }}><Plus /></Button>
               </div>
@@ -308,7 +311,10 @@ function CargoCard({ c, empresaId, tareas, tareasTipo, cargosTipo, procesos, zon
                 </CardFooter>
               </Card>
             )}
+            <div className="flex gap-2">
+              <GuardarEnBiblioteca que="este cargo con sus tareas" trigger={<Button size="xs" variant="outline" />} onGuardar={(a) => run(() => A.guardarCargoEnBiblioteca(empresaId, c.id, a), a === "empresa" ? "Cargo guardado en la biblioteca de esta empresa" : "Cargo guardado en la biblioteca general")} />
             <Confirmar trigger={<Button size="xs" variant="destructive" />} titulo={`Eliminar el cargo ${c.nombre}`} descripcion="Se eliminan sus tareas exclusivas y los peligros asociados." accion="Eliminar" destructivo onConfirm={() => run(() => A.eliminarCargo(empresaId, c.id))}><Trash2 /> Eliminar cargo</Confirmar>
+            </div>
           </CardContent>
         </CollapsibleContent>
       </Card>
@@ -316,7 +322,7 @@ function CargoCard({ c, empresaId, tareas, tareasTipo, cargosTipo, procesos, zon
   );
 }
 
-function NuevoCargo({ empresaId, cargosTipo, sectorTipoId, run, pend }: { empresaId: string; cargosTipo: { id: string; nombre: string; sectorTipoId: string | null }[]; sectorTipoId: string | null; run: Run; pend: boolean }) {
+function NuevoCargo({ empresaId, cargosTipo, sectorTipoId, run, pend }: { empresaId: string; cargosTipo: { id: string; nombre: string; sectorTipoId: string | null; empresaId: string | null }[]; sectorTipoId: string | null; run: Run; pend: boolean }) {
   const [nombre, setNombre] = useState("");
   const [n, setN] = useState(1);
   const [tipo, setTipo] = useState("");
@@ -330,8 +336,9 @@ function NuevoCargo({ empresaId, cargosTipo, sectorTipoId, run, pend }: { empres
         </div>
         <NativeSelect className="w-full" value={tipo} onChange={(e) => { setTipo(e.target.value); if (!nombre) setNombre(cargosTipo.find((t) => t.id === e.target.value)?.nombre.split(" / ")[0] ?? ""); }}>
           <NativeSelectOption value="">Tipo de cargo (opcional)…</NativeSelectOption>
-          {cargosTipo.filter((t) => !sectorTipoId || t.sectorTipoId === sectorTipoId).map((t) => <NativeSelectOption key={t.id} value={t.id}>{t.nombre}</NativeSelectOption>)}
-          <NativeSelectOptGroup label="Otros sectores">{cargosTipo.filter((t) => sectorTipoId && t.sectorTipoId !== sectorTipoId).map((t) => <NativeSelectOption key={t.id} value={t.id}>{t.nombre}</NativeSelectOption>)}</NativeSelectOptGroup>
+          {cargosTipo.some((t) => t.empresaId) && <NativeSelectOptGroup label="Propios de esta empresa">{cargosTipo.filter((t) => t.empresaId).map((t) => <NativeSelectOption key={t.id} value={t.id}>{t.nombre}</NativeSelectOption>)}</NativeSelectOptGroup>}
+              {cargosTipo.filter((t) => !t.empresaId && (!sectorTipoId || t.sectorTipoId === sectorTipoId)).map((t) => <NativeSelectOption key={t.id} value={t.id}>{t.nombre}</NativeSelectOption>)}
+          <NativeSelectOptGroup label="Otros sectores">{cargosTipo.filter((t) => !t.empresaId && sectorTipoId && t.sectorTipoId !== sectorTipoId).map((t) => <NativeSelectOption key={t.id} value={t.id}>{t.nombre}</NativeSelectOption>)}</NativeSelectOptGroup>
         </NativeSelect>
       </CardContent>
       <CardFooter>
@@ -341,7 +348,7 @@ function NuevoCargo({ empresaId, cargosTipo, sectorTipoId, run, pend }: { empres
   );
 }
 
-function AgregarPeligro({ empresaId, catalogo, tareas, zonas, cargos, run, pend }: { empresaId: string; catalogo: { id: string; clasificacion: string; descripcion: string }[]; tareas: Tarea[]; zonas: Item[]; cargos: Cargo[]; run: Run; pend: boolean }) {
+function AgregarPeligro({ empresaId, catalogo, tareas, zonas, cargos, run, pend }: { empresaId: string; catalogo: { id: string; clasificacion: string; descripcion: string; empresaId: string | null }[]; tareas: Tarea[]; zonas: Item[]; cargos: Cargo[]; run: Run; pend: boolean }) {
   const [origen, setOrigen] = useState<"tarea" | "zona" | "cargo">("tarea");
   const [ref, setRef] = useState("");
   const [pid, setPid] = useState("");
@@ -354,7 +361,8 @@ function AgregarPeligro({ empresaId, catalogo, tareas, zonas, cargos, run, pend 
         <NativeSelect className="w-64" value={ref} onChange={(e) => setRef(e.target.value)}><NativeSelectOption value="">Seleccione…</NativeSelectOption>{opciones.map((o) => <NativeSelectOption key={o.id} value={o.id}>{o.nombre}</NativeSelectOption>)}</NativeSelect>
         <NativeSelect className="flex-1 min-w-72" value={pid} onChange={(e) => setPid(e.target.value)}>
           <NativeSelectOption value="">Peligro…</NativeSelectOption>
-          {CLASIFICACIONES.map((c) => <NativeSelectOptGroup key={c} label={CLASIFICACION_ETIQUETA[c]}>{catalogo.filter((p) => p.clasificacion === c).map((p) => <NativeSelectOption key={p.id} value={p.id}>{p.descripcion}</NativeSelectOption>)}</NativeSelectOptGroup>)}
+          {catalogo.some((p) => p.empresaId) && <NativeSelectOptGroup label="Propios de esta empresa">{catalogo.filter((p) => p.empresaId).map((p) => <NativeSelectOption key={p.id} value={p.id}>{p.descripcion}</NativeSelectOption>)}</NativeSelectOptGroup>}
+          {CLASIFICACIONES.map((c) => <NativeSelectOptGroup key={c} label={CLASIFICACION_ETIQUETA[c]}>{catalogo.filter((p) => !p.empresaId && p.clasificacion === c).map((p) => <NativeSelectOption key={p.id} value={p.id}>{p.descripcion}</NativeSelectOption>)}</NativeSelectOptGroup>)}
         </NativeSelect>
         <Button disabled={!ref || !pid || pend} onClick={() => { run(() => A.agregarPeligro(empresaId, origen, ref, pid), "Peligro agregado"); setPid(""); }}><Plus /> Agregar</Button>
       </CardContent>

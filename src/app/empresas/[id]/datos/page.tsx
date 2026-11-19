@@ -11,7 +11,7 @@ export default async function Datos({ params }: PageProps<"/empresas/[id]/datos"
   const [e, sectores, cargosTipo, ciius] = await Promise.all([
     db.empresa.findUniqueOrThrow({ where: { id }, include: { sedes: true, cargos: true } }),
     db.sectorTipo.findMany({ orderBy: { nombre: "asc" }, select: { id: true, nombre: true, ciius: true } }),
-    db.cargoTipo.findMany({ orderBy: { nombre: "asc" }, select: { id: true, nombre: true, sectorTipoId: true } }),
+    db.cargoTipo.findMany({ where: { OR: [{ empresaId: null }, { empresaId: id }] }, orderBy: { nombre: "asc" }, select: { id: true, nombre: true, sectorTipoId: true } }),
     db.ciiuClaseRiesgo.findMany({ orderBy: { codigo: "asc" }, select: { codigo: true, descripcion: true, claseRiesgo: true } }),
   ]);
   const inicial: IntakeData = {
