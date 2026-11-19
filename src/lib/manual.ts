@@ -137,7 +137,8 @@ export const MANUAL: SeccionManual[] = [
         { nombre: "Descargar todo (ZIP)", hace: "Todos los documentos en Word por carpetas, con la matriz y la evaluación en Excel." },
       ] },
       { titulo: "Faltan datos", que: "Tarjetas por tema con lo que falta para que los documentos salgan completos y en qué documento se usa. Al guardar esos datos, los documentos se actualizan solos." },
-      { titulo: "Tabla por carpeta", que: "Cada documento con su estado (borrador, firmado), versión y por qué aplica.", botones: [
+      { titulo: "Filtrar por estado", que: "Resumen de cuántos documentos hay en cada estado; pulse uno para ver solo esos. Estados: Sin generar, Por revisar (cambiaron los datos después de editarlo), Borrador (sin revisar), Aprobado (listo para firmar), Firmado (firmado de la versión vigente) y Volver a firmar (cambió después de firmarse). Pase el mouse sobre el estado para ver el siguiente paso." },
+      { titulo: "Tabla por carpeta", que: "Cada documento con su versión, su estado y por qué aplica (pase el mouse sobre el nombre).", botones: [
         { nombre: "Ver y editar", hace: "Abre el documento por secciones para revisarlo, editarlo y subir el firmado." },
         { nombre: "Descargar en Word", hace: "Descarga ese documento con logo, encabezado y pie." },
       ] },
@@ -151,6 +152,7 @@ export const MANUAL: SeccionManual[] = [
     resumen: "Un documento dividido en secciones. El sistema redacta cada sección; usted puede editarla y su edición se conserva al regenerar.",
     partes: [
       { titulo: "Barra superior", que: "Acciones del documento.", botones: [
+        { nombre: "Estado y Marcar como aprobado", hace: "Muestra el estado del documento. Cuando lo haya revisado, márquelo como aprobado; el estado Firmado se pone solo al subir el firmado." },
         { nombre: "Regenerar", hace: "Vuelve a llenar el documento con los datos actuales; sus ediciones manuales se conservan." },
         { nombre: "Word", hace: "Descarga el documento para imprimir y firmar." },
         { nombre: "Subir firmado", hace: "Sube el PDF o la foto del documento firmado: queda en estado Firmado y en el expediente." },

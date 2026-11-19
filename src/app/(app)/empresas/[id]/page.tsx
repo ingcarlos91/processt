@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { estadoDocumento } from "@/lib/estado-documento";
 import { AlertTriangle, Check, FileText, ListChecks, ShieldAlert, CalendarDays } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { db } from "@/lib/db";
@@ -22,7 +23,7 @@ export default async function Resumen({ params }: PageProps<"/empresas/[id]">) {
   const e = await db.empresa.findUniqueOrThrow({
     where: { id },
     include: {
-      evaluaciones: { orderBy: { fecha: "desc" }, take: 1 }, documentos: { select: { estado: true, secciones: { select: { requiereRevision: true } } } },
+      evaluaciones: { orderBy: { fecha: "desc" }, take: 1 }, documentos: { select: { estado: true, version: true, secciones: { select: { requiereRevision: true } }, archivos: { where: { activo: true, tipo: "DOCUMENTO_FIRMADO" }, orderBy: { subidoEn: "desc" }, take: 1, select: { documentoVersion: true } } } },
       actividades: { where: { anio: { in: [new Date().getFullYear(), new Date().getFullYear() + 1] } } }, peligros: { select: { nd: true, ne: true, nc: true, estado: true } }, comites: true, cargos: true,
     },
   });
@@ -67,7 +68,11 @@ export default async function Resumen({ params }: PageProps<"/empresas/[id]">) {
         <Stat label="Última evaluación" value={puntaje != null && ev?.valoracion ? `${puntaje}%` : "—"} hint={ev?.valoracion ?? "Sin evaluación cerrada"} tone={ev?.valoracion === "ACEPTABLE" ? "ok" : ev?.valoracion === "CRÍTICO" ? "bad" : ev?.valoracion ? "warn" : undefined} />
         <Stat label="Plan anual" value={e.actividades.length ? `${Math.round((ej / e.actividades.length) * 100)}%` : "—"} hint={`${ej} de ${e.actividades.length} actividades`} />
         <Stat porque="Son los riesgos de nivel I y II según la GTC 45: “no aceptables”. Deben intervenirse primero y pasan al plan anual." normas={["GTC 45", "Decreto 1072/2015 art. 2.2.4.6.24"]} label="Riesgos prioritarios (I y II)" value={niveles.filter((n) => n === "I" || n === "II").length} hint={`${niveles.length} peligros en la matriz`} tone={niveles.includes("I") ? "bad" : undefined} />
-        <Stat label="Documentos" value={e.documentos.length} hint={`${e.documentos.filter((d) => d.estado !== "BORRADOR").length} aprobados o firmados de ${rr.documentos.length} aplicables`} />
+        <Stat label="Documentos" value={`${e.documentos.length} / ${rr.documentos.length}`} hint={(() => {
+          const est = e.documentos.map((d) => estadoDocumento({ estado: d.estado, version: d.version, firmadoVersion: d.archivos[0]?.documentoVersion, revisar: d.secciones.some((x) => x.requiereRevision) }));
+          const n = (k: string) => est.filter((x) => x === k).length;
+          return `${n("firmado")} firmados · ${n("aprobado")} aprobados · ${n("borrador") + n("por_revisar")} en borrador${n("volver_a_firmar") ? ` · ${n("volver_a_firmar")} por volver a firmar` : ""}`;
+        })()} />
       </div>
 
       {alertas.length > 0 && (

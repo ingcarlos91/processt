@@ -1,15 +1,16 @@
 "use client";
+import { EstadoDocumento } from "@/components/documentos/estado-documento";
+import { estadoDocumento } from "@/lib/estado-documento";
 import { BotonDescarga } from "@/components/app/boton-descarga";
 import Link from "next/link";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
-import { ArrowLeft, Download, PenLine, RefreshCw, RotateCcw, Check, Save, Upload } from "lucide-react";
+import { ArrowLeft, CheckCheck, Download, PenLine, RefreshCw, RotateCcw, Check, Save, Upload } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertAction, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
 import { NormaRef } from "@/components/app/ui";
 import * as A from "@/app/actions/sgsst";
 import { SubirArchivo, ListaArchivos, type ArchivoUI } from "@/components/app/adjuntos";
@@ -22,6 +23,7 @@ export function DocumentoEditor({ empresaId, doc, normas, secciones, firmados }:
   empresaId: string; doc: { id: string; codigo: string; nombre: string; version: number; estado: string; generadoEn: string; estandares: string[] }; normas: string[]; secciones: Sec[]; firmados: ArchivoUI[];
 }) {
   const ultimoFirmado = firmados.find((f) => f.activo);
+  const estadoEf = estadoDocumento({ estado: doc.estado, version: doc.version, firmadoVersion: ultimoFirmado?.documentoVersion, revisar: secciones.some((x) => x.revisar) });
   const [pend, start] = useTransition();
   const run = (fn: () => Promise<unknown>, ok?: string) => start(async () => { await fn(); if (ok) toast.success(ok); });
   return (
@@ -29,9 +31,9 @@ export function DocumentoEditor({ empresaId, doc, normas, secciones, firmados }:
       <div className="flex flex-wrap items-center gap-2">
         <Link href={`/empresas/${empresaId}/documentos`} className={buttonVariants({ variant: "ghost", size: "sm" })}><ArrowLeft /> Documentos</Link>
         <div className="flex-1" />
-        <NativeSelect value={doc.estado} onChange={(e) => run(() => A.cambiarEstadoDocumento(empresaId, doc.id, e.target.value as "BORRADOR"), "Estado actualizado")}>
-          <NativeSelectOption value="BORRADOR">Borrador</NativeSelectOption><NativeSelectOption value="APROBADO">Aprobado</NativeSelectOption><NativeSelectOption value="FIRMADO">Firmado</NativeSelectOption>
-        </NativeSelect>
+        <EstadoDocumento estado={estadoEf} version={doc.version} firmadoVersion={ultimoFirmado?.documentoVersion} />
+        {(estadoEf === "borrador" || estadoEf === "por_revisar") && <Button variant="outline" disabled={pend || estadoEf === "por_revisar"} tooltip={estadoEf === "por_revisar" ? "Primero revise las secciones marcadas" : "Confirma que usted revisó el documento y está listo para firmar"} onClick={() => run(() => A.cambiarEstadoDocumento(empresaId, doc.id, "APROBADO"), "Documento aprobado: descárguelo, hágalo firmar y súbalo")}><CheckCheck /> Marcar como aprobado</Button>}
+        {estadoEf === "aprobado" && <Button variant="ghost" disabled={pend} tooltip="Vuelve a dejarlo en borrador para seguir revisándolo" onClick={() => run(() => A.cambiarEstadoDocumento(empresaId, doc.id, "BORRADOR"), "El documento volvió a borrador")}>Volver a borrador</Button>}
         <Button variant="outline" tooltip="Vuelve a llenar el documento con los datos actuales de la empresa; sus ediciones manuales se conservan" disabled={pend} onClick={() => run(() => A.regenerarDocumento(empresaId, doc.codigo), "Documento regenerado con los datos actuales")}><RefreshCw /> Regenerar</Button>
         <BotonDescarga href={`/api/empresas/${empresaId}/documentos/${doc.codigo}`} variant="outline" tooltip="Descargar en Word con logo, encabezado y pie, para imprimir y firmar"><Download /> Word</BotonDescarga>
         <SubirArchivo empresaId={empresaId} ctx={{ tipo: "DOCUMENTO_FIRMADO", documentoId: doc.id }} titulo="Subir firmado" trigger={<Button tooltip="Suba el PDF o la foto del documento ya firmado; queda en estado Firmado y en el expediente"><Upload /> Subir firmado</Button>} ayuda="Escanee o fotografíe el documento firmado y súbalo. El documento quedará en estado Firmado y entrará al expediente de la empresa." descripcionInicial={`${doc.codigo} ${doc.nombre} firmado`} />
