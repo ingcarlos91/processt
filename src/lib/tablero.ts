@@ -10,7 +10,7 @@ export type FilaEmpresa = {
   planTotal: number; planEjecutadas: number; planVencidas: number;
   docsAplicables: number; docsGenerados: number; docsFirmados: number; docsVolverFirmar: number;
   accidentesAnio: number; plazosVencidos: number; accionesVencidas: number; sugeridosMatriz: number; peligros: number; prioritarios: number;
-  matrizSinVersion: boolean; matrizVencida: boolean;
+  matrizSinVersion: boolean; matrizVencida: boolean; horasMes: number; contratoHorasMes: number | null;
   prioridad: number; motivos: string[];
 };
 
@@ -27,6 +27,8 @@ export async function tableroConsultora(hoy = new Date()) {
       acciones: { where: { estado: "abierta", fechaLimite: { lt: hoy } }, select: { id: true } },
       peligros: { select: { estado: true, nd: true, ne: true, nc: true } },
       matrizVersiones: { orderBy: { numero: "desc" }, take: 1, select: { fecha: true } },
+      contratoHorasMes: true,
+      visitas: { where: { fecha: { gte: new Date(Date.UTC(hoy.getUTCFullYear(), hoy.getUTCMonth(), 1)) } }, select: { horas: true } },
     },
   });
 
@@ -50,7 +52,7 @@ export async function tableroConsultora(hoy = new Date()) {
       docsAplicables: aplicables, docsGenerados: e.documentos.length, docsFirmados: estados.filter((x) => x === "firmado").length, docsVolverFirmar: estados.filter((x) => x === "volver_a_firmar").length,
       accidentesAnio: e.eventos.filter((x) => x.tipo === "AT" && x.fecha.getUTCFullYear() === anio).length, plazosVencidos, accionesVencidas: e.acciones.length,
       sugeridosMatriz: e.peligros.filter((p) => p.estado === "sugerido").length, peligros: aprobados.length, prioritarios,
-      matrizSinVersion: !ultimaV, matrizVencida, prioridad: 0, motivos: [],
+      matrizSinVersion: !ultimaV, matrizVencida, horasMes: e.visitas.reduce((s, v) => s + v.horas, 0), contratoHorasMes: e.contratoHorasMes, prioridad: 0, motivos: [],
     };
     const m: [boolean, number, string][] = [
       [plazosVencidos > 0, 10, `${plazosVencidos} plazo(s) de accidentes`],

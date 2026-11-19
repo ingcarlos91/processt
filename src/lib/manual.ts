@@ -304,6 +304,7 @@ export const MANUAL: SeccionManual[] = [
         { nombre: "✓ / editar / eliminar", hace: "Marca el recordatorio como hecho, lo edita o lo borra." },
       ] },
       { titulo: "Exportar a Google Calendar", que: "Descarga un archivo .ics con las fechas pendientes; impórtelo en Google Calendar, Outlook o el celular." },
+      { titulo: "Bitácora de visitas (en el planeador de cada empresa)", que: "Horas pactadas y valor mensual del contrato; cada visita o reunión con fecha, horas, quién atendió, actividades y compromisos. Muestra el avance de horas del mes y el valor por hora real; las visitas salen en el informe mensual y en el tablero.", botones: [{ nombre: "Registrar visita", hace: "Agrega una visita a la bitácora." }, { nombre: "Guardar (contrato)", hace: "Guarda las horas pactadas y el valor mensual." }] },
     ],
     consejos: ["Las fechas se calculan solas a partir de lo registrado: al cerrar una versión de la matriz o una autoevaluación, la próxima fecha se mueve un año."],
     relacionadas: ["plan", "accidentes", "comites"],

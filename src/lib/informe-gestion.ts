@@ -27,6 +27,7 @@ export async function informeGestion(empresaId: string, anio: number, mes: numbe
       documentos: { include: { secciones: { select: { requiereRevision: true } }, archivos: { where: { activo: true, tipo: "DOCUMENTO_FIRMADO" }, orderBy: { subidoEn: "desc" } } }, orderBy: { codigo: "asc" } },
       comites: { include: { archivos: { where: { activo: true } } } },
       trabajadoresMes: true,
+      visitas: { orderBy: { fecha: "asc" } },
     },
   });
   const nombreMes = `${MESES[mes - 1]} de ${anio}`;
@@ -98,6 +99,14 @@ export async function informeGestion(empresaId: string, anio: number, mes: numbe
 | Accidentes de trabajo en el mes | ${eventosMes.filter((x) => x.tipo === "AT").length} |
 | Documentos firmados | ${e.documentos.length ? `${barra((firmados / e.documentos.length) * 100)} (${firmados} de ${e.documentos.length})` : "—"} |
 | Acciones abiertas / vencidas | ${abiertas.length} / ${accVencidas.length} |
+
+## Visitas y acompañamiento de la consultora
+
+${(() => { const vs = e.visitas.filter((v) => enMes(v.fecha)); const h = vs.reduce((s, v) => s + v.horas, 0); return vs.length ? `${vs.length} visita(s) y ${h.toLocaleString("es-CO")} horas de asesoría${e.contratoHorasMes ? ` (${e.contratoHorasMes} horas pactadas al mes)` : ""}.
+
+| Fecha | Horas | Modalidad | Actividades | Compromisos |
+|---|---|---|---|---|
+${vs.map((v) => `| ${fecha(v.fecha)} | ${v.horas} | ${v.modalidad === "virtual" ? "Virtual" : "Presencial"} | ${c(v.actividades).replace(/ {2,}/g, " ")} | ${c(v.compromisos)} |`).join("\n")}` : "No se registraron visitas en el mes."; })()}
 
 ## Actividades del plan anual en ${MESES[mes - 1]}
 

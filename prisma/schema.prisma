@@ -101,30 +101,33 @@ model Empresa {
   creadoEn                 DateTime    @default(now()) @map("creado_en")
   actualizadoEn            DateTime    @updatedAt @map("actualizado_en")
 
-  sedes           Sede[]
-  zonas           Zona[]
-  procesos        Proceso[]
-  cargos          Cargo[]
-  tareas          Tarea[]
-  peligros        PeligroEvaluado[]
-  matrizVersiones MatrizVersion[]
-  evaluaciones    Evaluacion[]
-  documentos      Documento[]
-  actividades     ActividadPlan[]
-  evidencias      Evidencia[]
-  eventos         Evento[]
-  trabajadoresMes TrabajadoresMes[]
-  comites         Comite[]
-  peligrosPropios PeligroCatalogo[] @relation("BibliotecaPeligroCatalogo")
-  tareasPropias   TareaTipo[]       @relation("BibliotecaTareaTipo")
-  cargosPropios   CargoTipo[]       @relation("BibliotecaCargoTipo")
-  catalogoPropio  CatalogoItem[]    @relation("BibliotecaCatalogoItem")
-  usuarios        Usuario[]
-  acciones        Accion[]
-  recordatorios   Recordatorio[]
-  trabajadores    Trabajador[]
-  capacitaciones  Capacitacion[]
-  inspecciones    Inspeccion[]
+  sedes            Sede[]
+  zonas            Zona[]
+  procesos         Proceso[]
+  cargos           Cargo[]
+  tareas           Tarea[]
+  peligros         PeligroEvaluado[]
+  matrizVersiones  MatrizVersion[]
+  evaluaciones     Evaluacion[]
+  documentos       Documento[]
+  actividades      ActividadPlan[]
+  evidencias       Evidencia[]
+  eventos          Evento[]
+  trabajadoresMes  TrabajadoresMes[]
+  comites          Comite[]
+  peligrosPropios  PeligroCatalogo[] @relation("BibliotecaPeligroCatalogo")
+  tareasPropias    TareaTipo[]       @relation("BibliotecaTareaTipo")
+  cargosPropios    CargoTipo[]       @relation("BibliotecaCargoTipo")
+  catalogoPropio   CatalogoItem[]    @relation("BibliotecaCatalogoItem")
+  usuarios         Usuario[]
+  acciones         Accion[]
+  recordatorios    Recordatorio[]
+  trabajadores     Trabajador[]
+  capacitaciones   Capacitacion[]
+  inspecciones     Inspeccion[]
+  visitas          Visita[]
+  contratoHorasMes Float?            @map("contrato_horas_mes") // horas de asesoría pactadas al mes
+  contratoValorMes Int?              @map("contrato_valor_mes") // valor mensual del contrato (pesos)
 
   @@map("empresa")
 }
@@ -912,6 +915,23 @@ model Inspeccion {
 
   @@index([empresaId, fecha])
   @@map("inspeccion")
+}
+
+// Bitácora de visitas y reuniones de la consultora con el cliente (horas dedicadas).
+model Visita {
+  id          String   @id @default(cuid())
+  empresaId   String   @map("empresa_id")
+  empresa     Empresa  @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  fecha       DateTime
+  horas       Float    @default(1)
+  modalidad   String   @default("presencial") // presencial | virtual
+  atendio     String? // persona del cliente que atendió
+  actividades String
+  compromisos String?
+  creadoEn    DateTime @default(now()) @map("creado_en")
+
+  @@index([empresaId, fecha])
+  @@map("visita")
 }
 
 model TrabajadoresMes {

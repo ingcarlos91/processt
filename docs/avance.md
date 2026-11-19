@@ -68,6 +68,8 @@ IA opcional: agregar `AI_GATEWAY_API_KEY=...` en `.env`. Sin clave, “Sugerir t
 - Informe mensual de gestión en Word por empresa.
 - Trabajadores: importar desde Excel, exámenes (solo conceptos), entregas de EPP, capacitaciones con asistencia; alimentan FOR-01 (consolidado), FOR-02, MTZ-04, PRG-01 y el planeador.
 
+- Inspecciones (listas editables en Biblioteca, hallazgos a FOR-06, fotos, PRG-06, planeador). Entidades globales (EPS, AFP, ARL, escolaridad). Bitácora de visitas con contrato (horas y valor), en planeador, tablero e informe.
+
 ## Pendiente
 
 - PDF directo (hoy: Word; PDF desde Word o imprimir).

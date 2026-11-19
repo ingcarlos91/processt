@@ -3,7 +3,7 @@
 import { db } from "@/lib/db";
 import { plazos } from "@/lib/eventos";
 
-export type Categoria = "plan" | "comite" | "accidente" | "accion" | "matriz" | "evaluacion" | "responsable" | "examen" | "epp" | "inspeccion" | "recordatorio";
+export type Categoria = "plan" | "comite" | "accidente" | "accion" | "matriz" | "evaluacion" | "responsable" | "examen" | "epp" | "inspeccion" | "visita" | "recordatorio";
 export type EstadoFecha = "vencido" | "hoy" | "proximo" | "pendiente" | "hecho";
 
 export type Fecha = {
@@ -22,6 +22,7 @@ export const CATEGORIAS: Record<Categoria, { t: string; color: string }> = {
   examen: { t: "Exámenes médicos", color: "bg-pink-500" },
   epp: { t: "Reposición de EPP", color: "bg-lime-600" },
   inspeccion: { t: "Inspecciones", color: "bg-indigo-500" },
+  visita: { t: "Visitas realizadas", color: "bg-cyan-600" },
   recordatorio: { t: "Mis recordatorios", color: "bg-slate-500" },
 };
 
@@ -53,6 +54,7 @@ export async function fechasPlaneador({ empresaId, desde, hasta, hoy = new Date(
       evaluaciones: { orderBy: { fecha: "desc" }, take: 1, select: { fecha: true, anio: true } },
       recordatorios: true,
       inspecciones: { orderBy: { fecha: "desc" }, select: { lista: true, fecha: true } },
+      visitas: { where: { fecha: { gte: desde, lte: hasta } }, select: { id: true, fecha: true, horas: true, actividades: true } },
       trabajadores: { where: { activo: true }, select: { id: true, nombres: true, examenes: { orderBy: { fecha: "desc" }, take: 1, select: { id: true, proximo: true, tipo: true } }, entregasEpp: { where: { proximaReposicion: { not: null } }, orderBy: { fecha: "desc" }, select: { id: true, elemento: true, proximaReposicion: true } } } },
     },
   });
@@ -117,6 +119,7 @@ export async function fechasPlaneador({ empresaId, desde, hasta, hoy = new Date(
         if (ep.proximaReposicion && dentro(ep.proximaReposicion, false)) add({ id: `epp-${ep.id}`, fecha: iso(ep.proximaReposicion), titulo: `Reposición de EPP: ${ep.elemento} — ${t.nombres}`, categoria: "epp", estado: estadoDe(ep.proximaReposicion, false, hoy), normaRef: "Decreto 1072/2015 art. 2.2.4.6.24", href: `${base}/trabajadores` });
       }
     }
+    for (const v of e.visitas) add({ id: `vis-${v.id}`, fecha: iso(v.fecha), titulo: `Visita (${v.horas} h): ${v.actividades.split("\n")[0]}`, detalle: v.actividades, categoria: "visita", estado: "hecho", href: `${base}/planeador` });
     for (const rc of e.recordatorios) {
       if (dentro(rc.fecha, rc.hecho)) add({ id: `rec-${rc.id}`, recordatorioId: rc.id, fecha: iso(rc.fecha), titulo: rc.titulo, detalle: rc.notas ?? undefined, categoria: "recordatorio", estado: estadoDe(rc.fecha, rc.hecho, hoy), href: base });
     }

@@ -77,7 +77,7 @@ export default async function Home() {
           <Section title="Empresas" description="Pase el mouse sobre los datos para ver el detalle." contentClassName="px-0">
             <Table>
               <TableHeader>
-                <TableRow><TableHead className="pl-6">Empresa</TableHead><TableHead>Riesgo</TableHead><TableHead>Trab.</TableHead><TableHead>Nivel</TableHead><TableHead>Estándares</TableHead><TableHead>Plan anual</TableHead><TableHead>Matriz</TableHead><TableHead>Documentos firmados</TableHead><TableHead className="pr-6">Pendientes</TableHead></TableRow>
+                <TableRow><TableHead className="pl-6">Empresa</TableHead><TableHead>Riesgo</TableHead><TableHead>Trab.</TableHead><TableHead>Nivel</TableHead><TableHead>Estándares</TableHead><TableHead>Plan anual</TableHead><TableHead>Matriz</TableHead><TableHead>Documentos firmados</TableHead><TableHead>Horas del mes</TableHead><TableHead className="pr-6">Pendientes</TableHead></TableRow>
               </TableHeader>
               <TableBody>
                 {filas.map((e) => (
@@ -90,6 +90,7 @@ export default async function Home() {
                     <TableCell>{e.planTotal ? <Tip texto={`${e.planEjecutadas} de ${e.planTotal} actividades del año ejecutadas; ${e.planVencidas} vencidas`}><div className="w-24"><div className="text-xs">{pct(e.planEjecutadas, e.planTotal)}%</div><Progress value={pct(e.planEjecutadas, e.planTotal)} /></div></Tip> : <span className="text-xs text-muted-foreground">Sin plan este año</span>}</TableCell>
                     <TableCell className="text-xs"><Tip texto={`${e.peligros} peligros aprobados; ${e.prioritarios} en nivel I o II; ${e.sugeridosMatriz} sugeridos sin revisar`}><span>{e.peligros} · <span className={e.prioritarios ? "font-medium text-orange-700" : ""}>{e.prioritarios} prioritarios</span></span></Tip></TableCell>
                     <TableCell><Tip texto={`${e.docsGenerados} generados de ${e.docsAplicables} aplicables; ${e.docsVolverFirmar} por volver a firmar`}><div className="w-28"><div className="text-xs">{e.docsFirmados} / {e.docsAplicables}</div><Progress value={pct(e.docsFirmados, e.docsAplicables)} /></div></Tip></TableCell>
+                    <TableCell className="text-xs">{e.contratoHorasMes ? <Tip texto={`${e.horasMes} de ${e.contratoHorasMes} horas pactadas este mes`}><div className="w-20"><div>{e.horasMes} / {e.contratoHorasMes} h</div><Progress value={Math.min(100, (e.horasMes / e.contratoHorasMes) * 100)} /></div></Tip> : e.horasMes ? `${e.horasMes} h` : "—"}</TableCell>
                     <TableCell className="pr-6">{e.motivos.length ? <Tip texto={<ul>{e.motivos.map((m) => <li key={m}>• {m}</li>)}</ul>}><Badge variant={e.prioridad >= 8 ? "destructive" : "outline"}>{e.motivos.length}</Badge></Tip> : <Badge variant="secondary">Al día</Badge>}</TableCell>
                   </TableRow>
                 ))}
