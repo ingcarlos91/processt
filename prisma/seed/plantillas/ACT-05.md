@@ -15,11 +15,11 @@ El empleador debe conformar, capacitar, entrenar y dotar la brigada de prevenci�
 
 En {{empresa.ciudad}}, el {{integrantes.brigada.inicio}}, **{{empresa.razonSocial}}** conforma su brigada de emergencias con los siguientes integrantes voluntarios:
 
-| Nombre | Cédula | Cargo | Rol en la brigada | Firma |
+| Nombre | Documento | Cargo | Rol en la brigada | Firma |
 |---|---|---|---|---|
 {{#if integrantes.brigada.hayMiembros}}
 {{#each integrantes.brigada.miembros}}
-| {{nombre}} | {{cedula}} | {{cargo}} | {{rolTexto}} | |
+| {{nombre}} | {{doc}} | {{cargo}} | {{rolTexto}} | |
 {{/each}}
 {{else}}
 | | | | Jefe de brigada | |
@@ -50,4 +50,4 @@ Se recomienda al menos un brigadista por área y por turno.
 Botiquín tipo A o B, camilla con inmovilizadores, extintores según tipo de fuego, chalecos o brazaletes de identificación, linterna, pito o megáfono.
 
 ______________________________________
-**{{empresa.representanteLegal}}** — Representante Legal
+**{{empresa.representanteLegal}}** — Representante Legal — {{empresa.representanteDoc}}

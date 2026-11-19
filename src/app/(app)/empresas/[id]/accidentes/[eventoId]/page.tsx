@@ -44,7 +44,7 @@ export default async function Evento({ params }: PageProps<"/empresas/[id]/accid
         id: ev.id, tipo: ev.tipo, gravedad: ev.gravedad,
         datos: {
           tipo: ev.tipo, gravedad: ev.gravedad, fecha: iso(ev.fecha), hora: ev.hora ?? "", lugar: ev.lugar ?? "", descripcion: ev.descripcion ?? "",
-          trabajadorNombre: ev.trabajadorNombre ?? "", trabajadorCedula: ev.trabajadorCedula ?? "", vinculacion: ev.vinculacion ?? "", antiguedad: ev.antiguedad ?? "",
+          trabajadorNombre: ev.trabajadorNombre ?? "", trabajadorTipoDoc: ev.trabajadorTipoDoc ?? "CC", trabajadorCedula: ev.trabajadorCedula ?? "", vinculacion: ev.vinculacion ?? "", antiguedad: ev.antiguedad ?? "",
           cargoId: ev.cargoId ?? "", cargo: ev.cargo ?? "", tarea: ev.tarea ?? "", mecanismo: ev.mecanismo ?? "", agente: ev.agente ?? "", lesion: ev.lesion ?? "",
           parteCuerpo: ev.parteCuerpo ?? "", testigos: ev.testigos ?? "", diasIncapacidad: ev.diasIncapacidad, diasCargados: ev.diasCargados, casoNuevo: ev.casoNuevo,
         },

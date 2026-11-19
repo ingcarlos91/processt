@@ -38,3 +38,4 @@ Dada en {{empresa.ciudad}}, el {{fecha}}. Se revisará anualmente.
 ______________________________________
 **{{empresa.representanteLegal}}**
 Representante Legal
+{{empresa.representanteDoc}}

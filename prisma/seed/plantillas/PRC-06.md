@@ -50,4 +50,4 @@ Toda la información se maneja con reserva y como dato sensible conforme a la Le
 Fecha: {{fecha}}
 
 ______________________________________
-**{{empresa.representanteLegal}}** — Representante Legal
+**{{empresa.representanteLegal}}** — Representante Legal — {{empresa.representanteDoc}}

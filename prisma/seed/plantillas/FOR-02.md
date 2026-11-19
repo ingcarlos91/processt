@@ -9,7 +9,7 @@ normas: ["RES-1843-2025","RES-0312-2019"]
 ---
 ## Registro
 
-| N.º | Trabajador | Cédula | Cargo | Tipo de evaluación | Fecha | Concepto de aptitud | Restricciones / recomendaciones | Comunicado al trabajador (fecha) | Comunicado al jefe (fecha) | Acciones implementadas | Próximo control |
+| N.º | Trabajador | Documento | Cargo | Tipo de evaluación | Fecha | Concepto de aptitud | Restricciones / recomendaciones | Comunicado al trabajador (fecha) | Comunicado al jefe (fecha) | Acciones implementadas | Próximo control |
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | 1 | | | | | | | | | | | |
 | 2 | | | | | | | | | | | |

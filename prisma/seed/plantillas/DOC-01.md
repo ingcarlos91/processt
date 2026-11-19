@@ -45,7 +45,7 @@ Los objetivos son claros, medibles y cuantificables, adecuados al tamaño y acti
 ## Aprobación
 
 ______________________________________
-**{{empresa.representanteLegal}}** — Representante Legal
+**{{empresa.representanteLegal}}** — Representante Legal — {{empresa.representanteDoc}}
 
 ______________________________________
-**{{responsable.nombre}}** — Responsable del SG-SST
+**{{responsable.nombre}}** — Responsable del SG-SST — {{responsable.doc}}

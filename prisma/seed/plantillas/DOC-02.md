@@ -74,4 +74,4 @@ Quienes tienen responsabilidades en el SG-SST rendirán cuentas al menos una vez
 Fecha: {{fecha}}
 
 ______________________________________
-**{{empresa.representanteLegal}}** — Representante Legal
+**{{empresa.representanteLegal}}** — Representante Legal — {{empresa.representanteDoc}}

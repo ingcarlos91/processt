@@ -35,7 +35,7 @@ El responsable del SG-SST hará seguimiento mensual a la ejecución del plan y c
 ## Firmas
 
 ______________________________________
-**{{empresa.representanteLegal}}** — Representante Legal (empleador)
+**{{empresa.representanteLegal}}** — Representante Legal (empleador) — {{empresa.representanteDoc}}
 
 ______________________________________
-**{{responsable.nombre}}** — Responsable del SG-SST
+**{{responsable.nombre}}** — Responsable del SG-SST — {{responsable.doc}}

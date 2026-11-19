@@ -1,4 +1,5 @@
 import { unified } from "unified";
+import { RE_DOC } from "@/lib/documento-identidad";
 import remarkParse from "remark-parse";
 import remarkGfm from "remark-gfm";
 import remarkBreaks from "remark-breaks";
@@ -71,7 +72,7 @@ function bloqueFirmas(firmas: Firma[]) {
       new Paragraph({ children: [], spacing: { before: 900 } }),
       new Paragraph({ border: { top: { style: BorderStyle.SINGLE, size: 6, color: "000000", space: 4 } }, children: [new TextRun({ text: f.nombre || " ", bold: true })], spacing: { after: 0 } }),
       ...(f.cargo ? [new Paragraph({ children: [new TextRun({ text: f.cargo, size: 18 })], spacing: { after: 0 } })] : []),
-      new Paragraph({ children: [new TextRun({ text: f.cc || "C.C. ____________________", size: 18, color: "555555" })], spacing: { after: 120 } }),
+      new Paragraph({ children: [new TextRun({ text: f.cc || "Documento: ____________________", size: 18, color: "555555" })], spacing: { after: 120 } }),
     ] : [new Paragraph({ children: [] })],
   });
   const filas: TableRow[] = [];
@@ -92,9 +93,9 @@ function bloques(nodes: RootContent[], nivelLista = 0, ordenada = false): (Parag
       while (esFirma(nodes, i)) {
         const t = textoPlano((nodes[i + 1] as { children: PhrasingContent[] }).children).replace(/\u00a0/g, " ").trim();
         const partes = t.split(/\s+—\s+/).map((x) => x.trim()).filter(Boolean);
-        const cc = partes.find((x) => /^C\.?C\.?/i.test(x));
+        const cc = partes.find((x) => RE_DOC.test(x));
         const [nombre = "", ...resto] = partes.filter((x) => x !== cc);
-        firmas.push({ nombre, cargo: resto.join(" — "), cc: cc && !/C\.?C\.?\s*$/.test(cc) ? cc : "" });
+        firmas.push({ nombre, cargo: resto.join(" — "), cc: cc ?? "" });
         i += 2;
       }
       i--;

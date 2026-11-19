@@ -58,7 +58,7 @@ normas: ["DEC-1072-2015","RES-0312-2019"]
 Los resultados se documentan y divulgan al {{#if comites.copasst.esVigia}}Vigía de SST{{else}}COPASST{{/if}} y al responsable del SG-SST, quien define e implementa las acciones (art. 2.2.4.6.31, parágrafo).
 
 ______________________________________
-**{{empresa.representanteLegal}}** — Representante Legal
+**{{empresa.representanteLegal}}** — Representante Legal — {{empresa.representanteDoc}}
 
 ______________________________________
-**{{responsable.nombre}}** — Responsable del SG-SST
+**{{responsable.nombre}}** — Responsable del SG-SST — {{responsable.doc}}

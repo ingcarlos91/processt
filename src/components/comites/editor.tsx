@@ -2,7 +2,9 @@
 import Link from "next/link";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
-import { Plus, Trash2, FileText } from "lucide-react";
+import { Plus, Trash2, FileText, Pencil, X } from "lucide-react";
+import { CampoDocumento } from "@/components/app/campo-documento";
+import { abrevDoc } from "@/lib/documento-identidad";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -19,7 +21,7 @@ import { SubirArchivo, ListaArchivos, type ArchivoUI } from "@/components/app/ad
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import * as A from "@/app/actions/sgsst";
 
-type Miembro = { id: string; nombre: string; cedula: string; cargo: string; rol: string; representa: string };
+type Miembro = { id: string; nombre: string; tipoDoc: string; cedula: string; cargo: string; rol: string; representa: string };
 type Comite = { id: string; tipo: string; inicio: string; fin: string; normaRef: string; datos: Record<string, unknown>; actas: ArchivoUI[]; miembros: Miembro[] };
 
 const INFO: Record<string, { nombre: string; doc: string; desc: string }> = {
@@ -33,6 +35,7 @@ const ROLES = [["presidente", "Presidente"], ["secretario", "Secretario"], ["pri
 export function ComitesEditor({ empresaId, requeridos, comites, composicion, refs, porques }: { empresaId: string; requeridos: string[]; comites: Comite[]; composicion: string; refs: Record<string, string>; porques: Record<string, string> }) {
   const [, start] = useTransition();
   const run = (fn: () => Promise<unknown>, ok?: string) => start(async () => { await fn(); if (ok) toast.success(ok); });
+  const [editando, setEditando] = useState<{ id: string; nombre: string; tipoDoc: string; cedula: string; cargo: string } | null>(null);
   const hoy = new Date().toISOString().slice(0, 10);
   return (
     <div className="grid lg:grid-cols-2 gap-6 items-start">
@@ -63,11 +66,27 @@ export function ComitesEditor({ empresaId, requeridos, comites, composicion, ref
                     <TableBody>
                       {c.miembros.map((m) => (
                         <TableRow key={m.id}>
-                          <TableCell>{m.nombre}<div className="text-xs text-muted-foreground">{m.cedula}</div></TableCell>
-                          <TableCell>{m.cargo}</TableCell>
+                          {editando?.id === m.id ? (
+                            <>
+                              <TableCell className="space-y-1.5"><Input value={editando.nombre} onChange={(e) => setEditando({ ...editando, nombre: e.target.value })} /><CampoDocumento tipo={editando.tipoDoc} numero={editando.cedula} onTipo={(v) => setEditando({ ...editando, tipoDoc: v })} onNumero={(v) => setEditando({ ...editando, cedula: v })} /></TableCell>
+                              <TableCell><Input value={editando.cargo} onChange={(e) => setEditando({ ...editando, cargo: e.target.value })} /></TableCell>
+                            </>
+                          ) : (
+                            <>
+                              <TableCell>{m.nombre}<div className={m.cedula ? "text-xs text-muted-foreground" : "text-xs text-amber-700"}>{m.cedula ? `${abrevDoc(m.tipoDoc)} ${m.cedula}` : "Sin documento"}</div></TableCell>
+                              <TableCell>{m.cargo}</TableCell>
+                            </>
+                          )}
                           <TableCell>{ROLES.find((r) => r[0] === m.rol)?.[1] ?? m.rol}</TableCell>
                           <TableCell>{m.representa}</TableCell>
-                          <TableCell><Button size="icon-xs" variant="ghost" aria-label="Quitar" onClick={() => run(() => A.eliminarMiembro(empresaId, m.id))}><Trash2 /></Button></TableCell>
+                          <TableCell>
+                            <div className="flex justify-end gap-0.5">
+                              {editando?.id === m.id
+                                ? <><Button size="xs" onClick={() => { run(() => A.actualizarMiembro(empresaId, m.id, editando), "Integrante actualizado"); setEditando(null); }}>Guardar</Button><Button size="icon-xs" variant="ghost" aria-label="Cancelar" onClick={() => setEditando(null)}><X /></Button></>
+                                : <Button size="icon-xs" variant="ghost" aria-label="Editar integrante" onClick={() => setEditando({ id: m.id, nombre: m.nombre, tipoDoc: m.tipoDoc, cedula: m.cedula, cargo: m.cargo })}><Pencil /></Button>}
+                              <Button size="icon-xs" variant="ghost" aria-label="Quitar" onClick={() => run(() => A.eliminarMiembro(empresaId, m.id))}><Trash2 /></Button>
+                            </div>
+                          </TableCell>
                         </TableRow>
                       ))}
                       {!c.miembros.length && <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground">Sin integrantes</TableCell></TableRow>}
@@ -96,18 +115,18 @@ function NuevoComite({ onCrear }: { onCrear: (fecha: string) => void }) {
   return <div className="flex gap-2"><Input type="date" value={f} onChange={(e) => setF(e.target.value)} /><Button onClick={() => onCrear(f)}><Plus /> Registrar</Button></div>;
 }
 
-function NuevoMiembro({ tipo, onAgregar }: { tipo: string; onAgregar: (m: { nombre: string; cedula?: string; cargo?: string; rol: string; representa?: string }) => void }) {
-  const [m, setM] = useState({ nombre: "", cedula: "", cargo: "", rol: tipo === "BRIGADA" ? "brigadista" : tipo === "VIGIA" ? "vigia" : "principal", representa: tipo === "BRIGADA" ? "" : "trabajadores" });
+function NuevoMiembro({ tipo, onAgregar }: { tipo: string; onAgregar: (m: { nombre: string; tipoDoc?: string; cedula?: string; cargo?: string; rol: string; representa?: string }) => void }) {
+  const [m, setM] = useState({ nombre: "", tipoDoc: "CC", cedula: "", cargo: "", rol: tipo === "BRIGADA" ? "brigadista" : tipo === "VIGIA" ? "vigia" : "principal", representa: tipo === "BRIGADA" ? "" : "trabajadores" });
   return (
-    <div className="grid grid-cols-2 md:grid-cols-6 gap-2 w-full items-end">
+    <div className="grid grid-cols-2 md:grid-cols-7 gap-2 w-full items-end">
       <Field className="md:col-span-2"><FieldLabel className="text-xs">Nombre</FieldLabel><Input value={m.nombre} onChange={(e) => setM({ ...m, nombre: e.target.value })} /></Field>
-      <Field><FieldLabel className="text-xs">Cédula</FieldLabel><Input value={m.cedula} onChange={(e) => setM({ ...m, cedula: e.target.value })} /></Field>
+      <Field className="col-span-2 md:col-span-2"><FieldLabel className="text-xs gap-1">Documento <Ayuda k="documentoIdentidad" /></FieldLabel><CampoDocumento tipo={m.tipoDoc} numero={m.cedula} onTipo={(v) => setM({ ...m, tipoDoc: v })} onNumero={(v) => setM({ ...m, cedula: v })} /></Field>
       <Field><FieldLabel className="text-xs">Cargo</FieldLabel><Input value={m.cargo} onChange={(e) => setM({ ...m, cargo: e.target.value })} /></Field>
       <Field><FieldLabel className="text-xs gap-1">Rol <Ayuda k="rolComite" /></FieldLabel><NativeSelect className="w-full" value={m.rol} onChange={(e) => setM({ ...m, rol: e.target.value })}>{ROLES.map(([v, l]) => <NativeSelectOption key={v} value={v}>{l}</NativeSelectOption>)}</NativeSelect></Field>
       {tipo !== "BRIGADA" ? (
         <Field><FieldLabel className="text-xs gap-1">Representa <Ayuda k="representa" /></FieldLabel><NativeSelect className="w-full" value={m.representa} onChange={(e) => setM({ ...m, representa: e.target.value })}><NativeSelectOption value="trabajadores">Trabajadores</NativeSelectOption><NativeSelectOption value="empleador">Empleador</NativeSelectOption></NativeSelect></Field>
       ) : <div />}
-      <Button className="md:col-span-6 w-fit" size="sm" disabled={!m.nombre} onClick={() => { onAgregar(m); setM({ ...m, nombre: "", cedula: "", cargo: "" }); }}><Plus /> Agregar integrante</Button>
+      <Button className="md:col-span-7 w-fit" size="sm" disabled={!m.nombre} onClick={() => { onAgregar(m); setM({ ...m, nombre: "", cedula: "", cargo: "" }); }}><Plus /> Agregar integrante</Button>
     </div>
   );
 }

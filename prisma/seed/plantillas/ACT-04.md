@@ -23,11 +23,11 @@ Se convoca a los trabajadores a postular candidatos y votar por sus representant
 
 Fecha de conformación: {{integrantes.ccl.inicio}}. Periodo: hasta el {{integrantes.ccl.fin}}.
 
-| Representación | Rol | Nombre | Cédula | Cargo | Firma |
+| Representación | Rol | Nombre | Documento | Cargo | Firma |
 |---|---|---|---|---|---|
 {{#if integrantes.ccl.hayMiembros}}
 {{#each integrantes.ccl.miembros}}
-| {{representa}} | {{rolTexto}} | {{nombre}} | {{cedula}} | {{cargo}} | |
+| {{representa}} | {{rolTexto}} | {{nombre}} | {{doc}} | {{cargo}} | |
 {{/each}}
 {{else}}
 | Empleador | Principal | | | | |
@@ -72,4 +72,4 @@ Presidente: {{integrantes.ccl.presidente}}  Secretario: {{integrantes.ccl.secret
 ## Firmas
 
 ______________________________________
-**{{empresa.representanteLegal}}** — Representante Legal
+**{{empresa.representanteLegal}}** — Representante Legal — {{empresa.representanteDoc}}

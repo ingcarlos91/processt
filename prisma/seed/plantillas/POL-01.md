@@ -41,4 +41,4 @@ Dada en {{empresa.ciudad}}, el {{fecha}}.
 ______________________________________
 **{{empresa.representanteLegal}}**
 Representante Legal
-C.C. {{empresa.representanteCedula}}
+{{empresa.representanteDoc}}

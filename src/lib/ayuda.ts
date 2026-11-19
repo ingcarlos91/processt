@@ -33,7 +33,7 @@ export const AYUDA: Record<string, Ayuda> = {
   ciudad: { titulo: "Ciudad", que: "Ciudad de la sede principal.", para: "Aparece en las fechas de firma de los documentos (“Dada en …”)." },
   departamento: { titulo: "Departamento", que: "Departamento de la sede principal." },
   representanteLegal: { titulo: "Representante legal", que: "Persona que firma en nombre de la empresa.", para: "Firma la política, el plan anual, el presupuesto, las designaciones y la revisión por la dirección. Aparece como “Aprobó” en todos los documentos.", donde: "Certificado de existencia y representación legal (Cámara de Comercio).", normas: ["Decreto 1072/2015 art. 2.2.4.6.6"] },
-  representanteCedula: { titulo: "Cédula del representante legal", que: "Número de cédula de quien firma.", para: "Va debajo de la firma en la política y las designaciones." },
+  representanteCedula: { titulo: "Documento del representante legal", que: "Tipo (C.C., C.E., pasaporte, PPT…) y número del documento de quien firma.", para: "Va debajo de la firma del representante en todos los documentos y actas." },
   logo: { titulo: "Logo", que: "Imagen del logo de la empresa (PNG o JPG, máximo 2 MB).", para: "Se pone en el encabezado de todos los documentos Word y en la matriz en Excel.", donde: "Pídalo a la empresa; si no tiene, se usa el nombre." },
 
   // ── Actividad y riesgo ──
@@ -215,4 +215,15 @@ Object.assign(AYUDA, {
   evLecciones: { titulo: "Lecciones aprendidas", que: "Lo que todos deben saber para que no se repita.", para: "Se divulgan a los trabajadores y al COPASST o Vigía.", normas: ["Decreto 1072/2015 art. 2.2.4.6.32"] },
   evJerarquia: { titulo: "Jerarquía de controles", que: "Orden en que se prefieren las medidas: primero eliminar el peligro, luego sustituirlo, después controles de ingeniería, administrativos y, por último, EPP.", normas: ["Decreto 1072/2015 art. 2.2.4.6.24"] },
   evEficacia: { titulo: "Verificación de eficacia", que: "Cómo se comprobó que la acción funcionó (inspección, medición, seguimiento sin repetición del evento).", normas: ["Decreto 1072/2015 art. 2.2.4.6.33"] },
+});
+
+Object.assign(AYUDA, {
+  documentoIdentidad: { titulo: "Documento de identidad", que: "Tipo y número del documento de la persona.", para: "Aparece debajo de su firma y en las actas, con su abreviatura (C.C., C.E., Pasaporte…).", opciones: [
+    { valor: "CC", etiqueta: "C.C. — Cédula de ciudadanía", explica: "Colombianos mayores de edad." },
+    { valor: "CE", etiqueta: "C.E. — Cédula de extranjería", explica: "Extranjeros residentes." },
+    { valor: "PA", etiqueta: "Pasaporte", explica: "Extranjeros sin cédula de extranjería." },
+    { valor: "PPT", etiqueta: "PPT — Permiso por Protección Temporal", explica: "Migrantes venezolanos con el estatuto temporal de protección." },
+    { valor: "PEP", etiqueta: "PEP — Permiso Especial de Permanencia", explica: "Permiso anterior al PPT, mientras esté vigente." },
+    { valor: "TI", etiqueta: "T.I. — Tarjeta de identidad", explica: "Menores de edad (por ejemplo, aprendices)." },
+  ] },
 });

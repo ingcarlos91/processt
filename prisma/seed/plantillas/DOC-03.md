@@ -13,7 +13,7 @@ normas: ["DEC-1072-2015","RES-0312-2019","RES-4927-2016"]
 
 Señor(a)
 **{{responsable.nombre}}**
-C.C. {{responsable.cedula}}
+{{responsable.doc}}
 
 **Asunto:** Designación como responsable del Sistema de Gestión de la Seguridad y Salud en el Trabajo
 
@@ -42,7 +42,7 @@ La empresa le otorga la autoridad y los recursos necesarios para el cumplimiento
 ## Firmas
 
 ______________________________________
-**{{empresa.representanteLegal}}** — Representante Legal
+**{{empresa.representanteLegal}}** — Representante Legal — {{empresa.representanteDoc}}
 
 ______________________________________
-**{{responsable.nombre}}** — Acepto la designación
+**{{responsable.nombre}}** — Acepto la designación — {{responsable.doc}}

@@ -22,11 +22,11 @@ Por tener {{empresa.trabajadores}} trabajadores, **{{empresa.razonSocial}}** deb
 
 El representante legal de {{empresa.razonSocial}} designa como Vigía de Seguridad y Salud en el Trabajo a:
 
-| Rol | Nombre | Cédula | Cargo |
+| Rol | Nombre | Documento | Cargo |
 |---|---|---|---|
 {{#if integrantes.copasst.hayMiembros}}
 {{#each integrantes.copasst.miembros}}
-| {{rolTexto}} | {{nombre}} | {{cedula}} | {{cargo}} |
+| {{rolTexto}} | {{nombre}} | {{doc}} | {{cargo}} |
 {{/each}}
 {{else}}
 | Vigía principal | | | |
@@ -47,10 +47,10 @@ Periodo: dos (2) años, del {{integrantes.copasst.inicio}} al {{integrantes.copa
 8. Servir como organismo de coordinación entre el empleador y los trabajadores.
 
 ______________________________________
-**{{empresa.representanteLegal}}** — Representante Legal
+**{{empresa.representanteLegal}}** — Representante Legal — {{empresa.representanteDoc}}
 
 ______________________________________
-Vigía de SST — Acepto la designación
+{{#with integrantes.copasst.miembros.[0]}}**{{nombre}}** — Vigía de SST, acepto la designación{{#if doc}} — {{doc}}{{/if}}{{else}}Vigía de SST — Acepto la designación{{/with}}
 {{else}}
 ## Convocatoria a elecciones
 
@@ -63,7 +63,7 @@ La gerencia de {{empresa.razonSocial}} convoca a todos los trabajadores a inscri
 - Se elegirán {{comites.copasst.porParte}} representante(s) principal(es) y sus suplentes por los trabajadores.
 
 ______________________________________
-**{{empresa.representanteLegal}}** — Representante Legal
+**{{empresa.representanteLegal}}** — Representante Legal — {{empresa.representanteDoc}}
 
 ## Acta de votación y escrutinio
 
@@ -91,11 +91,11 @@ ______________________ ______________________
 
 En {{empresa.ciudad}}, el día {{integrantes.copasst.inicio}}, se reunieron los representantes del empleador designados por el representante legal y los representantes de los trabajadores elegidos por votación, para conformar el COPASST de {{empresa.razonSocial}} por el periodo de dos (2) años.
 
-| Representación | Rol | Nombre | Cédula | Cargo | Firma |
+| Representación | Rol | Nombre | Documento | Cargo | Firma |
 |---|---|---|---|---|---|
 {{#if integrantes.copasst.hayMiembros}}
 {{#each integrantes.copasst.miembros}}
-| {{representa}} | {{rolTexto}} | {{nombre}} | {{cedula}} | {{cargo}} | |
+| {{representa}} | {{rolTexto}} | {{nombre}} | {{doc}} | {{cargo}} | |
 {{/each}}
 {{else}}
 | Empleador | Principal | | | | |

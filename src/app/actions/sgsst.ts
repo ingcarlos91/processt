@@ -177,9 +177,18 @@ export async function crearComite(empresaId: string, tipo: string, periodoInicio
   await actualizarDocumentosExistentes(empresaId);
   rv(empresaId);
 }
-export async function agregarMiembro(empresaId: string, comiteId: string, d: { nombre: string; cedula?: string; cargo?: string; rol: string; representa?: string }) {
+export async function agregarMiembro(empresaId: string, comiteId: string, d: { nombre: string; tipoDoc?: string; cedula?: string; cargo?: string; rol: string; representa?: string }) {
   await requiereUsuario();
   await db.comiteMiembro.create({ data: { comiteId, ...d } });
+  await actualizarDocumentosExistentes(empresaId);
+  rv(empresaId);
+}
+/** Edita un integrante (por ejemplo, para completar su documento). Los documentos se actualizan solos. */
+export async function actualizarMiembro(empresaId: string, id: string, d: { nombre: string; tipoDoc?: string; cedula?: string; cargo?: string }) {
+  await requiereUsuario();
+  const m = await db.comiteMiembro.findUniqueOrThrow({ where: { id }, include: { comite: true } });
+  if (m.comite.empresaId !== empresaId) throw new Error("Integrante no encontrado.");
+  await db.comiteMiembro.update({ where: { id }, data: { nombre: d.nombre.trim() || m.nombre, tipoDoc: d.tipoDoc || "CC", cedula: d.cedula?.trim() || null, cargo: d.cargo?.trim() || null } });
   await actualizarDocumentosExistentes(empresaId);
   rv(empresaId);
 }

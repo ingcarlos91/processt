@@ -1,4 +1,5 @@
 "use client";
+import { CampoDocumento } from "@/components/app/campo-documento";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { Save, Sparkles } from "lucide-react";
@@ -33,7 +34,7 @@ export function ConsultoraForm({ inicial, ia }: { inicial: D; ia: { activa: bool
             {campo("nit", "NIT de la consultora")}
             <FieldSeparator className="md:col-span-2">Profesional</FieldSeparator>
             {campo("profesional", "Nombre completo")}
-            {campo("cedula", "Cédula")}
+            <Field><FieldLabel htmlFor="cedula" className="gap-1">Documento de identidad <Ayuda k="documentoIdentidad" /></FieldLabel><CampoDocumento id="cedula" tipo={d.tipoDoc} numero={d.cedula} onTipo={(v) => set("tipoDoc", v)} onNumero={(v) => set("cedula", v)} /></Field>
             {campo("cargo", "Cargo o vínculo con las empresas", { desc: "Por ejemplo: Asesora externa en SST" })}
             <Field>
               <FieldLabel htmlFor="perfil" className="gap-1">Perfil <Ayuda k="perfil" /></FieldLabel>

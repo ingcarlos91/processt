@@ -60,4 +60,4 @@ Este reglamento permanecerá exhibido en por lo menos dos (2) lugares visibles d
 Fecha: {{fecha}}
 
 ______________________________________
-**{{empresa.representanteLegal}}** — Representante Legal
+**{{empresa.representanteLegal}}** — Representante Legal — {{empresa.representanteDoc}}

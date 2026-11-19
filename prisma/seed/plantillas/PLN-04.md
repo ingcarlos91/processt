@@ -110,4 +110,4 @@ La empresa se articula con los planes de emergencia del edificio o la zona y con
 Fecha: {{fecha}}
 
 ______________________________________
-**{{empresa.representanteLegal}}** — Representante Legal
+**{{empresa.representanteLegal}}** — Representante Legal — {{empresa.representanteDoc}}

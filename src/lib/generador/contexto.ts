@@ -1,3 +1,4 @@
+import { abrevDoc, docTexto } from "@/lib/documento-identidad";
 import { db, consultoraActual } from "@/lib/db";
 import { evaluarEmpresa, composicionCopasst, type ResultadoReglas } from "@/lib/reglas/motor";
 import { calcular, CLASIFICACION_ETIQUETA } from "@/lib/gtc45";
@@ -226,7 +227,7 @@ export async function construirContexto(empresaId: string) {
   const ROL: Record<string, string> = { presidente: "Presidente", secretario: "Secretario", principal: "Principal", suplente: "Suplente", vigia: "Vigía", jefe_brigada: "Jefe de brigada", brigadista: "Brigadista", principal_empleador: "Principal", principal_trabajadores: "Principal", suplente_empleador: "Suplente", suplente_trabajadores: "Suplente" };
   const comite = (tipos: string[]) => {
     const c = e.comites.find((x) => tipos.includes(x.tipo));
-    const miembros = (c?.miembros ?? []).map((m) => ({ nombre: m.nombre, cedula: m.cedula ?? "", cargo: m.cargo ?? "", rol: m.rol, rolTexto: ROL[m.rol] ?? m.rol, representa: m.representa === "empleador" ? "Empleador" : m.representa === "trabajadores" ? "Trabajadores" : "" }));
+    const miembros = (c?.miembros ?? []).map((m) => ({ nombre: m.nombre, cedula: m.cedula ?? "", doc: m.cedula ? docTexto(m.tipoDoc, m.cedula) : "", cargo: m.cargo ?? "", rol: m.rol, rolTexto: ROL[m.rol] ?? m.rol, representa: m.representa === "empleador" ? "Empleador" : m.representa === "trabajadores" ? "Trabajadores" : "" }));
     const d = (c?.datos ?? {}) as Record<string, unknown>;
     return {
       registrado: !!c, inicio: fmtDia(c?.periodoInicio) || B, fin: fmtDia(c?.periodoFin) || B, miembros, hayMiembros: miembros.length > 0,
@@ -260,7 +261,7 @@ export async function construirContexto(empresaId: string) {
     empresa: {
       id: e.id, razonSocial: e.razonSocial, nit: e.digitoVerificacion ? `${e.nit}-${e.digitoVerificacion}` : e.nit,
       direccion: e.direccion ?? "", ciudad: e.ciudad ?? "", departamento: e.departamento ?? "", telefono: e.telefono ?? "", correo: e.correo ?? "",
-      representanteLegal: e.representanteLegal ?? "", representanteCedula: e.representanteCedula ?? "", ciiu: e.ciiu ?? "", actividad: e.descripcionActividad ?? "",
+      representanteLegal: e.representanteLegal ?? "", representanteCedula: e.representanteCedula ?? "", representanteTipoDoc: abrevDoc(e.representanteTipoDoc), representanteDoc: docTexto(e.representanteTipoDoc, e.representanteCedula), ciiu: e.ciiu ?? "", actividad: e.descripcionActividad ?? "",
       claseRiesgo: e.claseRiesgo, claseRiesgoRomano: ROMANO[e.claseRiesgo], arl: e.arl ?? "", eps: e.epsPrincipal ?? "",
       trabajadores, contratistas: e.nContratistas, aprendices: e.nAprendices, vehiculos: e.nVehiculos, horario: e.horario ?? "", turnos: (e.turnos ?? "").split(",").map((t) => TURNOS.find((x) => x.valor === t)?.etiqueta ?? t).filter(Boolean).join("; "),
       nivel: rr.nivel, sector: e.sectorTipo?.nombre ?? "", logoUrl: e.logoUrl ?? "", tieneLogo: !!e.logoUrl,
@@ -269,13 +270,13 @@ export async function construirContexto(empresaId: string) {
     responsable: (() => {
       const r = resp;
       return {
-        nombre: (r.nombre as string)?.trim() || "______________________", cedula: (r.cedula as string)?.trim() || "______________", cargo: (r.cargo as string) ?? "",
+        nombre: (r.nombre as string)?.trim() || "______________________", cedula: (r.cedula as string)?.trim() || "______________", doc: docTexto(r.tipoDoc as string, r.cedula as string), cargo: (r.cargo as string) ?? "",
         perfilTexto: PERFIL_TEXTO[(r.perfil as string) ?? ""] ?? "", licencia: (r.licencia as string) ?? "", licenciaFecha: (r.licenciaFecha as string) ?? "",
         curso50hFecha: r.curso50h ? ((r.curso50hFecha as string) || "Aprobado") : "", esConsultora: false,
       };
     })(),
     consultora: {
-      nombre: consultora.nombre, profesional: consultora.profesional ?? "", cedula: consultora.cedula ?? "", cargo: consultora.cargo ?? "",
+      nombre: consultora.nombre, profesional: consultora.profesional ?? "", cedula: consultora.cedula ?? "", doc: docTexto(consultora.tipoDoc, consultora.cedula), cargo: consultora.cargo ?? "",
       perfilTexto: PERFIL_TEXTO[consultora.perfil ?? ""] ?? "", licencia: consultora.licenciaSst ?? "", licenciaFecha: fmt(consultora.licenciaFecha),
       curso50hFecha: consultora.curso50h ? consultora.curso50hFecha || "Aprobado" : "", correo: consultora.correo ?? "", telefono: consultora.telefono ?? "",
     },
@@ -363,7 +364,7 @@ export async function contextoEvento(eventoId: string) {
       tipo: TIPO_EV[ev.tipo] ?? ev.tipo, esAT: ev.tipo === "AT", esIncidente: ev.tipo === "INCIDENTE", esEL: ev.tipo === "EL",
       gravedad: ev.gravedad === "grave" ? "Grave" : ev.gravedad === "mortal" ? "Mortal" : "Leve", esGrave: ev.gravedad === "grave" || ev.gravedad === "mortal",
       fecha: fmtDia(ev.fecha), hora: ev.hora ?? "", lugar: ev.lugar ?? "", descripcion: ev.descripcion ?? "",
-      trabajador: ev.trabajadorNombre ?? "", cedula: ev.trabajadorCedula ?? "", vinculacion: VINC[ev.vinculacion ?? ""] ?? "", antiguedad: ev.antiguedad ?? "",
+      trabajador: ev.trabajadorNombre ?? "", cedula: ev.trabajadorCedula ?? "", doc: ev.trabajadorCedula ? docTexto(ev.trabajadorTipoDoc, ev.trabajadorCedula) : "", vinculacion: VINC[ev.vinculacion ?? ""] ?? "", antiguedad: ev.antiguedad ?? "",
       cargo: ev.cargo ?? "", tarea: ev.tarea ?? "", mecanismo: ev.mecanismo ?? "", agente: ev.agente ?? "", lesion: ev.lesion ?? "", parteCuerpo: ev.parteCuerpo ?? "",
       testigos: ev.testigos ?? "", dias: ev.diasIncapacidad, diasCargados: ev.diasCargados,
       fechaReporte: ev.fechaReporte ? fmtDia(ev.fechaReporte) : "", furat: ev.furatNumero ?? "", reporteMinisterio: ev.reporteMinisterio ? fmtDia(ev.reporteMinisterio) : "",

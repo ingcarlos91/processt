@@ -1,4 +1,5 @@
 "use client";
+import { CampoDocumento } from "@/components/app/campo-documento";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Selector } from "@/components/app/selector";
@@ -57,7 +58,7 @@ export function EventoForm({ d, set, cargos, cat, lugares }: { d: DatosEvento; s
         <FieldLegend variant="label">Persona afectada</FieldLegend>
         <div className="grid gap-4 sm:grid-cols-3">
           <Field><Etiqueta htmlFor="ev-n">Nombre</Etiqueta><Input id="ev-n" value={d.trabajadorNombre ?? ""} onChange={(e) => u("trabajadorNombre", e.target.value)} /></Field>
-          <Field><Etiqueta htmlFor="ev-c">Cédula</Etiqueta><Input id="ev-c" value={d.trabajadorCedula ?? ""} onChange={(e) => u("trabajadorCedula", e.target.value)} /></Field>
+          <Field><Etiqueta htmlFor="ev-c" k="documentoIdentidad">Documento</Etiqueta><CampoDocumento id="ev-c" tipo={d.trabajadorTipoDoc} numero={d.trabajadorCedula} onTipo={(v) => u("trabajadorTipoDoc", v)} onNumero={(v) => u("trabajadorCedula", v)} /></Field>
           <Field>
             <Etiqueta htmlFor="ev-v" k="evVinculacion">Vinculación</Etiqueta>
             <Selector id="ev-v" value={d.vinculacion} onChange={(v) => u("vinculacion", v)} opciones={Object.entries(VINCULACION).map(([k, t]) => ({ valor: k, etiqueta: t }))} />

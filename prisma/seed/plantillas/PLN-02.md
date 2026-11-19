@@ -38,7 +38,7 @@ Pendiente de diligenciar la evaluación de estándares mínimos.
 ## Firmas
 
 ______________________________________
-**{{empresa.representanteLegal}}** — Representante Legal
+**{{empresa.representanteLegal}}** — Representante Legal — {{empresa.representanteDoc}}
 
 ______________________________________
-**{{responsable.nombre}}** — Responsable del SG-SST
+**{{responsable.nombre}}** — Responsable del SG-SST — {{responsable.doc}}

@@ -23,7 +23,7 @@ async function delaEmpresa(empresaId: string, eventoId: string) {
 
 export type DatosEvento = {
   tipo: string; fecha: string; hora?: string; lugar?: string; descripcion?: string;
-  trabajadorNombre?: string; trabajadorCedula?: string; vinculacion?: string; antiguedad?: string;
+  trabajadorNombre?: string; trabajadorTipoDoc?: string; trabajadorCedula?: string; vinculacion?: string; antiguedad?: string;
   cargoId?: string; cargo?: string; tarea?: string; mecanismo?: string; agente?: string; lesion?: string; parteCuerpo?: string;
   gravedad?: string; testigos?: string; diasIncapacidad?: number; diasCargados?: number; casoNuevo?: boolean; origenAusencia?: string;
 };
@@ -36,7 +36,7 @@ function datos(d: DatosEvento) {
   const gravedad = d.tipo === "AT" ? (d.gravedad ?? "leve") : "leve";
   return {
     tipo: d.tipo, fecha, hora: d.hora || null, lugar: d.lugar || null, descripcion: d.descripcion || null,
-    trabajadorNombre: d.trabajadorNombre || null, trabajadorCedula: d.trabajadorCedula || null, vinculacion: d.vinculacion || null, antiguedad: d.antiguedad || null,
+    trabajadorNombre: d.trabajadorNombre || null, trabajadorTipoDoc: d.trabajadorTipoDoc || "CC", trabajadorCedula: d.trabajadorCedula || null, vinculacion: d.vinculacion || null, antiguedad: d.antiguedad || null,
     cargoId: d.cargoId || null, cargo: d.cargo || null, tarea: d.tarea || null, mecanismo: d.mecanismo || null, agente: d.agente || null,
     lesion: d.lesion || null, parteCuerpo: d.parteCuerpo || null, gravedad, mortal: gravedad === "mortal", testigos: d.testigos || null,
     diasIncapacidad: Math.max(0, Number(d.diasIncapacidad) || 0), diasCargados: Math.max(0, Number(d.diasCargados) || 0),

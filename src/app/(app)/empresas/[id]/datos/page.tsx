@@ -19,7 +19,7 @@ export default async function Datos({ params }: PageProps<"/empresas/[id]/datos"
   ]);
   const inicial: IntakeData = {
     razonSocial: e.razonSocial, nit: e.nit, digitoVerificacion: e.digitoVerificacion ?? "", direccion: e.direccion ?? "", ciudad: e.ciudad ?? "", departamento: e.departamento ?? "",
-    telefono: e.telefono ?? "", correo: e.correo ?? "", representanteLegal: e.representanteLegal ?? "", representanteCedula: e.representanteCedula ?? "",
+    telefono: e.telefono ?? "", correo: e.correo ?? "", representanteLegal: e.representanteLegal ?? "", representanteTipoDoc: e.representanteTipoDoc, representanteCedula: e.representanteCedula ?? "",
     ciiu: e.ciiu ?? "", descripcionActividad: e.descripcionActividad ?? "", claseRiesgo: e.claseRiesgo, claseRiesgoJustificacion: e.claseRiesgoJustificacion ?? "",
     arl: e.arl ?? "", epsPrincipal: e.epsPrincipal ?? "", sectorTipoId: e.sectorTipoId, esUpa: e.esUpa,
     nTrabajadoresPlanta: e.nTrabajadoresPlanta, nContratistas: e.nContratistas, nAprendices: e.nAprendices, nEnMision: e.nEnMision, nVehiculos: e.nVehiculos,

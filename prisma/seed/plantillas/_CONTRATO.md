@@ -7,7 +7,7 @@ Helpers: `{{inc @index}}`, `{{#if (eq a b)}}`, `{{#if (gte a b)}}`, `{{upper x}}
 
 | Variable | Contenido |
 |---|---|
-| `empresa.*` | razonSocial, nit, direccion, ciudad, departamento, telefono, correo, representanteLegal, representanteCedula, ciiu, actividad, claseRiesgo, claseRiesgoRomano, arl, eps, trabajadores, contratistas, aprendices, vehiculos, horario, turnos, nivel, sector |
+| `empresa.*` | razonSocial, nit, direccion, ciudad, departamento, telefono, correo, representanteLegal, representanteCedula, representanteTipoDoc (abreviatura), representanteDoc ("C.C. 123", "C.E. 456"…), ciiu, actividad, claseRiesgo, claseRiesgoRomano, arl, eps, trabajadores, contratistas, aprendices, vehiculos, horario, turnos, nivel, sector |
 | `responsable.*` | nombre, cedula, cargo, perfilTexto, licencia, licenciaFecha, curso50hFecha |
 | `consultora.*` | nombre, profesional, cedula, licencia, correo, telefono |
 | `fecha`, `anio`, `anioSiguiente` | fecha de emisión (texto), año vigente |
@@ -31,3 +31,7 @@ Helpers: `{{inc @index}}`, `{{#if (eq a b)}}`, `{{#if (gte a b)}}`, `{{upper x}}
 | `amenazas[]` | amenaza, tipo, origen, calificacion, descripcion |
 | `presupuesto[]` | rubro, descripcion, estandar |
 | `altoRiesgo[]` | tipo, tareas, cargos, norma |
+
+## Documento de identidad
+
+Toda persona trae `doc` ya formateado con su tipo: `empresa.representanteDoc`, `responsable.doc`, `consultora.doc`, `integrantes.*.miembros[].doc`, `ev.doc`. Tipos: C.C., C.E., Pasaporte, PPT, PEP, T.I. En las firmas (`**Nombre** — Cargo — {{…doc}}`) el Word lo pone debajo del cargo.

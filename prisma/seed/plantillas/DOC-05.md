@@ -67,7 +67,7 @@ Las prioridades se definen al completar la tabla de valores.
 Los resultados de esta evaluación son la línea base para la planificación del SG-SST y para el plan anual de trabajo {{anio}}.
 
 ______________________________________
-**{{responsable.nombre}}** — Evaluador(a), Licencia SST {{default responsable.licencia "______"}}
+**{{responsable.nombre}}** — Evaluador(a), Licencia SST {{default responsable.licencia "______"}} — {{responsable.doc}}
 
 ______________________________________
-**{{empresa.representanteLegal}}** — Representante Legal
+**{{empresa.representanteLegal}}** — Representante Legal — {{empresa.representanteDoc}}

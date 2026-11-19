@@ -23,6 +23,7 @@ model Consultora {
   cargo         String? // p. ej. "Asesora externa en SST"
   curso50h      Boolean   @default(false) @map("curso_50h")
   curso50hFecha String?   @map("curso_50h_fecha")
+  tipoDoc       String    @default("CC") @map("tipo_doc") // CC | CE | PA | PPT | PEP | TI
   cedula        String?
   telefono      String?
   correo        String?
@@ -70,7 +71,8 @@ model Empresa {
   telefono                 String?
   correo                   String?
   representanteLegal       String?     @map("representante_legal")
-  representanteCedula      String?     @map("representante_cedula")
+  representanteTipoDoc     String      @default("CC") @map("representante_tipo_doc") // CC | CE | PA | PPT | PEP | TI
+  representanteCedula      String?     @map("representante_cedula") // número del documento
   ciiu                     String?
   descripcionActividad     String?     @map("descripcion_actividad")
   claseRiesgo              Int         @default(1) @map("clase_riesgo") // 1..5 (Decreto 1607/2002)
@@ -88,7 +90,7 @@ model Empresa {
   esUpa                    Boolean     @default(false) @map("es_upa") // unidad de producción agropecuaria
   disparadores             Json        @default("{}") // { alturas: true, confinados: false, quimicos: true, ... }
   estadoActual             Json        @default("{}") @map("estado_actual") // respuestas del paso 6 del intake (por ítem)
-  responsableSst           Json?       @map("responsable_sst") // { nombre, cedula, cargo, perfil, licencia, licenciaFecha, curso50h, curso50hFecha }
+  responsableSst           Json?       @map("responsable_sst") // { nombre, tipoDoc, cedula, cargo, perfil, licencia, licenciaFecha, curso50h, curso50hFecha }
   logoUrl                  String?     @map("logo_url")
   fechaInicioSgsst         DateTime?   @map("fecha_inicio_sgsst")
   sectorTipoId             String?     @map("sector_tipo_id")
@@ -413,16 +415,16 @@ model CargoTipoPeligro {
 // ─────────────────────────── Matriz de peligros (instancia por empresa) ───────────────────────────
 
 model MatrizVersion {
-  id        String            @id @default(cuid())
-  empresaId String            @map("empresa_id")
-  empresa   Empresa           @relation(fields: [empresaId], references: [id], onDelete: Cascade)
-  numero    Int
-  motivo    String // inicial | anual | gestion_cambio
-  fecha     DateTime          @default(now())
-  snapshot  Json? // copia de la matriz al cerrar: { filas: [...] } (versiones antiguas: arreglo de peligros)
-  cerradoPor String?          @map("cerrado_por")
-  resumen   Json? // { total, prioritarios, porNivel }
-  peligros  PeligroEvaluado[]
+  id         String            @id @default(cuid())
+  empresaId  String            @map("empresa_id")
+  empresa    Empresa           @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  numero     Int
+  motivo     String // inicial | anual | gestion_cambio
+  fecha      DateTime          @default(now())
+  snapshot   Json? // copia de la matriz al cerrar: { filas: [...] } (versiones antiguas: arreglo de peligros)
+  cerradoPor String?           @map("cerrado_por")
+  resumen    Json? // { total, prioritarios, porNivel }
+  peligros   PeligroEvaluado[]
 
   @@map("matriz_version")
 }
@@ -705,6 +707,7 @@ model Evento {
   lugar             String?
   descripcion       String?
   trabajadorNombre  String?          @map("trabajador_nombre")
+  trabajadorTipoDoc String?          @map("trabajador_tipo_doc")
   trabajadorCedula  String?          @map("trabajador_cedula")
   vinculacion       String? // planta | contratista | aprendiz | mision | visitante
   antiguedad        String?
@@ -809,6 +812,7 @@ model ComiteMiembro {
   comiteId   String  @map("comite_id")
   comite     Comite  @relation(fields: [comiteId], references: [id], onDelete: Cascade)
   nombre     String
+  tipoDoc    String  @default("CC") @map("tipo_doc") // CC | CE | PA | PPT | PEP | TI
   cedula     String?
   cargo      String?
   rol        String // presidente | secretario | principal_empleador | principal_trabajadores | suplente_empleador | suplente_trabajadores | brigadista | jefe_brigada

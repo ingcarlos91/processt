@@ -1,4 +1,5 @@
 "use client";
+import { CampoDocumento } from "@/components/app/campo-documento";
 import Link from "next/link";
 import { useMemo, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
@@ -89,7 +90,7 @@ function Opcion({ id, checked, onChange, children, extra }: { id: string; checke
 }
 
 
-export type Profesional = { nombre: string; cedula: string; cargo: string; perfil: string; licencia: string; licenciaFecha: string; curso50h: boolean; curso50hFecha: string };
+export type Profesional = { nombre: string; tipoDoc?: string; cedula: string; cargo: string; perfil: string; licencia: string; licenciaFecha: string; curso50h: boolean; curso50hFecha: string };
 
 export function IntakeWizard({ sectores, cargosTipo, ciius, inicial, empresaId, profesional, tieneLogo }: { sectores: Sector[]; cargosTipo: CargoTipo[]; ciius: Ciiu[]; inicial?: IntakeData; empresaId?: string; profesional: Profesional; tieneLogo?: boolean }) {
   const router = useRouter();
@@ -195,7 +196,7 @@ export function IntakeWizard({ sectores, cargosTipo, ciius, inicial, empresaId, 
               <Campo id="ciu" ayuda="ciudad" label="Ciudad"><Input id="ciu" value={d.ciudad ?? ""} onChange={(e) => set("ciudad", e.target.value)} /></Campo>
               <Campo id="dep" ayuda="departamento" label="Departamento"><Input id="dep" value={d.departamento ?? ""} onChange={(e) => set("departamento", e.target.value)} /></Campo>
               <Campo id="rl" ayuda="representanteLegal" label="Representante legal"><Input id="rl" value={d.representanteLegal ?? ""} onChange={(e) => set("representanteLegal", e.target.value)} /></Campo>
-              <Campo id="rlc" ayuda="representanteCedula" label="Cédula del representante legal"><Input id="rlc" value={d.representanteCedula ?? ""} onChange={(e) => set("representanteCedula", e.target.value)} /></Campo>
+              <Campo id="rlc" ayuda="representanteCedula" label="Documento del representante legal"><CampoDocumento id="rlc" tipo={d.representanteTipoDoc} numero={d.representanteCedula} onTipo={(v) => set("representanteTipoDoc", v)} onNumero={(v) => set("representanteCedula", v)} /></Campo>
               <Field className="md:col-span-2">
                 <FieldLabel className="gap-1">Logo de la empresa <Ayuda k="logo" /></FieldLabel>
                 <div className="flex items-center gap-4">
@@ -344,7 +345,7 @@ export function IntakeWizard({ sectores, cargosTipo, ciius, inicial, empresaId, 
                   : <Link href="/configuracion" className="text-xs underline underline-offset-2">Registre sus datos en “Mi consultora” para copiarlos con un clic</Link>}
               </div>
               <Campo id="rn" ayuda="respNombre" label="Nombre"><Input id="rn" value={d.responsableSst.nombre ?? ""} onChange={(e) => setR("nombre", e.target.value)} /></Campo>
-              <Campo id="rc" ayuda="respNombre" label="Cédula"><Input id="rc" value={d.responsableSst.cedula ?? ""} onChange={(e) => setR("cedula", e.target.value)} /></Campo>
+              <Campo id="rc" ayuda="documentoIdentidad" label="Documento de identidad"><CampoDocumento id="rc" tipo={d.responsableSst.tipoDoc} numero={d.responsableSst.cedula} onTipo={(v) => setR("tipoDoc", v)} onNumero={(v) => setR("cedula", v)} /></Campo>
               <Campo id="rcar" ayuda="cargoProfesional" label="Cargo o vínculo"><Input id="rcar" placeholder="Asesora externa SST" value={d.responsableSst.cargo ?? ""} onChange={(e) => setR("cargo", e.target.value)} /></Campo>
               <Campo id="rp" ayuda="perfil" label="Perfil">
                 <NativeSelect id="rp" className="w-full" value={d.responsableSst.perfil ?? ""} onChange={(e) => setR("perfil", e.target.value)}>

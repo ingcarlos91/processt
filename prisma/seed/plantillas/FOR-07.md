@@ -41,7 +41,7 @@ descripcion: Se genera uno por cada evento desde la pestaña Accidentes e incide
 | Campo | |
 |---|---|
 | Nombre | {{default ev.trabajador "______"}} |
-| Cédula | {{default ev.cedula "______"}} |
+| Documento | {{default ev.cedula "______"}} |
 | Cargo | {{default ev.cargo "______"}} |
 | Tipo de vinculación | {{default ev.vinculacion "______"}} |
 | Antigüedad en el cargo | {{default ev.antiguedad "______"}} |
@@ -125,7 +125,7 @@ Las lecciones aprendidas se divulgan a los trabajadores y al {{#if comites.copas
 {{/if}}
 
 ______________________________________
-**{{empresa.representanteLegal}}** — Representante Legal
+**{{empresa.representanteLegal}}** — Representante Legal — {{empresa.representanteDoc}}
 
 ______________________________________
-**{{responsable.nombre}}** — Responsable del SG-SST
+**{{responsable.nombre}}** — Responsable del SG-SST — {{responsable.doc}}

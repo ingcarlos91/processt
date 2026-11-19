@@ -11,14 +11,14 @@ import { TURNOS_NOCTURNOS } from "@/lib/ayuda";
 
 export type IntakeData = {
   razonSocial: string; nit: string; digitoVerificacion?: string; direccion?: string; ciudad?: string; departamento?: string; telefono?: string; correo?: string;
-  representanteLegal?: string; representanteCedula?: string; logoUrl?: string;
+  representanteLegal?: string; representanteTipoDoc?: string; representanteCedula?: string; logoUrl?: string;
   ciiu?: string; descripcionActividad?: string; claseRiesgo: number; claseRiesgoJustificacion?: string; arl?: string; epsPrincipal?: string; sectorTipoId?: string | null; esUpa?: boolean;
   nTrabajadoresPlanta: number; nContratistas: number; nAprendices: number; nEnMision: number; nVehiculos: number; horario?: string; turnos?: string;
   sedes: { nombre: string; direccion?: string; ciudad?: string }[];
   cargos: { nombre: string; nPersonas: number; cargoTipoId?: string | null; funciones?: string }[];
   disparadores: Record<string, boolean>;
   estadoActual: Record<string, boolean>;
-  responsableSst: { nombre?: string; cedula?: string; cargo?: string; perfil?: string; licencia?: string; licenciaFecha?: string; curso50h?: boolean; curso50hFecha?: string };
+  responsableSst: { nombre?: string; tipoDoc?: string; cedula?: string; cargo?: string; perfil?: string; licencia?: string; licenciaFecha?: string; curso50h?: boolean; curso50hFecha?: string };
 };
 
 const n = (v: unknown) => (Number.isFinite(Number(v)) ? Number(v) : 0);
@@ -26,7 +26,7 @@ const n = (v: unknown) => (Number.isFinite(Number(v)) ? Number(v) : 0);
 function datosEmpresa(d: IntakeData) {
   return {
     razonSocial: d.razonSocial.trim(), nit: d.nit.replace(/[^\d]/g, ""), digitoVerificacion: d.digitoVerificacion || null, direccion: d.direccion, ciudad: d.ciudad, departamento: d.departamento,
-    telefono: d.telefono, correo: d.correo, representanteLegal: d.representanteLegal, representanteCedula: d.representanteCedula,
+    telefono: d.telefono, correo: d.correo, representanteLegal: d.representanteLegal, representanteTipoDoc: d.representanteTipoDoc || "CC", representanteCedula: d.representanteCedula,
     ciiu: d.ciiu, descripcionActividad: d.descripcionActividad, claseRiesgo: Math.min(5, Math.max(1, n(d.claseRiesgo) || 1)), claseRiesgoJustificacion: d.claseRiesgoJustificacion,
     arl: d.arl, epsPrincipal: d.epsPrincipal, sectorTipoId: d.sectorTipoId || null, esUpa: !!d.esUpa,
     nTrabajadoresPlanta: n(d.nTrabajadoresPlanta), nContratistas: n(d.nContratistas), nAprendices: n(d.nAprendices), nEnMision: n(d.nEnMision), nVehiculos: n(d.nVehiculos),
@@ -106,7 +106,7 @@ export async function guardarSede(empresaId: string, s: { id?: string; nombre: s
   revalidatePath(`/empresas/${empresaId}`, "layout");
 }
 
-export type DatosConsultora = { nombre: string; nit?: string; profesional?: string; cedula?: string; cargo?: string; perfil?: string; licenciaSst?: string; licenciaFecha?: string; curso50h?: boolean; curso50hFecha?: string; telefono?: string; correo?: string };
+export type DatosConsultora = { nombre: string; nit?: string; profesional?: string; tipoDoc?: string; cedula?: string; cargo?: string; perfil?: string; licenciaSst?: string; licenciaFecha?: string; curso50h?: boolean; curso50hFecha?: string; telefono?: string; correo?: string };
 
 export async function guardarConsultora(d: DatosConsultora) {
   await requiereUsuario();

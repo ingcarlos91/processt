@@ -36,4 +36,4 @@ Espacio para reuniones de los comités, equipos de cómputo, elementos de emerge
 El presente presupuesto se aprueba y se ejecutará conforme al plan anual de trabajo {{anio}}.
 
 ______________________________________
-**{{empresa.representanteLegal}}** — Representante Legal
+**{{empresa.representanteLegal}}** — Representante Legal — {{empresa.representanteDoc}}

@@ -27,4 +27,4 @@ condicion: {"vehiculosMin":10}
 {{empresa.razonSocial}} se compromete a prevenir los siniestros viales de sus trabajadores y de terceros, mediante el cumplimiento de las normas de tránsito, el mantenimiento de sus vehículos, la capacitación de sus conductores y la promoción de comportamientos seguros en la vía.
 
 ______________________________________
-**{{empresa.representanteLegal}}** — Representante Legal
+**{{empresa.representanteLegal}}** — Representante Legal — {{empresa.representanteDoc}}

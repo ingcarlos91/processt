@@ -61,6 +61,8 @@ IA opcional: agregar `AI_GATEWAY_API_KEY=...` en `.env`. Sin clave, “Sugerir t
 
 - Manual de ayuda por sección: botón “Ayuda” en el encabezado abre un panel con la ayuda de la pantalla actual (qué incluye cada tarjeta, qué hace cada botón, paso a paso, consejos, normas y secciones relacionadas), buscador en todo el manual e índice. Contenido en `src/lib/manual.ts` (actualizar al cambiar una pantalla).
 
+- Documento de identidad con tipo (C.C., C.E., Pasaporte, PPT, PEP, T.I.) para representante legal, responsable SG-SST, profesional, integrantes de comités (editables) y trabajador accidentado; todas las firmas y actas lo precargan.
+
 ## Pendiente
 
 - PDF directo (hoy: Word; PDF desde Word o imprimir).
