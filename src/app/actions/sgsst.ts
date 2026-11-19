@@ -186,3 +186,12 @@ export async function guardarTrabajadoresMes(empresaId: string, anio: number, me
   });
   rv(empresaId);
 }
+
+// ───────── Biblioteca ─────────
+export async function actualizarPeligroCatalogo(id: string, d: Record<string, string | number | boolean | string[]>) {
+  const permitidos = ["clasificacion", "subclasificacion", "descripcion", "efectosPosibles", "ndDefault", "neDefault", "ncDefault", "controlesFuente", "controlesMedio", "controlesIndividuo", "medidaEliminacion", "medidaSustitucion", "medidaIngenieria", "medidaAdministrativa", "medidaEpp", "eppSugerido", "examenesSugeridos", "capacitacionesSugeridas", "normas", "pveAsociado", "requisitoLegalEspecifico", "validado"];
+  const data: Record<string, unknown> = {};
+  for (const k of permitidos) if (k in d) data[k] = ["ndDefault", "neDefault", "ncDefault"].includes(k) ? Number(d[k]) : d[k];
+  await db.peligroCatalogo.update({ where: { id }, data });
+  revalidatePath("/biblioteca");
+}
