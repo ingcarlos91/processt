@@ -11,6 +11,8 @@ const nextConfig: NextConfig = {
       },
     },
   },
+  // El botón de Next.js en desarrollo tapaba el avatar del menú (abajo a la izquierda).
+  devIndicators: { position: "bottom-right" },
   serverExternalPackages: ["@prisma/client", "prisma"],
   experimental: { serverActions: { bodySizeLimit: "12mb" } },
 };

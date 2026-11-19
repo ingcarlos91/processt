@@ -31,7 +31,7 @@ IA opcional: agregar `AI_GATEWAY_API_KEY=...` en `.env`. Sin clave, “Sugerir t
 | H6 Documentos | ✅ | 48 plantillas escritas desde cero sobre la norma; generación por secciones con ediciones preservadas; Word con encabezado y pie; ZIP por carpetas de estándar. |
 | H7 Plan anual | ✅ | ~110 actividades con estándar y norma; en nov-dic se planea el año siguiente (Res. 0312 art. 26). Sin correos aún. |
 | H8 Tablero y comités | ✅ | Alertas, comités con periodos, indicadores art. 30 con registro de eventos y fichas técnicas. |
-| UI | ✅ | 100 % shadcn (base-nova): sidebar-07, Card, Table, Field, NativeSelect, Dialog, Empty, Alert. Marca PROCESST. Fuente BW Modelica declarada (faltan los archivos). |
+| UI | ✅ | 100 % shadcn (base-nova): sidebar-07, Card, Table, Field, NativeSelect, Dialog, Empty, Alert. Marca PROCESST. Fuente Plus Jakarta Sans (libre, reemplaza a BW Modelica). |
 
 ## Agregado después
 
@@ -55,7 +55,6 @@ IA opcional: agregar `AI_GATEWAY_API_KEY=...` en `.env`. Sin clave, “Sugerir t
 
 ## Pendiente
 
-- Archivos de la fuente BW Modelica en `public/fonts/bw-modelica/`.
 - PDF directo (hoy: Word; PDF desde Word o imprimir).
 - Correos de recordatorio y despliegue (Vercel + Neon). Recuperación de contraseña por correo.
 - Validar con la consultora: textos de plantillas, valores ND/NE/NC de la biblioteca, umbral del CCL en la Res. 3461/2025.
