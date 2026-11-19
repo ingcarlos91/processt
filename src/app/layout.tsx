@@ -14,7 +14,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="es" className={`${marca.variable} ${geistMono.variable} h-full antialiased`}>
       <body className="min-h-full">
-        <TooltipProvider>
+        <TooltipProvider delay={350}>
           {children}
           <Toaster richColors position="top-right" />
         </TooltipProvider>

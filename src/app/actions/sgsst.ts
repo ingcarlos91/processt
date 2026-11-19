@@ -174,21 +174,25 @@ export async function crearComite(empresaId: string, tipo: string, periodoInicio
   const fin = new Date(ini); fin.setFullYear(fin.getFullYear() + 2);
   const NR: Record<string, string> = { COPASST: "Res. 2013/1986", VIGIA: "Res. 2013/1986; Decreto 1072/2015", CCL: "Res. 3461/2025", BRIGADA: "Decreto 1072/2015 art. 2.2.4.6.25" };
   await db.comite.create({ data: { empresaId, tipo, periodoInicio: ini, periodoFin: tipo === "BRIGADA" ? null : fin, normaRef: NR[tipo] } });
+  await actualizarDocumentosExistentes(empresaId);
   rv(empresaId);
 }
 export async function agregarMiembro(empresaId: string, comiteId: string, d: { nombre: string; cedula?: string; cargo?: string; rol: string; representa?: string }) {
   await requiereUsuario();
   await db.comiteMiembro.create({ data: { comiteId, ...d } });
+  await actualizarDocumentosExistentes(empresaId);
   rv(empresaId);
 }
 export async function eliminarMiembro(empresaId: string, id: string) {
   await requiereUsuario();
   await db.comiteMiembro.delete({ where: { id } });
+  await actualizarDocumentosExistentes(empresaId);
   rv(empresaId);
 }
 export async function eliminarComite(empresaId: string, id: string) {
   await requiereUsuario();
   await db.comite.delete({ where: { id } });
+  await actualizarDocumentosExistentes(empresaId);
   rv(empresaId);
 }
 

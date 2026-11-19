@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 import { recalcularEmpresa } from "@/lib/empresa";
 import { Section, NormaRef } from "@/components/app/ui";
 import { Badge } from "@/components/ui/badge";
-import { buttonVariants } from "@/components/ui/button";
+import { buttonVariants, BotonEnlace } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
 import { BotonGenerarTodo } from "@/components/empresa/acciones";
@@ -28,11 +28,11 @@ export default async function Documentos({ params }: PageProps<"/empresas/[id]/d
   const resp = (emp.responsableSst ?? {}) as { nombre?: string; licencia?: string; cedula?: string };
   const faltaResp = [!resp.nombre?.trim() && "nombre", !resp.cedula?.trim() && "cédula", !resp.licencia?.trim() && "licencia"].filter(Boolean) as string[];
   const falta = faltantes((emp.datosComplementarios ?? {}) as Complementarios, (emp.disparadores ?? {}) as Record<string, boolean>, rr.documentos.map((d) => d.codigo));
-  const comitesSinIntegrantes = rr.comites.filter((c) => !emp.comites.some((x) => (x.tipo === c || (c === "COPASST" && x.tipo === "VIGIA")) && x._count.miembros > 0));
+  const comitesSinIntegrantes = [...new Set(rr.comites)].filter((c) => !emp.comites.some((x) => (x.tipo === c || (c === "COPASST" && x.tipo === "VIGIA")) && x._count.miembros > 0));
   const acciones = (
     <div className="flex gap-2">
       <BotonGenerarTodo empresaId={id} />
-      <a href={`/api/empresas/${id}/paquete.zip`} className={buttonVariants({ variant: "outline" })}><Download /> Descargar todo (ZIP)</a>
+      <BotonEnlace href={`/api/empresas/${id}/paquete.zip`} variant="outline" tooltip="Todos los documentos en Word organizados por carpetas, con la matriz y la evaluación en Excel"><Download /> Descargar todo (ZIP)</BotonEnlace>
     </div>
   );
   if (!docs.length) return (
@@ -48,7 +48,7 @@ export default async function Documentos({ params }: PageProps<"/empresas/[id]/d
   return (
     <>
       <div className="flex flex-wrap items-center gap-2">
-        <span className="text-sm text-muted-foreground">{docs.length} de {rr.documentos.length} documentos generados · se conservan las ediciones manuales al regenerar</span>
+        <span className="text-sm text-muted-foreground">{docs.length} de {rr.documentos.length} documentos generados · se actualizan solos al guardar Datos y Comités</span>
         <div className="flex-1" />{acciones}
       </div>
       {(falta.length > 0 || faltaResp.length > 0 || comitesSinIntegrantes.length > 0) && (
@@ -61,7 +61,7 @@ export default async function Documentos({ params }: PageProps<"/empresas/[id]/d
               {falta.map((f) => <li key={f.k}>{f.etiqueta} <span className="text-muted-foreground">({f.documentos.join(", ")})</span></li>)}
               {comitesSinIntegrantes.map((c) => <li key={c}>Integrantes de {c === "COPASST" ? "COPASST o Vigía" : c === "CCL" ? "Comité de Convivencia" : "brigada"} <span className="text-muted-foreground">(se registran en Comités)</span></li>)}
             </ul>
-            Mientras tanto, los documentos salen con espacios en blanco para llenar a mano.
+            <strong className="font-medium text-foreground">No tiene que volver a generar:</strong> al guardar estos datos, los documentos se actualizan solos. Mientras tanto salen con espacios en blanco para llenar a mano.
           </AlertDescription>
           <AlertAction className="flex flex-col gap-1">
             {faltaResp.length > 0 && <Link href={`/empresas/${id}/datos`} className={buttonVariants({ size: "sm", variant: "outline" })}>Responsable SG-SST</Link>}
@@ -94,8 +94,8 @@ export default async function Documentos({ params }: PageProps<"/empresas/[id]/d
                     </TableCell>
                     <TableCell className="pr-6 text-right">
                       {d && <div className="flex justify-end gap-1">
-                        <Link href={`/empresas/${id}/documentos/${p.codigo}`} className={buttonVariants({ size: "sm", variant: "outline" })}><PenLine /> Ver y editar</Link>
-                        <a href={`/api/empresas/${id}/documentos/${p.codigo}`} className={buttonVariants({ size: "icon-sm", variant: "ghost" })} aria-label="Descargar Word"><Download /></a>
+                        <Link href={`/empresas/${id}/documentos/${p.codigo}`} title="Ver el documento, editar sus secciones y subir la versión firmada" className={buttonVariants({ size: "sm", variant: "outline" })}><PenLine /> Ver y editar</Link>
+                        <BotonEnlace href={`/api/empresas/${id}/documentos/${p.codigo}`} size="icon-sm" variant="ghost" aria-label="Descargar en Word"><Download /></BotonEnlace>
                       </div>}
                     </TableCell>
                   </TableRow>

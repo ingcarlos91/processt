@@ -2,7 +2,7 @@
 import { useMemo, useState, useTransition } from "react";
 import { toast } from "sonner";
 import { CalendarDays, Check, Plus, Sparkles, Trash2, Download, Paperclip, Upload } from "lucide-react";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button, BotonEnlace } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -42,7 +42,7 @@ export function PlanEditor({ empresaId, anio, actividades }: { empresaId: string
   const ej = actividades.filter((a) => a.estado === "EJECUTADA").length;
   const venc = actividades.filter((a) => a.estado === "PENDIENTE" && a.mes < mesActual).length;
 
-  const generar = <Button disabled={pend} onClick={() => run(async () => { const n = await A.generarPlanAnual(empresaId, anio); toast.success(`${n} actividades generadas; PLN-01 actualizado`); })}><Sparkles /> {actividades.length ? "Regenerar pendientes" : `Generar plan anual ${anio}`}</Button>;
+  const generar = <Button tooltip="Crea las actividades del año a partir de los estándares, la matriz de peligros y los comités; no borra las que usted agregó" disabled={pend} onClick={() => run(async () => { const n = await A.generarPlanAnual(empresaId, anio); toast.success(`${n} actividades generadas; PLN-01 actualizado`); })}><Sparkles /> {actividades.length ? "Regenerar pendientes" : `Generar plan anual ${anio}`}</Button>;
 
   if (!actividades.length) return (
     <Empty className="border bg-background">
@@ -90,7 +90,7 @@ export function PlanEditor({ empresaId, anio, actividades }: { empresaId: string
         <label className="flex items-center gap-2 text-sm"><Checkbox checked={ocultarComites} onCheckedChange={(v) => setOcultarComites(!!v)} /> Ocultar reuniones mensuales de comités</label>
         <div className="flex-1" />
         {generar}
-        <a href={`/api/empresas/${empresaId}/documentos/PLN-01`} className={buttonVariants({ variant: "outline" })}><Download /> PLN-01 Word</a>
+        <BotonEnlace href={`/api/empresas/${empresaId}/documentos/PLN-01`} variant="outline" tooltip="Descargar el plan anual de trabajo (PLN-01) en Word, listo para firmar"><Download /> PLN-01 Word</BotonEnlace>
       </div>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <Stat label="Cumplimiento del plan" value={`${Math.round((ej / actividades.length) * 100)}%`} hint={<Progress value={(ej / actividades.length) * 100} className="w-full" />} tone={ej / actividades.length >= 0.9 ? "ok" : undefined} />

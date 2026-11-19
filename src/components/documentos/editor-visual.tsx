@@ -31,10 +31,7 @@ export function EditorVisual({ markdown, onChange }: { markdown: string; onChang
 
 function Boton({ etiqueta, onClick, children, disabled }: { etiqueta: string; onClick: () => void; children: React.ReactNode; disabled?: boolean }) {
   return (
-    <Tooltip>
-      <TooltipTrigger render={<Button type="button" variant="ghost" size="icon-sm" aria-label={etiqueta} disabled={disabled} onClick={onClick} />}>{children}</TooltipTrigger>
-      <TooltipContent>{etiqueta}</TooltipContent>
-    </Tooltip>
+    <Button type="button" variant="ghost" size="icon-sm" aria-label={etiqueta} disabled={disabled} onClick={onClick}>{children}</Button>
   );
 }
 

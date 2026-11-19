@@ -2,7 +2,7 @@
 import { Fragment, useMemo, useState, useTransition } from "react";
 import { toast } from "sonner";
 import { Plus, Trash2, Sparkles, Check, Download, ChevronDown, ChevronRight, X, Lock } from "lucide-react";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button, BotonEnlace } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Section, NormaRef } from "@/components/app/ui";
 import { Input } from "@/components/ui/input";
@@ -80,7 +80,7 @@ export function MatrizEditor(props: {
         <div className="flex-1" />
         {sugeridos > 0 && <Button disabled={pend} onClick={() => run(() => A.aprobarTodos(empresaId), "Sugerencias aprobadas")}><Check /> Aprobar {sugeridos} sugeridos</Button>}
         {props.sectorTipoId && <Button variant="outline" disabled={pend} onClick={() => run(() => A.completarDesdeSector(empresaId), "Procesos y zonas del sector agregados")}>Completar procesos y zonas del sector</Button>}
-        <a href={`/api/empresas/${empresaId}/matriz.xlsx`} className={buttonVariants({ variant: "outline" })}><Download /> Excel GTC 45</a>
+        <BotonEnlace href={`/api/empresas/${empresaId}/matriz.xlsx`} variant="outline" tooltip="Descargar la matriz de peligros en Excel con el formato de la GTC 45"><Download /> Excel GTC 45</BotonEnlace>
         <Pedir trigger={<Button variant="outline" disabled={pend} />} titulo="Cerrar versión de la matriz" descripcion="Se guarda una copia de la matriz actual. Debe actualizarse mínimo una vez al año y ante cambios o accidentes graves (Decreto 1072/2015 art. 2.2.4.6.15)." label="Motivo (inicial, anual, gestión del cambio, accidente)" inicial={props.version ? "anual" : "inicial"} accion="Cerrar versión" onConfirm={(m) => run(() => A.cerrarVersionMatriz(empresaId, m), "Versión de la matriz guardada")}><Lock /> Cerrar versión</Pedir>
       </div>
       {props.version && <p className="text-xs text-muted-foreground -mt-4">Última versión cerrada: v{props.version.numero} ({props.version.motivo}) el {new Date(props.version.fecha).toLocaleDateString("es-CO")}. La matriz se actualiza mínimo una vez al año y ante cambios o accidentes graves.</p>}
@@ -138,8 +138,8 @@ export function MatrizEditor(props: {
                         <TableCell className="whitespace-nowrap"><span className={cn("px-2 py-0.5 rounded font-semibold", COLOR_NIVEL[c.nivel])}>{c.nivel}</span> <Porque titulo={`Nivel de riesgo ${c.nivel}`} normas={["GTC 45 numeral 3"]} pasos={explicarRiesgo(p.nd, p.ne, p.nc).pasos}>Así se calculó con la metodología GTC 45. Cambie ND, NE o NC según lo que observe en la empresa y el nivel se recalcula.</Porque></TableCell>
                         <TableCell className="tabular-nums whitespace-nowrap">{exp} <Porque titulo="Personas expuestas">{`Suma de las personas de: ${cargos.filter((x) => cargoIds.includes(x.id)).map((x) => `${x.nombre} (${x.nPersonas})`).join(", ") || "ningún cargo asociado"}.`} {p.origen === "zona" ? "Son los cargos con alguna tarea en esta zona." : p.origen === "tarea" ? "Son los cargos que hacen esta tarea." : "Es el cargo dueño del peligro."}</Porque></TableCell>
                         <TableCell className="whitespace-nowrap">
-                          {p.estado === "sugerido" && <Button size="icon-xs" variant="outline" title="Aprobar" onClick={() => run(() => A.actualizarPeligro(empresaId, p.id, { estado: "aprobado" }))}><Check /></Button>}
-                          <Button size="icon-xs" variant="ghost" title="Eliminar" onClick={() => run(() => A.eliminarPeligro(empresaId, p.id))}><Trash2 /></Button>
+                          {p.estado === "sugerido" && <Button size="icon-xs" variant="outline" aria-label="Aprobar peligro sugerido" onClick={() => run(() => A.actualizarPeligro(empresaId, p.id, { estado: "aprobado" }))}><Check /></Button>}
+                          <Button size="icon-xs" variant="ghost" aria-label="Quitar peligro de la matriz" onClick={() => run(() => A.eliminarPeligro(empresaId, p.id))}><Trash2 /></Button>
                         </TableCell>
                       </TableRow>
                       {abierto === p.id && <DetallePeligro p={p} empresaId={empresaId} run={run} />}

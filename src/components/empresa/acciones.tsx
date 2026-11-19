@@ -8,7 +8,7 @@ import { generarTodo } from "@/app/actions/sgsst";
 export function BotonGenerarTodo({ empresaId, label = "Generar / actualizar todos los documentos" }: { empresaId: string; label?: string }) {
   const [pend, start] = useTransition();
   return (
-    <Button disabled={pend} onClick={() => start(async () => {
+    <Button tooltip="Úselo después de cambiar la matriz de peligros, la evaluación o el plan anual. Los cambios en Datos y Comités se aplican solos. Sus ediciones manuales se conservan." disabled={pend} onClick={() => start(async () => {
       const r = await generarTodo(empresaId);
       toast.success(`${r.total} documentos generados${r.revisar ? `; ${r.revisar} secciones editadas requieren revisión` : ""}.`);
     })}>

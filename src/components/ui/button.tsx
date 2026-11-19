@@ -1,6 +1,7 @@
 import { Button as ButtonPrimitive } from "@base-ui/react/button"
 import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "cn"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 
 const buttonVariants = cva(
   "group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
@@ -39,19 +40,53 @@ const buttonVariants = cva(
   }
 )
 
+type Lado = "top" | "bottom" | "left" | "right"
+
+/**
+ * Botón de shadcn con tooltip opcional.
+ * - `tooltip`: texto que explica la acción al pasar el mouse.
+ * - Los botones solo con icono muestran su `aria-label` como tooltip automáticamente.
+ * - `tooltip={false}` lo desactiva (por ejemplo, si ya está dentro de otro tooltip).
+ */
 function Button({
   className,
   variant = "default",
   size = "default",
+  tooltip,
+  tooltipLado = "top",
   ...props
-}: ButtonPrimitive.Props & VariantProps<typeof buttonVariants>) {
-  return (
+}: ButtonPrimitive.Props & VariantProps<typeof buttonVariants> & { tooltip?: React.ReactNode | false; tooltipLado?: Lado }) {
+  const boton = (
     <ButtonPrimitive
       data-slot="button"
       className={cn(buttonVariants({ variant, size, className }))}
       {...props}
     />
   )
+  const auto = String(size).startsWith("icon") ? (props as { "aria-label"?: string })["aria-label"] : undefined
+  const texto = tooltip === false ? undefined : tooltip ?? auto
+  if (!texto) return boton
+  return (
+    <Tooltip>
+      <TooltipTrigger render={boton} />
+      <TooltipContent side={tooltipLado}>{texto}</TooltipContent>
+    </Tooltip>
+  )
 }
 
-export { Button, buttonVariants }
+/** Enlace con apariencia de botón (descargas, navegación) y tooltip opcional. */
+function BotonEnlace({
+  href, className, variant = "default", size = "default", tooltip, tooltipLado = "top", children, ...props
+}: React.ComponentProps<"a"> & VariantProps<typeof buttonVariants> & { tooltip?: React.ReactNode; tooltipLado?: Lado }) {
+  const enlace = <a href={href} className={cn(buttonVariants({ variant, size, className }))} {...props}>{children}</a>
+  const texto = tooltip ?? (String(size).startsWith("icon") ? props["aria-label"] : undefined)
+  if (!texto) return enlace
+  return (
+    <Tooltip>
+      <TooltipTrigger render={enlace} />
+      <TooltipContent side={tooltipLado}>{texto}</TooltipContent>
+    </Tooltip>
+  )
+}
+
+export { Button, BotonEnlace, buttonVariants }

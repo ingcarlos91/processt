@@ -4,7 +4,7 @@ import { expedientePorEstandar } from "@/lib/expediente";
 import { aArchivoUI } from "@/lib/archivos-ui";
 import { Section, Stat, NormaRef } from "@/components/app/ui";
 import { Badge } from "@/components/ui/badge";
-import { buttonVariants } from "@/components/ui/button";
+import { BotonEnlace } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { SubirArchivo, ListaArchivos } from "@/components/app/adjuntos";
@@ -25,7 +25,7 @@ export default async function Evidencias({ params }: PageProps<"/empresas/[id]/e
       <div className="flex flex-wrap items-center gap-2">
         <p className="text-sm text-muted-foreground max-w-3xl">Todo lo que demuestra el cumplimiento, organizado por estándar como lo revisa el inspector (Res. 0312/2019 art. 16). Los archivos nunca se borran: se retiran y quedan en el historial (Decreto 1072/2015 art. 2.2.4.6.13).</p>
         <div className="flex-1" />
-        <a href={`/api/empresas/${id}/expediente.zip`} className={buttonVariants()}><Download /> Descargar expediente (ZIP)</a>
+        <BotonEnlace href={`/api/empresas/${id}/expediente.zip`} tooltip="Una carpeta por estándar con documentos firmados, evidencias e índice; lista para una visita del Ministerio o la ARL"><Download /> Descargar expediente (ZIP)</BotonEnlace>
       </div>
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
         <Stat label="Estándares con soporte" value={`${con} / ${exp.length}`} hint={<Progress value={(con / Math.max(1, exp.length)) * 100} className="w-full" />} tone={con === exp.length ? "ok" : undefined} />

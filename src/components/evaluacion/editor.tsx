@@ -3,7 +3,7 @@ import Link from "next/link";
 import { useTransition } from "react";
 import { toast } from "sonner";
 import { ClipboardCheck, Download, Lock, LockOpen, Plus, Trash2, Paperclip, Upload } from "lucide-react";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button, BotonEnlace } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -66,7 +66,7 @@ export function EvaluacionEditor({ empresaId, nivel, evaluaciones, actual }: {
         <NormaRef>Res. 0312/2019 arts. 27 y 28</NormaRef>
         <div className="flex-1" />
         {nueva}
-        <a href={`/api/empresas/${empresaId}/evaluacion.xlsx`} className={buttonVariants({ variant: "outline" })}><Download /> Excel</a>
+        <BotonEnlace href={`/api/empresas/${empresaId}/evaluacion.xlsx`} variant="outline" tooltip="Descargar la autoevaluación de estándares mínimos en Excel (Res. 0312/2019)"><Download /> Excel</BotonEnlace>
         {actual.cerrada
           ? <Button variant="outline" disabled={pend} onClick={() => run(() => A.reabrirEvaluacion(empresaId, actual.id))}><LockOpen /> Reabrir</Button>
           : <Button disabled={pend} onClick={() => run(() => A.cerrarEvaluacion(empresaId, actual.id), "Evaluación cerrada: se generó el plan de mejoramiento y se actualizaron DOC-05 y PLN-02")}><Lock /> Cerrar y generar plan de mejoramiento</Button>}
