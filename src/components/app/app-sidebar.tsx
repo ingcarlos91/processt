@@ -16,6 +16,7 @@ const nav = [
   { href: "/biblioteca", label: "Biblioteca de peligros", icon: BookOpen },
   { href: "/plantillas", label: "Plantillas", icon: FileText },
   { href: "/normas", label: "Normas y estándares", icon: Scale },
+  { href: "/configuracion", label: "Mi consultora", icon: Settings },
 ];
 
 export function AppSidebar({ empresas, consultora, usuario }: { empresas: { id: string; razonSocial: string }[]; consultora: { nombre: string; profesional: string | null }; usuario: { nombre: string; email: string; rol: string } }) {
