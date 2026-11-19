@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
-import { NativeSelect, NativeSelectOptGroup, NativeSelectOption } from "@/components/ui/native-select";
+import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,7 +14,8 @@ import { Field, FieldLabel } from "@/components/ui/field";
 import { Section } from "@/components/app/ui";
 import { Confirmar } from "@/components/app/confirmar";
 import { Ayuda } from "@/components/app/ayuda";
-import { CLASIFICACIONES, CLASIFICACION_ETIQUETA } from "@/lib/gtc45";
+import { Buscador } from "@/components/app/buscador";
+import { CLASIFICACION_ETIQUETA } from "@/lib/gtc45";
 import * as A from "@/app/actions/biblioteca";
 import { Upload } from "lucide-react";
 
@@ -72,9 +73,7 @@ export function TareasTab({ tareas, peligros, zonas, empresaId }: { tareas: T[];
                         <FieldLabel className="text-xs gap-1">Zonas donde se hace (en orden de preferencia) <Ayuda ayuda={{ titulo: "Zonas preferidas", que: "Lugares donde normalmente se hace esta tarea.", para: "Al instanciar la tarea en una empresa se ubica en la primera de estas zonas que exista. Así sus peligros de lugar aplican a las personas correctas." }} /></FieldLabel>
                         <div className="flex flex-wrap gap-1">
                           {t.zonasPreferidas.map((z) => <Badge key={z} variant="secondary" className="gap-1 pr-1">{z}<Button variant="ghost" size="icon-xs" className="size-4" aria-label="Quitar" onClick={() => run(() => A.actualizarTareaTipo(t.id, { zonasPreferidas: t.zonasPreferidas.filter((x) => x !== z) }))}><X /></Button></Badge>)}
-                          <NativeSelect size="sm" value="" onChange={(e) => e.target.value && run(() => A.actualizarTareaTipo(t.id, { zonasPreferidas: [...t.zonasPreferidas, e.target.value] }))}>
-                            <NativeSelectOption value="">+ zona</NativeSelectOption>{zonas.filter((z) => !t.zonasPreferidas.includes(z.nombre)).map((z) => <NativeSelectOption key={z.id} value={z.nombre}>{z.nombre}</NativeSelectOption>)}
-                          </NativeSelect>
+                          <Buscador size="xs" placeholder="Buscar zona…" textoBoton="zona" opciones={zonas.filter((z) => !t.zonasPreferidas.includes(z.nombre)).map((z) => ({ valor: z.nombre, etiqueta: z.nombre }))} onSelect={(v) => run(() => A.actualizarTareaTipo(t.id, { zonasPreferidas: [...t.zonasPreferidas, v] }))} />
                         </div>
                       </Field>
                       <Field>
@@ -82,11 +81,9 @@ export function TareasTab({ tareas, peligros, zonas, empresaId }: { tareas: T[];
                         <div className="flex flex-wrap gap-1">
                           {t.peligroIds.map((id) => { const p = nombreP(id); return p && <Badge key={id} variant="outline" className="gap-1 pr-1 font-normal"><span className="text-muted-foreground">{CLASIFICACION_ETIQUETA[p.clasificacion]}:</span> {p.descripcion}<Button variant="ghost" size="icon-xs" className="size-4" aria-label="Quitar" onClick={() => run(() => A.vincularPeligroTarea(t.id, id, true))}><X /></Button></Badge>; })}
                         </div>
-                        <NativeSelect className="w-full max-w-2xl" value="" onChange={(e) => e.target.value && run(() => A.vincularPeligroTarea(t.id, e.target.value), "Peligro agregado a la tarea")}>
-                          <NativeSelectOption value="">+ Agregar peligro del catálogo…</NativeSelectOption>
-                          {peligros.some((p) => p.propio) && <NativeSelectOptGroup label="Propios de esta empresa">{peligros.filter((p) => p.propio && !t.peligroIds.includes(p.id)).map((p) => <NativeSelectOption key={p.id} value={p.id}>{p.descripcion}</NativeSelectOption>)}</NativeSelectOptGroup>}
-                          {CLASIFICACIONES.map((c) => <NativeSelectOptGroup key={c} label={CLASIFICACION_ETIQUETA[c]}>{peligros.filter((p) => !p.propio && p.clasificacion === c && !t.peligroIds.includes(p.id)).map((p) => <NativeSelectOption key={p.id} value={p.id}>{p.descripcion}</NativeSelectOption>)}</NativeSelectOptGroup>)}
-                        </NativeSelect>
+                        <Buscador className="w-full max-w-xl" ancho="w-[34rem]" placeholder="Buscar peligro…" textoBoton="Agregar peligro"
+                          opciones={peligros.filter((p) => !t.peligroIds.includes(p.id)).map((p) => ({ valor: p.id, etiqueta: p.descripcion, grupo: CLASIFICACION_ETIQUETA[p.clasificacion], relevancia: empresaId ? (p.propio ? "propio" as const : "otro" as const) : undefined }))}
+                          onSelect={(v) => run(() => A.vincularPeligroTarea(t.id, v), "Peligro agregado a la tarea")} />
                       </Field>
                       {empresaId && <Button size="xs" variant="secondary" className="mr-2" onClick={() => run(() => A.publicarEnGeneral("tarea", t.id), "Publicada en la biblioteca general")}><Upload /> Publicar en general</Button>}
                       <Confirmar trigger={<Button size="xs" variant="destructive" />} titulo={`Eliminar “${t.nombre}”`} descripcion="Solo se puede si ninguna empresa la usa." destructivo accion="Eliminar" onConfirm={() => run(() => A.eliminarTareaTipo(t.id), "Tarea eliminada")}><Trash2 /> Eliminar tarea</Confirmar>

@@ -1,5 +1,6 @@
 import { db } from "@/lib/db";
 import { MatrizEditor } from "@/components/matriz/editor";
+import { relevanciaEmpresa, relevancia } from "@/lib/biblioteca/relevancia";
 
 export const dynamic = "force-dynamic";
 
@@ -20,6 +21,7 @@ export default async function Matriz({ params }: PageProps<"/empresas/[id]/matri
     db.peligroCatalogo.findMany({ where: { OR: [{ empresaId: null }, { empresaId: id }] }, orderBy: [{ clasificacion: "asc" }, { descripcion: "asc" }], select: { id: true, clasificacion: true, descripcion: true, empresaId: true } }),
     db.zonaTipo.findMany({ orderBy: { nombre: "asc" }, select: { id: true, nombre: true } }),
   ]);
+  const rel = await relevanciaEmpresa(id);
   return (
     <MatrizEditor
       empresaId={id}
@@ -35,7 +37,10 @@ export default async function Matriz({ params }: PageProps<"/empresas/[id]/matri
         nd: p.nd, ne: p.ne, nc: p.nc, medidaEliminacion: p.medidaEliminacion ?? "", medidaSustitucion: p.medidaSustitucion ?? "", medidaIngenieria: p.medidaIngenieria ?? "",
         medidaAdministrativa: p.medidaAdministrativa ?? "", medidaEpp: p.medidaEpp ?? "", requisitoLegal: p.requisitoLegal, estado: p.estado, fuente: p.fuente,
       }))}
-      cargosTipo={cargosTipo} tareasTipo={tareasTipo} catalogo={catalogo} zonasTipo={zonasTipo}
+      cargosTipo={cargosTipo.map((c) => ({ ...c, relevancia: relevancia(!!c.empresaId, !!c.sectorTipoId && c.sectorTipoId === e.sectorTipoId) }))}
+      tareasTipo={tareasTipo.map((t) => ({ ...t, relevancia: relevancia(!!t.empresaId, rel.tareas.has(t.id)) }))}
+      catalogo={catalogo.map((p) => ({ ...p, relevancia: relevancia(!!p.empresaId, rel.peligros.has(p.id)) }))}
+      zonasTipo={zonasTipo.map((z) => ({ ...z, relevancia: relevancia(false, rel.zonas.has(z.id)) }))}
     />
   );
 }

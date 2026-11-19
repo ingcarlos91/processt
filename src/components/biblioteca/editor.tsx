@@ -8,12 +8,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 import { Field, FieldLabel } from "@/components/ui/field";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Section } from "@/components/app/ui";
 import { Ayuda } from "@/components/app/ayuda";
+import { Buscador } from "@/components/app/buscador";
 import { CLASIFICACIONES, CLASIFICACION_ETIQUETA, ND, NE, NC, calcular, COLOR_NIVEL } from "@/lib/gtc45";
 import { actualizarPeligroCatalogo } from "@/app/actions/sgsst";
 import { crearPeligro, eliminarPeligroCatalogo, publicarEnGeneral } from "@/app/actions/biblioteca";
@@ -21,7 +21,6 @@ import { Upload } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Plus, Trash2 } from "lucide-react";
 import { Confirmar } from "@/components/app/confirmar";
-import { NativeSelectOptGroup } from "@/components/ui/native-select";
 import { cn } from "@/lib/utils";
 
 type P = { id: string; clasificacion: string; sub: string; descripcion: string; efectos: string; nd: number; ne: number; nc: number; ingenieria: string; administrativa: string; epp: string[]; examenes: string[]; capacitaciones: string[]; normas: string[]; pve: string; validado: boolean; usos: number; enTareas: number };
@@ -92,10 +91,7 @@ export function BibliotecaEditor({ peligros, sectores = [], catalogo = [], empre
                               <Field key={k}>
                                 <FieldLabel className="text-xs gap-1">{l} <Ayuda k={a} /></FieldLabel>
                                 <div className="flex flex-wrap gap-1">{v.map((x) => <Badge key={x} variant="secondary" className="gap-1 pr-1 font-normal">{x}<Button variant="ghost" size="icon-xs" className="size-4" aria-label="Quitar" onClick={() => upd(p.id, { [k]: v.filter((y) => y !== x) })}>×</Button></Badge>)}</div>
-                                <NativeSelect size="sm" className="w-full" value="" onChange={(e) => e.target.value && upd(p.id, { [k]: [...v, e.target.value] })}>
-                                  <NativeSelectOption value="">+ Agregar del catálogo…</NativeSelectOption>
-                                  {catalogo.filter((c) => c.tipo === tipo && !v.includes(c.nombre)).map((c) => <NativeSelectOption key={c.nombre} value={c.nombre}>{c.nombre}</NativeSelectOption>)}
-                                </NativeSelect>
+                                <Buscador size="sm" className="w-full" placeholder="Buscar en el catálogo…" textoBoton="Agregar del catálogo" opciones={catalogo.filter((c) => c.tipo === tipo && !v.includes(c.nombre)).map((c) => ({ valor: c.nombre, etiqueta: c.nombre }))} onSelect={(x) => upd(p.id, { [k]: [...v, x] })} />
                               </Field>
                             ))}
                             <Field><FieldLabel className="text-xs gap-1">Códigos de normas (uno por línea) <Ayuda k="normasPeligro" /></FieldLabel><Textarea className="text-xs min-h-16" defaultValue={p.normas.join("\n")} onBlur={(e) => e.target.value !== p.normas.join("\n") && upd(p.id, { normas: aLista(e.target.value) })} /></Field>

@@ -16,6 +16,7 @@ import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Confirmar } from "@/components/app/confirmar";
 import { Ayuda } from "@/components/app/ayuda";
+import { Buscador } from "@/components/app/buscador";
 import * as A from "@/app/actions/biblioteca";
 
 type Cargo = { id: string; nombre: string; descripcion: string; validado: boolean; usos: number; tareaIds: string[] };
@@ -99,7 +100,7 @@ function SectorCard({ s, tareas, zonas, iaActiva, run, pend }: { s: S; tareas: I
               <Field>
                 <FieldLabel className="gap-1">Zonas <Ayuda ayuda={{ titulo: "Zonas del sector", que: "Lugares típicos de trabajo en este sector.", para: "Al crear una empresa del sector se crean estas zonas con sus peligros de lugar." }} /></FieldLabel>
                 <div className="flex flex-wrap gap-1">{s.zonaIds.map((id) => <Badge key={id} variant="secondary" className="gap-1 pr-1">{zonas.find((z) => z.id === id)?.nombre}<Button variant="ghost" size="icon-xs" className="size-4" aria-label="Quitar" onClick={() => run(() => A.vincularZonaSector(s.id, id, true))}><X /></Button></Badge>)}</div>
-                <NativeSelect className="w-full" value="" onChange={(e) => e.target.value && run(() => A.vincularZonaSector(s.id, e.target.value), "Zona agregada")}><NativeSelectOption value="">+ Agregar zona…</NativeSelectOption>{zonas.filter((z) => !s.zonaIds.includes(z.id)).map((z) => <NativeSelectOption key={z.id} value={z.id}>{z.nombre}</NativeSelectOption>)}</NativeSelect>
+                <Buscador className="w-full" placeholder="Buscar zona…" textoBoton="Agregar zona" opciones={zonas.filter((z) => !s.zonaIds.includes(z.id)).map((z) => ({ valor: z.id, etiqueta: z.nombre }))} onSelect={(v) => run(() => A.vincularZonaSector(s.id, v), "Zona agregada")} />
               </Field>
             </div>
             <div className="space-y-2">
@@ -114,7 +115,7 @@ function SectorCard({ s, tareas, zonas, iaActiva, run, pend }: { s: S; tareas: I
                     </CardHeader>
                     <CardContent className="space-y-2">
                       <div className="flex flex-wrap gap-1">{c.tareaIds.map((id) => <Badge key={id} variant="outline" className="gap-1 pr-1 font-normal text-[11px]">{nombreT(id)}<Button variant="ghost" size="icon-xs" className="size-4" aria-label="Quitar" onClick={() => run(() => A.vincularTareaCargo(c.id, id, true))}><X /></Button></Badge>)}</div>
-                      <NativeSelect size="sm" className="w-full" value="" onChange={(e) => e.target.value && run(() => A.vincularTareaCargo(c.id, e.target.value), "Tarea agregada al cargo")}><NativeSelectOption value="">+ Agregar tarea…</NativeSelectOption>{tareas.filter((t) => !c.tareaIds.includes(t.id)).map((t) => <NativeSelectOption key={t.id} value={t.id}>{t.nombre}</NativeSelectOption>)}</NativeSelect>
+                      <Buscador size="sm" className="w-full" placeholder="Buscar tarea…" textoBoton="Agregar tarea" opciones={tareas.filter((t) => !c.tareaIds.includes(t.id)).map((t) => ({ valor: t.id, etiqueta: t.nombre }))} onSelect={(v) => run(() => A.vincularTareaCargo(c.id, v), "Tarea agregada al cargo")} />
                     </CardContent>
                   </Card>
                 ))}

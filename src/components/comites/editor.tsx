@@ -29,7 +29,7 @@ const INFO: Record<string, { nombre: string; doc: string; desc: string }> = {
 const ROLES = [["presidente", "Presidente"], ["secretario", "Secretario"], ["principal", "Principal"], ["suplente", "Suplente"], ["vigia", "Vigía"], ["jefe_brigada", "Jefe de brigada"], ["brigadista", "Brigadista"]];
 
 export function ComitesEditor({ empresaId, requeridos, comites, composicion, refs, porques }: { empresaId: string; requeridos: string[]; comites: Comite[]; composicion: string; refs: Record<string, string>; porques: Record<string, string> }) {
-  const [pend, start] = useTransition();
+  const [, start] = useTransition();
   const run = (fn: () => Promise<unknown>, ok?: string) => start(async () => { await fn(); if (ok) toast.success(ok); });
   const hoy = new Date().toISOString().slice(0, 10);
   return (

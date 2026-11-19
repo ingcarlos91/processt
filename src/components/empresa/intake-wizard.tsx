@@ -8,11 +8,12 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { NativeSelect, NativeSelectOptGroup, NativeSelectOption } from "@/components/ui/native-select";
+import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
 import { Field, FieldDescription, FieldGroup, FieldLabel, FieldLegend, FieldSet } from "@/components/ui/field";
 import { Spinner } from "@/components/ui/spinner";
 import { NormaRef } from "@/components/app/ui";
 import { Ayuda } from "@/components/app/ayuda";
+import { Buscador } from "@/components/app/buscador";
 import { TURNOS, DIAS } from "@/lib/ayuda";
 import { Porque } from "@/components/app/porque";
 import { explicarNivel } from "@/lib/reglas/explicar";
@@ -124,8 +125,6 @@ export function IntakeWizard({ sectores, cargosTipo, ciius, inicial, empresaId, 
   }, [busq, ciius]);
   const trab = (Number(d.nTrabajadoresPlanta) || 0) + (Number(d.nEnMision) || 0);
   const prev = nivelPreview(trab, d.claseRiesgo);
-  const delSector = cargosTipo.filter((c) => !d.sectorTipoId || c.sectorTipoId === d.sectorTipoId);
-  const otros = cargosTipo.filter((c) => d.sectorTipoId && c.sectorTipoId !== d.sectorTipoId);
   const sumaCargos = d.cargos.reduce((s, c) => s + (Number(c.nPersonas) || 0), 0);
 
   function elegirCiiu(c: Ciiu) {
@@ -288,11 +287,9 @@ export function IntakeWizard({ sectores, cargosTipo, ciius, inicial, empresaId, 
                       <div key={i} className="grid md:grid-cols-[1fr_90px_1fr_auto] gap-2">
                         <Input placeholder="Nombre del cargo" value={c.nombre} onChange={(e) => set("cargos", d.cargos.map((x, j) => (j === i ? { ...x, nombre: e.target.value } : x)))} />
                         <Input type="number" min={1} value={c.nPersonas} onChange={(e) => set("cargos", d.cargos.map((x, j) => (j === i ? { ...x, nPersonas: Number(e.target.value) } : x)))} />
-                        <NativeSelect className="w-full" value={c.cargoTipoId ?? ""} onChange={(e) => set("cargos", d.cargos.map((x, j) => (j === i ? { ...x, cargoTipoId: e.target.value || null, nombre: x.nombre || cargosTipo.find((t) => t.id === e.target.value)?.nombre.split(" / ")[0] || "" } : x)))}>
-                          <NativeSelectOption value="">Tipo: detectar automáticamente</NativeSelectOption>
-                          {delSector.map((t) => <NativeSelectOption key={t.id} value={t.id}>{t.nombre}</NativeSelectOption>)}
-                          {otros.length > 0 && <NativeSelectOptGroup label="Otros sectores">{otros.map((t) => <NativeSelectOption key={t.id} value={t.id}>{t.nombre}</NativeSelectOption>)}</NativeSelectOptGroup>}
-                        </NativeSelect>
+                        <Buscador className="w-full" value={c.cargoTipoId ?? undefined} placeholder="Buscar cargo tipo…" textoBoton="Detectar automáticamente"
+                          opciones={cargosTipo.map((t) => ({ valor: t.id, etiqueta: t.nombre, relevancia: d.sectorTipoId ? (t.sectorTipoId === d.sectorTipoId ? "sector" as const : "otro" as const) : undefined }))}
+                          onSelect={(v) => set("cargos", d.cargos.map((x, j) => (j === i ? { ...x, cargoTipoId: v, nombre: x.nombre || cargosTipo.find((t) => t.id === v)?.nombre.split(" / ")[0] || "" } : x)))} />
                         <Button variant="ghost" size="icon" aria-label="Quitar cargo" onClick={() => set("cargos", d.cargos.filter((_, j) => j !== i))}><Trash2 /></Button>
                       </div>
                     ))}

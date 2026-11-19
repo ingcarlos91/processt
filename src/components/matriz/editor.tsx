@@ -1,16 +1,15 @@
 "use client";
 import { Fragment, useMemo, useState, useTransition } from "react";
 import { toast } from "sonner";
-import { Plus, Trash2, Sparkles, Check, Download, BookmarkPlus, ChevronDown, ChevronRight, X, Lock } from "lucide-react";
+import { Plus, Trash2, Sparkles, Check, Download, ChevronDown, ChevronRight, X, Lock } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Section, NormaRef } from "@/components/app/ui";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
-import { NativeSelect, NativeSelectOptGroup, NativeSelectOption } from "@/components/ui/native-select";
+import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,6 +17,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Item as UiItem, ItemActions, ItemContent, ItemDescription, ItemGroup, ItemTitle } from "@/components/ui/item";
 import { Confirmar, Pedir } from "@/components/app/confirmar";
 import { GuardarEnBiblioteca } from "@/components/app/guardar-biblioteca";
+import { Buscador, type OpcionBuscador, type Relevancia } from "@/components/app/buscador";
 import { ND, NE, NC, CLASIFICACIONES, CLASIFICACION_ETIQUETA, calcular, COLOR_NIVEL, explicarRiesgo } from "@/lib/gtc45";
 import { Porque } from "@/components/app/porque";
 import { Ayuda } from "@/components/app/ayuda";
@@ -34,12 +34,15 @@ type Peligro = {
   requisitoLegal: boolean; estado: string; fuente: string;
 };
 type Item = { id: string; nombre: string };
+type CT = { id: string; nombre: string; sectorTipoId: string | null; empresaId: string | null; relevancia: Relevancia };
+type TT = { id: string; nombre: string; actividad?: string | null; empresaId: string | null; relevancia: Relevancia };
+type PC = { id: string; clasificacion: string; descripcion: string; empresaId: string | null; relevancia: Relevancia };
+const opcCargos = (xs: CT[]): OpcionBuscador[] => xs.map((t) => ({ valor: t.id, etiqueta: t.nombre, relevancia: t.relevancia }));
 
 export function MatrizEditor(props: {
   empresaId: string; sectorTipoId: string | null; version: { numero: number; fecha: string; motivo: string } | null;
   procesos: Item[]; zonas: Item[]; cargos: Cargo[]; tareas: Tarea[]; peligros: Peligro[];
-  cargosTipo: { id: string; nombre: string; sectorTipoId: string | null; empresaId: string | null }[]; tareasTipo: { id: string; nombre: string; actividad: string | null; empresaId: string | null }[];
-  catalogo: { id: string; clasificacion: string; descripcion: string; empresaId: string | null }[]; zonasTipo: Item[];
+  cargosTipo: CT[]; tareasTipo: TT[]; catalogo: PC[]; zonasTipo: (Item & { relevancia: Relevancia })[];
 }) {
   const { empresaId, cargos, tareas, peligros, procesos, zonas } = props;
   const [pend, start] = useTransition();
@@ -191,9 +194,8 @@ function DetallePeligro({ p, empresaId, run }: { p: Peligro; empresaId: string; 
   );
 }
 
-function Estructura({ empresaId, procesos, zonas, zonasTipo, run, pend }: { empresaId: string; procesos: Item[]; zonas: Item[]; zonasTipo: Item[]; run: Run; pend: boolean }) {
+function Estructura({ empresaId, procesos, zonas, zonasTipo, run, pend }: { empresaId: string; procesos: Item[]; zonas: Item[]; zonasTipo: (Item & { relevancia: Relevancia })[]; run: Run; pend: boolean }) {
   const [np, setNp] = useState("");
-  const [zt, setZt] = useState("");
   const Chip = ({ nombre, onQuitar }: { nombre: string; onQuitar: () => void }) => (
     <Badge variant="outline" className="gap-1 pr-1">{nombre}<Button variant="ghost" size="icon-xs" className="size-4" aria-label={`Quitar ${nombre}`} onClick={onQuitar}><X /></Button></Badge>
   );
@@ -209,8 +211,7 @@ function Estructura({ empresaId, procesos, zonas, zonasTipo, run, pend }: { empr
           <FieldLabel>Zonas o lugares</FieldLabel>
           <div className="flex flex-wrap gap-1">{zonas.map((z) => <Chip key={z.id} nombre={z.nombre} onQuitar={() => run(() => A.eliminarZona(empresaId, z.id))} />)}</div>
           <div className="flex gap-1">
-            <NativeSelect className="w-full" value={zt} onChange={(e) => setZt(e.target.value)}><NativeSelectOption value="">Agregar zona de la biblioteca…</NativeSelectOption>{zonasTipo.map((z) => <NativeSelectOption key={z.id} value={z.id}>{z.nombre}</NativeSelectOption>)}</NativeSelect>
-            <Button size="icon" variant="outline" aria-label="Agregar zona" disabled={!zt || pend} onClick={() => { run(() => A.agregarZona(empresaId, zonasTipo.find((x) => x.id === zt)!.nombre, zt), "Zona agregada con sus peligros"); setZt(""); }}><Plus /></Button>
+            <Buscador className="w-full" placeholder="Buscar zona…" textoBoton="Agregar zona de la biblioteca" opciones={zonasTipo.map((z) => ({ valor: z.id, etiqueta: z.nombre, relevancia: z.relevancia }))} onSelect={(v) => run(() => A.agregarZona(empresaId, zonasTipo.find((x) => x.id === v)!.nombre, v), "Zona agregada con sus peligros")} />
           </div>
         </Field>
       </div>
@@ -218,13 +219,12 @@ function Estructura({ empresaId, procesos, zonas, zonasTipo, run, pend }: { empr
   );
 }
 
-function CargoCard({ c, empresaId, tareas, tareasTipo, cargosTipo, procesos, zonas, sectorTipoId, run, pend, activo, onFiltrar }: {
-  c: Cargo; empresaId: string; tareas: Tarea[]; tareasTipo: { id: string; nombre: string; empresaId: string | null }[]; cargosTipo: { id: string; nombre: string; sectorTipoId: string | null; empresaId: string | null }[];
+function CargoCard({ c, empresaId, tareas, tareasTipo, cargosTipo, procesos, zonas, run, pend, activo, onFiltrar }: {
+  c: Cargo; empresaId: string; tareas: Tarea[]; tareasTipo: TT[]; cargosTipo: CT[];
   procesos: Item[]; zonas: Item[]; sectorTipoId: string | null; run: Run; pend: boolean; activo: boolean; onFiltrar: () => void;
 }) {
   const [abierto, setAbierto] = useState(false);
   const [funciones, setFunciones] = useState(c.funciones);
-  const [tt, setTt] = useState("");
   const [manual, setManual] = useState("");
   const [sug, setSug] = useState<{ fuente: "ia" | "biblioteca"; sugerencia: Sugerencia } | null>(null);
   const [cargandoIA, startIA] = useTransition();
@@ -248,12 +248,7 @@ function CargoCard({ c, empresaId, tareas, tareasTipo, cargosTipo, procesos, zon
               <Field><FieldLabel htmlFor={`cn-${c.id}`} className="text-xs">Nombre</FieldLabel><Input id={`cn-${c.id}`} defaultValue={c.nombre} onBlur={(e) => e.target.value !== c.nombre && run(() => A.actualizarCargo(empresaId, c.id, { nombre: e.target.value }))} /></Field>
               <Field><FieldLabel htmlFor={`cp-${c.id}`} className="text-xs gap-1">Personas <Ayuda k="nPersonas" /></FieldLabel><Input id={`cp-${c.id}`} type="number" min={1} defaultValue={c.nPersonas} onBlur={(e) => Number(e.target.value) !== c.nPersonas && run(() => A.actualizarCargo(empresaId, c.id, { nPersonas: Number(e.target.value) }))} /></Field>
             </div>
-            <NativeSelect className="w-full" defaultValue="" onChange={(e) => e.target.value && run(() => A.aplicarTipo(empresaId, c.id, e.target.value), "Tareas y peligros del cargo tipo agregados")}>
-              <NativeSelectOption value="">Aplicar tareas de un cargo tipo…</NativeSelectOption>
-              {cargosTipo.some((t) => t.empresaId) && <NativeSelectOptGroup label="Propios de esta empresa">{cargosTipo.filter((t) => t.empresaId).map((t) => <NativeSelectOption key={t.id} value={t.id}>{t.nombre}</NativeSelectOption>)}</NativeSelectOptGroup>}
-              {cargosTipo.filter((t) => !t.empresaId && (!sectorTipoId || t.sectorTipoId === sectorTipoId)).map((t) => <NativeSelectOption key={t.id} value={t.id}>{t.nombre}</NativeSelectOption>)}
-              <NativeSelectOptGroup label="Otros sectores">{cargosTipo.filter((t) => !t.empresaId && sectorTipoId && t.sectorTipoId !== sectorTipoId).map((t) => <NativeSelectOption key={t.id} value={t.id}>{t.nombre}</NativeSelectOption>)}</NativeSelectOptGroup>
-            </NativeSelect>
+            <Buscador className="w-full" placeholder="Buscar cargo tipo…" textoBoton="Aplicar tareas de un cargo tipo" opciones={opcCargos(cargosTipo)} onSelect={(v) => run(() => A.aplicarTipo(empresaId, c.id, v), "Tareas y peligros del cargo tipo agregados")} />
 
             <Field>
               <FieldLabel className="text-xs">Tareas</FieldLabel>
@@ -272,13 +267,12 @@ function CargoCard({ c, empresaId, tareas, tareasTipo, cargosTipo, procesos, zon
                 ))}
               </ItemGroup>
               <div className="flex gap-1">
-                <NativeSelect className="w-full" value={tt} onChange={(e) => setTt(e.target.value)}>
-                  <NativeSelectOption value="">Agregar tarea…</NativeSelectOption>
-                  {otras.length > 0 && <NativeSelectOptGroup label="Tareas de otros cargos">{otras.map((t) => <NativeSelectOption key={t.id} value={`e:${t.id}`}>{t.nombre}</NativeSelectOption>)}</NativeSelectOptGroup>}
-                  {tareasTipo.some((t) => t.empresaId) && <NativeSelectOptGroup label="Biblioteca de esta empresa">{tareasTipo.filter((t) => t.empresaId).map((t) => <NativeSelectOption key={t.id} value={`b:${t.id}`}>{t.nombre}</NativeSelectOption>)}</NativeSelectOptGroup>}
-                  <NativeSelectOptGroup label="Biblioteca general">{tareasTipo.filter((t) => !t.empresaId).map((t) => <NativeSelectOption key={t.id} value={`b:${t.id}`}>{t.nombre}</NativeSelectOption>)}</NativeSelectOptGroup>
-                </NativeSelect>
-                <Button size="icon" variant="outline" aria-label="Agregar tarea" disabled={!tt || pend} onClick={() => { const [k, id] = tt.split(":"); run(() => (k === "e" ? A.vincularTarea(empresaId, c.id, id) : A.agregarTareaDeBiblioteca(empresaId, c.id, id))); setTt(""); }}><Plus /></Button>
+                <Buscador className="w-full" placeholder="Buscar tarea…" textoBoton="Agregar tarea"
+                  opciones={[
+                    ...otras.map((t) => ({ valor: `e:${t.id}`, etiqueta: t.nombre, detalle: "Ya está en la matriz de esta empresa", relevancia: "propio" as const, grupo: "En la matriz" })),
+                    ...tareasTipo.map((t) => ({ valor: `b:${t.id}`, etiqueta: t.nombre, detalle: t.actividad ?? undefined, relevancia: t.relevancia, grupo: t.empresaId ? "Biblioteca propia" : undefined })),
+                  ]}
+                  onSelect={(v) => { const [k, id] = v.split(":"); run(() => (k === "e" ? A.vincularTarea(empresaId, c.id, id) : A.agregarTareaDeBiblioteca(empresaId, c.id, id)), "Tarea agregada con sus peligros"); }} />
               </div>
               <div className="flex gap-1">
                 <Input placeholder="Tarea nueva (fuera de la biblioteca)" value={manual} onChange={(e) => setManual(e.target.value)} />
@@ -322,7 +316,7 @@ function CargoCard({ c, empresaId, tareas, tareasTipo, cargosTipo, procesos, zon
   );
 }
 
-function NuevoCargo({ empresaId, cargosTipo, sectorTipoId, run, pend }: { empresaId: string; cargosTipo: { id: string; nombre: string; sectorTipoId: string | null; empresaId: string | null }[]; sectorTipoId: string | null; run: Run; pend: boolean }) {
+function NuevoCargo({ empresaId, cargosTipo, run, pend }: { empresaId: string; cargosTipo: CT[]; sectorTipoId: string | null; run: Run; pend: boolean }) {
   const [nombre, setNombre] = useState("");
   const [n, setN] = useState(1);
   const [tipo, setTipo] = useState("");
@@ -334,12 +328,7 @@ function NuevoCargo({ empresaId, cargosTipo, sectorTipoId, run, pend }: { empres
           <Input placeholder="Nombre" value={nombre} onChange={(e) => setNombre(e.target.value)} />
           <Input type="number" min={1} aria-label="Personas" value={n} onChange={(e) => setN(Number(e.target.value))} />
         </div>
-        <NativeSelect className="w-full" value={tipo} onChange={(e) => { setTipo(e.target.value); if (!nombre) setNombre(cargosTipo.find((t) => t.id === e.target.value)?.nombre.split(" / ")[0] ?? ""); }}>
-          <NativeSelectOption value="">Tipo de cargo (opcional)…</NativeSelectOption>
-          {cargosTipo.some((t) => t.empresaId) && <NativeSelectOptGroup label="Propios de esta empresa">{cargosTipo.filter((t) => t.empresaId).map((t) => <NativeSelectOption key={t.id} value={t.id}>{t.nombre}</NativeSelectOption>)}</NativeSelectOptGroup>}
-              {cargosTipo.filter((t) => !t.empresaId && (!sectorTipoId || t.sectorTipoId === sectorTipoId)).map((t) => <NativeSelectOption key={t.id} value={t.id}>{t.nombre}</NativeSelectOption>)}
-          <NativeSelectOptGroup label="Otros sectores">{cargosTipo.filter((t) => !t.empresaId && sectorTipoId && t.sectorTipoId !== sectorTipoId).map((t) => <NativeSelectOption key={t.id} value={t.id}>{t.nombre}</NativeSelectOption>)}</NativeSelectOptGroup>
-        </NativeSelect>
+        <Buscador className="w-full" value={tipo || undefined} placeholder="Buscar cargo tipo…" textoBoton="Tipo de cargo (opcional)" opciones={opcCargos(cargosTipo)} onSelect={(v) => { setTipo(v); if (!nombre) setNombre(cargosTipo.find((t) => t.id === v)?.nombre.split(" / ")[0] ?? ""); }} />
       </CardContent>
       <CardFooter>
         <Button size="sm" disabled={!nombre || pend} onClick={() => { run(() => A.agregarCargo(empresaId, { nombre, nPersonas: n, cargoTipoId: tipo || undefined }), "Cargo agregado"); setNombre(""); setN(1); setTipo(""); }}><Plus /> Agregar cargo</Button>
@@ -348,7 +337,7 @@ function NuevoCargo({ empresaId, cargosTipo, sectorTipoId, run, pend }: { empres
   );
 }
 
-function AgregarPeligro({ empresaId, catalogo, tareas, zonas, cargos, run, pend }: { empresaId: string; catalogo: { id: string; clasificacion: string; descripcion: string; empresaId: string | null }[]; tareas: Tarea[]; zonas: Item[]; cargos: Cargo[]; run: Run; pend: boolean }) {
+function AgregarPeligro({ empresaId, catalogo, tareas, zonas, cargos, run, pend }: { empresaId: string; catalogo: PC[]; tareas: Tarea[]; zonas: Item[]; cargos: Cargo[]; run: Run; pend: boolean }) {
   const [origen, setOrigen] = useState<"tarea" | "zona" | "cargo">("tarea");
   const [ref, setRef] = useState("");
   const [pid, setPid] = useState("");
@@ -358,12 +347,9 @@ function AgregarPeligro({ empresaId, catalogo, tareas, zonas, cargos, run, pend 
       <CardHeader><CardTitle className="text-sm">Agregar peligro del catálogo</CardTitle></CardHeader>
       <CardContent className="flex flex-wrap gap-2">
         <NativeSelect className="w-32" value={origen} onChange={(e) => { setOrigen(e.target.value as "tarea"); setRef(""); }}><NativeSelectOption value="tarea">A tarea</NativeSelectOption><NativeSelectOption value="zona">A zona</NativeSelectOption><NativeSelectOption value="cargo">A cargo</NativeSelectOption></NativeSelect>
-        <NativeSelect className="w-64" value={ref} onChange={(e) => setRef(e.target.value)}><NativeSelectOption value="">Seleccione…</NativeSelectOption>{opciones.map((o) => <NativeSelectOption key={o.id} value={o.id}>{o.nombre}</NativeSelectOption>)}</NativeSelect>
-        <NativeSelect className="flex-1 min-w-72" value={pid} onChange={(e) => setPid(e.target.value)}>
-          <NativeSelectOption value="">Peligro…</NativeSelectOption>
-          {catalogo.some((p) => p.empresaId) && <NativeSelectOptGroup label="Propios de esta empresa">{catalogo.filter((p) => p.empresaId).map((p) => <NativeSelectOption key={p.id} value={p.id}>{p.descripcion}</NativeSelectOption>)}</NativeSelectOptGroup>}
-          {CLASIFICACIONES.map((c) => <NativeSelectOptGroup key={c} label={CLASIFICACION_ETIQUETA[c]}>{catalogo.filter((p) => !p.empresaId && p.clasificacion === c).map((p) => <NativeSelectOption key={p.id} value={p.id}>{p.descripcion}</NativeSelectOption>)}</NativeSelectOptGroup>)}
-        </NativeSelect>
+        <Buscador className="w-72" value={ref || undefined} placeholder={`Buscar ${origen}…`} textoBoton={`Elegir ${origen}`} opciones={opciones.map((o) => ({ valor: o.id, etiqueta: o.nombre }))} onSelect={setRef} />
+        <Buscador className="flex-1 min-w-72" ancho="w-[34rem]" value={pid || undefined} placeholder="Buscar peligro…" textoBoton="Elegir peligro"
+          opciones={catalogo.map((p) => ({ valor: p.id, etiqueta: p.descripcion, relevancia: p.relevancia, grupo: CLASIFICACION_ETIQUETA[p.clasificacion] }))} onSelect={setPid} />
         <Button disabled={!ref || !pid || pend} onClick={() => { run(() => A.agregarPeligro(empresaId, origen, ref, pid), "Peligro agregado"); setPid(""); }}><Plus /> Agregar</Button>
       </CardContent>
     </Card>

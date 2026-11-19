@@ -5,11 +5,11 @@ import { Plus, Trash2, Upload, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { NativeSelect, NativeSelectOptGroup, NativeSelectOption } from "@/components/ui/native-select";
 import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
 import { Confirmar } from "@/components/app/confirmar";
 import * as A from "@/app/actions/biblioteca";
+import { Buscador } from "@/components/app/buscador";
 
 type C = { id: string; nombre: string; descripcion: string; tareaIds: string[] };
 type T = { id: string; nombre: string; propia: boolean };
@@ -20,11 +20,9 @@ export function CargosPropios({ empresaId, sectorTipoId, cargos, tareas }: { emp
   const run = (fn: () => Promise<unknown>, ok?: string) => start(async () => { const r = await fn(); if (r && typeof r === "object" && "error" in r) toast.error(String(r.error)); else if (ok) toast.success(ok); });
   const nombreT = (id: string) => tareas.find((t) => t.id === id);
   const selector = (c: C) => (
-    <NativeSelect size="sm" className="w-full" value="" onChange={(e) => e.target.value && run(() => A.vincularTareaCargo(c.id, e.target.value), "Tarea agregada")}>
-      <NativeSelectOption value="">+ Agregar tarea…</NativeSelectOption>
-      <NativeSelectOptGroup label="Propias de esta empresa">{tareas.filter((t) => t.propia && !c.tareaIds.includes(t.id)).map((t) => <NativeSelectOption key={t.id} value={t.id}>{t.nombre}</NativeSelectOption>)}</NativeSelectOptGroup>
-      <NativeSelectOptGroup label="Biblioteca general">{tareas.filter((t) => !t.propia && !c.tareaIds.includes(t.id)).map((t) => <NativeSelectOption key={t.id} value={t.id}>{t.nombre}</NativeSelectOption>)}</NativeSelectOptGroup>
-    </NativeSelect>
+    <Buscador size="sm" className="w-full" placeholder="Buscar tarea…" textoBoton="Agregar tarea"
+      opciones={tareas.filter((t) => !c.tareaIds.includes(t.id)).map((t) => ({ valor: t.id, etiqueta: t.nombre, relevancia: t.propia ? "propio" as const : "otro" as const }))}
+      onSelect={(v) => run(() => A.vincularTareaCargo(c.id, v), "Tarea agregada")} />
   );
   return (
     <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-3">
