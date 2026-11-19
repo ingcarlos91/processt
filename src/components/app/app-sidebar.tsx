@@ -2,7 +2,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { Building2, BookOpen, FileText, Scale, Settings, Plus, LogOut, Users, ChevronsUpDown } from "lucide-react";
+import { Building2, BookOpen, FileText, Scale, Settings, Plus, LogOut, Users, ChevronsUpDown, KeyRound } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { salir } from "@/app/actions/auth";
@@ -79,7 +79,7 @@ export function AppSidebar({ empresas, consultora, usuario }: { empresas: { id: 
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator />
                 <DropdownMenuGroup>
-                  <DropdownMenuItem render={<Link href="/configuracion" />}><Settings /> Mi consultora</DropdownMenuItem>
+                  <DropdownMenuItem render={<Link href="/cuenta" />}><KeyRound /> Mi cuenta y contraseña</DropdownMenuItem>
                   {usuario.rol === "admin" && <DropdownMenuItem render={<Link href="/usuarios" />}><Users /> Usuarios</DropdownMenuItem>}
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator />
