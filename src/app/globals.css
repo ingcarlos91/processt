@@ -2,12 +2,34 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
+@font-face {
+  font-family: "BW Modelica";
+  src: url("/fonts/bw-modelica/BwModelica-Regular.woff2") format("woff2"), url("/fonts/bw-modelica/BwModelica-Regular.otf") format("opentype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "BW Modelica";
+  src: url("/fonts/bw-modelica/BwModelica-Medium.woff2") format("woff2"), url("/fonts/bw-modelica/BwModelica-Medium.otf") format("opentype");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "BW Modelica";
+  src: url("/fonts/bw-modelica/BwModelica-Bold.woff2") format("woff2"), url("/fonts/bw-modelica/BwModelica-Bold.otf") format("opentype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  --font-sans: "BW Modelica", var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono);
   --font-heading: var(--font-sans);
   --color-sidebar-ring: var(--sidebar-ring);
