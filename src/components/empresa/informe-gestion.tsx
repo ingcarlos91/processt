@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { FileBarChart } from "lucide-react";
+import { FileBarChart, FileDown } from "lucide-react";
 import { Selector } from "@/components/app/selector";
 import { BotonDescarga } from "@/components/app/boton-descarga";
 
@@ -14,6 +14,7 @@ export function BotonInformeGestion({ empresaId }: { empresaId: string }) {
   return (
     <div className="flex items-center gap-1.5">
       <Selector className="w-40" value={valor} onChange={setValor} opciones={opciones} />
+      <BotonDescarga href={`/api/empresas/${empresaId}/informe-gestion?anio=${anio}&mes=${mes}&formato=pdf`} variant="outline" size="icon" aria-label="Informe de gestión en PDF"><FileDown /></BotonDescarga>
       <BotonDescarga href={`/api/empresas/${empresaId}/informe-gestion?anio=${anio}&mes=${mes}`} texto="Armando el informe…" tooltip="Informe mensual para el cliente: avance del plan, estándares, accidentalidad, acciones, documentos, comités, lo que viene y recomendaciones. En Word, con logo y firmas."><FileBarChart /> Informe de gestión</BotonDescarga>
     </div>
   );

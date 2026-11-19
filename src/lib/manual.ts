@@ -311,7 +311,7 @@ export const MANUAL: SeccionManual[] = [
   },
   {
     id: "biblioteca", titulo: "Biblioteca general", ruta: /^\/biblioteca$/,
-    resumen: "Todo lo que el sistema precarga en todas las empresas. Se puede crear, editar y validar.",
+    resumen: "Todo lo parametrizable que sirve a todas las empresas: sectores y cargos, tareas, peligros, exámenes, EPP y capacitaciones, guías de accidentes, listas de inspección y entidades (EPS, fondos, ARL). Se puede crear, editar y validar.",
     partes: [
       { titulo: "Sectores y cargos", que: "Sectores con sus procesos, zonas y cargos tipo.", botones: [{ nombre: "Crear cargo / Ampliar con IA", hace: "Agrega cargos tipo al sector (con IA, propone muchos)." }] },
       { titulo: "Tareas", que: "Tareas tipo con sus peligros.", botones: [{ nombre: "Crear tarea", hace: "Agrega una tarea a la biblioteca." }] },

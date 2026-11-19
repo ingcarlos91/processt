@@ -3,7 +3,7 @@ import { useState, useTransition, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { ArrowLeft, Check, CheckCircle2, Download, Lock, LockOpen, Pencil, Plus, Save, Sparkles, Trash2, Upload, Users, X, CalendarPlus, ShieldPlus, Wand2 } from "lucide-react";
+import { ArrowLeft, Check, FileDown, CheckCircle2, Download, Lock, LockOpen, Pencil, Plus, Save, Sparkles, Trash2, Upload, Users, X, CalendarPlus, ShieldPlus, Wand2 } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -289,7 +289,7 @@ export function EventoDetalle({ empresaId, ev, cargos, peligros, peligrosEnMatri
       )}
 
       <Paso n={t.investiga ? ((t.reporta || grave) ? 5 : 4) : (t.reporta || grave) ? 3 : 2} titulo="Informe y soportes" descripcion="Descargue el informe, hágalo firmar por el equipo investigador y súbalo. Todo queda en Evidencias, en el estándar que corresponde." normas={["Res. 0312/2019 estándares 3.2.1 y 3.2.2"]}
-        accion={t.investiga && <BotonDescarga href={`/api/empresas/${empresaId}/eventos/${ev.id}/informe`} size="sm" tooltip="Informe de investigación (FOR-07) en Word"><Download /> Descargar FOR-07</BotonDescarga>}>
+        accion={t.investiga && <><BotonDescarga href={`/api/empresas/${empresaId}/eventos/${ev.id}/informe`} size="sm" tooltip="Informe de investigación (FOR-07) en Word"><Download /> FOR-07 Word</BotonDescarga><BotonDescarga href={`/api/empresas/${empresaId}/eventos/${ev.id}/informe?formato=pdf`} size="sm" variant="outline" texto="Generando PDF…" tooltip="Informe de investigación (FOR-07) en PDF"><FileDown /> PDF</BotonDescarga></>}>
         {grave && cerrada && (
           <div className="flex flex-wrap items-end gap-2">
             <Field className="w-56"><FieldLabel htmlFor="r-a">Fecha de remisión del informe a la ARL</FieldLabel><Input id="r-a" type="date" value={rep.invRemitidaArl} onChange={(e) => setRep({ ...rep, invRemitidaArl: e.target.value })} /></Field>

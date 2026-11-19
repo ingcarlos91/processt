@@ -14,7 +14,7 @@ import {
 const nav = [
   { href: "/", label: "Empresas", icon: Building2 },
   { href: "/planeador", label: "Planeador", icon: CalendarDays },
-  { href: "/biblioteca", label: "Biblioteca de peligros", icon: BookOpen },
+  { href: "/biblioteca", label: "Biblioteca", icon: BookOpen },
   { href: "/plantillas", label: "Plantillas", icon: FileText },
   { href: "/normas", label: "Normas y estándares", icon: Scale },
 ];

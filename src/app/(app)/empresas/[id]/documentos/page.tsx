@@ -4,7 +4,7 @@ import { EstadoDocumento } from "@/components/documentos/estado-documento";
 import { estadoDocumento, ESTADOS_DOC, type EstadoDoc } from "@/lib/estado-documento";
 import { cn } from "@/lib/utils";
 import { BotonDescarga } from "@/components/app/boton-descarga";
-import { Download, PenLine } from "lucide-react";
+import { Download, FileDown, PenLine } from "lucide-react";
 import { db } from "@/lib/db";
 import { recalcularEmpresa } from "@/lib/empresa";
 import { Section, NormaRef } from "@/components/app/ui";
@@ -123,6 +123,7 @@ export default async function Documentos({ params, searchParams }: PageProps<"/e
                       {d && <div className="flex justify-end gap-1">
                         <Link href={`/empresas/${id}/documentos/${p.codigo}`} title="Ver el documento, editar sus secciones y subir la versión firmada" className={buttonVariants({ size: "sm", variant: "outline" })}><PenLine /> Ver y editar</Link>
                         <BotonDescarga href={`/api/empresas/${id}/documentos/${p.codigo}`} size="icon-sm" variant="ghost" aria-label="Descargar en Word"><Download /></BotonDescarga>
+                        <BotonDescarga href={`/api/empresas/${id}/documentos/${p.codigo}?formato=pdf`} size="icon-sm" variant="ghost" aria-label="Descargar en PDF"><FileDown /></BotonDescarga>
                       </div>}
                     </TableCell>
                   </TableRow>

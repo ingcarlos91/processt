@@ -27,7 +27,7 @@ export default async function Biblioteca() {
   const catalogoLite = catalogo.map((c) => ({ tipo: c.tipo, nombre: c.nombre }));
   return (
     <Page>
-      <PageHeader title="Biblioteca general" description="Sirve para todas las empresas. Lo propio de un cliente se maneja en la pestaña “Biblioteca propia” de esa empresa y se puede publicar aquí. Todo lo que el sistema precarga en las empresas: sectores, cargos tipo, tareas tipo, peligros (GTC 45), exámenes médicos, EPP y capacitaciones. Puede crear, editar y validar cada elemento. Lo marcado “sin validar” viene de la semilla o de la IA y espera su revisión." />
+      <PageHeader title="Biblioteca general" description="Todo lo parametrizable que sirve a todas las empresas: sectores y cargos, tareas, peligros (GTC 45), exámenes, EPP, capacitaciones, guías de accidentes, listas de inspección y entidades (EPS, fondos de pensiones, ARL). Lo propio de un cliente se maneja en la pestaña “Biblioteca” de esa empresa y se puede publicar aquí. Lo marcado “sin validar” viene de la semilla o de la IA y espera su revisión." />
       <div className="grid grid-cols-2 lg:grid-cols-6 gap-4">
         <Stat label="Sectores" value={sectores.length} />
         <Stat label="Cargos tipo" value={sectores.reduce((s, x) => s + x.cargos.length, 0)} />
