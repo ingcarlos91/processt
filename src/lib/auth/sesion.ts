@@ -16,11 +16,14 @@ export async function cerrarSesion() {
 }
 
 /** Usuario de la sesión actual (verificado contra la base de datos). Redirige a /login si no hay sesión válida. */
+/** La sesión se emitió antes de un cambio de contraseña: ya no vale. */
+const vencida = (s: { iat?: number }, desde: Date | null) => !!desde && (s.iat ?? 0) * 1000 < desde.getTime() - 1000;
+
 export const usuarioActual = cache(async () => {
   const s = await verificarToken((await cookies()).get(COOKIE)?.value);
   if (!s) redirect("/login");
-  const u = await db.usuario.findUnique({ where: { id: s.usuarioId }, select: { id: true, nombre: true, email: true, rol: true, activo: true, consultoraId: true, empresaId: true } });
-  if (!u || !u.activo) redirect("/login");
+  const u = await db.usuario.findUnique({ where: { id: s.usuarioId }, select: { id: true, nombre: true, email: true, rol: true, activo: true, consultoraId: true, empresaId: true, sesionesDesde: true } });
+  if (!u || !u.activo || vencida(s, u.sesionesDesde)) redirect("/login");
   return u;
 });
 
@@ -28,7 +31,7 @@ export const usuarioActual = cache(async () => {
 export async function requiereUsuario() {
   const s = await verificarToken((await cookies()).get(COOKIE)?.value);
   if (!s) throw new Error("No autenticado: inicie sesión de nuevo.");
-  const u = await db.usuario.findUnique({ where: { id: s.usuarioId }, select: { id: true, rol: true, activo: true, consultoraId: true } });
-  if (!u || !u.activo) throw new Error("Usuario inactivo o inexistente.");
+  const u = await db.usuario.findUnique({ where: { id: s.usuarioId }, select: { id: true, rol: true, activo: true, consultoraId: true, sesionesDesde: true } });
+  if (!u || !u.activo || vencida(s, u.sesionesDesde)) throw new Error("Usuario inactivo o inexistente.");
   return u;
 }

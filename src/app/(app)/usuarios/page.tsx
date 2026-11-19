@@ -12,8 +12,8 @@ export default async function Usuarios() {
   const usuarios = await db.usuario.findMany({ where: { consultoraId: yo.consultoraId }, orderBy: { nombre: "asc" } });
   return (
     <Page>
-      <PageHeader title="Usuarios" description="Personas que pueden entrar a PROCESST. El administrador gestiona usuarios; el consultor trabaja empresas y documentos." />
-      <UsuariosEditor yoId={yo.id} usuarios={usuarios.map((u) => ({ id: u.id, nombre: u.nombre, email: u.email, rol: u.rol, activo: u.activo, ultimoAcceso: u.ultimoAcceso?.toISOString() ?? null }))} />
+      <PageHeader title="Usuarios" description="Personas que pueden entrar a PROCESST: crear, editar, cambiar rol, restablecer contraseña, desactivar o eliminar." />
+      <UsuariosEditor yoId={yo.id} usuarios={usuarios.map((u) => ({ id: u.id, nombre: u.nombre, email: u.email, rol: u.rol, activo: u.activo, ultimoAcceso: u.ultimoAcceso?.toISOString() ?? null, creadoEn: u.creadoEn.toISOString() }))} />
     </Page>
   );
 }

@@ -1,7 +1,7 @@
 // Firma y verificación del token de sesión (sin dependencias de servidor: lo usa también proxy.ts).
 import { SignJWT, jwtVerify } from "jose";
 
-export type Sesion = { usuarioId: string; rol: string; expira: string };
+export type Sesion = { usuarioId: string; rol: string; expira: string; iat?: number };
 export const COOKIE = "processt_sesion";
 export const DURACION_DIAS = 7;
 

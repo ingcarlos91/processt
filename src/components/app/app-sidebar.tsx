@@ -16,7 +16,12 @@ const nav = [
   { href: "/biblioteca", label: "Biblioteca de peligros", icon: BookOpen },
   { href: "/plantillas", label: "Plantillas", icon: FileText },
   { href: "/normas", label: "Normas y estándares", icon: Scale },
-  { href: "/configuracion", label: "Mi consultora", icon: Settings },
+];
+
+const admin = [
+  { href: "/configuracion", label: "Mi consultora", icon: Settings, soloAdmin: false },
+  { href: "/usuarios", label: "Usuarios", icon: Users, soloAdmin: true },
+  { href: "/cuenta", label: "Mi cuenta", icon: KeyRound, soloAdmin: false },
 ];
 
 export function AppSidebar({ empresas, consultora, usuario }: { empresas: { id: string; razonSocial: string }[]; consultora: { nombre: string; profesional: string | null }; usuario: { nombre: string; email: string; rol: string } }) {
@@ -60,6 +65,16 @@ export function AppSidebar({ empresas, consultora, usuario }: { empresas: { id: 
             ))}
           </SidebarMenu>
         </SidebarGroup>
+        <SidebarGroup>
+          <SidebarGroupLabel>Administración</SidebarGroupLabel>
+          <SidebarMenu>
+            {admin.filter((n) => !n.soloAdmin || usuario.rol === "admin").map((n) => (
+              <SidebarMenuItem key={n.href}>
+                <SidebarMenuButton tooltip={n.label} isActive={activo(n.href)} render={<Link href={n.href} />}><n.icon /> <span>{n.label}</span></SidebarMenuButton>
+              </SidebarMenuItem>
+            ))}
+          </SidebarMenu>
+        </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>
         <SidebarMenu>
@@ -80,7 +95,6 @@ export function AppSidebar({ empresas, consultora, usuario }: { empresas: { id: 
                 <DropdownMenuSeparator />
                 <DropdownMenuGroup>
                   <DropdownMenuItem render={<Link href="/cuenta" />}><KeyRound /> Mi cuenta y contraseña</DropdownMenuItem>
-                  {usuario.rol === "admin" && <DropdownMenuItem render={<Link href="/usuarios" />}><Users /> Usuarios</DropdownMenuItem>}
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => salir()}><LogOut /> Cerrar sesión</DropdownMenuItem>

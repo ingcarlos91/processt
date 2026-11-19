@@ -48,6 +48,8 @@ model Usuario {
   rol          String     @default("admin") // admin | consultor | cliente
   activo       Boolean    @default(true)
   ultimoAcceso DateTime?  @map("ultimo_acceso")
+  // Sesiones iniciadas antes de esta fecha dejan de valer (al cambiar o restablecer la contraseña, o desactivar).
+  sesionesDesde DateTime? @map("sesiones_desde")
   creadoEn     DateTime   @default(now()) @map("creado_en")
 
   @@map("usuario")
