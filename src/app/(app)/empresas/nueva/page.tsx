@@ -1,4 +1,5 @@
 import { db, consultoraActual } from "@/lib/db";
+import { cargarEntidades } from "@/lib/entidades";
 import { profesionalDe } from "@/lib/profesional";
 import { Page, PageHeader } from "@/components/app/ui";
 import { IntakeWizard } from "@/components/empresa/intake-wizard";
@@ -14,7 +15,7 @@ export default async function NuevaEmpresa() {
   return (
     <Page>
       <PageHeader title="Nueva empresa" description="Responda el cuestionario. Al crear, el sistema determina el nivel de estándares, los comités, las normas aplicables y precarga la matriz de peligros por cargo." />
-      <IntakeWizard sectores={sectores} cargosTipo={cargosTipo} ciius={ciius} profesional={profesionalDe(await consultoraActual())} />
+      <IntakeWizard sectores={sectores} cargosTipo={cargosTipo} ciius={ciius} profesional={profesionalDe(await consultoraActual())} entidades={await cargarEntidades()} />
     </Page>
   );
 }

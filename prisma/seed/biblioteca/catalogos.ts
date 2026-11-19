@@ -173,10 +173,14 @@ export const capacitaciones: Cap[] = [
 ];
 
 import { itemsAccidentes } from "./accidentes";
+import { itemsInspeccion } from "./inspecciones";
+import { itemsEntidades } from "./entidades";
 
 export function itemsCatalogo() {
   return [
     ...itemsAccidentes(),
+    ...itemsInspeccion(),
+    ...itemsEntidades(),
     ...examenes.map(([nombre, descripcion, enfasis, periodicidad, normas]) => ({ tipo: "EXAMEN", nombre, descripcion, detalle: { enfasis, periodicidad, momento: ["ingreso", "periodico", "retiro"] }, normas: normas ?? [] })),
     ...epp.map(([nombre, descripcion, parteCuerpo, normaTecnica, reposicion]) => ({ tipo: "EPP", nombre, descripcion, detalle: { parteCuerpo, normaTecnica, reposicion }, normas: [] as string[] })),
     ...capacitaciones.map(([nombre, descripcion, dirigidoA, intensidadHoras, periodicidad, normas, certificacion]) => ({ tipo: "CAPACITACION", nombre, descripcion, detalle: { dirigidoA, intensidadHoras, periodicidad, certificacion: !!certificacion }, normas: normas ?? [] })),

@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 import { cargarEmpresa, filasMatriz } from "@/lib/generador/contexto";
 import { TrabajadoresEditor } from "@/components/trabajadores/editor";
+import { cargarEntidades } from "@/lib/entidades";
 
 export const dynamic = "force-dynamic";
 const iso = (d?: Date | null) => d?.toISOString().slice(0, 10) ?? "";
@@ -23,6 +24,7 @@ export default async function Trabajadores({ params }: PageProps<"/empresas/[id]
   return (
     <TrabajadoresEditor
       empresaId={id}
+      entidades={await cargarEntidades()}
       cargos={e.cargos.map((c) => ({ id: c.id, nombre: c.nombre, nPersonas: c.nPersonas }))}
       sugeridos={sugeridos}
       catalogoEpp={catalogo.filter((c) => c.tipo === "EPP").map((c) => c.nombre)}

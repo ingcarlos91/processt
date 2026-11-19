@@ -265,6 +265,11 @@ export async function construirContexto(empresaId: string) {
   const accidentalidad = await contextoAccidentalidad(e.id);
   const ultimaVersion = await db.matrizVersion.findFirst({ where: { empresaId: e.id }, orderBy: { numero: "desc" } });
   const nomina = await contextoNomina(e.id);
+  const inspeccionesDb = await db.inspeccion.findMany({ where: { empresaId: e.id }, orderBy: { fecha: "asc" }, include: { _count: { select: { acciones: true } } } });
+  const inspecciones = inspeccionesDb.map((i) => {
+    const its = (i.items ?? []) as { resultado: string }[]; const ap = its.filter((x) => x.resultado !== "na");
+    return { fecha: ddmm(i.fecha), lista: i.lista, lugar: i.lugar ?? "", responsable: i.responsable ?? "", cumplimiento: ap.length ? `${Math.round((ap.filter((x) => x.resultado === "cumple").length / ap.length) * 100)} %` : "100 %", hallazgos: its.filter((x) => x.resultado === "no_cumple").length, acciones: i._count.acciones };
+  });
 
   return {
     empresa: {
@@ -297,7 +302,7 @@ export async function construirContexto(empresaId: string) {
     normas: normasDb.map((n) => ({ codigo: n.codigo, tipo: n.tipo === "Resolucion" ? "Resolución" : n.tipo === "GuiaTecnica" ? "Guía técnica" : n.tipo, numero: n.numero, anio: n.anio, entidad: n.entidad, nombre: n.nombre, articulosClave: n.articulosClave ?? "", resumen: n.resumen, evidenciaCumplimiento: n.evidenciaCumplimiento ?? "" })),
     estandares: (await db.estandar.findMany({ where: { codigo: { in: rr.estandares } }, orderBy: { orden: "asc" } })).map((s) => ({ codigo: s.codigo, ciclo: s.ciclo, grupo: s.grupo, descripcion: s.descripcion, puntaje: s.puntaje })),
     comites: { copasst: { aplica: true, esVigia: cop.tipo === "VIGIA", composicion: cop.texto, porParte: cop.porParte }, ccl: { aplica: rr.comites.includes("CCL") }, brigada: { aplica: true } },
-    capacitaciones, plan, evaluacion, planMejora, dis, indicadores: INDICADORES, pve, amenazas, presupuesto: presupuestoConValor, altoRiesgo, op, integrantes, accidentalidad, acciones: accidentalidad.acciones, nomina,
+    capacitaciones, plan, evaluacion, planMejora, dis, indicadores: INDICADORES, pve, amenazas, presupuesto: presupuestoConValor, altoRiesgo, op, integrantes, accidentalidad, acciones: accidentalidad.acciones, nomina, inspecciones, hayInspecciones: inspecciones.length > 0,
     documentosLista: plantillas.map((p) => ({ codigo: p.codigo, nombre: p.nombre, version: e.documentos.find((d) => d.codigo === p.codigo)?.version ?? 1, carpeta: p.carpeta ?? "" })),
     _reglas: rr,
   };

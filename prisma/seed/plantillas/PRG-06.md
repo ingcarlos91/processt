@@ -33,6 +33,20 @@ Identificar de manera sistemática condiciones y actos inseguros en instalacione
 |---|---|---|---|---|---|---|---|
 | | | | | | | | |
 
+## Inspecciones realizadas
+
+{{#if hayInspecciones}}
+| Fecha | Inspección | Lugar | Responsable | Cumplimiento | Hallazgos | Acciones |
+|---|---|---|---|---|---|---|
+{{#each inspecciones}}
+| {{fecha}} | {{celda lista}} | {{celda lugar}} | {{celda responsable}} | {{cumplimiento}} | {{hallazgos}} | {{acciones}} |
+{{/each}}
+
+Las acciones derivadas de los hallazgos se registran en FOR-06.
+{{else}}
+Las inspecciones se registran en PROCESST con su lista de chequeo, fotos y acciones; aquí se consolidan.
+{{/if}}
+
 ## Seguimiento
 
 Los hallazgos se registran como acciones correctivas (FOR-06) y se presentan en la reunión del {{#if comites.copasst.esVigia}}Vigía{{else}}COPASST{{/if}}. Indicador: (inspecciones ejecutadas / programadas) × 100.

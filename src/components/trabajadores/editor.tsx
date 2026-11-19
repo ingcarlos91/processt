@@ -1,4 +1,5 @@
 "use client";
+import type { Entidades } from "@/lib/entidades";
 import { useMemo, useState, useTransition } from "react";
 import { toast } from "sonner";
 import { ClipboardPaste, GraduationCap, HardHat, Pencil, Plus, Search, Stethoscope, Trash2, UserMinus, UserPlus, UserCheck, Users } from "lucide-react";
@@ -40,9 +41,9 @@ const enAnios = (f: string, n: number) => { const d = new Date(f + "T12:00:00Z")
 const fecha = (f: string) => (f ? new Date(f + "T12:00:00Z").toLocaleDateString("es-CO", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" }) : "—");
 const vacioT = (): Omit<T, "id" | "examenes" | "entregas" | "capacitaciones" | "cargo" | "activo" | "fechaRetiro"> & { id?: string } => ({ nombres: "", tipoDoc: "CC", documento: "", cargoId: "", vinculacion: "planta", fechaIngreso: "", sexo: "", fechaNacimiento: "", escolaridad: "", telefono: "", correo: "", eps: "", afp: "" });
 
-export function TrabajadoresEditor({ empresaId, trabajadores, cargos, sugeridos, catalogoEpp, catalogoCapacitaciones, actividades, capacitaciones }: {
+export function TrabajadoresEditor({ empresaId, trabajadores, cargos, sugeridos, catalogoEpp, catalogoCapacitaciones, actividades, capacitaciones, entidades }: {
   empresaId: string; trabajadores: T[]; cargos: { id: string; nombre: string; nPersonas: number }[]; sugeridos: Record<string, { epp: string[]; capacitaciones: string[] }>;
-  catalogoEpp: string[]; catalogoCapacitaciones: string[]; actividades: { id: string; nombre: string; periodo: string }[]; capacitaciones: Cap[];
+  catalogoEpp: string[]; catalogoCapacitaciones: string[]; actividades: { id: string; nombre: string; periodo: string }[]; capacitaciones: Cap[]; entidades: Entidades;
 }) {
   const [pend, start] = useTransition();
   const run = (fn: () => Promise<Res>, ok: string, despues?: () => void) => start(async () => { const r = await fn(); if ("error" in r && r.error) toast.error(r.error); else { toast.success(ok); despues?.(); } });
@@ -278,10 +279,10 @@ export function TrabajadoresEditor({ empresaId, trabajadores, cargos, sugeridos,
               <Field><FieldLabel htmlFor="t-i">Fecha de ingreso</FieldLabel><Input id="t-i" type="date" value={form.fechaIngreso} onChange={(e) => setForm({ ...form, fechaIngreso: e.target.value })} /></Field>
               <Field><FieldLabel>Sexo</FieldLabel><Selector value={form.sexo} onChange={(v) => setForm({ ...form, sexo: v })} opciones={[{ valor: "F", etiqueta: "Mujer" }, { valor: "M", etiqueta: "Hombre" }, { valor: "O", etiqueta: "Otro / prefiere no decir" }]} /></Field>
               <Field><FieldLabel htmlFor="t-fn">Fecha de nacimiento</FieldLabel><Input id="t-fn" type="date" value={form.fechaNacimiento} onChange={(e) => setForm({ ...form, fechaNacimiento: e.target.value })} /></Field>
-              <Field><FieldLabel>Escolaridad</FieldLabel><Selector value={form.escolaridad} onChange={(v) => setForm({ ...form, escolaridad: v })} opciones={ESCOLARIDAD.map((x) => ({ valor: x, etiqueta: x }))} /></Field>
+              <Field><FieldLabel>Escolaridad</FieldLabel><Selector value={form.escolaridad} onChange={(v) => setForm({ ...form, escolaridad: v })} opciones={(entidades.escolaridad.length ? entidades.escolaridad : ESCOLARIDAD).map((x) => ({ valor: x, etiqueta: x }))} /></Field>
               <Field><FieldLabel htmlFor="t-t">Teléfono</FieldLabel><Input id="t-t" value={form.telefono} onChange={(e) => setForm({ ...form, telefono: e.target.value })} /></Field>
-              <Field><FieldLabel htmlFor="t-e">EPS</FieldLabel><Input id="t-e" value={form.eps} onChange={(e) => setForm({ ...form, eps: e.target.value })} /></Field>
-              <Field><FieldLabel htmlFor="t-a">Fondo de pensiones</FieldLabel><Input id="t-a" value={form.afp} onChange={(e) => setForm({ ...form, afp: e.target.value })} /></Field>
+              <Field><FieldLabel htmlFor="t-e">EPS</FieldLabel><Combo id="t-e" value={form.eps} onChange={(v) => setForm({ ...form, eps: v })} grupos={[{ titulo: "EPS (Biblioteca → Entidades)", opciones: entidades.eps.map((x) => ({ valor: x })) }]} /></Field>
+              <Field><FieldLabel htmlFor="t-a">Fondo de pensiones</FieldLabel><Combo id="t-a" value={form.afp} onChange={(v) => setForm({ ...form, afp: v })} grupos={[{ titulo: "Fondos de pensiones (Biblioteca → Entidades)", opciones: entidades.afp.map((x) => ({ valor: x })) }]} /></Field>
             </div>
           )}
           <DialogFooter><Button variant="outline" onClick={() => setForm(null)}>Cancelar</Button><Button disabled={pend || !form?.nombres.trim()} onClick={() => form && run(() => A.guardarTrabajador(empresaId, form), form.id ? "Trabajador actualizado" : "Trabajador agregado", () => setForm(null))}>{pend && <Spinner />} Guardar</Button></DialogFooter>

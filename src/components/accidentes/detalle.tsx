@@ -311,7 +311,15 @@ export function EventoDetalle({ empresaId, ev, cargos, peligros, peligrosEnMatri
             <div className="grid gap-4 sm:grid-cols-2">
               <Field className="sm:col-span-2"><FieldLabel htmlFor="a-d">Medida</FieldLabel><Textarea id="a-d" rows={2} value={acc.descripcion} onChange={(e) => setAcc({ ...acc, descripcion: e.target.value })} /></Field>
               <Field className="sm:col-span-2"><FieldLabel htmlFor="a-h">Hallazgo</FieldLabel><Input id="a-h" value={acc.hallazgo} onChange={(e) => setAcc({ ...acc, hallazgo: e.target.value })} /></Field>
-              <Field className="sm:col-span-2"><FieldLabel htmlFor="a-c">Causa que ataca</FieldLabel><Combo id="a-c" value={acc.causa} onChange={(v) => setAcc({ ...acc, causa: v })} grupos={[{ titulo: "Causas básicas", opciones: [...(an.personales ?? []), ...(an.trabajo ?? [])].filter(Boolean).map((c) => ({ valor: c })) }, { titulo: "Causas inmediatas", opciones: [...(an.actos ?? []), ...(an.condiciones ?? [])].filter(Boolean).map((c) => ({ valor: c })) }]} /></Field>
+              <Field className="sm:col-span-2"><FieldLabel htmlFor="a-c">Causa que ataca</FieldLabel><Combo id="a-c" value={acc.causa} onChange={(v) => setAcc({ ...acc, causa: v })} grupos={(() => {
+                const forma = cat.formas.find((f) => f.nombre === datos.mecanismo);
+                const propias = [...(an.personales ?? []), ...(an.trabajo ?? []), ...(an.actos ?? []), ...(an.condiciones ?? [])].filter(Boolean);
+                const tipicas = forma ? [...forma.personales, ...forma.trabajo, ...forma.actos, ...forma.condiciones].filter((c) => !propias.includes(c)) : [];
+                return [
+                  { titulo: "Causas de esta investigación", opciones: propias.map((c) => ({ valor: c })) },
+                  { titulo: forma ? `Típicas de “${forma.nombre}” (Biblioteca)` : "Elija la forma del evento en el registro para ver causas típicas", opciones: tipicas.map((c) => ({ valor: c })) },
+                ];
+              })()} /></Field>
               <Field><FieldLabel htmlFor="a-t">Tipo</FieldLabel><Selector id="a-t" value={acc.tipo} onChange={(v) => setAcc({ ...acc, tipo: v })} opciones={[{ valor: "correctiva", etiqueta: "Correctiva" }, { valor: "preventiva", etiqueta: "Preventiva" }, { valor: "mejora", etiqueta: "De mejora" }]} /></Field>
               <Field><FieldLabel htmlFor="a-j" className="flex items-center gap-1">Jerarquía <Ayuda k="evJerarquia" /></FieldLabel><Selector id="a-j" value={acc.jerarquia} onChange={(v) => setAcc({ ...acc, jerarquia: v })} opciones={Object.entries(JERARQUIA).map(([k, v]) => ({ valor: k, etiqueta: v }))} /></Field>
               <Field><FieldLabel htmlFor="a-r">Responsable</FieldLabel><Combo id="a-r" value={acc.responsable} onChange={(v) => setAcc({ ...acc, responsable: v })} grupos={[{ titulo: "Personas registradas", opciones: personas.map((p) => ({ valor: p })) }]} /></Field>

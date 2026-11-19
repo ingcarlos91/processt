@@ -104,6 +104,21 @@ export const MANUAL: SeccionManual[] = [
     relacionadas: ["planeador", "plan", "documentos"],
   },
   {
+    id: "inspecciones", titulo: "Inspecciones", ruta: new RegExp(`^${E}/inspecciones$`),
+    resumen: "Inspecciones de seguridad con listas de chequeo (locativa, extintores, botiquín, EPP, herramientas, vehículos, eléctrica, orden y aseo). Los hallazgos generan acciones (FOR-06), se consolidan en el PRG-06 y el planeador avisa la próxima según la frecuencia de cada lista.",
+    partes: [
+      { titulo: "Nueva inspección", que: "Elija la lista de chequeo; registre fecha, lugar, responsable y quién acompañó (COPASST o Vigía).", botones: [
+        { nombre: "Cumple / No cumple / N. A.", hace: "Califica cada ítem. En los que no cumplen escriba la observación y, si quiere, la acción correctiva con responsable y fecha." },
+        { nombre: "Marcar pendientes como “cumple”", hace: "Califica de una vez los ítems que faltan como cumplidos." },
+        { nombre: "Guardar inspección", hace: "Guarda, crea las acciones en FOR-06 y abre el detalle para subir fotos." },
+      ] },
+      { titulo: "Lista de inspecciones", que: "Fecha, lista, lugar, cumplimiento, hallazgos y acciones. Clic para ver el detalle, las acciones y subir fotos o el registro firmado (estándar 4.2.4)." },
+    ],
+    consejos: ["Las listas y su frecuencia se editan en Biblioteca → Inspecciones."],
+    normas: ["Res. 0312/2019 estándar 4.2.4", "Decreto 1072/2015 art. 2.2.4.6.33"],
+    relacionadas: ["planeador", "documentos"],
+  },
+  {
     id: "versiones", titulo: "Versiones de la matriz", ruta: new RegExp(`^${E}/matriz/versiones$`),
     resumen: "Historial de las versiones cerradas de la matriz. Es el soporte de que la matriz se revisa y actualiza.",
     partes: [
@@ -302,6 +317,8 @@ export const MANUAL: SeccionManual[] = [
       { titulo: "Peligros", que: "Peligros GTC 45 con ND, NE y NC sugeridos, efectos, medidas, EPP, exámenes y capacitaciones." },
       { titulo: "Exámenes, EPP y capacitaciones", que: "Alimentan el profesiograma, la matriz de EPP y el programa de capacitación." },
       { titulo: "Accidentes", que: "Formas del evento (con causas, medidas y lección típicas), tipos de lesión (y cuáles sugieren accidente grave), agentes y partes del cuerpo.", botones: [{ nombre: "Nueva forma / Editar", hace: "Ajusta las guías que usa la investigación de accidentes." }] },
+      { titulo: "Inspecciones", que: "Listas de chequeo con sus ítems y frecuencia; se usan en la pestaña Inspecciones de cada empresa.", botones: [{ nombre: "Nueva lista / Editar", hace: "Un ítem por línea; la frecuencia en días define cuándo el planeador avisa la próxima inspección." }] },
+      { titulo: "Entidades", que: "EPS, fondos de pensiones, ARL y niveles de escolaridad que se ofrecen al registrar empresas y trabajadores." },
     ],
     consejos: ["Lo marcado “sin validar” viene de la semilla o de la IA: revíselo.", "Los cambios aplican a lo que se cree desde ahora; no modifican lo ya cargado en las empresas."],
     relacionadas: ["biblioteca-propia", "plantillas"],

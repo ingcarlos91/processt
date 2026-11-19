@@ -124,6 +124,7 @@ model Empresa {
   recordatorios   Recordatorio[]
   trabajadores    Trabajador[]
   capacitaciones  Capacitacion[]
+  inspecciones    Inspeccion[]
 
   @@map("empresa")
 }
@@ -683,6 +684,8 @@ model Evidencia {
   comite           Comite?        @relation(fields: [comiteId], references: [id], onDelete: SetNull)
   eventoId         String?        @map("evento_id")
   evento           Evento?        @relation(fields: [eventoId], references: [id], onDelete: SetNull)
+  inspeccionId     String?        @map("inspeccion_id")
+  inspeccion       Inspeccion?    @relation(fields: [inspeccionId], references: [id], onDelete: SetNull)
   estandarCodigo   String?        @map("estandar_codigo")
   descripcion      String
   archivoUrl       String?        @map("archivo_url") // ruta relativa en uploads/
@@ -757,25 +760,27 @@ model Evento {
 
 // Acciones preventivas, correctivas y de mejora (Decreto 1072/2015 arts. 2.2.4.6.33 y 2.2.4.6.34). Alimenta FOR-06.
 model Accion {
-  id          String         @id @default(cuid())
-  empresaId   String         @map("empresa_id")
-  empresa     Empresa        @relation(fields: [empresaId], references: [id], onDelete: Cascade)
-  eventoId    String?        @map("evento_id")
-  evento      Evento?        @relation(fields: [eventoId], references: [id], onDelete: SetNull)
-  origen      String         @default("investigacion") // investigacion | inspeccion | auditoria | revision | arl | autoridad | trabajador
-  fecha       DateTime       @default(now())
-  hallazgo    String
-  causa       String?
-  tipo        String         @default("correctiva") // correctiva | preventiva | mejora
-  jerarquia   String? // eliminacion | sustitucion | ingenieria | administrativo | epp
-  descripcion String
-  responsable String?
-  fechaLimite DateTime?      @map("fecha_limite")
-  estado      String         @default("abierta") // abierta | cerrada
-  fechaCierre DateTime?      @map("fecha_cierre")
-  eficacia    String?
-  actividadId String?        @map("actividad_id")
-  actividad   ActividadPlan? @relation(fields: [actividadId], references: [id], onDelete: SetNull)
+  id           String         @id @default(cuid())
+  empresaId    String         @map("empresa_id")
+  empresa      Empresa        @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  eventoId     String?        @map("evento_id")
+  evento       Evento?        @relation(fields: [eventoId], references: [id], onDelete: SetNull)
+  inspeccionId String?        @map("inspeccion_id")
+  inspeccion   Inspeccion?    @relation(fields: [inspeccionId], references: [id], onDelete: SetNull)
+  origen       String         @default("investigacion") // investigacion | inspeccion | auditoria | revision | arl | autoridad | trabajador
+  fecha        DateTime       @default(now())
+  hallazgo     String
+  causa        String?
+  tipo         String         @default("correctiva") // correctiva | preventiva | mejora
+  jerarquia    String? // eliminacion | sustitucion | ingenieria | administrativo | epp
+  descripcion  String
+  responsable  String?
+  fechaLimite  DateTime?      @map("fecha_limite")
+  estado       String         @default("abierta") // abierta | cerrada
+  fechaCierre  DateTime?      @map("fecha_cierre")
+  eficacia     String?
+  actividadId  String?        @map("actividad_id")
+  actividad    ActividadPlan? @relation(fields: [actividadId], references: [id], onDelete: SetNull)
 
   @@map("accion")
 }
@@ -887,6 +892,26 @@ model AsistenciaCapacitacion {
 
   @@unique([capacitacionId, trabajadorId])
   @@map("asistencia_capacitacion")
+}
+
+// Inspección de seguridad con lista de chequeo (Res. 0312/2019 estándar 4.2.4). Los hallazgos generan acciones (FOR-06).
+model Inspeccion {
+  id            String      @id @default(cuid())
+  empresaId     String      @map("empresa_id")
+  empresa       Empresa     @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  lista         String // nombre de la lista de chequeo usada
+  fecha         DateTime
+  lugar         String?
+  responsable   String?
+  participantes String? // por ejemplo, integrante del COPASST o Vigía
+  items         Json        @default("[]") // [{ pregunta, resultado: cumple | no_cumple | na, observacion }]
+  observaciones String?
+  creadoEn      DateTime    @default(now()) @map("creado_en")
+  acciones      Accion[]
+  archivos      Evidencia[]
+
+  @@index([empresaId, fecha])
+  @@map("inspeccion")
 }
 
 model TrabajadoresMes {

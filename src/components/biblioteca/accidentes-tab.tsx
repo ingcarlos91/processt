@@ -56,7 +56,7 @@ function useRun() {
   return { pend, run };
 }
 
-function Simple({ tipo, titulo, items, descripcion, conGrave }: { tipo: string; titulo: string; items: ItemSimple[]; descripcion: string; conGrave?: boolean }) {
+export function Simple({ tipo, titulo, items, descripcion, conGrave }: { tipo: string; titulo: string; items: ItemSimple[]; descripcion: string; conGrave?: boolean }) {
   const { pend, run } = useRun();
   const [q, setQ] = useState("");
   const [n, setN] = useState({ nombre: "", descripcion: "" });

@@ -1,4 +1,6 @@
 "use client";
+import { Combo } from "@/components/app/combo";
+import type { Entidades } from "@/lib/entidades";
 import { CampoDocumento } from "@/components/app/campo-documento";
 import Link from "next/link";
 import { useMemo, useRef, useState, useTransition } from "react";
@@ -92,7 +94,7 @@ function Opcion({ id, checked, onChange, children, extra }: { id: string; checke
 
 export type Profesional = { nombre: string; tipoDoc?: string; cedula: string; cargo: string; perfil: string; licencia: string; licenciaFecha: string; curso50h: boolean; curso50hFecha: string };
 
-export function IntakeWizard({ sectores, cargosTipo, ciius, inicial, empresaId, profesional, tieneLogo }: { sectores: Sector[]; cargosTipo: CargoTipo[]; ciius: Ciiu[]; inicial?: IntakeData; empresaId?: string; profesional: Profesional; tieneLogo?: boolean }) {
+export function IntakeWizard({ sectores, cargosTipo, ciius, inicial, empresaId, profesional, tieneLogo, entidades }: { sectores: Sector[]; cargosTipo: CargoTipo[]; ciius: Ciiu[]; inicial?: IntakeData; empresaId?: string; profesional: Profesional; tieneLogo?: boolean; entidades?: Entidades }) {
   const router = useRouter();
   const [logo, setLogo] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(tieneLogo && empresaId ? `/api/empresas/${empresaId}/logo` : null);
@@ -241,10 +243,9 @@ export function IntakeWizard({ sectores, cargosTipo, ciius, inicial, empresaId, 
                 </NativeSelect>
               </Campo>
               <Campo id="arl" ayuda="arl" label="ARL">
-                <Input id="arl" list="arls" value={d.arl ?? ""} onChange={(e) => set("arl", e.target.value)} />
-                <datalist id="arls">{ARLS.map((a) => <option key={a} value={a} />)}</datalist>
+                <Combo id="arl" value={d.arl} onChange={(v) => set("arl", v)} grupos={[{ titulo: "ARL (Biblioteca → Entidades)", opciones: (entidades?.arl.length ? entidades.arl : ARLS).map((a) => ({ valor: a })) }]} />
               </Campo>
-              <Campo id="eps" ayuda="eps" label="EPS principal"><Input id="eps" value={d.epsPrincipal ?? ""} onChange={(e) => set("epsPrincipal", e.target.value)} /></Campo>
+              <Campo id="eps" ayuda="eps" label="EPS principal"><Combo id="eps" value={d.epsPrincipal} onChange={(v) => set("epsPrincipal", v)} grupos={[{ titulo: "EPS (Biblioteca → Entidades)", opciones: (entidades?.eps ?? []).map((a) => ({ valor: a })) }]} /></Campo>
               <Campo id="just" ayuda="justificacion" label="Justificación si cambió la clase sugerida"><Input id="just" value={d.claseRiesgoJustificacion ?? ""} onChange={(e) => set("claseRiesgoJustificacion", e.target.value)} /></Campo>
               <div className="md:col-span-2"><Opcion id="upa" checked={!!d.esUpa} onChange={(v) => set("esUpa", v)} extra={<><NormaRef>Res. 0312/2019 art. 7</NormaRef><Ayuda k="esUpa" /></>}>Es unidad de producción agropecuaria (UPA)</Opcion></div>
             </FieldGroup>

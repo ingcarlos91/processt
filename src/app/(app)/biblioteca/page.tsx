@@ -7,6 +7,9 @@ import { SectoresTab } from "@/components/biblioteca/sectores-tab";
 import { CatalogosTab } from "@/components/biblioteca/catalogos-tab";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AccidentesTab } from "@/components/biblioteca/accidentes-tab";
+import { EntidadesTab } from "@/components/biblioteca/entidades-tab";
+import { InspeccionesTab } from "@/components/biblioteca/inspecciones-tab";
+import { db as dbEnt } from "@/lib/db";
 import { cargarCatalogoAccidentes } from "@/lib/catalogo-accidentes";
 
 export const dynamic = "force-dynamic";
@@ -40,6 +43,8 @@ export default async function Biblioteca() {
           <TabsTrigger value="peligros">Peligros</TabsTrigger>
           <TabsTrigger value="catalogos">Exámenes, EPP y capacitaciones</TabsTrigger>
           <TabsTrigger value="accidentes">Accidentes</TabsTrigger>
+          <TabsTrigger value="inspecciones">Inspecciones</TabsTrigger>
+          <TabsTrigger value="entidades">Entidades</TabsTrigger>
         </TabsList>
         <TabsContent value="sectores" className="mt-4">
           <SectoresTab
@@ -57,6 +62,17 @@ export default async function Biblioteca() {
             catalogo={catalogoLite}
             peligros={peligros.map((p) => ({ id: p.id, clasificacion: p.clasificacion, sub: p.subclasificacion ?? "", descripcion: p.descripcion, efectos: p.efectosPosibles, nd: p.ndDefault, ne: p.neDefault, nc: p.ncDefault, ingenieria: p.medidaIngenieria ?? "", administrativa: p.medidaAdministrativa ?? "", epp: p.eppSugerido, examenes: p.examenesSugeridos, capacitaciones: p.capacitacionesSugeridas, normas: p.normas, pve: p.pveAsociado ?? "", validado: p.validado, usos: p._count.evaluados, enTareas: p._count.tareas }))}
           />
+        </TabsContent>
+        <TabsContent value="inspecciones" className="mt-4">
+          <InspeccionesTab listas={(await dbEnt.catalogoItem.findMany({ where: { tipo: "LISTA_INSPECCION", empresaId: null } })).map((l) => { const d = (l.detalle ?? {}) as { items?: string[]; frecuenciaDias?: number; orden?: number }; return { id: l.id, nombre: l.nombre, descripcion: l.descripcion ?? "", frecuenciaDias: d.frecuenciaDias ?? 0, items: d.items ?? [], orden: d.orden ?? 99 }; }).sort((a, b) => a.orden - b.orden)} />
+        </TabsContent>
+        <TabsContent value="entidades" className="mt-4">
+          <EntidadesTab items={await (async () => {
+            const xs = await dbEnt.catalogoItem.findMany({ where: { empresaId: null, tipo: { in: ["ARL", "EPS", "AFP", "ESCOLARIDAD"] } } });
+            const orden = (d: unknown) => Number((d as { orden?: number })?.orden ?? 999);
+            const de = (t: string) => xs.filter((x) => x.tipo === t).sort((a, b) => orden(a.detalle) - orden(b.detalle) || a.nombre.localeCompare(b.nombre)).map((x) => ({ id: x.id, nombre: x.nombre, descripcion: x.descripcion ?? "" }));
+            return { ARL: de("ARL"), EPS: de("EPS"), AFP: de("AFP"), ESCOLARIDAD: de("ESCOLARIDAD") };
+          })()} />
         </TabsContent>
         <TabsContent value="accidentes" className="mt-4">
           <AccidentesTab cat={await cargarCatalogoAccidentes()} />

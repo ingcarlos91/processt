@@ -3,7 +3,7 @@
 import { db } from "@/lib/db";
 import { plazos } from "@/lib/eventos";
 
-export type Categoria = "plan" | "comite" | "accidente" | "accion" | "matriz" | "evaluacion" | "responsable" | "examen" | "epp" | "recordatorio";
+export type Categoria = "plan" | "comite" | "accidente" | "accion" | "matriz" | "evaluacion" | "responsable" | "examen" | "epp" | "inspeccion" | "recordatorio";
 export type EstadoFecha = "vencido" | "hoy" | "proximo" | "pendiente" | "hecho";
 
 export type Fecha = {
@@ -21,6 +21,7 @@ export const CATEGORIAS: Record<Categoria, { t: string; color: string }> = {
   responsable: { t: "Responsable SG-SST", color: "bg-teal-500" },
   examen: { t: "Exámenes médicos", color: "bg-pink-500" },
   epp: { t: "Reposición de EPP", color: "bg-lime-600" },
+  inspeccion: { t: "Inspecciones", color: "bg-indigo-500" },
   recordatorio: { t: "Mis recordatorios", color: "bg-slate-500" },
 };
 
@@ -51,10 +52,12 @@ export async function fechasPlaneador({ empresaId, desde, hasta, hoy = new Date(
       matrizVersiones: { orderBy: { numero: "desc" }, take: 1, select: { numero: true, fecha: true } },
       evaluaciones: { orderBy: { fecha: "desc" }, take: 1, select: { fecha: true, anio: true } },
       recordatorios: true,
+      inspecciones: { orderBy: { fecha: "desc" }, select: { lista: true, fecha: true } },
       trabajadores: { where: { activo: true }, select: { id: true, nombres: true, examenes: { orderBy: { fecha: "desc" }, take: 1, select: { id: true, proximo: true, tipo: true } }, entregasEpp: { where: { proximaReposicion: { not: null } }, orderBy: { fecha: "desc" }, select: { id: true, elemento: true, proximaReposicion: true } } } },
     },
   });
   const out: Fecha[] = [];
+  const frecuencias = new Map((await db.catalogoItem.findMany({ where: { tipo: "LISTA_INSPECCION" }, select: { nombre: true, detalle: true } })).map((l) => [l.nombre, Number((l.detalle as { frecuenciaDias?: number })?.frecuenciaDias) || 0]));
   const dentro = (f: Date, hecho: boolean) => (f >= desde && f <= hasta) || (!hecho && f < desde && f.getTime() > desde.getTime() - 400 * DIA);
   const NOMBRE_COMITE: Record<string, string> = { COPASST: "COPASST", VIGIA: "Vigía de SST", CCL: "Comité de Convivencia Laboral", BRIGADA: "Brigada" };
 
@@ -94,6 +97,15 @@ export async function fechasPlaneador({ empresaId, desde, hasta, hoy = new Date(
     if (r.curso50h && /^\d{4}-\d{2}-\d{2}$/.test(r.curso50hFecha ?? "")) {
       const f = masAnios(new Date(r.curso50hFecha + "T12:00:00Z"), 3);
       if (dentro(f, false)) add({ id: `curso-${e.id}`, fecha: iso(f), titulo: `Actualización del curso virtual de 20 horas${r.nombre ? ` — ${r.nombre}` : ""}`, detalle: "El responsable del SG-SST actualiza el curso de 50 horas con un curso de 20 horas cada tres años.", categoria: "responsable", estado: estadoDe(f, false, hoy), normaRef: "Res. 4927/2016", href: `${base}/datos` });
+    }
+    // Próxima inspección de cada lista usada, según su frecuencia en la biblioteca.
+    const vistasInsp = new Set<string>();
+    for (const ins of e.inspecciones) {
+      if (vistasInsp.has(ins.lista)) continue; vistasInsp.add(ins.lista);
+      const dias = frecuencias.get(ins.lista);
+      if (!dias) continue;
+      const f = new Date(ins.fecha.getTime() + dias * DIA);
+      if (dentro(f, false)) add({ id: `insp-${e.id}-${ins.lista}`, fecha: iso(f), titulo: `Próxima ${ins.lista.toLowerCase()}`, detalle: `Frecuencia sugerida: cada ${dias} días. Última: ${ins.fecha.toISOString().slice(0, 10)}.`, categoria: "inspeccion", estado: estadoDe(f, false, hoy), normaRef: "Res. 0312/2019 estándar 4.2.4", href: `${base}/inspecciones` });
     }
     for (const t of e.trabajadores) {
       const x = t.examenes[0];
