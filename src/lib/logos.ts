@@ -1,4 +1,5 @@
-import { guardar, leer, borrar } from "@/lib/almacen";
+import { randomUUID } from "node:crypto";
+import { guardar, leer, borrarPrefijo } from "@/lib/almacen";
 import { imageSize } from "image-size";
 
 const TIPOS: Record<string, "png" | "jpg"> = { "image/png": "png", "image/jpeg": "jpg" };
@@ -11,13 +12,14 @@ export async function guardarLogo(empresaId: string, file: File) {
   if (file.size > LOGO_MAX_BYTES) throw new Error("El logo no puede superar 2 MB.");
   const buf = Buffer.from(await file.arrayBuffer());
   imageSize(buf); // valida que sea una imagen legible
-  for (const e of Object.values(TIPOS)) await borrar(`uploads/logos/${empresaId}.${e}`);
-  await guardar(`uploads/logos/${empresaId}.${ext}`, buf, file.type);
-  return `uploads/logos/${empresaId}.${ext}`;
+  await borrarPrefijo(`uploads/logos/${empresaId}`);
+  const ruta = `uploads/logos/${empresaId}-${randomUUID()}.${ext}`; // nombre no adivinable
+  await guardar(ruta, buf, file.type);
+  return ruta;
 }
 
 export async function borrarLogo(empresaId: string) {
-  for (const e of Object.values(TIPOS)) await borrar(`uploads/logos/${empresaId}.${e}`);
+  await borrarPrefijo(`uploads/logos/${empresaId}`);
 }
 
 /** Lee el logo y calcula su tamaño para que quepa en una caja manteniendo la proporción. */
