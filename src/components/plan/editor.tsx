@@ -1,8 +1,9 @@
 "use client";
+import { BotonDescarga } from "@/components/app/boton-descarga";
 import { useMemo, useState, useTransition } from "react";
 import { toast } from "sonner";
 import { CalendarDays, Check, Plus, Sparkles, Trash2, Download, Paperclip, Upload } from "lucide-react";
-import { Button, BotonEnlace } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -90,7 +91,7 @@ export function PlanEditor({ empresaId, anio, actividades }: { empresaId: string
         <label className="flex items-center gap-2 text-sm"><Checkbox checked={ocultarComites} onCheckedChange={(v) => setOcultarComites(!!v)} /> Ocultar reuniones mensuales de comités</label>
         <div className="flex-1" />
         {generar}
-        <BotonEnlace href={`/api/empresas/${empresaId}/documentos/PLN-01`} variant="outline" tooltip="Descargar el plan anual de trabajo (PLN-01) en Word, listo para firmar"><Download /> PLN-01 Word</BotonEnlace>
+        <BotonDescarga href={`/api/empresas/${empresaId}/documentos/PLN-01`} variant="outline" tooltip="Descargar el plan anual de trabajo (PLN-01) en Word, listo para firmar"><Download /> PLN-01 Word</BotonDescarga>
       </div>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <Stat label="Cumplimiento del plan" value={`${Math.round((ej / actividades.length) * 100)}%`} hint={<Progress value={(ej / actividades.length) * 100} className="w-full" />} tone={ej / actividades.length >= 0.9 ? "ok" : undefined} />

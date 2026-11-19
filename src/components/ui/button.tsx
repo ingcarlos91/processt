@@ -74,19 +74,5 @@ function Button({
   )
 }
 
-/** Enlace con apariencia de botón (descargas, navegación) y tooltip opcional. */
-function BotonEnlace({
-  href, className, variant = "default", size = "default", tooltip, tooltipLado = "top", children, ...props
-}: React.ComponentProps<"a"> & VariantProps<typeof buttonVariants> & { tooltip?: React.ReactNode; tooltipLado?: Lado }) {
-  const enlace = <a href={href} className={cn(buttonVariants({ variant, size, className }))} {...props}>{children}</a>
-  const texto = tooltip ?? (String(size).startsWith("icon") ? props["aria-label"] : undefined)
-  if (!texto) return enlace
-  return (
-    <Tooltip>
-      <TooltipTrigger render={enlace} />
-      <TooltipContent side={tooltipLado}>{texto}</TooltipContent>
-    </Tooltip>
-  )
-}
 
-export { Button, BotonEnlace, buttonVariants }
+export { Button, buttonVariants }

@@ -1,8 +1,9 @@
 "use client";
+import { BotonDescarga } from "@/components/app/boton-descarga";
 import { Fragment, useMemo, useState, useTransition } from "react";
 import { toast } from "sonner";
 import { Plus, Trash2, Sparkles, Check, Download, ChevronDown, ChevronRight, X, Lock } from "lucide-react";
-import { Button, BotonEnlace } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Section, NormaRef } from "@/components/app/ui";
 import { Input } from "@/components/ui/input";
@@ -80,7 +81,7 @@ export function MatrizEditor(props: {
         <div className="flex-1" />
         {sugeridos > 0 && <Button disabled={pend} onClick={() => run(() => A.aprobarTodos(empresaId), "Sugerencias aprobadas")}><Check /> Aprobar {sugeridos} sugeridos</Button>}
         {props.sectorTipoId && <Button variant="outline" disabled={pend} onClick={() => run(() => A.completarDesdeSector(empresaId), "Procesos y zonas del sector agregados")}>Completar procesos y zonas del sector</Button>}
-        <BotonEnlace href={`/api/empresas/${empresaId}/matriz.xlsx`} variant="outline" tooltip="Descargar la matriz de peligros en Excel con el formato de la GTC 45"><Download /> Excel GTC 45</BotonEnlace>
+        <BotonDescarga href={`/api/empresas/${empresaId}/matriz.xlsx`} variant="outline" tooltip="Descargar la matriz de peligros en Excel con el formato de la GTC 45"><Download /> Excel GTC 45</BotonDescarga>
         <Pedir trigger={<Button variant="outline" disabled={pend} />} titulo="Cerrar versión de la matriz" descripcion="Se guarda una copia de la matriz actual. Debe actualizarse mínimo una vez al año y ante cambios o accidentes graves (Decreto 1072/2015 art. 2.2.4.6.15)." label="Motivo (inicial, anual, gestión del cambio, accidente)" inicial={props.version ? "anual" : "inicial"} accion="Cerrar versión" onConfirm={(m) => run(() => A.cerrarVersionMatriz(empresaId, m), "Versión de la matriz guardada")}><Lock /> Cerrar versión</Pedir>
       </div>
       {props.version && <p className="text-xs text-muted-foreground -mt-4">Última versión cerrada: v{props.version.numero} ({props.version.motivo}) el {new Date(props.version.fecha).toLocaleDateString("es-CO")}. La matriz se actualiza mínimo una vez al año y ante cambios o accidentes graves.</p>}

@@ -1,10 +1,11 @@
 import Link from "next/link";
+import { BotonDescarga } from "@/components/app/boton-descarga";
 import { Download, FileText, PenLine } from "lucide-react";
 import { db } from "@/lib/db";
 import { recalcularEmpresa } from "@/lib/empresa";
 import { Section, NormaRef } from "@/components/app/ui";
 import { Badge } from "@/components/ui/badge";
-import { buttonVariants, BotonEnlace } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
 import { BotonGenerarTodo } from "@/components/empresa/acciones";
@@ -42,7 +43,7 @@ export default async function Documentos({ params }: PageProps<"/empresas/[id]/d
   const acciones = (
     <div className="flex gap-2">
       <BotonGenerarTodo empresaId={id} />
-      <BotonEnlace href={`/api/empresas/${id}/paquete.zip`} variant="outline" tooltip="Todos los documentos en Word organizados por carpetas, con la matriz y la evaluación en Excel"><Download /> Descargar todo (ZIP)</BotonEnlace>
+      <BotonDescarga href={`/api/empresas/${id}/paquete.zip`} variant="outline" texto="Armando el ZIP…" tooltip="Todos los documentos en Word organizados por carpetas, con la matriz y la evaluación en Excel"><Download /> Descargar todo (ZIP)</BotonDescarga>
     </div>
   );
   if (!docs.length) return (
@@ -110,7 +111,7 @@ export default async function Documentos({ params }: PageProps<"/empresas/[id]/d
                     <TableCell className="pr-6 text-right">
                       {d && <div className="flex justify-end gap-1">
                         <Link href={`/empresas/${id}/documentos/${p.codigo}`} title="Ver el documento, editar sus secciones y subir la versión firmada" className={buttonVariants({ size: "sm", variant: "outline" })}><PenLine /> Ver y editar</Link>
-                        <BotonEnlace href={`/api/empresas/${id}/documentos/${p.codigo}`} size="icon-sm" variant="ghost" aria-label="Descargar en Word"><Download /></BotonEnlace>
+                        <BotonDescarga href={`/api/empresas/${id}/documentos/${p.codigo}`} size="icon-sm" variant="ghost" aria-label="Descargar en Word"><Download /></BotonDescarga>
                       </div>}
                     </TableCell>
                   </TableRow>

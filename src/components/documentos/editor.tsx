@@ -1,9 +1,10 @@
 "use client";
+import { BotonDescarga } from "@/components/app/boton-descarga";
 import Link from "next/link";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { ArrowLeft, Download, PenLine, RefreshCw, RotateCcw, Check, Save, Upload } from "lucide-react";
-import { Button, buttonVariants, BotonEnlace } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -32,7 +33,7 @@ export function DocumentoEditor({ empresaId, doc, normas, secciones, firmados }:
           <NativeSelectOption value="BORRADOR">Borrador</NativeSelectOption><NativeSelectOption value="APROBADO">Aprobado</NativeSelectOption><NativeSelectOption value="FIRMADO">Firmado</NativeSelectOption>
         </NativeSelect>
         <Button variant="outline" tooltip="Vuelve a llenar el documento con los datos actuales de la empresa; sus ediciones manuales se conservan" disabled={pend} onClick={() => run(() => A.regenerarDocumento(empresaId, doc.codigo), "Documento regenerado con los datos actuales")}><RefreshCw /> Regenerar</Button>
-        <BotonEnlace href={`/api/empresas/${empresaId}/documentos/${doc.codigo}`} variant="outline" tooltip="Descargar en Word con logo, encabezado y pie, para imprimir y firmar"><Download /> Word</BotonEnlace>
+        <BotonDescarga href={`/api/empresas/${empresaId}/documentos/${doc.codigo}`} variant="outline" tooltip="Descargar en Word con logo, encabezado y pie, para imprimir y firmar"><Download /> Word</BotonDescarga>
         <SubirArchivo empresaId={empresaId} ctx={{ tipo: "DOCUMENTO_FIRMADO", documentoId: doc.id }} titulo="Subir firmado" trigger={<Button tooltip="Suba el PDF o la foto del documento ya firmado; queda en estado Firmado y en el expediente"><Upload /> Subir firmado</Button>} ayuda="Escanee o fotografíe el documento firmado y súbalo. El documento quedará en estado Firmado y entrará al expediente de la empresa." descripcionInicial={`${doc.codigo} ${doc.nombre} firmado`} />
       </div>
       {ultimoFirmado?.documentoVersion && ultimoFirmado.documentoVersion < doc.version && (

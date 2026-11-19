@@ -10,6 +10,7 @@ import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, Di
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
 import { Item, ItemActions, ItemContent, ItemDescription, ItemGroup, ItemMedia, ItemTitle } from "@/components/ui/item";
 import { Pedir } from "@/components/app/confirmar";
+import { BotonDescarga } from "@/components/app/boton-descarga";
 import { subirArchivo, retirarArchivo, restaurarArchivo } from "@/app/actions/archivos";
 import { cn } from "@/lib/utils";
 
@@ -84,7 +85,7 @@ export function ListaArchivos({ empresaId, archivos, vacio = "Sin archivos.", co
             </ItemContent>
             <ItemActions className="gap-0">
               <Button size="icon-xs" variant="ghost" aria-label="Ver" render={<a href={`/api/archivos/${a.id}`} target="_blank" rel="noreferrer" />}><Eye /></Button>
-              <Button size="icon-xs" variant="ghost" aria-label="Descargar" render={<a href={`/api/archivos/${a.id}?descargar`} />}><Download /></Button>
+              <BotonDescarga size="icon-xs" variant="ghost" aria-label="Descargar" href={`/api/archivos/${a.id}?descargar`}><Download /></BotonDescarga>
               {a.activo
                 ? <Pedir trigger={<Button size="icon-xs" variant="ghost" aria-label="Retirar" />} titulo="Retirar archivo" descripcion="El archivo no se borra: queda en el historial, porque la norma exige conservar los registros del SG-SST." label="Motivo (por ejemplo: subido por error, reemplazado)" accion="Retirar" onConfirm={(m) => start(async () => { await retirarArchivo(empresaId, a.id, m); toast.success("Archivo retirado (queda en el historial)"); })}><Archive /></Pedir>
                 : <Button size="icon-xs" variant="ghost" aria-label="Restaurar" onClick={() => start(async () => { await restaurarArchivo(empresaId, a.id); toast.success("Archivo restaurado"); })}><RotateCcw /></Button>}
