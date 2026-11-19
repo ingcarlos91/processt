@@ -8,6 +8,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
 import { BotonGenerarTodo } from "@/components/empresa/acciones";
+import { Porque } from "@/components/app/porque";
 
 export const dynamic = "force-dynamic";
 const ESTADO: Record<string, "outline" | "secondary" | "default"> = { BORRADOR: "outline", APROBADO: "secondary", FIRMADO: "default" };
@@ -55,7 +56,7 @@ export default async function Documentos({ params }: PageProps<"/empresas/[id]/d
                   <TableRow key={p.codigo}>
                     <TableCell className="pl-6 font-mono text-xs">{p.codigo}</TableCell>
                     <TableCell>
-                      <div className="font-medium">{p.nombre}</div>
+                      <div className="font-medium">{p.nombre} <Porque titulo={`¿Por qué ${p.codigo}?`} normas={p.normas}>{rr.documentos.find((x) => x.codigo === p.codigo)?.porque}</Porque></div>
                       <div className="flex gap-1 mt-1">{editadas > 0 && <Badge variant="secondary">{editadas} secciones editadas</Badge>}{revisar > 0 && <Badge variant="destructive">{revisar} por revisar</Badge>}</div>
                     </TableCell>
                     <TableCell><div className="flex flex-wrap gap-1">{p.estandares.map((e) => <NormaRef key={e}>{e}</NormaRef>)}</div></TableCell>

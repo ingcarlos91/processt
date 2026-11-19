@@ -13,9 +13,19 @@ import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTi
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Section, Stat, NormaRef } from "@/components/app/ui";
 import { Confirmar } from "@/components/app/confirmar";
+import { Porque } from "@/components/app/porque";
 import * as A from "@/app/actions/sgsst";
 import { MESES } from "@/lib/plan/generar";
 import { cn } from "@/lib/utils";
+
+const ORIGEN: Record<string, string> = {
+  nivel: "Es una actividad mínima que exige el nivel de estándares de la empresa.",
+  comite: "La norma exige que el comité se reúna al menos una vez al mes.",
+  matriz: "Sale de la matriz de peligros: un riesgo prioritario que hay que intervenir o un tema de capacitación de los peligros de los cargos.",
+  mejoramiento: "Sale del plan de mejoramiento: corrige un estándar que la evaluación encontró sin cumplir.",
+  manual: "La agregó la consultora a mano.",
+  periodica: "Es una obligación periódica fijada por la norma.",
+};
 
 type Act = { id: string; mes: number; nombre: string; estandar: string; normaRef: string; responsable: string; estado: string; origen: string };
 
@@ -47,7 +57,7 @@ export function PlanEditor({ empresaId, anio, actividades }: { empresaId: string
     <TableRow key={a.id} className={cn(a.estado === "PENDIENTE" && a.mes < mesActual && "bg-red-50/60")}>
       <TableCell className="pl-6 w-10"><Checkbox checked={a.estado === "EJECUTADA"} onCheckedChange={(v) => run(() => A.actualizarActividad(empresaId, a.id, { estado: v ? "EJECUTADA" : "PENDIENTE" }))} aria-label="Ejecutada" /></TableCell>
       {vista === "tabla" && <TableCell className="w-28">{MESES[a.mes - 1]}</TableCell>}
-      <TableCell><span className={cn(a.estado === "EJECUTADA" && "line-through text-muted-foreground")}>{a.nombre}</span></TableCell>
+      <TableCell><span className={cn(a.estado === "EJECUTADA" && "line-through text-muted-foreground")}>{a.nombre}</span> <Porque titulo="¿Por qué esta actividad?" normas={[a.normaRef]}>{ORIGEN[a.origen] ?? "Actividad del plan."}</Porque></TableCell>
       <TableCell className="w-20">{a.estandar && <Badge variant="outline">{a.estandar}</Badge>}</TableCell>
       <TableCell className="w-56"><NormaRef>{a.normaRef}</NormaRef></TableCell>
       <TableCell className="w-48"><Input className="h-7" defaultValue={a.responsable} onBlur={(e) => e.target.value !== a.responsable && run(() => A.actualizarActividad(empresaId, a.id, { responsable: e.target.value }))} /></TableCell>

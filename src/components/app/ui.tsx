@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { Porque } from "@/components/app/porque";
 
 /** Encabezado de página (título, descripción y acciones). */
 export function PageHeader({ title, description, actions }: { title: ReactNode; description?: ReactNode; actions?: ReactNode }) {
@@ -38,12 +39,12 @@ export function Section({ title, description, children, actions, className, cont
 }
 
 /** Indicador (patrón "section cards" del bloque dashboard-01). */
-export function Stat({ label, value, hint, tone }: { label: string; value: ReactNode; hint?: ReactNode; tone?: "ok" | "warn" | "bad" }) {
+export function Stat({ label, value, hint, tone, porque, normas }: { label: string; value: ReactNode; hint?: ReactNode; tone?: "ok" | "warn" | "bad"; porque?: ReactNode; normas?: string[] }) {
   const c = tone === "ok" ? "text-emerald-600" : tone === "warn" ? "text-amber-600" : tone === "bad" ? "text-destructive" : "";
   return (
     <Card className="@container/card gap-2">
       <CardHeader>
-        <CardDescription>{label}</CardDescription>
+        <CardDescription className="flex items-center gap-1">{label}{porque && <Porque titulo={label} normas={normas}>{porque}</Porque>}</CardDescription>
         <CardTitle className={cn("text-2xl font-semibold tabular-nums", c)}>{value}</CardTitle>
       </CardHeader>
       {hint && <CardFooter className="text-muted-foreground text-xs">{hint}</CardFooter>}

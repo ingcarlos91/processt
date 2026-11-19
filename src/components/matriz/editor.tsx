@@ -17,7 +17,8 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Item as UiItem, ItemActions, ItemContent, ItemDescription, ItemGroup, ItemTitle } from "@/components/ui/item";
 import { Confirmar, Pedir } from "@/components/app/confirmar";
-import { ND, NE, NC, CLASIFICACIONES, CLASIFICACION_ETIQUETA, calcular, COLOR_NIVEL, SIGNIFICADO_NR } from "@/lib/gtc45";
+import { ND, NE, NC, CLASIFICACIONES, CLASIFICACION_ETIQUETA, calcular, COLOR_NIVEL, explicarRiesgo } from "@/lib/gtc45";
+import { Porque } from "@/components/app/porque";
 import * as A from "@/app/actions/matriz";
 import type { Sugerencia } from "@/lib/ia";
 import { cn } from "@/lib/utils";
@@ -121,7 +122,7 @@ export function MatrizEditor(props: {
                     <Fragment key={p.id}>
                       <TableRow className={cn("border-t align-top", p.estado === "sugerido" && "bg-amber-50")}>
                         <TableCell><button onClick={() => setAbierto(abierto === p.id ? null : p.id)}>{abierto === p.id ? <ChevronDown className="size-4" /> : <ChevronRight className="size-4" />}</button></TableCell>
-                        <TableCell><Badge variant="outline" className="text-[10px]">{p.origen}</Badge>{p.estado === "sugerido" && <Badge className="ml-1 text-[10px] bg-amber-500">{p.fuente === "ia" ? "IA" : "sugerido"}</Badge>}</TableCell>
+                        <TableCell><Badge variant="outline" className="text-[10px]">{p.origen}</Badge><Porque titulo={`Peligro por ${p.origen}`} normas={["GTC 45", "Decreto 1072/2015 art. 2.2.4.6.15"]}>{p.origen === "tarea" ? "Viene de la tarea: lo sufren las personas de los cargos que hacen esa tarea." : p.origen === "zona" ? "Viene del lugar de trabajo (zona): lo sufre todo el que trabaja allí, haga lo que haga (por ejemplo, sismo, incendio, pisos)." : "Viene del cargo en sí, no de una tarea (por ejemplo, carga mental o jornada)."} {p.fuente === "biblioteca" ? "Se tomó de la biblioteca de peligros." : p.fuente === "ia" ? "Lo sugirió la IA a partir de las funciones del cargo." : "Lo agregó la consultora."}</Porque>{p.estado === "sugerido" && <Badge className="ml-1 text-[10px] bg-amber-500">{p.fuente === "ia" ? "IA" : "sugerido"}</Badge>}</TableCell>
                         <TableCell className="max-w-64">{lugar}{t?.altoRiesgo && <Badge variant="destructive" className="ml-1 text-[10px]">alto riesgo: {t.altoRiesgo}</Badge>}</TableCell>
                         <TableCell>{CLASIFICACION_ETIQUETA[p.clasificacion] ?? p.clasificacion}</TableCell>
                         <TableCell>{p.descripcion}</TableCell>
@@ -129,8 +130,8 @@ export function MatrizEditor(props: {
                         <TableCell><NativeSelect size="sm" className="w-14" value={p.ne} onChange={(e) => run(() => A.actualizarPeligro(empresaId, p.id, { ne: Number(e.target.value) }))}>{NE.map((x) => <NativeSelectOption key={x.valor} value={x.valor} title={x.etiqueta}>{x.valor}</NativeSelectOption>)}</NativeSelect></TableCell>
                         <TableCell><NativeSelect size="sm" className="w-18" value={p.nc} onChange={(e) => run(() => A.actualizarPeligro(empresaId, p.id, { nc: Number(e.target.value) }))}>{NC.map((x) => <NativeSelectOption key={x.valor} value={x.valor} title={x.etiqueta}>{x.valor}</NativeSelectOption>)}</NativeSelect></TableCell>
                         <TableCell className="tabular-nums">{c.nr}</TableCell>
-                        <TableCell><span title={`${c.aceptabilidad}. ${SIGNIFICADO_NR[c.nivel]}`} className={cn("px-2 py-0.5 rounded font-semibold", COLOR_NIVEL[c.nivel])}>{c.nivel}</span></TableCell>
-                        <TableCell className="tabular-nums">{exp}</TableCell>
+                        <TableCell className="whitespace-nowrap"><span className={cn("px-2 py-0.5 rounded font-semibold", COLOR_NIVEL[c.nivel])}>{c.nivel}</span> <Porque titulo={`Nivel de riesgo ${c.nivel}`} normas={["GTC 45 numeral 3"]} pasos={explicarRiesgo(p.nd, p.ne, p.nc).pasos}>Así se calculó con la metodología GTC 45. Cambie ND, NE o NC según lo que observe en la empresa y el nivel se recalcula.</Porque></TableCell>
+                        <TableCell className="tabular-nums whitespace-nowrap">{exp} <Porque titulo="Personas expuestas">{`Suma de las personas de: ${cargos.filter((x) => cargoIds.includes(x.id)).map((x) => `${x.nombre} (${x.nPersonas})`).join(", ") || "ningún cargo asociado"}.`} {p.origen === "zona" ? "Son los cargos con alguna tarea en esta zona." : p.origen === "tarea" ? "Son los cargos que hacen esta tarea." : "Es el cargo dueño del peligro."}</Porque></TableCell>
                         <TableCell className="whitespace-nowrap">
                           {p.estado === "sugerido" && <Button size="icon-xs" variant="outline" title="Aprobar" onClick={() => run(() => A.actualizarPeligro(empresaId, p.id, { estado: "aprobado" }))}><Check /></Button>}
                           <Button size="icon-xs" variant="ghost" title="Eliminar" onClick={() => run(() => A.eliminarPeligro(empresaId, p.id))}><Trash2 /></Button>

@@ -11,6 +11,8 @@ import { NativeSelect, NativeSelectOptGroup, NativeSelectOption } from "@/compon
 import { Field, FieldDescription, FieldGroup, FieldLabel, FieldLegend, FieldSet } from "@/components/ui/field";
 import { Spinner } from "@/components/ui/spinner";
 import { NormaRef } from "@/components/app/ui";
+import { Porque } from "@/components/app/porque";
+import { explicarNivel } from "@/lib/reglas/explicar";
 import { crearEmpresa, actualizarEmpresa, type IntakeData } from "@/app/actions/empresas";
 import { DISPARADORES } from "@/lib/reglas/condicion";
 import { cn } from "@/lib/utils";
@@ -124,7 +126,7 @@ export function IntakeWizard({ sectores, cargosTipo, ciius, inicial, empresaId }
         </div>
         <Card size="sm">
           <CardHeader>
-            <CardDescription>Estándares mínimos aplicables</CardDescription>
+            <CardDescription className="flex items-center gap-1">Estándares mínimos aplicables <Porque normas={[prev.ref]}>{explicarNivel(prev.nivel, trab, d.claseRiesgo)} Se cuentan trabajadores de planta y en misión; contratistas y aprendices no suman para el nivel.</Porque></CardDescription>
             <CardTitle className="text-3xl tabular-nums">{prev.nivel}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-1 text-xs text-muted-foreground">

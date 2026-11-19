@@ -10,6 +10,8 @@ import { buttonVariants } from "@/components/ui/button";
 import { MESES } from "@/lib/plan/generar";
 import { calcular } from "@/lib/gtc45";
 import { BotonGenerarTodo } from "@/components/empresa/acciones";
+import { Porque } from "@/components/app/porque";
+import { explicarNivel, explicarConteo } from "@/lib/reglas/explicar";
 
 export const dynamic = "force-dynamic";
 
@@ -46,10 +48,10 @@ export default async function Resumen({ params }: PageProps<"/empresas/[id]">) {
   return (
     <>
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
-        <Stat label="Estándares mínimos" value={rr.nivel} hint={<NormaRef>{rr.nivelNormaRef}</NormaRef>} />
+        <Stat label="Estándares mínimos" value={rr.nivel} hint={<NormaRef>{rr.nivelNormaRef}</NormaRef>} porque={<>{explicarNivel(rr.nivel, rr.trabajadores, e.claseRiesgo)} {explicarConteo(e)}</>} normas={[rr.nivelNormaRef]} />
         <Stat label="Última evaluación" value={puntaje != null && ev?.valoracion ? `${puntaje}%` : "—"} hint={ev?.valoracion ?? "Sin evaluación cerrada"} tone={ev?.valoracion === "ACEPTABLE" ? "ok" : ev?.valoracion === "CRÍTICO" ? "bad" : ev?.valoracion ? "warn" : undefined} />
         <Stat label="Plan anual" value={e.actividades.length ? `${Math.round((ej / e.actividades.length) * 100)}%` : "—"} hint={`${ej} de ${e.actividades.length} actividades`} />
-        <Stat label="Riesgos prioritarios (I y II)" value={niveles.filter((n) => n === "I" || n === "II").length} hint={`${niveles.length} peligros en la matriz`} tone={niveles.includes("I") ? "bad" : undefined} />
+        <Stat porque="Son los riesgos de nivel I y II según la GTC 45: “no aceptables”. Deben intervenirse primero y pasan al plan anual." normas={["GTC 45", "Decreto 1072/2015 art. 2.2.4.6.24"]} label="Riesgos prioritarios (I y II)" value={niveles.filter((n) => n === "I" || n === "II").length} hint={`${niveles.length} peligros en la matriz`} tone={niveles.includes("I") ? "bad" : undefined} />
         <Stat label="Documentos" value={e.documentos.length} hint={`${e.documentos.filter((d) => d.estado !== "BORRADOR").length} aprobados o firmados de ${rr.documentos.length} aplicables`} />
       </div>
 
@@ -73,7 +75,7 @@ export default async function Resumen({ params }: PageProps<"/empresas/[id]">) {
         <Section title="Qué exige la norma a esta empresa" description="Conclusiones del motor de reglas con su fundamento.">
           <ul className="space-y-2 text-sm">
             {rr.conclusiones.map((c, i) => (
-              <li key={i} className="flex gap-2 items-start"><Check className="size-4 mt-0.5 text-emerald-600 shrink-0" /><span className="flex-1">{c.tipo === "comite" ? `Comité requerido: ${c.valor}` : c.valor} <NormaRef>{c.normaRef}</NormaRef></span></li>
+              <li key={i} className="flex gap-2 items-start"><Check className="size-4 mt-0.5 text-emerald-600 shrink-0" /><span className="flex-1">{c.tipo === "comite" ? `Comité requerido: ${c.valor}` : c.valor} <NormaRef>{c.normaRef}</NormaRef> <Porque normas={[c.normaRef]}>{c.porque}</Porque></span></li>
             ))}
           </ul>
         </Section>
@@ -84,7 +86,7 @@ export default async function Resumen({ params }: PageProps<"/empresas/[id]">) {
         </Section>
         <Section title={`Documentos aplicables (${rr.documentos.length})`} className="lg:col-span-2">
           <div className="grid md:grid-cols-2 gap-x-6 gap-y-1">
-            {rr.documentos.map((d) => <Item key={d.codigo}><Badge variant="outline" className="font-mono">{d.codigo}</Badge><ItemContent><ItemTitle>{d.nombre}</ItemTitle></ItemContent></Item>)}
+            {rr.documentos.map((d) => <Item key={d.codigo}><Badge variant="outline" className="font-mono">{d.codigo}</Badge><ItemContent><ItemTitle>{d.nombre} <Porque titulo={`¿Por qué ${d.codigo}?`} normas={d.normas}>{d.porque}</Porque></ItemTitle></ItemContent></Item>)}
           </div>
         </Section>
       </div>

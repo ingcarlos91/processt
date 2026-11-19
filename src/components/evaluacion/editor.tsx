@@ -14,6 +14,7 @@ import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTi
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Section, Stat, NormaRef } from "@/components/app/ui";
 import { Confirmar } from "@/components/app/confirmar";
+import { Porque } from "@/components/app/porque";
 import * as A from "@/app/actions/sgsst";
 import { cn } from "@/lib/utils";
 
@@ -70,8 +71,8 @@ export function EvaluacionEditor({ empresaId, nivel, evaluaciones, actual }: {
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <Stat label="Puntaje" value={`${actual.cal.puntaje}%`} hint={actual.nivel === 60 ? "Sobre 100 puntos" : `Ajustado a los ${actual.items.length} ítems aplicables (${actual.cal.obtenido} de ${actual.cal.maximo})`} tone={TONO[actual.cal.valoracion]} />
-        <Stat label="Valoración" value={<span className="text-lg">{actual.cal.valoracion}</span>} tone={TONO[actual.cal.valoracion]} />
+        <Stat label="Puntaje" porque={actual.nivel === 60 ? "Suma de los puntos de los ítems que cumplen o no aplican (con justificación). El total posible es 100." : `Suma de los puntos de los ítems que cumplen o no aplican, dividida entre los ${actual.cal.maximo} puntos posibles de los ${actual.items.length} ítems que aplican a este nivel, expresada en porcentaje. Los ítems sin evaluar cuentan como no cumplidos.`} normas={["Res. 0312/2019 art. 27"]} value={`${actual.cal.puntaje}%`} hint={actual.nivel === 60 ? "Sobre 100 puntos" : `Ajustado a los ${actual.items.length} ítems aplicables (${actual.cal.obtenido} de ${actual.cal.maximo})`} tone={TONO[actual.cal.valoracion]} />
+        <Stat label="Valoración" porque="Menos de 60 %: crítico. Entre 60 % y 85 %: moderadamente aceptable. Más de 85 %: aceptable. Cada valoración trae acciones obligatorias distintas." normas={["Res. 0312/2019 art. 28"]} value={<span className="text-lg">{actual.cal.valoracion}</span>} tone={TONO[actual.cal.valoracion]} />
         <Stat label="Ítems evaluados" value={`${evaluados} / ${actual.items.length}`} hint={<Progress value={(evaluados / actual.items.length) * 100} className="w-full" />} />
         <Stat label="Estado" value={actual.cerrada ? "Cerrada" : "En curso"} hint={actual.tipo === "inicial" ? "Evaluación inicial" : `Autoevaluación ${actual.anio}`} />
       </div>
@@ -92,7 +93,7 @@ export function EvaluacionEditor({ empresaId, nivel, evaluaciones, actual }: {
               <TableBody>
                 {its.map((i) => (
                   <TableRow key={i.id} className={cn(i.estado === "NO_CUMPLE" && "bg-red-50/60", i.estado === "PENDIENTE" && "bg-muted/40")}>
-                    <TableCell className="pl-6 font-mono text-xs">{i.codigo}</TableCell>
+                    <TableCell className="pl-6 font-mono text-xs whitespace-nowrap">{i.codigo} <Porque titulo={`Ítem ${i.codigo}`} normas={["Res. 0312/2019 arts. 16 y 27"]}>{`Vale ${i.puntaje} puntos. Qué revisa el inspector: ${i.modo}`}</Porque></TableCell>
                     <TableCell><div className="font-medium text-sm">{i.descripcion}</div><div className="text-xs text-muted-foreground mt-1">{i.modo}</div></TableCell>
                     <TableCell className="tabular-nums">{i.puntaje}</TableCell>
                     <TableCell>

@@ -13,6 +13,7 @@ import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTi
 import { Field, FieldLabel } from "@/components/ui/field";
 import { NormaRef } from "@/components/app/ui";
 import { Confirmar } from "@/components/app/confirmar";
+import { Porque } from "@/components/app/porque";
 import * as A from "@/app/actions/sgsst";
 
 type Miembro = { id: string; nombre: string; cedula: string; cargo: string; rol: string; representa: string };
@@ -26,7 +27,7 @@ const INFO: Record<string, { nombre: string; doc: string; desc: string }> = {
 };
 const ROLES = [["presidente", "Presidente"], ["secretario", "Secretario"], ["principal", "Principal"], ["suplente", "Suplente"], ["vigia", "Vigía"], ["jefe_brigada", "Jefe de brigada"], ["brigadista", "Brigadista"]];
 
-export function ComitesEditor({ empresaId, requeridos, comites, composicion, refs }: { empresaId: string; requeridos: string[]; comites: Comite[]; composicion: string; refs: Record<string, string> }) {
+export function ComitesEditor({ empresaId, requeridos, comites, composicion, refs, porques }: { empresaId: string; requeridos: string[]; comites: Comite[]; composicion: string; refs: Record<string, string>; porques: Record<string, string> }) {
   const [pend, start] = useTransition();
   const run = (fn: () => Promise<unknown>, ok?: string) => start(async () => { await fn(); if (ok) toast.success(ok); });
   const hoy = new Date().toISOString().slice(0, 10);
@@ -39,7 +40,7 @@ export function ComitesEditor({ empresaId, requeridos, comites, composicion, ref
         return (
           <Card key={tipo}>
             <CardHeader>
-              <CardTitle>{info.nombre}</CardTitle>
+              <CardTitle className="flex items-center gap-1">{info.nombre}<Porque titulo={`¿Por qué ${info.nombre}?`} normas={[refs[tipo === "VIGIA" ? "COPASST" : tipo] ?? c?.normaRef]}>{porques[tipo === "VIGIA" ? "COPASST" : tipo] ?? info.desc}</Porque></CardTitle>
               <CardDescription>{info.desc} {tipo === "COPASST" && `Composición: ${composicion}.`}</CardDescription>
               <CardAction className="flex flex-col items-end gap-1"><NormaRef>{refs[tipo === "VIGIA" ? "COPASST" : tipo] ?? c?.normaRef}</NormaRef><Link href={`/empresas/${empresaId}/documentos/${info.doc}`} className={buttonVariants({ size: "xs", variant: "ghost" })}><FileText /> {info.doc}</Link></CardAction>
             </CardHeader>

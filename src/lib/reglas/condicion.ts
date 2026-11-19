@@ -31,6 +31,14 @@ export type ContextoReglas = {
   esUpa: boolean;
   nivel?: number;
   disparadores: Partial<Record<Disparador, boolean>>;
+  /** De dónde salió cada disparador: marcado en el cuestionario o detectado en la matriz (con el peligro que lo activó). */
+  origenDisparadores?: Partial<Record<Disparador, string>>;
+};
+
+/** Normas de un peligro → disparador que activan. */
+export const NORMA_A_DISPARADOR: Record<string, Disparador> = {
+  "RES-4272-2021": "alturas", "RES-0491-2020": "confinados", "DEC-1496-2018": "quimicos", "RES-0773-2021": "quimicos",
+  "RES-8321-1983": "ruido", "LEY-1503-2011": "conduccion",
 };
 
 export type Condicion = {

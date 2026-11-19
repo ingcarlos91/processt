@@ -4,6 +4,8 @@ import { calcular, CLASIFICACION_ETIQUETA } from "@/lib/gtc45";
 import { INDICADORES } from "@/lib/indicadores";
 import { calificar } from "@/lib/evaluacion";
 import { generarPlan, MESES, anioPlanDefecto } from "@/lib/plan/generar";
+import { disparadoresDesdeMatriz } from "@/lib/reglas/matriz-disparadores";
+import { contexto as ctxReglas } from "@/lib/reglas/motor";
 
 const ROMANO = ["", "I", "II", "III", "IV", "V"];
 const PERFIL_TEXTO: Record<string, string> = { tecnico: "Técnico en SST", tecnologo: "Tecnólogo en SST", profesional: "Profesional en SST", especialista: "Profesional con posgrado en SST" };
@@ -35,7 +37,7 @@ export async function datosReglas() {
 }
 
 export async function resultadoReglas(e: EmpresaCompleta): Promise<ResultadoReglas> {
-  return evaluarEmpresa(e, await datosReglas());
+  return evaluarEmpresa({ ...e, disparadoresMatriz: await disparadoresDesdeMatriz(e.id) }, await datosReglas());
 }
 
 /** Filas de matriz con cálculo GTC 45 y personas expuestas. */
@@ -89,7 +91,7 @@ export async function construirContexto(empresaId: string) {
   const filas = filasMatriz(e);
   const prioritarios = filas.filter((f) => f.nivelRiesgo === "I" || f.nivelRiesgo === "II");
   const resp = (e.responsableSst ?? {}) as Record<string, string | boolean | undefined>;
-  const dis = (e.disparadores ?? {}) as Record<string, boolean>;
+  const dis = ctxReglas({ ...e, disparadoresMatriz: await disparadoresDesdeMatriz(e.id) }).disparadores as Record<string, boolean>;
 
   // Cargos con derivados (profesiograma, EPP, capacitaciones)
   const cargos = e.cargos.map((c) => {
