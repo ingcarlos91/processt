@@ -5,6 +5,7 @@ import { Fragment } from "react";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
+import { ManualAyuda } from "@/components/app/manual-ayuda";
 
 const ETIQUETAS: Record<string, string> = {
   empresas: "Empresas", nueva: "Nueva empresa", datos: "Datos", matriz: "Cargos y matriz", evaluacion: "Evaluación", documentos: "Documentos",
@@ -38,6 +39,7 @@ export function SiteHeader({ empresas }: { empresas: { id: string; razonSocial: 
           </BreadcrumbList>
         </Breadcrumb>
       </div>
+      <div className="ml-auto px-4"><ManualAyuda /></div>
     </header>
   );
 }

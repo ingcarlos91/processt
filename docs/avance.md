@@ -59,6 +59,8 @@ IA opcional: agregar `AI_GATEWAY_API_KEY=...` en `.env`. Sin clave, “Sugerir t
 
 - Versiones de la matriz: el cierre guarda filas completas, quién cerró y resumen; página Cargos y matriz → Versiones para ver, descargar en Excel (`?version=N`) y comparar con la vigente (agregados, quitados, cambios de nivel y controles); versiones antiguas compatibles. MTZ-02 muestra la versión. Avisos de actualización: más de un año (obligatorio), accidente mortal (obligatorio), grave (recomendado) — Decreto 1072/2015 art. 2.2.4.6.15; Res. 0312/2019 estándar 4.1.2. “Completar procesos y zonas” trae peligros como sugeridos. Ayuda solo en encabezados; explicación de cada dato en tooltip.
 
+- Manual de ayuda por sección: botón “Ayuda” en el encabezado abre un panel con la ayuda de la pantalla actual (qué incluye cada tarjeta, qué hace cada botón, paso a paso, consejos, normas y secciones relacionadas), buscador en todo el manual e índice. Contenido en `src/lib/manual.ts` (actualizar al cambiar una pantalla).
+
 ## Pendiente
 
 - PDF directo (hoy: Word; PDF desde Word o imprimir).
