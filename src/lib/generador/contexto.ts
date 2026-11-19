@@ -213,7 +213,15 @@ export async function construirContexto(empresaId: string) {
   const tabla = (k: string) => ((Array.isArray(comp[k]) ? comp[k] : []) as Record<string, string>[]).filter((f) => Object.values(f).some((x) => String(x ?? "").trim())).map((f) => Object.fromEntries(Object.entries(f).map(([kk, vv]) => [kk, fmtIso(vv)])));
   const pesos = (n: number) => n.toLocaleString("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 0 });
   const valores = tabla("presupuesto");
-  const presupuestoConValor = presupuesto.map((r) => { const v = Number(valores.find((x) => x.rubro === r.rubro)?.valor ?? 0); return { ...r, valor: v ? pesos(v) : "", valorNum: v }; });
+  // Rubros sugeridos con su valor, más los rubros que la consultora agregó como filas nuevas.
+  const norm = (t: unknown) => String(t ?? "").trim().toLowerCase();
+  const presupuestoConValor = [
+    ...presupuesto.map((r) => { const v = Number(valores.find((x) => norm(x.rubro) === norm(r.rubro))?.valor ?? 0); return { ...r, valor: v ? pesos(v) : "", valorNum: v }; }),
+    ...valores.filter((x) => norm(x.rubro) && !presupuesto.some((r) => norm(r.rubro) === norm(x.rubro))).map((x) => {
+      const v = Number(x.valor ?? 0);
+      return { rubro: String(x.rubro).trim(), descripcion: "Rubro agregado por la consultora", estandar: "", valor: v ? pesos(v) : "", valorNum: v };
+    }),
+  ];
   const totalPresupuesto = presupuestoConValor.reduce((s2, r) => s2 + r.valorNum, 0);
   const op = {
     arlLinea: txt("arlLinea"), telefonoSst: txt("telefonoSst", consultora.telefono || B), correoQuejas: txt("correoQuejas", e.correo || B),
