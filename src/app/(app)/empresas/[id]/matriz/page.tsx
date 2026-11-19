@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 import { MatrizEditor } from "@/components/matriz/editor";
 import { relevanciaEmpresa, relevancia } from "@/lib/biblioteca/relevancia";
+import { avisosActualizacion } from "@/lib/matriz/versiones";
 
 export const dynamic = "force-dynamic";
 
@@ -22,10 +23,12 @@ export default async function Matriz({ params }: PageProps<"/empresas/[id]/matri
     db.zonaTipo.findMany({ orderBy: { nombre: "asc" }, select: { id: true, nombre: true } }),
   ]);
   const rel = await relevanciaEmpresa(id);
+  const [avisos, nVersiones] = await Promise.all([avisosActualizacion(id), db.matrizVersion.count({ where: { empresaId: id } })]);
   return (
     <MatrizEditor
       empresaId={id}
       sectorTipoId={e.sectorTipoId}
+      avisos={avisos} nVersiones={nVersiones}
       version={e.matrizVersiones[0] ? { numero: e.matrizVersiones[0].numero, fecha: e.matrizVersiones[0].fecha.toISOString(), motivo: e.matrizVersiones[0].motivo } : null}
       procesos={e.procesos.map((p) => ({ id: p.id, nombre: p.nombre }))}
       zonas={e.zonas.map((z) => ({ id: z.id, nombre: z.nombre }))}

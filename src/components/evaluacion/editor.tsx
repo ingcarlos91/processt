@@ -15,7 +15,7 @@ import { EstadoVacio } from "@/components/app/ilustraciones";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Section, Stat, NormaRef } from "@/components/app/ui";
 import { Confirmar } from "@/components/app/confirmar";
-import { Porque } from "@/components/app/porque";
+import { Tip } from "@/components/app/tip";
 import { Ayuda } from "@/components/app/ayuda";
 import { SubirArchivo, ListaArchivos, type ArchivoUI } from "@/components/app/adjuntos";
 import { Popover, PopoverContent, PopoverDescription, PopoverHeader, PopoverTitle, PopoverTrigger } from "@/components/ui/popover";
@@ -90,7 +90,7 @@ export function EvaluacionEditor({ empresaId, nivel, evaluaciones, actual }: {
               <TableBody>
                 {its.map((i) => (
                   <TableRow key={i.id} className={cn(i.estado === "NO_CUMPLE" && "bg-red-50/60", i.estado === "PENDIENTE" && "bg-muted/40")}>
-                    <TableCell className="pl-6 font-mono text-xs whitespace-nowrap">{i.codigo} <Porque titulo={`Ítem ${i.codigo}`} normas={["Res. 0312/2019 arts. 16 y 27"]}>{`Vale ${i.puntaje} puntos. Qué revisa el inspector: ${i.modo}`}</Porque></TableCell>
+                    <TableCell className="pl-6 font-mono text-xs whitespace-nowrap"><Tip texto={`Vale ${i.puntaje} puntos (Res. 0312/2019 arts. 16 y 27). Qué revisa el inspector: ${i.modo}`}><span className="underline decoration-dotted decoration-muted-foreground/50 underline-offset-4">{i.codigo}</span></Tip></TableCell>
                     <TableCell>
                       <div className="font-medium text-sm">{i.descripcion}</div>
                       <div className="text-xs text-muted-foreground mt-1">{i.modo}</div>

@@ -57,6 +57,8 @@ IA opcional: agregar `AI_GATEWAY_API_KEY=...` en `.env`. Sin clave, “Sugerir t
 
 - Biblioteca → Accidentes (global): formas del evento con causas, medidas, lesiones/agentes/partes típicas y lección sugerida; agentes; tipos de lesión (con “sugiere grave”, Res. 1401/2007 art. 3); partes del cuerpo. Alimentan el formulario (selector con búsqueda y texto libre, típicas primero) y las sugerencias de investigación. Precarga: lugares desde sedes/zonas, tareas del cargo, responsable y fecha (+30 días) de acciones, lección por forma.
 
+- Versiones de la matriz: el cierre guarda filas completas, quién cerró y resumen; página Cargos y matriz → Versiones para ver, descargar en Excel (`?version=N`) y comparar con la vigente (agregados, quitados, cambios de nivel y controles); versiones antiguas compatibles. MTZ-02 muestra la versión. Avisos de actualización: más de un año (obligatorio), accidente mortal (obligatorio), grave (recomendado) — Decreto 1072/2015 art. 2.2.4.6.15; Res. 0312/2019 estándar 4.1.2. “Completar procesos y zonas” trae peligros como sugeridos. Ayuda solo en encabezados; explicación de cada dato en tooltip.
+
 ## Pendiente
 
 - PDF directo (hoy: Word; PDF desde Word o imprimir).

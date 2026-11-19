@@ -12,16 +12,17 @@ async function ponerLogo(wb: ExcelJS.Workbook, ws: ExcelJS.Worksheet, ctx: Conte
   ws.addImage(id, { tl: { col: columna, row: 0.1 }, ext: { width: l.ancho, height: l.alto } });
 }
 
-function encabezado(ws: ExcelJS.Worksheet, titulo: string, ctx: Contexto, columnas: number) {
+function encabezado(ws: ExcelJS.Worksheet, titulo: string, ctx: Contexto, columnas: number, extra = "") {
   ws.mergeCells(1, 1, 1, columnas);
   ws.getCell(1, 1).value = titulo;
   ws.getCell(1, 1).font = { bold: true, size: 14, color: { argb: "FFFFFFFF" } };
   ws.getCell(1, 1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: NAVY } };
   ws.mergeCells(2, 1, 2, columnas);
-  ws.getCell(2, 1).value = `${ctx.empresa.razonSocial} — NIT ${ctx.empresa.nit} — ${ctx.empresa.actividad} — Fecha: ${ctx.fecha} — Elaboró: ${ctx.consultora.profesional} (Licencia SST ${ctx.consultora.licencia})`;
+  ws.getCell(2, 1).value = `${ctx.empresa.razonSocial} — NIT ${ctx.empresa.nit} — ${ctx.empresa.actividad} — Fecha: ${ctx.fecha} — Elaboró: ${ctx.responsable.nombre}${ctx.responsable.licencia ? ` (Licencia SST ${ctx.responsable.licencia})` : ""}${extra ? ` — ${extra}` : ""}`;
 }
 
-export async function matrizXlsx(ctx: Contexto) {
+/** Matriz GTC 45 en Excel. Con `version`, exporta esa versión cerrada (sus filas ya vienen en ctx.matriz.filas). */
+export async function matrizXlsx(ctx: Contexto, version?: { numero: number; fecha: string; motivo: string } | null) {
   const wb = new ExcelJS.Workbook();
   wb.creator = "PROCESST";
   const ws = wb.addWorksheet("Matriz GTC 45", { views: [{ state: "frozen", ySplit: 5, xSplit: 4 }] });
@@ -36,7 +37,9 @@ export async function matrizXlsx(ctx: Contexto) {
     ["Medidas de intervención", ["Eliminación", "Sustitución", "Controles de ingeniería", "Controles administrativos, señalización", "EPP"]],
   ];
   const total = grupos.reduce((s, g) => s + g[1].length, 0);
-  encabezado(ws, "MATRIZ DE IDENTIFICACIÓN DE PELIGROS, EVALUACIÓN Y VALORACIÓN DE RIESGOS (GTC 45)", ctx, total);
+  const v = version ?? null;
+  encabezado(ws, `MATRIZ DE IDENTIFICACIÓN DE PELIGROS, EVALUACIÓN Y VALORACIÓN DE RIESGOS (GTC 45)${v ? ` — VERSIÓN ${v.numero}` : ""}`, ctx, total,
+    v ? `Versión ${v.numero} cerrada el ${v.fecha} (${v.motivo})` : ctx.matriz.version ? `Matriz vigente; última versión cerrada: v${ctx.matriz.version.numero} el ${ctx.matriz.version.fecha}` : "Versión en elaboración");
   ws.getRow(1).height = 36;
   await ponerLogo(wb, ws, ctx, total - 2);
   let col = 1;

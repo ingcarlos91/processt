@@ -1,4 +1,7 @@
 "use server";
+import { cargarEmpresa, filasMatriz } from "@/lib/generador/contexto";
+import { resumenFilas } from "@/lib/matriz/versiones";
+import { actualizarDocumentos } from "@/lib/generador/documentos";
 import { requiereUsuario } from "@/lib/auth/sesion";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
@@ -143,10 +146,15 @@ export async function eliminarProceso(empresaId: string, procesoId: string) {
   rv(empresaId);
 }
 
+/** Agrega zonas (con sus peligros como sugeridos, para revisión) y procesos típicos del sector que falten. */
 export async function completarDesdeSector(empresaId: string) {
   await requiereUsuario();
-  await prepararEstructura(empresaId, "aprobado");
+  const antes = await db.peligroEvaluado.count({ where: { empresaId } });
+  const [zonasAntes, procesosAntes] = await Promise.all([db.zona.count({ where: { empresaId } }), db.proceso.count({ where: { empresaId } })]);
+  await prepararEstructura(empresaId, "sugerido");
+  const [despues, zonas, procesos] = await Promise.all([db.peligroEvaluado.count({ where: { empresaId } }), db.zona.count({ where: { empresaId } }), db.proceso.count({ where: { empresaId } })]);
   rv(empresaId);
+  return { zonas: zonas - zonasAntes, procesos: procesos - procesosAntes, peligros: despues - antes };
 }
 
 export async function sugerirConIA(empresaId: string, cargoId: string, funciones: string) {
@@ -222,12 +230,22 @@ export async function guardarTareaEnBiblioteca(empresaId: string, tareaId: strin
   rv(empresaId);
 }
 
+/**
+ * Cierra una versión: guarda la matriz completa (filas con nombres de procesos, zonas, tareas y cargos),
+ * quién la cerró y un resumen. El MTZ-02 se actualiza y sube de versión.
+ */
 export async function cerrarVersionMatriz(empresaId: string, motivo: string) {
-  await requiereUsuario();
+  const u = await requiereUsuario();
+  if (!motivo.trim()) return { error: "Escriba el motivo de la versión." };
+  const pendientes = await db.peligroEvaluado.count({ where: { empresaId, estado: "sugerido" } });
   const n = await db.matrizVersion.count({ where: { empresaId } });
-  const peligros = await db.peligroEvaluado.findMany({ where: { empresaId } });
-  const v = await db.matrizVersion.create({ data: { empresaId, numero: n + 1, motivo, snapshot: peligros as object } });
+  const e = await cargarEmpresa(empresaId);
+  const filas = filasMatriz(e);
+  const nombre = (await db.usuario.findUnique({ where: { id: u.id }, select: { nombre: true } }))?.nombre ?? null;
+  const v = await db.matrizVersion.create({ data: { empresaId, numero: n + 1, motivo: motivo.trim(), cerradoPor: nombre, snapshot: { filas } as object, resumen: resumenFilas(filas) as object } });
   await db.peligroEvaluado.updateMany({ where: { empresaId }, data: { matrizVersionId: v.id } });
   await recalcularEmpresa(empresaId);
+  await actualizarDocumentos(empresaId, ["MTZ-02", "MTZ-01", "PRC-10"]);
   rv(empresaId);
+  return { ok: true as const, numero: v.numero, pendientes };
 }

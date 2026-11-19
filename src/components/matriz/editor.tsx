@@ -2,8 +2,10 @@
 import { BotonDescarga } from "@/components/app/boton-descarga";
 import { Fragment, useMemo, useState, useTransition } from "react";
 import { toast } from "sonner";
-import { Plus, Trash2, Sparkles, Check, Download, ChevronDown, ChevronRight, X, Lock } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Plus, Trash2, Sparkles, Check, Download, ChevronDown, ChevronRight, X, Lock, History, AlertTriangle } from "lucide-react";
+import Link from "next/link";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Section, NormaRef } from "@/components/app/ui";
 import { Input } from "@/components/ui/input";
@@ -20,7 +22,7 @@ import { Confirmar, Pedir } from "@/components/app/confirmar";
 import { GuardarEnBiblioteca } from "@/components/app/guardar-biblioteca";
 import { Buscador, type OpcionBuscador, type Relevancia } from "@/components/app/buscador";
 import { ND, NE, NC, CLASIFICACIONES, CLASIFICACION_ETIQUETA, calcular, COLOR_NIVEL, explicarRiesgo } from "@/lib/gtc45";
-import { Porque } from "@/components/app/porque";
+import { Tip } from "@/components/app/tip";
 import { Ayuda } from "@/components/app/ayuda";
 import * as A from "@/app/actions/matriz";
 import type { Sugerencia } from "@/lib/ia";
@@ -41,7 +43,7 @@ type PC = { id: string; clasificacion: string; descripcion: string; empresaId: s
 const opcCargos = (xs: CT[]): OpcionBuscador[] => xs.map((t) => ({ valor: t.id, etiqueta: t.nombre, relevancia: t.relevancia }));
 
 export function MatrizEditor(props: {
-  empresaId: string; sectorTipoId: string | null; version: { numero: number; fecha: string; motivo: string } | null;
+  empresaId: string; sectorTipoId: string | null; version: { numero: number; fecha: string; motivo: string } | null; avisos: { nivel: "obligatorio" | "recomendado"; texto: string; normaRef: string }[]; nVersiones: number;
   procesos: Item[]; zonas: Item[]; cargos: Cargo[]; tareas: Tarea[]; peligros: Peligro[];
   cargosTipo: CT[]; tareasTipo: TT[]; catalogo: PC[]; zonasTipo: (Item & { relevancia: Relevancia })[];
 }) {
@@ -80,11 +82,20 @@ export function MatrizEditor(props: {
         <span className="text-sm text-muted-foreground mr-2">Metodología GTC 45 <NormaRef>Decreto 1072/2015 art. 2.2.4.6.15</NormaRef> <NormaRef>Res. 0312 est. 4.1.1 y 4.1.2</NormaRef></span>
         <div className="flex-1" />
         {sugeridos > 0 && <Button disabled={pend} onClick={() => run(() => A.aprobarTodos(empresaId), "Sugerencias aprobadas")}><Check /> Aprobar {sugeridos} sugeridos</Button>}
-        {props.sectorTipoId && <Button variant="outline" disabled={pend} onClick={() => run(() => A.completarDesdeSector(empresaId), "Procesos y zonas del sector agregados")}>Completar procesos y zonas del sector</Button>}
+        {props.sectorTipoId && <Button variant="outline" disabled={pend} tooltip="Agrega las zonas (con sus peligros como sugeridos) y los procesos típicos del sector que le falten a la empresa. No duplica ni modifica lo existente." onClick={() => start(async () => { const r = await A.completarDesdeSector(empresaId); if (!r.zonas && !r.procesos) toast.info("La empresa ya tiene todas las zonas y procesos del sector."); else toast.success(`Agregados: ${r.zonas} zona(s), ${r.procesos} proceso(s) y ${r.peligros} peligro(s) sugerido(s) para revisar.`); })}>Completar procesos y zonas del sector</Button>}
         <BotonDescarga href={`/api/empresas/${empresaId}/matriz.xlsx`} variant="outline" tooltip="Descargar la matriz de peligros en Excel con el formato de la GTC 45"><Download /> Excel GTC 45</BotonDescarga>
-        <Pedir trigger={<Button variant="outline" disabled={pend} />} titulo="Cerrar versión de la matriz" descripcion="Se guarda una copia de la matriz actual. Debe actualizarse mínimo una vez al año y ante cambios o accidentes graves (Decreto 1072/2015 art. 2.2.4.6.15)." label="Motivo (inicial, anual, gestión del cambio, accidente)" inicial={props.version ? "anual" : "inicial"} accion="Cerrar versión" onConfirm={(m) => run(() => A.cerrarVersionMatriz(empresaId, m), "Versión de la matriz guardada")}><Lock /> Cerrar versión</Pedir>
+        <Link href={`/empresas/${empresaId}/matriz/versiones`} className={buttonVariants({ variant: "outline" })}><History /> Versiones{props.nVersiones ? ` (${props.nVersiones})` : ""}</Link>
+        <Pedir trigger={<Button variant="outline" disabled={pend} tooltip="Congela la matriz actual como una versión consultable y descargable" />} titulo="Cerrar versión de la matriz" descripcion="Se guarda una copia completa de la matriz como está hoy, con fecha, motivo y quién la cerró; queda en el historial de versiones y el MTZ-02 se actualiza. La matriz se actualiza mínimo una vez al año, ante cambios en procesos o instalaciones y siempre que ocurra un accidente mortal o un evento catastrófico (Decreto 1072/2015 art. 2.2.4.6.15; Res. 0312/2019 estándar 4.1.2)." label="Motivo (por ejemplo: inicial, actualización anual 2026, cambio de proceso, accidente)" inicial={props.version ? `Actualización anual ${new Date().getFullYear()}` : "Versión inicial"} accion="Cerrar versión"
+          onConfirm={(m) => start(async () => { const r = await A.cerrarVersionMatriz(empresaId, m); if ("error" in r) toast.error(r.error); else toast.success(`Versión v${r.numero} cerrada${r.pendientes ? `. Atención: ${r.pendientes} peligro(s) sugerido(s) sin aprobar no quedaron en la versión` : ""}.`); })}><Lock /> Cerrar versión</Pedir>
       </div>
-      {props.version && <p className="text-xs text-muted-foreground -mt-4">Última versión cerrada: v{props.version.numero} ({props.version.motivo}) el {new Date(props.version.fecha).toLocaleDateString("es-CO")}. La matriz se actualiza mínimo una vez al año y ante cambios o accidentes graves.</p>}
+      {props.version && <p className="text-xs text-muted-foreground -mt-4">Última versión cerrada: v{props.version.numero} ({props.version.motivo}) el {new Date(props.version.fecha).toLocaleDateString("es-CO")}. <Link className="underline underline-offset-2" href={`/empresas/${empresaId}/matriz/versiones`}>Ver historial</Link></p>}
+      {props.avisos.map((a, i) => (
+        <Alert key={i} variant={a.nivel === "obligatorio" ? "destructive" : "default"}>
+          <AlertTriangle />
+          <AlertTitle>{a.nivel === "obligatorio" ? "Actualice la matriz" : "Revisión recomendada de la matriz"}</AlertTitle>
+          <AlertDescription className="flex flex-wrap items-center gap-2">{a.texto} <NormaRef>{a.normaRef}</NormaRef></AlertDescription>
+        </Alert>
+      ))}
 
       <div className="grid xl:grid-cols-[380px_1fr] gap-6 items-start">
         <div className="space-y-4">
@@ -128,7 +139,7 @@ export function MatrizEditor(props: {
                     <Fragment key={p.id}>
                       <TableRow className={cn("border-t align-top", p.estado === "sugerido" && "bg-amber-50")}>
                         <TableCell><button onClick={() => setAbierto(abierto === p.id ? null : p.id)}>{abierto === p.id ? <ChevronDown className="size-4" /> : <ChevronRight className="size-4" />}</button></TableCell>
-                        <TableCell><Badge variant="outline" className="text-[10px]">{p.origen}</Badge><Porque titulo={`Peligro por ${p.origen}`} normas={["GTC 45", "Decreto 1072/2015 art. 2.2.4.6.15"]}>{p.origen === "tarea" ? "Viene de la tarea: lo sufren las personas de los cargos que hacen esa tarea." : p.origen === "zona" ? "Viene del lugar de trabajo (zona): lo sufre todo el que trabaja allí, haga lo que haga (por ejemplo, sismo, incendio, pisos)." : "Viene del cargo en sí, no de una tarea (por ejemplo, carga mental o jornada)."} {p.fuente === "biblioteca" ? "Se tomó de la biblioteca de peligros." : p.fuente === "ia" ? "Lo sugirió la IA a partir de las funciones del cargo." : "Lo agregó la consultora."}</Porque>{p.estado === "sugerido" && <Badge className="ml-1 text-[10px] bg-amber-500">{p.fuente === "ia" ? "IA" : "sugerido"}</Badge>}</TableCell>
+                        <TableCell><Tip texto={<>{p.origen === "tarea" ? "Viene de la tarea: lo sufren las personas de los cargos que hacen esa tarea." : p.origen === "zona" ? "Viene del lugar de trabajo (zona): lo sufre todo el que trabaja allí, haga lo que haga (por ejemplo, sismo, incendio, pisos)." : "Viene del cargo en sí, no de una tarea (por ejemplo, carga mental o jornada)."} {p.fuente === "biblioteca" ? "Se tomó de la biblioteca de peligros." : p.fuente === "ia" ? "Lo sugirió la IA a partir de las funciones del cargo." : p.fuente === "investigacion" ? "Se agregó desde la investigación de un accidente." : "Lo agregó la consultora."}</>}><Badge variant="outline" className="text-[10px]">{p.origen}</Badge></Tip>{p.estado === "sugerido" && <Badge className="ml-1 text-[10px] bg-amber-500">{p.fuente === "ia" ? "IA" : "sugerido"}</Badge>}</TableCell>
                         <TableCell className="max-w-64">{lugar}{t?.altoRiesgo && <Badge variant="destructive" className="ml-1 text-[10px]">alto riesgo: {t.altoRiesgo}</Badge>}</TableCell>
                         <TableCell>{CLASIFICACION_ETIQUETA[p.clasificacion] ?? p.clasificacion}</TableCell>
                         <TableCell>{p.descripcion}</TableCell>
@@ -136,8 +147,8 @@ export function MatrizEditor(props: {
                         <TableCell><NativeSelect size="sm" className="w-14" value={p.ne} onChange={(e) => run(() => A.actualizarPeligro(empresaId, p.id, { ne: Number(e.target.value) }))}>{NE.map((x) => <NativeSelectOption key={x.valor} value={x.valor} title={x.etiqueta}>{x.valor}</NativeSelectOption>)}</NativeSelect></TableCell>
                         <TableCell><NativeSelect size="sm" className="w-18" value={p.nc} onChange={(e) => run(() => A.actualizarPeligro(empresaId, p.id, { nc: Number(e.target.value) }))}>{NC.map((x) => <NativeSelectOption key={x.valor} value={x.valor} title={x.etiqueta}>{x.valor}</NativeSelectOption>)}</NativeSelect></TableCell>
                         <TableCell className="tabular-nums">{c.nr}</TableCell>
-                        <TableCell className="whitespace-nowrap"><span className={cn("px-2 py-0.5 rounded font-semibold", COLOR_NIVEL[c.nivel])}>{c.nivel}</span> <Porque titulo={`Nivel de riesgo ${c.nivel}`} normas={["GTC 45 numeral 3"]} pasos={explicarRiesgo(p.nd, p.ne, p.nc).pasos}>Así se calculó con la metodología GTC 45. Cambie ND, NE o NC según lo que observe en la empresa y el nivel se recalcula.</Porque></TableCell>
-                        <TableCell className="tabular-nums whitespace-nowrap">{exp} <Porque titulo="Personas expuestas">{`Suma de las personas de: ${cargos.filter((x) => cargoIds.includes(x.id)).map((x) => `${x.nombre} (${x.nPersonas})`).join(", ") || "ningún cargo asociado"}.`} {p.origen === "zona" ? "Son los cargos con alguna tarea en esta zona." : p.origen === "tarea" ? "Son los cargos que hacen esta tarea." : "Es el cargo dueño del peligro."}</Porque></TableCell>
+                        <TableCell className="whitespace-nowrap"><Tip texto={<ul className="space-y-0.5">{explicarRiesgo(p.nd, p.ne, p.nc).pasos.map((x) => <li key={x}>{x}</li>)}</ul>}><span className={cn("px-2 py-0.5 rounded font-semibold", COLOR_NIVEL[c.nivel])}>{c.nivel}</span></Tip></TableCell>
+                        <TableCell className="tabular-nums whitespace-nowrap"><Tip texto={<>{`Suma de las personas de: ${cargos.filter((x) => cargoIds.includes(x.id)).map((x) => `${x.nombre} (${x.nPersonas})`).join(", ") || "ningún cargo asociado"}.`} {p.origen === "zona" ? "Son los cargos con alguna tarea en esta zona." : p.origen === "tarea" ? "Son los cargos que hacen esta tarea." : "Es el cargo dueño del peligro."}</>}><span className="underline decoration-dotted decoration-muted-foreground/50 underline-offset-4">{exp}</span></Tip></TableCell>
                         <TableCell className="whitespace-nowrap">
                           {p.estado === "sugerido" && <Button size="icon-xs" variant="outline" aria-label="Aprobar peligro sugerido" onClick={() => run(() => A.actualizarPeligro(empresaId, p.id, { estado: "aprobado" }))}><Check /></Button>}
                           <Button size="icon-xs" variant="ghost" aria-label="Quitar peligro de la matriz" onClick={() => run(() => A.eliminarPeligro(empresaId, p.id))}><Trash2 /></Button>

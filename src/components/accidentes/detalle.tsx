@@ -77,8 +77,8 @@ function ListaTexto({ items, onChange, placeholder, numerada, sugeridos }: { ite
   );
 }
 
-export function EventoDetalle({ empresaId, ev, cargos, peligros, peligrosEnMatriz, equipoSugerido, responsable, iaActiva, cat, lugares, personas }: {
-  empresaId: string; ev: Ev; cargos: CargoOpcion[]; peligros: OpcionBuscador[]; peligrosEnMatriz: string[]; equipoSugerido: Integrante[]; responsable: string; iaActiva: boolean; cat: CatalogoAccidentes; lugares: string[]; personas: string[];
+export function EventoDetalle({ empresaId, ev, cargos, peligros, peligrosEnMatriz, equipoSugerido, responsable, iaActiva, cat, lugares, personas, avisoMatriz }: {
+  empresaId: string; ev: Ev; cargos: CargoOpcion[]; peligros: OpcionBuscador[]; peligrosEnMatriz: string[]; equipoSugerido: Integrante[]; responsable: string; iaActiva: boolean; cat: CatalogoAccidentes; lugares: string[]; personas: string[]; avisoMatriz: "obligatorio" | "recomendado" | null;
 }) {
   const router = useRouter();
   const [pend, start] = useTransition();
@@ -136,6 +136,17 @@ export function EventoDetalle({ empresaId, ev, cargos, peligros, peligrosEnMatri
         <span className="text-sm text-muted-foreground">{fechaLarga(ev.datos.fecha)}{ev.datos.hora ? `, ${ev.datos.hora}` : ""}{ev.datos.cargo ? ` · ${ev.datos.cargo}` : ""}</span>
         <div className="flex flex-wrap gap-1">{ev.plazos.map((p) => <Semaforo key={p.clave} p={p} />)}</div>
       </div>
+
+      {avisoMatriz && (
+        <Alert variant={avisoMatriz === "obligatorio" ? "destructive" : "default"}>
+          <AlertTitle>{avisoMatriz === "obligatorio" ? "Accidente mortal: actualice la matriz de peligros" : "Accidente grave: revise la matriz de peligros"}</AlertTitle>
+          <AlertDescription className="flex flex-wrap items-center gap-2">
+            {avisoMatriz === "obligatorio" ? "La matriz debe actualizarse y cerrarse una nueva versión después de este evento." : "Revise la valoración y los controles del peligro relacionado y cierre una nueva versión de la matriz."}
+            <NormaRef>Decreto 1072/2015 art. 2.2.4.6.15</NormaRef><NormaRef>Res. 0312/2019 estándar 4.1.2</NormaRef>
+            <Link href={`/empresas/${empresaId}/matriz`} className={buttonVariants({ size: "sm", variant: "outline" })}>Ir a Cargos y matriz</Link>
+          </AlertDescription>
+        </Alert>
+      )}
 
       <Paso n={1} titulo="Registro del evento" descripcion="Los datos que pide el FURAT y la investigación. Sin diagnósticos médicos (dato sensible)." normas={["Ley 1581/2012"]}
         accion={cambioDatos && <Button size="sm" disabled={pend} onClick={() => run(() => A.actualizarEvento(empresaId, ev.id, datos), "Registro actualizado")}><Save /> Guardar registro</Button>}>

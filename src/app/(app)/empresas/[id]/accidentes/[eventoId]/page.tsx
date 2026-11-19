@@ -26,6 +26,9 @@ export default async function Evento({ params }: PageProps<"/empresas/[id]/accid
     db.zona.findMany({ where: { empresaId: id }, select: { nombre: true } }),
   ]);
   const resp = (empresa.responsableSst ?? {}) as { nombre?: string; cargo?: string };
+  // Accidente mortal: la matriz debe actualizarse; grave: se recomienda (Decreto 1072/2015 art. 2.2.4.6.15; Res. 0312/2019 estándar 4.1.2).
+  const ultimaVersion = ev.tipo === "AT" && ev.gravedad !== "leve" ? await db.matrizVersion.findFirst({ where: { empresaId: id }, orderBy: { numero: "desc" } }) : null;
+  const avisoMatriz = ev.tipo === "AT" && ev.gravedad !== "leve" && (!ultimaVersion || ultimaVersion.fecha < ev.fecha) ? (ev.gravedad === "mortal" ? "obligatorio" : "recomendado") : null;
   const miembros = comites.flatMap((c) => c.miembros.map((m) => ({ nombre: m.nombre, cargo: m.cargo ?? "", rol: "copasst" as const })));
   const sugeridos: Integrante[] = [
     { nombre: "", cargo: "", rol: "jefe" },
@@ -56,6 +59,7 @@ export default async function Evento({ params }: PageProps<"/empresas/[id]/accid
       peligrosEnMatriz={[...idsMatriz].filter(Boolean) as string[]}
       equipoSugerido={sugeridos}
       responsable={resp.nombre ?? ""}
+      avisoMatriz={avisoMatriz}
       cat={cat} lugares={[...new Set([...zonas, ...sedes].map((x) => x.nombre))]}
       personas={[...new Set([resp.nombre, empresa.representanteLegal, ...miembros.map((m) => m.nombre)].filter(Boolean) as string[])]}
     />

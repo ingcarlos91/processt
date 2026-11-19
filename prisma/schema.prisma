@@ -419,7 +419,9 @@ model MatrizVersion {
   numero    Int
   motivo    String // inicial | anual | gestion_cambio
   fecha     DateTime          @default(now())
-  snapshot  Json? // copia de la matriz al cerrar la versión
+  snapshot  Json? // copia de la matriz al cerrar: { filas: [...] } (versiones antiguas: arreglo de peligros)
+  cerradoPor String?          @map("cerrado_por")
+  resumen   Json? // { total, prioritarios, porNivel }
   peligros  PeligroEvaluado[]
 
   @@map("matriz_version")

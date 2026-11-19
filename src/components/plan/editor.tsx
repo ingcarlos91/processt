@@ -14,7 +14,7 @@ import { EstadoVacio } from "@/components/app/ilustraciones";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Section, Stat, NormaRef } from "@/components/app/ui";
 import { Confirmar } from "@/components/app/confirmar";
-import { Porque } from "@/components/app/porque";
+import { Tip } from "@/components/app/tip";
 import { SubirArchivo, ListaArchivos, type ArchivoUI } from "@/components/app/adjuntos";
 import { Popover, PopoverContent, PopoverDescription, PopoverHeader, PopoverTitle, PopoverTrigger } from "@/components/ui/popover";
 import * as A from "@/app/actions/sgsst";
@@ -53,7 +53,7 @@ export function PlanEditor({ empresaId, anio, actividades }: { empresaId: string
     <TableRow key={a.id} className={cn(a.estado === "PENDIENTE" && a.mes < mesActual && "bg-red-50/60")}>
       <TableCell className="pl-6 w-10"><Checkbox checked={a.estado === "EJECUTADA"} onCheckedChange={(v) => run(() => A.actualizarActividad(empresaId, a.id, { estado: v ? "EJECUTADA" : "PENDIENTE" }))} aria-label="Ejecutada" /></TableCell>
       {vista === "tabla" && <TableCell className="w-28">{MESES[a.mes - 1]}</TableCell>}
-      <TableCell><span className={cn(a.estado === "EJECUTADA" && "line-through text-muted-foreground")}>{a.nombre}</span> <Porque titulo="¿Por qué esta actividad?" normas={[a.normaRef]}>{ORIGEN[a.origen] ?? "Actividad del plan."}</Porque></TableCell>
+      <TableCell><Tip texto={<>{ORIGEN[a.origen] ?? "Actividad del plan."}{a.normaRef ? ` (${a.normaRef})` : ""}</>}><span className={cn(a.estado === "EJECUTADA" && "line-through text-muted-foreground")}>{a.nombre}</span></Tip></TableCell>
       <TableCell className="w-20">{a.estandar && <Badge variant="outline">{a.estandar}</Badge>}</TableCell>
       <TableCell className="w-56"><NormaRef>{a.normaRef}</NormaRef></TableCell>
       <TableCell className="w-20">

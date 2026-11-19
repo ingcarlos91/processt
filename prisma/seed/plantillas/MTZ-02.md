@@ -14,6 +14,7 @@ normas: ["GTC-45-2012","DEC-1072-2015","RES-0312-2019"]
 | Empresa | {{empresa.razonSocial}} — NIT {{empresa.nit}} |
 | Metodología | GTC 45 (ver PRC-10) |
 | Fecha de elaboración / actualización | {{fecha}} |
+| Versión de la matriz | {{#if matriz.version}}v{{matriz.version.numero}} cerrada el {{matriz.version.fecha}} — {{matriz.version.motivo}}{{else}}Versión inicial en elaboración{{/if}} |
 | Elaboró | {{responsable.nombre}} — Licencia SST {{default responsable.licencia "______"}} |
 | Participantes | Trabajadores de las áreas, {{#if comites.copasst.esVigia}}Vigía de SST{{else}}COPASST{{/if}} |
 
