@@ -49,16 +49,69 @@ function tabla(t: Table) {
   });
 }
 
+const SIN_BORDE = { style: BorderStyle.NONE, size: 0, color: "FFFFFF" };
+
+/** Texto plano de un nodo en línea. */
+function textoPlano(nodes: PhrasingContent[]): string {
+  return nodes.map((n) => (n.type === "break" ? " — " : "value" in n ? String(n.value) : "children" in n ? textoPlano((n as { children: PhrasingContent[] }).children) : "")).join("");
+}
+
+/**
+ * Bloque de firmas. En las plantillas una firma es una línea "_____" seguida de "**Nombre** — Cargo".
+ * En Word se dibuja con espacio para firmar, una línea corta y debajo nombre y cargo; dos por fila.
+ */
+type Firma = { nombre: string; cargo: string; cc: string };
+
+function bloqueFirmas(firmas: Firma[]) {
+  const celda = (f?: Firma) => new TableCell({
+    width: { size: 50, type: WidthType.PERCENTAGE },
+    borders: { top: SIN_BORDE, bottom: SIN_BORDE, left: SIN_BORDE, right: SIN_BORDE },
+    margins: { left: 120, right: 360 },
+    children: f ? [
+      new Paragraph({ children: [], spacing: { before: 900 } }),
+      new Paragraph({ border: { top: { style: BorderStyle.SINGLE, size: 6, color: "000000", space: 4 } }, children: [new TextRun({ text: f.nombre || " ", bold: true })], spacing: { after: 0 } }),
+      ...(f.cargo ? [new Paragraph({ children: [new TextRun({ text: f.cargo, size: 18 })], spacing: { after: 0 } })] : []),
+      new Paragraph({ children: [new TextRun({ text: f.cc || "C.C. ____________________", size: 18, color: "555555" })], spacing: { after: 120 } }),
+    ] : [new Paragraph({ children: [] })],
+  });
+  const filas: TableRow[] = [];
+  for (let i = 0; i < firmas.length; i += 2) filas.push(new TableRow({ cantSplit: true, children: [celda(firmas[i]), celda(firmas[i + 1])] }));
+  return new DTable({ width: { size: 100, type: WidthType.PERCENTAGE }, borders: { top: SIN_BORDE, bottom: SIN_BORDE, left: SIN_BORDE, right: SIN_BORDE, insideHorizontal: SIN_BORDE, insideVertical: SIN_BORDE }, rows: filas });
+}
+
+function esFirma(nodes: RootContent[], i: number) {
+  return nodes[i]?.type === "thematicBreak" && nodes[i + 1]?.type === "paragraph";
+}
+
 function bloques(nodes: RootContent[], nivelLista = 0, ordenada = false): (Paragraph | DTable)[] {
   const out: (Paragraph | DTable)[] = [];
-  for (const n of nodes) {
+  for (let i = 0; i < nodes.length; i++) {
+    const n = nodes[i];
+    if (esFirma(nodes, i)) {
+      const firmas: Firma[] = [];
+      while (esFirma(nodes, i)) {
+        const t = textoPlano((nodes[i + 1] as { children: PhrasingContent[] }).children).replace(/\u00a0/g, " ").trim();
+        const partes = t.split(/\s+—\s+/).map((x) => x.trim()).filter(Boolean);
+        const cc = partes.find((x) => /^C\.?C\.?/i.test(x));
+        const [nombre = "", ...resto] = partes.filter((x) => x !== cc);
+        firmas.push({ nombre, cargo: resto.join(" — "), cc: cc && !/C\.?C\.?\s*$/.test(cc) ? cc : "" });
+        i += 2;
+      }
+      i--;
+      out.push(bloqueFirmas(firmas));
+      continue;
+    }
     switch (n.type) {
       case "heading": {
         const lv = [HeadingLevel.HEADING_1, HeadingLevel.HEADING_1, HeadingLevel.HEADING_2, HeadingLevel.HEADING_3, HeadingLevel.HEADING_4][n.depth] ?? HeadingLevel.HEADING_4;
         out.push(new Paragraph({ heading: lv, children: runs(n.children), spacing: { before: 200, after: 100 } }));
         break;
       }
-      case "paragraph": out.push(new Paragraph({ children: runs(n.children), spacing: { after: 120 }, alignment: AlignmentType.JUSTIFIED })); break;
+      case "paragraph": {
+        const conSaltos = n.children.some((c) => c.type === "break");
+        out.push(new Paragraph({ children: runs(n.children), spacing: { after: 120 }, alignment: conSaltos ? AlignmentType.LEFT : AlignmentType.JUSTIFIED }));
+        break;
+      }
       case "list": {
         n.children.forEach((li, i) => {
           li.children.forEach((c, j) => {
