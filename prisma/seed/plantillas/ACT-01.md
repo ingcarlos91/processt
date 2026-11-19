@@ -1,0 +1,107 @@
+---
+codigo: ACT-01
+nombre: Conformación del COPASST o designación del Vigía de SST
+tipo: ACT
+nivelMin: 7
+carpeta: 1. Recursos
+estandares: ["1.1.6"]
+normas: ["RES-2013-1986","DEC-1072-2015","RES-0312-2019"]
+---
+## Fundamento
+
+{{#if comites.copasst.esVigia}}
+Por tener menos de diez (10) trabajadores, **{{empresa.razonSocial}}** debe contar con un Vigía de Seguridad y Salud en el Trabajo, designado por el empleador (Decreto 1072 de 2015, art. 2.2.4.6.2; Resolución 2013 de 1986).
+{{else}}
+Por tener {{empresa.trabajadores}} trabajadores, **{{empresa.razonSocial}}** debe conformar un Comité Paritario de Seguridad y Salud en el Trabajo (COPASST) con la siguiente composición: {{comites.copasst.composicion}} (Resolución 2013 de 1986, art. 2). El periodo es de dos (2) años y el comité se reúne como mínimo una vez al mes.
+{{/if}}
+
+{{#if comites.copasst.esVigia}}
+## Designación del Vigía
+
+{{empresa.ciudad}}, {{fecha}}
+
+El representante legal de {{empresa.razonSocial}} designa como Vigía de Seguridad y Salud en el Trabajo a:
+
+| Rol | Nombre | Cédula | Cargo |
+|---|---|---|---|
+| Vigía principal | | | |
+| Suplente | | | |
+
+Periodo: dos (2) años a partir de la fecha de esta designación.
+
+## Funciones del Vigía
+
+1. Proponer la adopción de medidas y actividades que procuren y mantengan la salud en los lugares de trabajo.
+2. Proponer y participar en actividades de capacitación en SST.
+3. Colaborar con los funcionarios de entidades gubernamentales de SST en las actividades que realicen en la empresa.
+4. Vigilar el desarrollo de las actividades del SG-SST.
+5. Colaborar en el análisis de las causas de los accidentes de trabajo y enfermedades laborales y proponer medidas correctivas.
+6. Visitar periódicamente los lugares de trabajo e inspeccionar ambientes, máquinas, equipos y operaciones.
+7. Estudiar y considerar las sugerencias de los trabajadores en materia de SST.
+8. Servir como organismo de coordinación entre el empleador y los trabajadores.
+
+______________________________________
+**{{empresa.representanteLegal}}** — Representante Legal
+
+______________________________________
+Vigía de SST — Acepto la designación
+{{else}}
+## Convocatoria a elecciones
+
+{{empresa.ciudad}}, {{fecha}}
+
+La gerencia de {{empresa.razonSocial}} convoca a todos los trabajadores a inscribir sus candidatos y participar en la elección de sus representantes ante el COPASST para el periodo de dos (2) años.
+
+- Inscripción de candidatos: del ______ al ______.
+- Fecha de votación: ______. Lugar: ______. Horario: ______.
+- Se elegirán {{comites.copasst.porParte}} representante(s) principal(es) y sus suplentes por los trabajadores.
+
+______________________________________
+**{{empresa.representanteLegal}}** — Representante Legal
+
+## Acta de votación y escrutinio
+
+Siendo las ____ del día ______, se realizó la votación para elegir a los representantes de los trabajadores ante el COPASST, con los siguientes resultados:
+
+| Candidato | Votos |
+|---|---|
+| | |
+| | |
+| Votos en blanco | |
+| Votos nulos | |
+| **Total de votantes** | |
+
+Jurados de votación:
+
+______________________ ______________________
+
+## Acta de conformación del COPASST
+
+En {{empresa.ciudad}}, el día ______, se reunieron los representantes del empleador designados por el representante legal y los representantes de los trabajadores elegidos por votación, para conformar el COPASST de {{empresa.razonSocial}} por el periodo de dos (2) años.
+
+| Representación | Rol | Nombre | Cédula | Cargo | Firma |
+|---|---|---|---|---|---|
+| Empleador | Principal | | | | |
+| Empleador | Suplente | | | | |
+| Trabajadores | Principal | | | | |
+| Trabajadores | Suplente | | | | |
+
+- Presidente (designado por el empleador): ______________________
+- Secretario (elegido por el comité): ______________________
+
+El empleador concede a los miembros del comité cuatro (4) horas semanales dentro de la jornada para el cumplimiento de sus funciones (Resolución 2013 de 1986, art. 7). Las reuniones ordinarias se realizarán mensualmente.
+
+## Funciones del COPASST
+
+1. Proponer la adopción de medidas y actividades que procuren y mantengan la salud en los lugares de trabajo.
+2. Proponer y participar en actividades de capacitación en SST dirigidas a trabajadores, supervisores y directivos.
+3. Colaborar con los funcionarios de entidades gubernamentales de SST.
+4. Vigilar el desarrollo de las actividades del SG-SST y el cumplimiento del reglamento de higiene y seguridad industrial.
+5. Colaborar en el análisis de las causas de los accidentes de trabajo y enfermedades laborales y proponer medidas correctivas.
+6. Visitar periódicamente los lugares de trabajo e inspeccionar ambientes, máquinas, equipos y operaciones.
+7. Estudiar y considerar las sugerencias de los trabajadores en materia de SST.
+8. Servir como organismo de coordinación entre empleador y trabajadores.
+9. Solicitar periódicamente a la empresa informes sobre accidentalidad y enfermedades laborales.
+10. Elegir al secretario del comité y mantener un archivo de las actas.
+11. Participar en la planificación de la auditoría anual del SG-SST.
+{{/if}}

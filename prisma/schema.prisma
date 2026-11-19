@@ -204,16 +204,27 @@ model SectorTipo {
 }
 
 model ProcesoTipo {
-  id           String      @id @default(cuid())
-  sectorTipoId String?     @map("sector_tipo_id")
-  sectorTipo   SectorTipo? @relation(fields: [sectorTipoId], references: [id])
+  id           String             @id @default(cuid())
+  sectorTipoId String?            @map("sector_tipo_id")
+  sectorTipo   SectorTipo?        @relation(fields: [sectorTipoId], references: [id])
   nombre       String
   descripcion  String?
-  validado     Boolean     @default(false)
+  validado     Boolean            @default(false)
   tareas       TareaTipo[]
+  tareasTipo   ProcesoTipoTarea[]
   procesos     Proceso[]
 
   @@map("proceso_tipo")
+}
+
+model ProcesoTipoTarea {
+  procesoTipoId String      @map("proceso_tipo_id")
+  tareaTipoId   String      @map("tarea_tipo_id")
+  procesoTipo   ProcesoTipo @relation(fields: [procesoTipoId], references: [id], onDelete: Cascade)
+  tareaTipo     TareaTipo   @relation(fields: [tareaTipoId], references: [id], onDelete: Cascade)
+
+  @@id([procesoTipoId, tareaTipoId])
+  @@map("proceso_tipo_tarea")
 }
 
 model ZonaTipo {
@@ -263,6 +274,7 @@ model TareaTipo {
   validado      Boolean            @default(false)
   peligros      TareaTipoPeligro[]
   cargos        CargoTipoTarea[]
+  procesosTipo  ProcesoTipoTarea[]
   tareas        Tarea[]
 
   @@map("tarea_tipo")
