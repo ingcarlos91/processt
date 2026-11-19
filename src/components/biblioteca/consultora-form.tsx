@@ -5,28 +5,58 @@ import { Save, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
+import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field";
-import { guardarConsultora } from "@/app/actions/empresas";
+import { Field, FieldDescription, FieldGroup, FieldLabel, FieldSeparator } from "@/components/ui/field";
+import { NormaRef } from "@/components/app/ui";
+import { guardarConsultora, type DatosConsultora } from "@/app/actions/empresas";
 
-type D = { nombre: string; nit: string; profesional: string; cedula: string; licenciaSst: string; telefono: string; correo: string };
+type D = Required<Omit<DatosConsultora, "curso50h">> & { curso50h: boolean };
 
 export function ConsultoraForm({ inicial, ia }: { inicial: D; ia: { activa: boolean; modelo: string } }) {
   const [d, setD] = useState(inicial);
   const [pend, start] = useTransition();
-  const campos: [keyof D, string, string?][] = [["nombre", "Nombre de la consultora"], ["nit", "NIT"], ["profesional", "Profesional que firma"], ["cedula", "Cédula"], ["licenciaSst", "Licencia en SST", "Resolución y fecha (Res. 908/2025: licencia digital)"], ["telefono", "Teléfono"], ["correo", "Correo"]];
+  const set = <K extends keyof D>(k: K, v: D[K]) => setD((x) => ({ ...x, [k]: v }));
+  const campo = (k: keyof D, l: string, opts?: { tipo?: string; desc?: string }) => (
+    <Field><FieldLabel htmlFor={k}>{l}</FieldLabel><Input id={k} type={opts?.tipo} value={String(d[k] ?? "")} onChange={(e) => set(k, e.target.value as never)} />{opts?.desc && <FieldDescription>{opts.desc}</FieldDescription>}</Field>
+  );
   return (
-    <div className="grid lg:grid-cols-[1fr_380px] gap-6 items-start max-w-5xl">
+    <div className="grid lg:grid-cols-[1fr_380px] gap-6 items-start max-w-6xl">
       <Card>
-        <CardHeader><CardTitle>Datos</CardTitle></CardHeader>
+        <CardHeader><CardTitle>Consultora y profesional que firma</CardTitle><CardDescription>Se usan en la designación del responsable (DOC-03), en las firmas “Elaboró” y en la evaluación inicial.</CardDescription></CardHeader>
         <CardContent>
           <FieldGroup className="grid md:grid-cols-2 gap-4">
-            {campos.map(([k, l, h]) => (
-              <Field key={k}><FieldLabel htmlFor={k}>{l}</FieldLabel><Input id={k} value={d[k]} onChange={(e) => setD({ ...d, [k]: e.target.value })} />{h && <FieldDescription>{h}</FieldDescription>}</Field>
-            ))}
+            {campo("nombre", "Nombre de la consultora")}
+            {campo("nit", "NIT de la consultora")}
+            <FieldSeparator className="md:col-span-2">Profesional</FieldSeparator>
+            {campo("profesional", "Nombre completo")}
+            {campo("cedula", "Cédula")}
+            {campo("cargo", "Cargo o vínculo con las empresas", { desc: "Por ejemplo: Asesora externa en SST" })}
+            <Field>
+              <FieldLabel htmlFor="perfil">Perfil</FieldLabel>
+              <NativeSelect id="perfil" className="w-full" value={d.perfil} onChange={(e) => set("perfil", e.target.value)}>
+                <NativeSelectOption value="">— Seleccione —</NativeSelectOption>
+                <NativeSelectOption value="tecnico">Técnico en SST</NativeSelectOption>
+                <NativeSelectOption value="tecnologo">Tecnólogo en SST</NativeSelectOption>
+                <NativeSelectOption value="profesional">Profesional en SST</NativeSelectOption>
+                <NativeSelectOption value="especialista">Profesional con posgrado en SST</NativeSelectOption>
+              </NativeSelect>
+              <FieldDescription>Define a qué empresas puede diseñarles el SG-SST (Res. 0312/2019 arts. 4, 10 y 17).</FieldDescription>
+            </Field>
+            {campo("licenciaSst", "Licencia en SST", { desc: "Número de resolución (Res. 908/2025: licencia digital)" })}
+            {campo("licenciaFecha", "Fecha de la licencia", { tipo: "date" })}
+            <Field orientation="horizontal" className="md:col-span-1">
+              <Switch id="c50" checked={d.curso50h} onCheckedChange={(v) => set("curso50h", v)} />
+              <FieldLabel htmlFor="c50" className="font-normal">Curso virtual de 50 horas aprobado <NormaRef>Decreto 1072/2015 art. 2.2.4.6.35</NormaRef></FieldLabel>
+            </Field>
+            {campo("curso50hFecha", "Fecha del curso de 50 horas", { tipo: "date" })}
+            <FieldSeparator className="md:col-span-2">Contacto</FieldSeparator>
+            {campo("telefono", "Teléfono")}
+            {campo("correo", "Correo", { tipo: "email" })}
           </FieldGroup>
         </CardContent>
-        <CardFooter className="border-t"><Button disabled={pend} onClick={() => start(async () => { await guardarConsultora(d); toast.success("Datos guardados"); })}><Save /> Guardar</Button></CardFooter>
+        <CardFooter className="border-t"><Button disabled={pend} onClick={() => start(async () => { await guardarConsultora(d); toast.success("Datos guardados. Regenere los documentos de cada empresa para aplicarlos."); })}><Save /> Guardar</Button></CardFooter>
       </Card>
       <Card>
         <CardHeader><CardTitle className="flex items-center gap-2"><Sparkles className="size-4" /> Asistente de IA</CardTitle><CardDescription>Sugiere tareas y peligros por cargo según la GTC 45, priorizando la biblioteca.</CardDescription></CardHeader>

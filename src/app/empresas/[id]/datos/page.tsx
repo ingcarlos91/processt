@@ -1,4 +1,5 @@
-import { db } from "@/lib/db";
+import { db, consultoraActual } from "@/lib/db";
+import { profesionalDe } from "@/lib/profesional";
 import { IntakeWizard } from "@/components/empresa/intake-wizard";
 import type { IntakeData } from "@/app/actions/empresas";
 import { BotonEliminarEmpresa } from "@/components/empresa/eliminar";
@@ -26,7 +27,7 @@ export default async function Datos({ params }: PageProps<"/empresas/[id]/datos"
   return (
     <>
       <p className="text-sm text-muted-foreground max-w-4xl">Edite los datos de la empresa. Los cargos se gestionan en la pestaña “Cargos y matriz de peligros”. Al guardar se recalculan el nivel de estándares, comités y normas; luego regenere los documentos.</p>
-      <IntakeWizard sectores={sectores} cargosTipo={cargosTipo} ciius={ciius} inicial={inicial} empresaId={id} />
+      <IntakeWizard sectores={sectores} cargosTipo={cargosTipo} ciius={ciius} inicial={inicial} empresaId={id} profesional={profesionalDe(await consultoraActual())} tieneLogo={!!e.logoUrl} />
       <BotonEliminarEmpresa id={id} nombre={e.razonSocial} />
     </>
   );

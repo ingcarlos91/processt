@@ -1,8 +1,16 @@
 import ExcelJS from "exceljs";
 import type { Contexto } from "./contexto";
+import { leerLogo } from "@/lib/logos";
 
 const COLOR: Record<string, string> = { I: "FFDC2626", II: "FFF97316", III: "FFFDE047", IV: "FF16A34A" };
 const NAVY = "FF22314F";
+
+async function ponerLogo(wb: ExcelJS.Workbook, ws: ExcelJS.Worksheet, ctx: Contexto, columna: number) {
+  const l = await leerLogo(ctx.empresa.logoUrl, { ancho: 160, alto: 40 });
+  if (!l) return;
+  const id = wb.addImage({ buffer: l.buf as unknown as ExcelJS.Buffer, extension: l.tipo === "png" ? "png" : "jpeg" });
+  ws.addImage(id, { tl: { col: columna, row: 0.1 }, ext: { width: l.ancho, height: l.alto } });
+}
 
 function encabezado(ws: ExcelJS.Worksheet, titulo: string, ctx: Contexto, columnas: number) {
   ws.mergeCells(1, 1, 1, columnas);
@@ -29,6 +37,8 @@ export async function matrizXlsx(ctx: Contexto) {
   ];
   const total = grupos.reduce((s, g) => s + g[1].length, 0);
   encabezado(ws, "MATRIZ DE IDENTIFICACIÓN DE PELIGROS, EVALUACIÓN Y VALORACIÓN DE RIESGOS (GTC 45)", ctx, total);
+  ws.getRow(1).height = 36;
+  await ponerLogo(wb, ws, ctx, total - 2);
   let col = 1;
   for (const [g, cols] of grupos) {
     if (cols.length > 1) ws.mergeCells(4, col, 4, col + cols.length - 1);
@@ -72,6 +82,8 @@ export async function evaluacionXlsx(ctx: Contexto) {
   const wb = new ExcelJS.Workbook();
   const ws = wb.addWorksheet("Tabla de valores");
   encabezado(ws, "AUTOEVALUACIÓN DE ESTÁNDARES MÍNIMOS — RESOLUCIÓN 0312 DE 2019", ctx, 6);
+  ws.getRow(1).height = 36;
+  await ponerLogo(wb, ws, ctx, 5);
   ws.addRow([]);
   const h = ws.addRow(["Ítem", "Estándar", "Valor", "Calificación", "Puntaje obtenido", "Observación"]);
   h.eachCell((c) => { c.font = { bold: true, color: { argb: "FFFFFFFF" } }; c.fill = { type: "pattern", pattern: "solid", fgColor: { argb: NAVY } }; });

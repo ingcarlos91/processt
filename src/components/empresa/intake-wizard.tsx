@@ -1,7 +1,8 @@
 "use client";
-import { useMemo, useState, useTransition } from "react";
+import { useMemo, useRef, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Plus, Trash2, ChevronLeft, ChevronRight, Check } from "lucide-react";
+import { Plus, Trash2, ChevronLeft, ChevronRight, Check, ImagePlus, UserCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -13,7 +14,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { NormaRef } from "@/components/app/ui";
 import { Porque } from "@/components/app/porque";
 import { explicarNivel } from "@/lib/reglas/explicar";
-import { crearEmpresa, actualizarEmpresa, type IntakeData } from "@/app/actions/empresas";
+import { crearEmpresa, actualizarEmpresa, subirLogo, quitarLogo, type IntakeData } from "@/app/actions/empresas";
 import { DISPARADORES } from "@/lib/reglas/condicion";
 import { cn } from "@/lib/utils";
 
@@ -76,12 +77,30 @@ function Opcion({ id, checked, onChange, children, extra }: { id: string; checke
   );
 }
 
-export function IntakeWizard({ sectores, cargosTipo, ciius, inicial, empresaId }: { sectores: Sector[]; cargosTipo: CargoTipo[]; ciius: Ciiu[]; inicial?: IntakeData; empresaId?: string }) {
+export type Profesional = { nombre: string; cedula: string; cargo: string; perfil: string; licencia: string; licenciaFecha: string; curso50h: boolean; curso50hFecha: string };
+
+export function IntakeWizard({ sectores, cargosTipo, ciius, inicial, empresaId, profesional, tieneLogo }: { sectores: Sector[]; cargosTipo: CargoTipo[]; ciius: Ciiu[]; inicial?: IntakeData; empresaId?: string; profesional: Profesional; tieneLogo?: boolean }) {
+  const router = useRouter();
+  const [logo, setLogo] = useState<File | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(tieneLogo && empresaId ? `/api/empresas/${empresaId}/logo` : null);
+  const fileRef = useRef<HTMLInputElement>(null);
+  function elegirLogo(f: File | null) {
+    if (!f) return;
+    if (!["image/png", "image/jpeg"].includes(f.type)) return toast.error("El logo debe ser PNG o JPG.");
+    if (f.size > 2 * 1024 * 1024) return toast.error("El logo no puede superar 2 MB.");
+    setLogo(f);
+    setLogoPreview(URL.createObjectURL(f));
+    if (empresaId) start(async () => {
+      const fd = new FormData(); fd.append("logo", f);
+      const r = await subirLogo(empresaId, fd);
+      if ("error" in r) toast.error(r.error); else toast.success("Logo guardado. Regenere los documentos para verlo en los formatos.");
+    });
+  }
   const [paso, setPaso] = useState(0);
   const [pend, start] = useTransition();
   const [d, setD] = useState<IntakeData>(inicial ?? {
     razonSocial: "", nit: "", claseRiesgo: 1, nTrabajadoresPlanta: 1, nContratistas: 0, nAprendices: 0, nEnMision: 0, nVehiculos: 0,
-    sedes: [{ nombre: "Sede principal" }], cargos: [{ nombre: "", nPersonas: 1 }], disparadores: {}, estadoActual: {}, responsableSst: {},
+    sedes: [{ nombre: "Sede principal" }], cargos: [{ nombre: "", nPersonas: 1 }], disparadores: {}, estadoActual: {}, responsableSst: { ...profesional },
   });
   const set = <K extends keyof IntakeData>(k: K, v: IntakeData[K]) => setD((x) => ({ ...x, [k]: v }));
   const setR = (k: keyof IntakeData["responsableSst"], v: string | boolean) => setD((x) => ({ ...x, responsableSst: { ...x.responsableSst, [k]: v } }));
@@ -109,7 +128,13 @@ export function IntakeWizard({ sectores, cargosTipo, ciius, inicial, empresaId }
         if (r?.ok) toast.success("Datos guardados. Se recalcularon el nivel, los comités y las normas.");
       } else {
         const r = await crearEmpresa(d);
-        if (r && "error" in r) toast.error(r.error);
+        if ("error" in r) return void toast.error(r.error);
+        if (logo) {
+          const fd = new FormData(); fd.append("logo", logo);
+          const l = await subirLogo(r.id, fd);
+          if ("error" in l) toast.error(l.error);
+        }
+        router.push(`/empresas/${r.id}`);
       }
     });
   }
@@ -156,6 +181,19 @@ export function IntakeWizard({ sectores, cargosTipo, ciius, inicial, empresaId }
               <Campo id="dep" label="Departamento"><Input id="dep" value={d.departamento ?? ""} onChange={(e) => set("departamento", e.target.value)} /></Campo>
               <Campo id="rl" label="Representante legal"><Input id="rl" value={d.representanteLegal ?? ""} onChange={(e) => set("representanteLegal", e.target.value)} /></Campo>
               <Campo id="rlc" label="Cédula del representante legal"><Input id="rlc" value={d.representanteCedula ?? ""} onChange={(e) => set("representanteCedula", e.target.value)} /></Campo>
+              <Field className="md:col-span-2">
+                <FieldLabel>Logo de la empresa</FieldLabel>
+                <div className="flex items-center gap-4">
+                  <div className="flex h-16 w-40 items-center justify-center rounded-lg border border-dashed bg-muted/40 overflow-hidden">
+                    {/* eslint-disable-next-line @next/next/no-img-element -- vista previa local (blob) */}
+                    {logoPreview ? <img src={logoPreview} alt="Logo" className="max-h-14 max-w-36 object-contain" /> : <ImagePlus className="size-6 text-muted-foreground" />}
+                  </div>
+                  <input ref={fileRef} type="file" accept="image/png,image/jpeg" className="hidden" onChange={(e) => elegirLogo(e.target.files?.[0] ?? null)} />
+                  <Button variant="outline" size="sm" onClick={() => fileRef.current?.click()}><ImagePlus /> {logoPreview ? "Cambiar logo" : "Subir logo"}</Button>
+                  {logoPreview && <Button variant="ghost" size="sm" onClick={() => { setLogo(null); setLogoPreview(null); if (empresaId) start(() => quitarLogo(empresaId)); }}><Trash2 /> Quitar</Button>}
+                </div>
+                <FieldDescription>PNG o JPG, máximo 2 MB. Aparece en el encabezado de todos los documentos y formatos.</FieldDescription>
+              </Field>
             </FieldGroup>
           )}
 
@@ -263,6 +301,10 @@ export function IntakeWizard({ sectores, cargosTipo, ciius, inicial, empresaId }
 
           {paso === 6 && (
             <FieldGroup className="grid md:grid-cols-2 gap-4">
+              <div className="md:col-span-2 flex flex-wrap items-center gap-2 rounded-lg border bg-muted/40 p-3 text-sm">
+                <span className="flex-1">Por defecto se usan los datos de la profesional configurados en “Mi consultora”{profesional.nombre ? `: ${profesional.nombre}` : ""}. Cámbielos solo si el responsable en esta empresa es otra persona.</span>
+                <Button variant="outline" size="sm" onClick={() => set("responsableSst", { ...profesional })}><UserCheck /> Usar mis datos</Button>
+              </div>
               <Campo id="rn" label="Nombre"><Input id="rn" value={d.responsableSst.nombre ?? ""} onChange={(e) => setR("nombre", e.target.value)} /></Campo>
               <Campo id="rc" label="Cédula"><Input id="rc" value={d.responsableSst.cedula ?? ""} onChange={(e) => setR("cedula", e.target.value)} /></Campo>
               <Campo id="rcar" label="Cargo o vínculo"><Input id="rcar" placeholder="Asesora externa SST" value={d.responsableSst.cargo ?? ""} onChange={(e) => setR("cargo", e.target.value)} /></Campo>

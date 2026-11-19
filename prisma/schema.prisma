@@ -19,6 +19,10 @@ model Consultora {
   licenciaSst   String?   @map("licencia_sst")
   licenciaFecha DateTime? @map("licencia_fecha")
   profesional   String? // nombre de la profesional que firma
+  perfil        String? // tecnico | tecnologo | profesional | especialista
+  cargo         String? // p. ej. "Asesora externa en SST"
+  curso50h      Boolean   @default(false) @map("curso_50h")
+  curso50hFecha String?   @map("curso_50h_fecha")
   cedula        String?
   telefono      String?
   correo        String?

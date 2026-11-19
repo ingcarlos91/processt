@@ -30,11 +30,17 @@ IA opcional: agregar `AI_GATEWAY_API_KEY=...` en `.env`. Sin clave, “Sugerir t
 | H8 Tablero y comités | ✅ | Alertas, comités con periodos, indicadores art. 30 con registro de eventos y fichas técnicas. |
 | UI | ✅ | 100 % shadcn (base-nova): sidebar-07, Card, Table, Field, NativeSelect, Dialog, Empty, Alert. Marca PROCESST. Fuente BW Modelica declarada (faltan los archivos). |
 
+## Agregado después
+
+- Explicaciones “¿Por qué?”: ícono ⓘ en cada decisión y panel lateral con todas las decisiones de la empresa.
+- Peligros especiales detectados desde la matriz (no solo desde el cuestionario), con alerta.
+- Datos de la profesional en “Mi consultora”: se precargan como responsable del SG-SST y firman como “Elaboró”.
+- Logo por empresa (PNG/JPG, 2 MB) en el encabezado de Word y Excel; se guarda en `uploads/logos/` (fuera de git).
+
 ## Pendiente
 
 - Archivos de la fuente BW Modelica en `public/fonts/bw-modelica/`.
 - PDF directo (hoy: Word; PDF desde Word o imprimir).
-- Logo por empresa (campo existe; falta subir archivo).
 - Correos de recordatorio, autenticación y despliegue (Vercel + Neon + Clerk).
 - Validar con la consultora: textos de plantillas, valores ND/NE/NC de la biblioteca, umbral del CCL en la Res. 3461/2025.
 - Calidad: pruebas automatizadas (fase siguiente).

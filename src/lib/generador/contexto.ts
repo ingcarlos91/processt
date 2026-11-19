@@ -216,14 +216,23 @@ export async function construirContexto(empresaId: string) {
       representanteLegal: e.representanteLegal ?? "", representanteCedula: e.representanteCedula ?? "", ciiu: e.ciiu ?? "", actividad: e.descripcionActividad ?? "",
       claseRiesgo: e.claseRiesgo, claseRiesgoRomano: ROMANO[e.claseRiesgo], arl: e.arl ?? "", eps: e.epsPrincipal ?? "",
       trabajadores, contratistas: e.nContratistas, aprendices: e.nAprendices, vehiculos: e.nVehiculos, horario: e.horario ?? "", turnos: e.turnos ?? "",
-      nivel: rr.nivel, sector: e.sectorTipo?.nombre ?? "",
+      nivel: rr.nivel, sector: e.sectorTipo?.nombre ?? "", logoUrl: e.logoUrl ?? "", tieneLogo: !!e.logoUrl,
     },
-    responsable: {
-      nombre: (resp.nombre as string) ?? "", cedula: (resp.cedula as string) ?? "", cargo: (resp.cargo as string) ?? "",
-      perfilTexto: PERFIL_TEXTO[(resp.perfil as string) ?? ""] ?? "", licencia: (resp.licencia as string) ?? "", licenciaFecha: (resp.licenciaFecha as string) ?? "",
-      curso50hFecha: resp.curso50h ? ((resp.curso50hFecha as string) || "Aprobado") : "",
+    // Si la empresa no tiene responsable propio, se usan los datos de la profesional de la consultora.
+    responsable: (() => {
+      const propio = !!(resp.nombre as string)?.trim();
+      const r = propio ? resp : { nombre: consultora.profesional, cedula: consultora.cedula, cargo: consultora.cargo ?? "Asesor(a) externo(a) en SST", perfil: consultora.perfil, licencia: consultora.licenciaSst, licenciaFecha: consultora.licenciaFecha?.toISOString().slice(0, 10), curso50h: consultora.curso50h, curso50hFecha: consultora.curso50hFecha };
+      return {
+        nombre: (r.nombre as string) ?? "", cedula: (r.cedula as string) ?? "", cargo: (r.cargo as string) ?? "",
+        perfilTexto: PERFIL_TEXTO[(r.perfil as string) ?? ""] ?? "", licencia: (r.licencia as string) ?? "", licenciaFecha: (r.licenciaFecha as string) ?? "",
+        curso50hFecha: r.curso50h ? ((r.curso50hFecha as string) || "Aprobado") : "", esConsultora: !propio,
+      };
+    })(),
+    consultora: {
+      nombre: consultora.nombre, profesional: consultora.profesional ?? "", cedula: consultora.cedula ?? "", cargo: consultora.cargo ?? "",
+      perfilTexto: PERFIL_TEXTO[consultora.perfil ?? ""] ?? "", licencia: consultora.licenciaSst ?? "", licenciaFecha: fmt(consultora.licenciaFecha),
+      curso50hFecha: consultora.curso50h ? consultora.curso50hFecha || "Aprobado" : "", correo: consultora.correo ?? "", telefono: consultora.telefono ?? "",
     },
-    consultora: { nombre: consultora.nombre, profesional: consultora.profesional ?? "", cedula: consultora.cedula ?? "", licencia: consultora.licenciaSst ?? "", correo: consultora.correo ?? "", telefono: consultora.telefono ?? "" },
     fecha: fmt(new Date()), anio: anioPlan, anioSiguiente: anioPlan + 1,
     sedes: e.sedes.map((s) => ({ nombre: s.nombre, direccion: s.direccion ?? "", ciudad: s.ciudad ?? "" })),
     procesos: e.procesos.map((p) => ({ nombre: p.nombre, descripcion: p.descripcion ?? "", tareas: e.tareas.filter((t) => t.procesoId === p.id).map((t) => t.nombre) })),

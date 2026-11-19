@@ -15,7 +15,7 @@ export async function mdAHtml(md: string) {
   return String(f);
 }
 
-type Meta = { codigo: string; nombre: string; version: number; fecha: string; empresa: string; nit: string; elaboro: string; aprobo: string; horizontal?: boolean; logo?: Buffer | null };
+type Meta = { codigo: string; nombre: string; version: number; fecha: string; empresa: string; nit: string; elaboro: string; aprobo: string; horizontal?: boolean; logo?: { buf: Buffer; tipo: "png" | "jpg"; ancho: number; alto: number } | null };
 
 function runs(nodes: PhrasingContent[], estilo: { bold?: boolean; italics?: boolean } = {}): TextRun[] {
   const out: TextRun[] = [];
@@ -89,7 +89,7 @@ export async function mdADocx(md: string, meta: Meta) {
     children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: t, bold, size: 18 })] })],
   });
   const logoCelda = meta.logo
-    ? new TableCell({ width: { size: 20, type: WidthType.PERCENTAGE }, rowSpan: 2, children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new ImageRun({ data: meta.logo, transformation: { width: 90, height: 45 }, type: "png" })] })] })
+    ? new TableCell({ width: { size: 20, type: WidthType.PERCENTAGE }, rowSpan: 2, children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new ImageRun({ data: meta.logo.buf, transformation: { width: meta.logo.ancho, height: meta.logo.alto }, type: meta.logo.tipo })] })] })
     : new TableCell({ width: { size: 20, type: WidthType.PERCENTAGE }, rowSpan: 2, children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: meta.empresa, bold: true, size: 16 })] })] });
   const header = new Header({
     children: [new DTable({
