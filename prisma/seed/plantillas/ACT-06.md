@@ -26,7 +26,7 @@ normas: ["DEC-1072-2015","RES-0312-2019"]
 | 4 | Capacidad del SG-SST para satisfacer las necesidades de la empresa en SST | |
 | 5 | Necesidad de cambios en el SG-SST, incluida la política y los objetivos | |
 | 6 | Eficacia de las medidas de seguimiento de revisiones anteriores | |
-| 7 | Resultados de indicadores y auditorías anteriores | |
+| 7 | Resultados de indicadores y auditorías anteriores | {{#if ultimaAuditoria}}Auditoría interna {{ultimaAuditoria.anio}} (cerrada el {{ultimaAuditoria.cierre}}): conformidad {{ultimaAuditoria.conformidad}}, {{ultimaAuditoria.noConformes}} no conformidad(es) y {{ultimaAuditoria.acciones}} acción(es).{{/if}} |
 | 8 | Nuevas prioridades y objetivos estratégicos | |
 | 9 | Eficacia de las medidas de prevención y control de peligros | |
 | 10 | Comunicación de resultados y desempeño a los trabajadores | |

@@ -61,6 +61,8 @@ function NativeSelect({ className, size = "default", children, value, defaultVal
       name={name}
       onValueChange={(v) => {
         const val = v == null || v === VACIO ? "" : String(v)
+        // Solo avisa cuando el valor realmente cambia (evita recargas en bucle al montar).
+        if (val === crudo) return
         if (!controlado) setInterno(val)
         onChange?.({ target: { value: val }, currentTarget: { value: val } })
       }}

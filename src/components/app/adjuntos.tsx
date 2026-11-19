@@ -15,7 +15,7 @@ import { subirArchivo, retirarArchivo, restaurarArchivo } from "@/app/actions/ar
 import { cn } from "@/lib/utils";
 
 export type ArchivoUI = { id: string; tipo: string; descripcion: string; nombreArchivo: string | null; mime: string | null; tamano: number | null; fecha: string; subidoPor: string | null; activo: boolean; documentoVersion?: number | null };
-export type ContextoAdjunto = { tipo: "DOCUMENTO_FIRMADO" | "EVIDENCIA" | "ACTA"; documentoId?: string; actividadId?: string; comiteId?: string; eventoId?: string; inspeccionId?: string; estandarCodigo?: string };
+export type ContextoAdjunto = { tipo: "DOCUMENTO_FIRMADO" | "EVIDENCIA" | "ACTA"; documentoId?: string; actividadId?: string; comiteId?: string; eventoId?: string; inspeccionId?: string; auditoriaId?: string; estandarCodigo?: string };
 
 const ACEPTA = "application/pdf,image/jpeg,image/png,image/webp,image/heic,.docx,.xlsx";
 const tam = (n: number | null) => (n == null ? "" : n > 1048576 ? `${(n / 1048576).toFixed(1)} MB` : `${Math.round(n / 1024)} KB`);
@@ -38,7 +38,7 @@ export function SubirArchivo({ empresaId, ctx, trigger, titulo = "Subir archivo"
     if (!file) return;
     const fd = new FormData();
     fd.append("archivo", file); fd.append("tipo", ctx.tipo); fd.append("descripcion", desc); fd.append("fecha", fecha);
-    for (const k of ["documentoId", "actividadId", "comiteId", "eventoId", "inspeccionId", "estandarCodigo"] as const) if (ctx[k]) fd.append(k, ctx[k]!);
+    for (const k of ["documentoId", "actividadId", "comiteId", "eventoId", "inspeccionId", "auditoriaId", "estandarCodigo"] as const) if (ctx[k]) fd.append(k, ctx[k]!);
     const r = await subirArchivo(empresaId, fd);
     if ("error" in r) toast.error(r.error);
     else { toast.success(ctx.tipo === "DOCUMENTO_FIRMADO" ? "Documento firmado guardado" : ctx.actividadId ? "Evidencia guardada; actividad marcada como ejecutada" : "Archivo guardado"); setOpen(false); setFile(null); }

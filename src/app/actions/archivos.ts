@@ -22,6 +22,7 @@ export async function subirArchivo(empresaId: string, fd: FormData) {
   const comiteId = (fd.get("comiteId") as string) || null;
   const eventoId = (fd.get("eventoId") as string) || null;
   const inspeccionId = (fd.get("inspeccionId") as string) || null;
+  const auditoriaId = (fd.get("auditoriaId") as string) || null;
   let estandarCodigo = (fd.get("estandarCodigo") as string) || null;
   const fechaTxt = (fd.get("fecha") as string) || "";
   const fecha = /^\d{4}-\d{2}-\d{2}$/.test(fechaTxt) ? new Date(fechaTxt + "T12:00:00Z") : new Date();
@@ -55,13 +56,19 @@ export async function subirArchivo(empresaId: string, fd: FormData) {
     estandarCodigo ||= "4.2.4";
     descripcion ||= `Registro de ${ins.lista}`;
   }
+  if (auditoriaId) {
+    const au = await db.auditoria.findUniqueOrThrow({ where: { id: auditoriaId } });
+    if (au.empresaId !== empresaId) return { error: "Auditoría no encontrada." };
+    estandarCodigo ||= "6.1.2";
+    descripcion ||= `Auditoría interna ${au.anio}`;
+  }
   descripcion ||= file.name;
 
   let guardado;
   try { guardado = await guardarArchivo(empresaId, file); } catch (e) { return { error: e instanceof Error ? e.message : String(e) }; }
   const nombreUsuario = (await db.usuario.findUnique({ where: { id: u.id }, select: { nombre: true } }))?.nombre;
   await db.evidencia.create({ data: {
-    empresaId, tipo, documentoId, documentoVersion, actividadId, comiteId, eventoId, inspeccionId, estandarCodigo, descripcion, fecha,
+    empresaId, tipo, documentoId, documentoVersion, actividadId, comiteId, eventoId, inspeccionId, auditoriaId, estandarCodigo, descripcion, fecha,
     archivoUrl: guardado.ruta, nombreArchivo: file.name, mime: file.type, tamano: file.size, subidoPor: nombreUsuario,
   } });
   if (documentoId) await db.documento.update({ where: { id: documentoId }, data: { estado: "FIRMADO" } });

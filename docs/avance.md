@@ -70,6 +70,9 @@ IA opcional: agregar `AI_GATEWAY_API_KEY=...` en `.env`. Sin clave, “Sugerir t
 
 - Inspecciones (listas editables en Biblioteca, hallazgos a FOR-06, fotos, PRG-06, planeador). Entidades globales (EPS, AFP, ARL, escolaridad). Bitácora de visitas con contrato (horas y valor), en planeador, tablero e informe.
 
+- Exportación a PDF con Playwright (documentos, informe de gestión, informe de investigación, informe de auditoría). En Vercel requerirá Chromium para serverless.
+- Auditoría interna anual (13 aspectos del art. 2.2.4.6.30 con evidencia de PROCESST, no conformidades a FOR-06, informe Word/PDF, PRG-10, ACT-06, planeador).
+
 ## Pendiente
 
 - PDF directo (hoy: Word; PDF desde Word o imprimir).

@@ -74,7 +74,7 @@ export function PlanEditor({ empresaId, anio, actividades }: { empresaId: string
   return (
     <>
       <div className="flex flex-wrap items-center gap-2">
-        <NativeSelect value={anio} onChange={(e) => (window.location.href = `?anio=${e.target.value}`)}>
+        <NativeSelect value={anio} onChange={(e) => { if (String(e.target.value) !== String(anio)) window.location.href = `?anio=${e.target.value}`; }}>
           {[anio - 1, anio, anio + 1].map((y) => <NativeSelectOption key={y} value={y}>{y}</NativeSelectOption>)}
         </NativeSelect>
         <div className="flex">

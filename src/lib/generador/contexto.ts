@@ -265,6 +265,12 @@ export async function construirContexto(empresaId: string) {
   const accidentalidad = await contextoAccidentalidad(e.id);
   const ultimaVersion = await db.matrizVersion.findFirst({ where: { empresaId: e.id }, orderBy: { numero: "desc" } });
   const nomina = await contextoNomina(e.id);
+  const auditoriasDb = await db.auditoria.findMany({ where: { empresaId: e.id }, orderBy: { fechaInicio: "asc" }, include: { _count: { select: { acciones: true } } } });
+  const auditorias = auditoriasDb.map((a) => {
+    const its = (a.items ?? []) as { resultado: string }[]; const ap = its.filter((x) => x.resultado && x.resultado !== "na");
+    return { anio: a.anio, fecha: ddmm(a.fechaInicio), cierre: ddmm(a.fechaCierre), auditor: a.auditor, estado: a.estado === "cerrada" ? "Cerrada" : "En curso", conformidad: ap.length ? `${Math.round((ap.filter((x) => x.resultado === "conforme").length / ap.length) * 100)} %` : "—", noConformes: its.filter((x) => x.resultado === "no_conforme").length, acciones: a._count.acciones };
+  });
+  const ultimaAuditoria = auditorias.filter((a) => a.estado === "Cerrada").at(-1) ?? null;
   const inspeccionesDb = await db.inspeccion.findMany({ where: { empresaId: e.id }, orderBy: { fecha: "asc" }, include: { _count: { select: { acciones: true } } } });
   const inspecciones = inspeccionesDb.map((i) => {
     const its = (i.items ?? []) as { resultado: string }[]; const ap = its.filter((x) => x.resultado !== "na");
@@ -302,7 +308,7 @@ export async function construirContexto(empresaId: string) {
     normas: normasDb.map((n) => ({ codigo: n.codigo, tipo: n.tipo === "Resolucion" ? "Resolución" : n.tipo === "GuiaTecnica" ? "Guía técnica" : n.tipo, numero: n.numero, anio: n.anio, entidad: n.entidad, nombre: n.nombre, articulosClave: n.articulosClave ?? "", resumen: n.resumen, evidenciaCumplimiento: n.evidenciaCumplimiento ?? "" })),
     estandares: (await db.estandar.findMany({ where: { codigo: { in: rr.estandares } }, orderBy: { orden: "asc" } })).map((s) => ({ codigo: s.codigo, ciclo: s.ciclo, grupo: s.grupo, descripcion: s.descripcion, puntaje: s.puntaje })),
     comites: { copasst: { aplica: true, esVigia: cop.tipo === "VIGIA", composicion: cop.texto, porParte: cop.porParte }, ccl: { aplica: rr.comites.includes("CCL") }, brigada: { aplica: true } },
-    capacitaciones, plan, evaluacion, planMejora, dis, indicadores: INDICADORES, pve, amenazas, presupuesto: presupuestoConValor, altoRiesgo, op, integrantes, accidentalidad, acciones: accidentalidad.acciones, nomina, inspecciones, hayInspecciones: inspecciones.length > 0,
+    capacitaciones, plan, evaluacion, planMejora, dis, indicadores: INDICADORES, pve, amenazas, presupuesto: presupuestoConValor, altoRiesgo, op, integrantes, accidentalidad, acciones: accidentalidad.acciones, nomina, inspecciones, hayInspecciones: inspecciones.length > 0, auditorias, hayAuditorias: auditorias.length > 0, ultimaAuditoria,
     documentosLista: plantillas.map((p) => ({ codigo: p.codigo, nombre: p.nombre, version: e.documentos.find((d) => d.codigo === p.codigo)?.version ?? 1, carpeta: p.carpeta ?? "" })),
     _reglas: rr,
   };

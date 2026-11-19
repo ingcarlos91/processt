@@ -36,6 +36,18 @@ Verificar anualmente el cumplimiento del SG-SST de **{{empresa.razonSocial}}** (
 | 12 | Desarrollo del proceso de auditoría | |
 | 13 | Evaluación por parte de la alta dirección | |
 
+## Auditorías realizadas
+
+{{#if hayAuditorias}}
+| Año | Inicio | Cierre | Auditor | Estado | Conformidad | No conformidades | Acciones |
+|---|---|---|---|---|---|---|---|
+{{#each auditorias}}
+| {{anio}} | {{fecha}} | {{cierre}} | {{celda auditor}} | {{estado}} | {{conformidad}} | {{noConformes}} | {{acciones}} |
+{{/each}}
+{{else}}
+Las auditorías se realizan en PROCESST con los aspectos del art. 2.2.4.6.30 y generan su informe; aquí se consolidan.
+{{/if}}
+
 ## Informe
 
 El informe se comunica a los responsables de adoptar las medidas preventivas, correctivas o de mejora y alimenta la revisión por la alta dirección.

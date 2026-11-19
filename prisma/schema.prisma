@@ -128,6 +128,7 @@ model Empresa {
   visitas          Visita[]
   contratoHorasMes Float?            @map("contrato_horas_mes") // horas de asesoría pactadas al mes
   contratoValorMes Int?              @map("contrato_valor_mes") // valor mensual del contrato (pesos)
+  auditorias       Auditoria[]
 
   @@map("empresa")
 }
@@ -689,6 +690,8 @@ model Evidencia {
   evento           Evento?        @relation(fields: [eventoId], references: [id], onDelete: SetNull)
   inspeccionId     String?        @map("inspeccion_id")
   inspeccion       Inspeccion?    @relation(fields: [inspeccionId], references: [id], onDelete: SetNull)
+  auditoriaId      String?        @map("auditoria_id")
+  auditoria        Auditoria?     @relation(fields: [auditoriaId], references: [id], onDelete: SetNull)
   estandarCodigo   String?        @map("estandar_codigo")
   descripcion      String
   archivoUrl       String?        @map("archivo_url") // ruta relativa en uploads/
@@ -784,6 +787,8 @@ model Accion {
   eficacia     String?
   actividadId  String?        @map("actividad_id")
   actividad    ActividadPlan? @relation(fields: [actividadId], references: [id], onDelete: SetNull)
+  auditoriaId  String?        @map("auditoria_id")
+  auditoria    Auditoria?     @relation(fields: [auditoriaId], references: [id], onDelete: SetNull)
 
   @@map("accion")
 }
@@ -932,6 +937,30 @@ model Visita {
 
   @@index([empresaId, fecha])
   @@map("visita")
+}
+
+// Auditoría interna anual del SG-SST (Decreto 1072/2015 arts. 2.2.4.6.29 y 2.2.4.6.30; Res. 0312/2019 estándares 6.1.2 y 6.1.4).
+model Auditoria {
+  id            String      @id @default(cuid())
+  empresaId     String      @map("empresa_id")
+  empresa       Empresa     @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  anio          Int
+  fechaInicio   DateTime    @map("fecha_inicio")
+  fechaCierre   DateTime?   @map("fecha_cierre")
+  auditor       String
+  auditorPerfil String?     @map("auditor_perfil") // formación e independencia del auditor
+  participantes String? // COPASST o Vigía que participó en la planificación
+  alcance       String?
+  metodologia   String?
+  items         Json        @default("[]") // [{ n, aspecto, criterio, estandares, resultado, evidencia, hallazgo }]
+  conclusiones  String?
+  estado        String      @default("en_curso") // en_curso | cerrada
+  creadoEn      DateTime    @default(now()) @map("creado_en")
+  acciones      Accion[]
+  archivos      Evidencia[]
+
+  @@index([empresaId, anio])
+  @@map("auditoria")
 }
 
 model TrabajadoresMes {

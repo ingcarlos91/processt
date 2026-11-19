@@ -119,6 +119,22 @@ export const MANUAL: SeccionManual[] = [
     relacionadas: ["planeador", "documentos"],
   },
   {
+    id: "auditoria", titulo: "Auditoría interna", ruta: new RegExp(`^${E}/auditoria(/[^/]+)?$`),
+    resumen: "Auditoría anual del SG-SST con los 13 aspectos del Decreto 1072/2015 art. 2.2.4.6.30, planificada con el COPASST o Vigía. Genera acciones (FOR-06), su informe en Word y PDF, alimenta la revisión por la dirección (ACT-06) y el planeador programa la siguiente.",
+    partes: [
+      { titulo: "Planificar auditoría", que: "Año, fecha, auditor (idóneo e independiente: no audita su propio trabajo), su perfil, con quién se planificó, alcance y metodología." },
+      { titulo: "Aspectos auditados", que: "Cada aspecto con su criterio, sus estándares y, en gris, lo que PROCESST ya tiene registrado (documentos firmados, plan, investigaciones, inspecciones, acciones…) como punto de partida.", botones: [
+        { nombre: "Conforme / Observación / No conforme / N. A.", hace: "Califica el aspecto; escriba la evidencia revisada y, si aplica, el hallazgo y la acción correctiva." },
+        { nombre: "Guardar", hace: "Guarda el avance." },
+        { nombre: "Cerrar auditoría", hace: "Exige todos los aspectos calificados y el hallazgo de cada no conformidad; crea las acciones en FOR-06." },
+        { nombre: "Informe Word / PDF", hace: "Descarga el informe de auditoría para firmar." },
+      ] },
+      { titulo: "Soportes", que: "Plan de auditoría, listas diligenciadas e informe firmado; quedan en Evidencias, estándar 6.1.2." },
+    ],
+    normas: ["Decreto 1072/2015 arts. 2.2.4.6.29 y 2.2.4.6.30", "Res. 0312/2019 estándares 6.1.2 y 6.1.4"],
+    relacionadas: ["planeador", "documentos"],
+  },
+  {
     id: "versiones", titulo: "Versiones de la matriz", ruta: new RegExp(`^${E}/matriz/versiones$`),
     resumen: "Historial de las versiones cerradas de la matriz. Es el soporte de que la matriz se revisa y actualiza.",
     partes: [
@@ -190,7 +206,7 @@ export const MANUAL: SeccionManual[] = [
       { titulo: "Barra superior", que: "Acciones del documento.", botones: [
         { nombre: "Estado y Marcar como aprobado", hace: "Muestra el estado del documento. Cuando lo haya revisado, márquelo como aprobado; el estado Firmado se pone solo al subir el firmado." },
         { nombre: "Regenerar", hace: "Vuelve a llenar el documento con los datos actuales; sus ediciones manuales se conservan." },
-        { nombre: "Word", hace: "Descarga el documento para imprimir y firmar." },
+        { nombre: "Word / PDF", hace: "Descarga el documento en Word (editable) o en PDF, con encabezado, firmas y numeración." },
         { nombre: "Subir firmado", hace: "Sube el PDF o la foto del documento firmado: queda en estado Firmado y en el expediente." },
       ] },
       { titulo: "Versiones firmadas", que: "Historial de los firmados subidos; el más reciente es el vigente." },

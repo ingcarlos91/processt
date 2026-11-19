@@ -32,7 +32,7 @@ export function IndicadoresEditor({ empresaId, anio, trabajadoresBase, mensuales
     <Tabs defaultValue="tablero">
       <div className="flex flex-wrap items-center gap-2">
         <TabsList><TabsTrigger value="tablero">Tablero</TabsTrigger><TabsTrigger value="eventos">Registro de eventos</TabsTrigger><TabsTrigger value="fichas">Fichas técnicas</TabsTrigger></TabsList>
-        <NativeSelect value={anio} onChange={(e) => (window.location.href = `?anio=${e.target.value}`)}>{[anio - 1, anio, anio + 1].map((y) => <NativeSelectOption key={y} value={y}>{y}</NativeSelectOption>)}</NativeSelect>
+        <NativeSelect value={anio} onChange={(e) => { if (String(e.target.value) !== String(anio)) window.location.href = `?anio=${e.target.value}`; }}>{[anio - 1, anio, anio + 1].map((y) => <NativeSelectOption key={y} value={y}>{y}</NativeSelectOption>)}</NativeSelect>
         <NormaRef>Res. 0312/2019 art. 30</NormaRef><NormaRef>Decreto 1072/2015 arts. 2.2.4.6.19-22</NormaRef>
       </div>
 

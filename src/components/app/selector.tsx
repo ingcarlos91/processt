@@ -10,7 +10,7 @@ export function Selector({ id, value, onChange, opciones, placeholder = "Selecci
 }) {
   const items = Object.fromEntries(opciones.map((o) => [o.valor, o.etiqueta]));
   return (
-    <Select value={value || null} onValueChange={(v) => onChange((v as string | null) ?? "")} items={items} disabled={disabled}>
+    <Select value={value || null} onValueChange={(v) => { const x = (v as string | null) ?? ""; if (x !== (value ?? "")) onChange(x); }} items={items} disabled={disabled}>
       <SelectTrigger id={id} className={cn("w-full", className)}><SelectValue placeholder={placeholder} /></SelectTrigger>
       <SelectContent>
         {opciones.map((o) => (

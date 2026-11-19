@@ -3,7 +3,7 @@
 import { db } from "@/lib/db";
 import { plazos } from "@/lib/eventos";
 
-export type Categoria = "plan" | "comite" | "accidente" | "accion" | "matriz" | "evaluacion" | "responsable" | "examen" | "epp" | "inspeccion" | "visita" | "recordatorio";
+export type Categoria = "plan" | "comite" | "accidente" | "accion" | "matriz" | "evaluacion" | "responsable" | "examen" | "epp" | "inspeccion" | "auditoria" | "visita" | "recordatorio";
 export type EstadoFecha = "vencido" | "hoy" | "proximo" | "pendiente" | "hecho";
 
 export type Fecha = {
@@ -22,6 +22,7 @@ export const CATEGORIAS: Record<Categoria, { t: string; color: string }> = {
   examen: { t: "Exámenes médicos", color: "bg-pink-500" },
   epp: { t: "Reposición de EPP", color: "bg-lime-600" },
   inspeccion: { t: "Inspecciones", color: "bg-indigo-500" },
+  auditoria: { t: "Auditoría interna", color: "bg-fuchsia-600" },
   visita: { t: "Visitas realizadas", color: "bg-cyan-600" },
   recordatorio: { t: "Mis recordatorios", color: "bg-slate-500" },
 };
@@ -54,6 +55,7 @@ export async function fechasPlaneador({ empresaId, desde, hasta, hoy = new Date(
       evaluaciones: { orderBy: { fecha: "desc" }, take: 1, select: { fecha: true, anio: true } },
       recordatorios: true,
       inspecciones: { orderBy: { fecha: "desc" }, select: { lista: true, fecha: true } },
+      auditorias: { orderBy: { fechaInicio: "desc" }, take: 1, select: { id: true, anio: true, fechaInicio: true, estado: true } },
       visitas: { where: { fecha: { gte: desde, lte: hasta } }, select: { id: true, fecha: true, horas: true, actividades: true } },
       trabajadores: { where: { activo: true }, select: { id: true, nombres: true, examenes: { orderBy: { fecha: "desc" }, take: 1, select: { id: true, proximo: true, tipo: true } }, entregasEpp: { where: { proximaReposicion: { not: null } }, orderBy: { fecha: "desc" }, select: { id: true, elemento: true, proximaReposicion: true } } } },
     },
@@ -118,6 +120,11 @@ export async function fechasPlaneador({ empresaId, desde, hasta, hoy = new Date(
         if (vistos.has(ep.elemento)) continue; vistos.add(ep.elemento);
         if (ep.proximaReposicion && dentro(ep.proximaReposicion, false)) add({ id: `epp-${ep.id}`, fecha: iso(ep.proximaReposicion), titulo: `Reposición de EPP: ${ep.elemento} — ${t.nombres}`, categoria: "epp", estado: estadoDe(ep.proximaReposicion, false, hoy), normaRef: "Decreto 1072/2015 art. 2.2.4.6.24", href: `${base}/trabajadores` });
       }
+    }
+    const au = e.auditorias[0];
+    if (au) {
+      const f = au.estado === "cerrada" ? masAnios(au.fechaInicio, 1) : au.fechaInicio;
+      if (dentro(f, false)) add({ id: `aud-${au.id}`, fecha: iso(f), titulo: au.estado === "cerrada" ? `Auditoría interna anual ${au.anio + 1}` : `Cerrar la auditoría interna ${au.anio}`, detalle: "Planifíquela con el COPASST o Vigía y con un auditor idóneo e independiente.", categoria: "auditoria", estado: estadoDe(f, false, hoy), normaRef: "Decreto 1072/2015 art. 2.2.4.6.29", href: au.estado === "cerrada" ? `${base}/auditoria` : `${base}/auditoria/${au.id}` });
     }
     for (const v of e.visitas) add({ id: `vis-${v.id}`, fecha: iso(v.fecha), titulo: `Visita (${v.horas} h): ${v.actividades.split("\n")[0]}`, detalle: v.actividades, categoria: "visita", estado: "hecho", href: `${base}/planeador` });
     for (const rc of e.recordatorios) {
