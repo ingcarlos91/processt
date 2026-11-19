@@ -175,3 +175,12 @@
   .editor-visual p { @apply my-1; }
   .editor-visual h3 { @apply text-base font-semibold mt-4; }
 }
+
+/* Loader con el isotipo: giro con aceleración, como un equipo que se mueve */
+@keyframes isotipo-giro {
+  0% { transform: rotate(0deg) scale(1); }
+  50% { transform: rotate(200deg) scale(0.92); }
+  100% { transform: rotate(360deg) scale(1); }
+}
+.isotipo-girando { animation: isotipo-giro 1.2s cubic-bezier(0.65, 0, 0.35, 1) infinite; }
+@media (prefers-reduced-motion: reduce) { .isotipo-girando { animation-duration: 3s; animation-timing-function: linear; } }

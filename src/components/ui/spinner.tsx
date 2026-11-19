@@ -1,9 +1,10 @@
 import { cn } from "cn"
-import { Loader2Icon } from "lucide-react"
 
-function Spinner({ className, ...props }: React.ComponentProps<"svg">) {
+/** Indicador de carga con el isotipo de PROCESST. */
+function Spinner({ className, ...props }: React.ComponentProps<"img">) {
   return (
-    <Loader2Icon data-slot="spinner" role="status" aria-label="Loading" className={cn("size-4 animate-spin", className)} {...props} />
+    // eslint-disable-next-line @next/next/no-img-element
+    <img src="/brand/icono.png" alt="" data-slot="spinner" role="status" aria-label="Cargando" className={cn("size-4 isotipo-girando object-contain", className)} {...props} />
   )
 }
 

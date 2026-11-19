@@ -3,7 +3,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { Building2, BookOpen, FileText, Scale, Settings, Plus, LogOut, Users, ChevronsUpDown, KeyRound } from "lucide-react";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Isotipo } from "@/components/app/isotipo";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { salir } from "@/app/actions/auth";
 import {
@@ -25,7 +25,6 @@ const admin = [
 ];
 
 export function AppSidebar({ empresas, consultora, usuario }: { empresas: { id: string; razonSocial: string }[]; consultora: { nombre: string; profesional: string | null }; usuario: { nombre: string; email: string; rol: string } }) {
-  const iniciales = usuario.nombre.split(/\s+/).map((x) => x[0]).slice(0, 2).join("").toUpperCase();
   const p = usePathname();
   const activo = (href: string) => (href === "/" ? p === "/" : p.startsWith(href));
   return (
@@ -81,7 +80,7 @@ export function AppSidebar({ empresas, consultora, usuario }: { empresas: { id: 
           <SidebarMenuItem>
             <DropdownMenu>
               <DropdownMenuTrigger render={<SidebarMenuButton size="lg" tooltip={usuario.nombre} className="data-popup-open:bg-sidebar-accent" />}>
-                <Avatar className="size-8 rounded-lg"><AvatarFallback className="rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">{iniciales}</AvatarFallback></Avatar>
+                <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-white p-1"><Isotipo className="size-full" /></span>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-medium">{usuario.nombre}</span>
                   <span className="truncate text-xs opacity-70">{consultora.nombre}</span>
