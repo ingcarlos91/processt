@@ -38,7 +38,7 @@ export function SectoresTab({ sectores, tareas, zonas, iaActiva }: { sectores: S
         <div className="flex-1" />
         <Dialog>
           <DialogTrigger render={<Button />}><Plus /> Nuevo sector</DialogTrigger>
-          <DialogContent>
+          <DialogContent className="sm:max-w-lg">
             <DialogHeader><DialogTitle>Nuevo sector</DialogTitle><DialogDescription>Un sector agrupa procesos, zonas y cargos típicos. Al elegir el código CIIU de una empresa, el sistema propone el sector que tenga ese código.</DialogDescription></DialogHeader>
             <Field><FieldLabel>Nombre</FieldLabel><Input value={nuevo.nombre} onChange={(e) => setNuevo({ ...nuevo, nombre: e.target.value })} placeholder="Ej: Minería de materiales de construcción" /></Field>
             <Field><FieldLabel>Descripción</FieldLabel><Input value={nuevo.descripcion} placeholder="Ej.: Extracción de arena, gravilla y arcilla" onChange={(e) => setNuevo({ ...nuevo, descripcion: e.target.value })} /></Field>

@@ -92,7 +92,7 @@ export function InspeccionesEditor({ empresaId, inspecciones, listas, lugares, p
           <DialogHeader><DialogTitle>{nueva?.lista}</DialogTitle><DialogDescription>{lista?.descripcion} Califique cada ítem; en los que no cumplen puede crear la acción de una vez.</DialogDescription></DialogHeader>
           {nueva && (
             <div className="space-y-5">
-              <div className="grid gap-4 sm:grid-cols-4">
+              <div className="grid gap-4 sm:grid-cols-2">
                 <Field><FieldLabel htmlFor="i-f">Fecha</FieldLabel><Input id="i-f" type="date" value={nueva.fecha} onChange={(e) => setNueva({ ...nueva, fecha: e.target.value })} /></Field>
                 <Field><FieldLabel>Lugar</FieldLabel><Combo value={nueva.lugar} placeholder="Seleccione o escriba el lugar" onChange={(v) => setNueva({ ...nueva, lugar: v })} grupos={[{ titulo: "Sedes y zonas", opciones: lugares.map((x) => ({ valor: x })) }]} /></Field>
                 <Field><FieldLabel>Responsable</FieldLabel><Combo value={nueva.responsable} placeholder="Seleccione o escriba el responsable" onChange={(v) => setNueva({ ...nueva, responsable: v })} grupos={[{ titulo: "Personas", opciones: personas.map((x) => ({ valor: x })) }]} /></Field>

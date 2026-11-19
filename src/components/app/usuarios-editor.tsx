@@ -130,7 +130,7 @@ export function UsuariosEditor({ usuarios, yoId }: { usuarios: U[]; yoId: string
       </Section>
 
       <Dialog open={!!modal} onOpenChange={(o) => !o && setModal(null)}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-md">
           {(modal?.tipo === "nuevo" || modal?.tipo === "editar") && (
             <>
               <DialogHeader>

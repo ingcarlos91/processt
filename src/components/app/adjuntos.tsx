@@ -46,12 +46,12 @@ export function SubirArchivo({ empresaId, ctx, trigger, titulo = "Subir archivo"
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger render={(trigger ?? <Button size="sm" variant="outline"><Upload /> {titulo}</Button>) as ReactElement} />
-      <DialogContent>
+      <DialogContent className="sm:max-w-lg">
         <DialogHeader><DialogTitle>{titulo}</DialogTitle>{ayuda && <DialogDescription>{ayuda}</DialogDescription>}</DialogHeader>
         <Field>
           <FieldLabel>Archivo</FieldLabel>
           <input ref={ref} type="file" accept={ACEPTA} className="hidden" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
-          <Button variant="outline" className={cn("justify-start font-normal", !file && "text-muted-foreground")} onClick={() => ref.current?.click()}><Paperclip /> {file ? `${file.name} · ${tam(file.size)}` : "Elegir archivo…"}</Button>
+          <Button variant="outline" className={cn("w-full min-w-0 justify-start font-normal", !file && "text-muted-foreground")} onClick={() => ref.current?.click()}><Paperclip />{file ? <><span className="min-w-0 truncate">{file.name}</span><span className="shrink-0 text-muted-foreground">· {tam(file.size)}</span></> : "Elegir archivo…"}</Button>
           <FieldDescription>PDF, foto (JPG, PNG), Word o Excel. Máximo 4 MB (fotos del celular: suelen pesar menos). Desde el celular puede tomar la foto directamente.</FieldDescription>
         </Field>
         <Field><FieldLabel htmlFor="adj-d">Descripción</FieldLabel><Input id="adj-d" value={desc} onChange={(e) => setDesc(e.target.value)} placeholder="Ej: Lista de asistencia capacitación en alturas" /></Field>

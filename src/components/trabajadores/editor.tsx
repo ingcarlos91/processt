@@ -302,14 +302,14 @@ export function TrabajadoresEditor({ empresaId, trabajadores, cargos, sugeridos,
 
       {/* ───── Examen ───── */}
       <Dialog open={!!examen} onOpenChange={(o) => !o && setExamen(null)}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-lg">
           <DialogHeader><DialogTitle>Examen médico ocupacional — {examen && nombre(examen.trabajadorId)}</DialogTitle><DialogDescription>Registre solo el concepto y las recomendaciones; nunca el diagnóstico.</DialogDescription></DialogHeader>
           {examen && (
             <div className="grid gap-4 sm:grid-cols-2">
               <Field><FieldLabel>Tipo</FieldLabel><Selector value={examen.tipo} onChange={(v) => setExamen({ ...examen, tipo: v })} opciones={Object.entries(TIPO_EX).map(([k, v]) => ({ valor: k, etiqueta: v }))} /></Field>
               <Field><FieldLabel htmlFor="x-f">Fecha</FieldLabel><Input id="x-f" type="date" value={examen.fecha} onChange={(e) => setExamen({ ...examen, fecha: e.target.value, proximo: examen.tipo === "retiro" ? "" : enAnios(e.target.value, 1) })} /></Field>
               <Field><FieldLabel>Concepto de aptitud</FieldLabel><Selector value={examen.concepto} onChange={(v) => setExamen({ ...examen, concepto: v })} opciones={Object.entries(CONCEPTO).map(([k, v]) => ({ valor: k, etiqueta: v.t }))} /></Field>
-              <Field><FieldLabel htmlFor="x-i">IPS</FieldLabel><Input id="x-i" placeholder="Nombre de la IPS que realizó el examen" value={examen.ips} onChange={(e) => setExamen({ ...examen, ips: e.target.value })} /></Field>
+              <Field><FieldLabel htmlFor="x-i">IPS</FieldLabel><Input id="x-i" placeholder="Ej.: IPS Salud Ocupacional" value={examen.ips} onChange={(e) => setExamen({ ...examen, ips: e.target.value })} /></Field>
               <Field className="sm:col-span-2"><FieldLabel htmlFor="x-r">Restricciones y recomendaciones</FieldLabel><Textarea id="x-r" rows={2} value={examen.restricciones} placeholder="Ej: Evitar levantar más de 12 kg durante 3 meses" onChange={(e) => setExamen({ ...examen, restricciones: e.target.value })} /></Field>
               <Field><FieldLabel htmlFor="x-c">Comunicado al trabajador</FieldLabel><Input id="x-c" type="date" value={examen.comunicadoTrabajador} onChange={(e) => setExamen({ ...examen, comunicadoTrabajador: e.target.value })} /></Field>
               <Field><FieldLabel htmlFor="x-p">Próximo examen</FieldLabel><Input id="x-p" type="date" value={examen.proximo} onChange={(e) => setExamen({ ...examen, proximo: e.target.value })} /><FieldDescription>Según la periodicidad del profesiograma.</FieldDescription></Field>
@@ -354,7 +354,7 @@ export function TrabajadoresEditor({ empresaId, trabajadores, cargos, sugeridos,
           {cap && (
             <div className="space-y-4">
               <Field><FieldLabel>Tema</FieldLabel><Combo value={cap.tema} placeholder="Seleccione o escriba el tema" onChange={(v) => setCap({ ...cap, tema: v })} grupos={[{ titulo: "Catálogo de capacitaciones", opciones: catalogoCapacitaciones.map((x) => ({ valor: x })) }]} /></Field>
-              <div className="grid gap-4 sm:grid-cols-4">
+              <div className="grid gap-4 sm:grid-cols-2">
                 <Field><FieldLabel htmlFor="c-f">Fecha</FieldLabel><Input id="c-f" type="date" value={cap.fecha} onChange={(e) => setCap({ ...cap, fecha: e.target.value })} /></Field>
                 <Field><FieldLabel htmlFor="c-h">Horas</FieldLabel><Input id="c-h" placeholder="Ej.: 2" type="number" min={0.5} step={0.5} value={cap.horas} onChange={(e) => setCap({ ...cap, horas: Number(e.target.value) })} /></Field>
                 <Field><FieldLabel>Modalidad</FieldLabel><Selector value={cap.modalidad} onChange={(v) => setCap({ ...cap, modalidad: v })} opciones={[{ valor: "presencial", etiqueta: "Presencial" }, { valor: "virtual", etiqueta: "Virtual" }]} /></Field>

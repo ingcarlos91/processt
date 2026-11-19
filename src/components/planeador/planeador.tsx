@@ -116,7 +116,7 @@ export function Planeador({ fechas, empresas, empresaId, icsHref }: { fechas: Fe
       )}
 
       <Dialog open={!!rec} onOpenChange={(o) => !o && setRec(null)}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader><DialogTitle>{rec?.id ? "Editar fecha" : "Agregar fecha"}</DialogTitle><DialogDescription>Visitas, entregas, reuniones, vencimientos de documentos externos… Aparece en el planeador y en el calendario exportado.</DialogDescription></DialogHeader>
           {rec && (
             <div className="space-y-4">
