@@ -121,6 +121,7 @@ model Empresa {
   catalogoPropio  CatalogoItem[]    @relation("BibliotecaCatalogoItem")
   usuarios        Usuario[]
   acciones        Accion[]
+  recordatorios   Recordatorio[]
 
   @@map("empresa")
 }
@@ -773,6 +774,22 @@ model Accion {
   actividad   ActividadPlan? @relation(fields: [actividadId], references: [id], onDelete: SetNull)
 
   @@map("accion")
+}
+
+// Fechas propias que la consultora agrega al planeador (visitas, entregas, vencimientos externos…).
+model Recordatorio {
+  id        String    @id @default(cuid())
+  empresaId String?   @map("empresa_id") // null = de la consultora, no de una empresa
+  empresa   Empresa?  @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  fecha     DateTime
+  titulo    String
+  notas     String?
+  hecho     Boolean   @default(false)
+  hechoEn   DateTime? @map("hecho_en")
+  creadoEn  DateTime  @default(now()) @map("creado_en")
+
+  @@index([fecha])
+  @@map("recordatorio")
 }
 
 model TrabajadoresMes {

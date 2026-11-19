@@ -257,6 +257,22 @@ export const MANUAL: SeccionManual[] = [
     relacionadas: ["accidentes"],
   },
   {
+    id: "planeador", titulo: "Planeador", ruta: new RegExp(`^(/planeador|${E}/planeador)$`),
+    resumen: "Todas las fechas a tener en cuenta, de todas las empresas (o de una): plan anual, fin de periodo de comités, plazos de accidentes, acciones, actualización anual de la matriz, autoevaluación anual, curso del responsable y recordatorios propios. Cada fecha cita su norma.",
+    partes: [
+      { titulo: "Indicadores", que: "Vencidos, esta semana, próximos 30 días y cumplidos." },
+      { titulo: "Filtros", que: "Estado (pendientes y vencidos, solo vencidos, esta semana, cumplidos), empresa y categorías (pulse una categoría para ocultarla o mostrarla)." },
+      { titulo: "Agenda y Calendario", que: "La agenda agrupa por mes; el calendario muestra el mes por días y arriba las actividades del plan sin día exacto. Clic en un día para ver su detalle.", botones: [{ nombre: "Abrir", hace: "Lleva a donde se gestiona esa fecha (plan, comité, accidente, matriz…)." }] },
+      { titulo: "Fechas propias", que: "Visitas, entregas, reuniones o vencimientos externos.", botones: [
+        { nombre: "Agregar fecha", hace: "Crea un recordatorio de una empresa o de la consultora." },
+        { nombre: "✓ / editar / eliminar", hace: "Marca el recordatorio como hecho, lo edita o lo borra." },
+      ] },
+      { titulo: "Exportar a Google Calendar", que: "Descarga un archivo .ics con las fechas pendientes; impórtelo en Google Calendar, Outlook o el celular." },
+    ],
+    consejos: ["Las fechas se calculan solas a partir de lo registrado: al cerrar una versión de la matriz o una autoevaluación, la próxima fecha se mueve un año."],
+    relacionadas: ["plan", "accidentes", "comites"],
+  },
+  {
     id: "biblioteca", titulo: "Biblioteca general", ruta: /^\/biblioteca$/,
     resumen: "Todo lo que el sistema precarga en todas las empresas. Se puede crear, editar y validar.",
     partes: [

@@ -9,7 +9,7 @@ import { ManualAyuda } from "@/components/app/manual-ayuda";
 
 const ETIQUETAS: Record<string, string> = {
   empresas: "Empresas", nueva: "Nueva empresa", datos: "Datos", matriz: "Cargos y matriz", evaluacion: "Evaluación", documentos: "Documentos",
-  plan: "Plan anual", comites: "Comités", indicadores: "Indicadores", biblioteca: "Biblioteca", plantillas: "Plantillas", normas: "Normas", configuracion: "Mi consultora", cuenta: "Mi cuenta", usuarios: "Usuarios", evidencias: "Evidencias", accidentes: "Accidentes e incidentes",
+  plan: "Plan anual", comites: "Comités", indicadores: "Indicadores", biblioteca: "Biblioteca", plantillas: "Plantillas", normas: "Normas", configuracion: "Mi consultora", cuenta: "Mi cuenta", usuarios: "Usuarios", evidencias: "Evidencias", accidentes: "Accidentes e incidentes", planeador: "Planeador", versiones: "Versiones",
 };
 
 export function SiteHeader({ empresas }: { empresas: { id: string; razonSocial: string }[] }) {

@@ -2,7 +2,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { Building2, BookOpen, FileText, Scale, Settings, Plus, LogOut, Users, ChevronsUpDown, KeyRound } from "lucide-react";
+import { Building2, CalendarDays, BookOpen, FileText, Scale, Settings, Plus, LogOut, Users, ChevronsUpDown, KeyRound } from "lucide-react";
 import { Isotipo } from "@/components/app/isotipo";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { salir } from "@/app/actions/auth";
@@ -13,6 +13,7 @@ import {
 
 const nav = [
   { href: "/", label: "Empresas", icon: Building2 },
+  { href: "/planeador", label: "Planeador", icon: CalendarDays },
   { href: "/biblioteca", label: "Biblioteca de peligros", icon: BookOpen },
   { href: "/plantillas", label: "Plantillas", icon: FileText },
   { href: "/normas", label: "Normas y estándares", icon: Scale },
