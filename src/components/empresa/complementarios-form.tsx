@@ -1,4 +1,5 @@
 "use client";
+import { cn } from "@/lib/utils";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { Plus, Save, Trash2 } from "lucide-react";
@@ -13,6 +14,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Ayuda } from "@/components/app/ayuda";
 import { guardarComplementarios } from "@/app/actions/sgsst";
 import type { CampoComplementario, Complementarios, Persona, Seccion } from "@/lib/complementarios";
+
+/** Muestra un número con separador de miles (3500000 → 3.500.000); se guarda sin puntos. */
+const miles = (v: string | undefined) => { const d = String(v ?? "").replace(/\D/g, ""); return d ? Number(d).toLocaleString("es-CO") : ""; };
 
 export function ComplementariosForm({ empresaId, secciones, inicial, faltan }: { empresaId: string; secciones: Seccion[]; inicial: Complementarios; faltan: string[] }) {
   const [d, setD] = useState<Complementarios>(() => {
@@ -82,7 +86,7 @@ function CampoUI({ c, v, set, falta }: { c: CampoComplementario; v: Complementar
         <Etiqueta c={c} falta={falta} />
         <div className="rounded-lg border overflow-x-auto">
           <Table>
-            <TableHeader><TableRow>{cols.map((col) => <TableHead key={col.k}>{col.etiqueta}</TableHead>)}<TableHead className="w-8" /></TableRow></TableHeader>
+            <TableHeader><TableRow>{cols.map((col) => <TableHead key={col.k} className={cn(col.tipo === "number" && "w-48 text-right", col.tipo === "date" && "w-40")}>{col.etiqueta}</TableHead>)}<TableHead className="w-8" /></TableRow></TableHeader>
             <TableBody>
               {filas.map((f, i) => (
                 <TableRow key={i}>
@@ -90,7 +94,9 @@ function CampoUI({ c, v, set, falta }: { c: CampoComplementario; v: Complementar
                     <TableCell key={col.k} className="p-1">
                       {col.tipo === "select"
                         ? <NativeSelect size="sm" className="w-full" value={f[col.k] ?? ""} onChange={(e) => upd(i, col.k, e.target.value)}><NativeSelectOption value="">—</NativeSelectOption>{col.opciones?.map((o) => <NativeSelectOption key={o} value={o}>{o}</NativeSelectOption>)}</NativeSelect>
-                        : <Input className="h-7" type={col.tipo ?? "text"} value={f[col.k] ?? ""} onChange={(e) => upd(i, col.k, e.target.value)} />}
+                        : col.tipo === "number"
+                          ? <Input className="h-7 text-right tabular-nums" inputMode="numeric" value={miles(f[col.k])} onChange={(e) => upd(i, col.k, e.target.value.replace(/\D/g, ""))} />
+                          : <Input className={cn("h-7", col.tipo !== "date" && "min-w-40")} type={col.tipo ?? "text"} value={f[col.k] ?? ""} onChange={(e) => upd(i, col.k, e.target.value)} />}
                     </TableCell>
                   ))}
                   <TableCell className="p-1"><Button variant="ghost" size="icon-xs" aria-label="Quitar fila" onClick={() => set(filas.filter((_, j) => j !== i))}><Trash2 /></Button></TableCell>
@@ -99,6 +105,7 @@ function CampoUI({ c, v, set, falta }: { c: CampoComplementario; v: Complementar
             </TableBody>
           </Table>
         </div>
+        {c.k === "presupuesto" && <div className="text-right text-sm">Total: <span className="font-semibold tabular-nums">$ {miles(String(filas.reduce((t, f) => t + (Number(f.valor) || 0), 0)))}</span></div>}
         <Button variant="outline" size="sm" className="w-fit" onClick={() => set([...filas, {}])}><Plus /> Agregar fila</Button>
       </Field>
     );
