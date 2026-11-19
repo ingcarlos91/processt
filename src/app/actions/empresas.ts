@@ -5,6 +5,7 @@ import { db, consultoraActual } from "@/lib/db";
 import { recalcularEmpresa } from "@/lib/empresa";
 import { prepararEstructura, aplicarCargoTipo, sugerirCargoTipo } from "@/lib/matriz/instanciar";
 import { guardarLogo, borrarLogo } from "@/lib/logos";
+import { TURNOS_NOCTURNOS } from "@/lib/ayuda";
 
 export type IntakeData = {
   razonSocial: string; nit: string; digitoVerificacion?: string; direccion?: string; ciudad?: string; departamento?: string; telefono?: string; correo?: string;
@@ -27,7 +28,9 @@ function datosEmpresa(d: IntakeData) {
     ciiu: d.ciiu, descripcionActividad: d.descripcionActividad, claseRiesgo: Math.min(5, Math.max(1, n(d.claseRiesgo) || 1)), claseRiesgoJustificacion: d.claseRiesgoJustificacion,
     arl: d.arl, epsPrincipal: d.epsPrincipal, sectorTipoId: d.sectorTipoId || null, esUpa: !!d.esUpa,
     nTrabajadoresPlanta: n(d.nTrabajadoresPlanta), nContratistas: n(d.nContratistas), nAprendices: n(d.nAprendices), nEnMision: n(d.nEnMision), nVehiculos: n(d.nVehiculos),
-    horario: d.horario, turnos: d.turnos, disparadores: d.disparadores ?? {}, estadoActual: d.estadoActual ?? {}, responsableSst: d.responsableSst ?? {},
+    horario: d.horario, turnos: d.turnos,
+    // Turnos nocturnos o rotativos activan el peligro especial de trabajo nocturno (Res. 2646/2008).
+    disparadores: { ...(d.disparadores ?? {}), ...((d.turnos ?? "").split(",").some((t) => TURNOS_NOCTURNOS.includes(t)) ? { trabajoNocturno: true } : {}) }, estadoActual: d.estadoActual ?? {}, responsableSst: d.responsableSst ?? {},
   };
 }
 

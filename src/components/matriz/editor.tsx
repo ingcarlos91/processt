@@ -19,6 +19,7 @@ import { Item as UiItem, ItemActions, ItemContent, ItemDescription, ItemGroup, I
 import { Confirmar, Pedir } from "@/components/app/confirmar";
 import { ND, NE, NC, CLASIFICACIONES, CLASIFICACION_ETIQUETA, calcular, COLOR_NIVEL, explicarRiesgo } from "@/lib/gtc45";
 import { Porque } from "@/components/app/porque";
+import { Ayuda } from "@/components/app/ayuda";
 import * as A from "@/app/actions/matriz";
 import type { Sugerencia } from "@/lib/ia";
 import { cn } from "@/lib/utils";
@@ -110,7 +111,7 @@ export function MatrizEditor(props: {
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-6" /><TableHead>Origen</TableHead><TableHead>Proceso / zona / tarea</TableHead><TableHead>Clasificación</TableHead><TableHead className="min-w-56">Peligro</TableHead>
-                  <TableHead>ND</TableHead><TableHead>NE</TableHead><TableHead>NC</TableHead><TableHead>NR</TableHead><TableHead>Nivel</TableHead><TableHead>Expuestos</TableHead><TableHead />
+                  <TableHead><span className="flex items-center gap-1">ND <Ayuda k="nd" /></span></TableHead><TableHead><span className="flex items-center gap-1">NE <Ayuda k="ne" /></span></TableHead><TableHead><span className="flex items-center gap-1">NC <Ayuda k="nc" /></span></TableHead><TableHead>NR</TableHead><TableHead>Nivel</TableHead><TableHead>Expuestos</TableHead><TableHead />
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -244,7 +245,7 @@ function CargoCard({ c, empresaId, tareas, tareasTipo, cargosTipo, procesos, zon
           <CardContent className="border-t py-3 space-y-4">
             <div className="grid grid-cols-[1fr_72px] gap-2">
               <Field><FieldLabel htmlFor={`cn-${c.id}`} className="text-xs">Nombre</FieldLabel><Input id={`cn-${c.id}`} defaultValue={c.nombre} onBlur={(e) => e.target.value !== c.nombre && run(() => A.actualizarCargo(empresaId, c.id, { nombre: e.target.value }))} /></Field>
-              <Field><FieldLabel htmlFor={`cp-${c.id}`} className="text-xs">Personas</FieldLabel><Input id={`cp-${c.id}`} type="number" min={1} defaultValue={c.nPersonas} onBlur={(e) => Number(e.target.value) !== c.nPersonas && run(() => A.actualizarCargo(empresaId, c.id, { nPersonas: Number(e.target.value) }))} /></Field>
+              <Field><FieldLabel htmlFor={`cp-${c.id}`} className="text-xs gap-1">Personas <Ayuda k="nPersonas" /></FieldLabel><Input id={`cp-${c.id}`} type="number" min={1} defaultValue={c.nPersonas} onBlur={(e) => Number(e.target.value) !== c.nPersonas && run(() => A.actualizarCargo(empresaId, c.id, { nPersonas: Number(e.target.value) }))} /></Field>
             </div>
             <NativeSelect className="w-full" defaultValue="" onChange={(e) => e.target.value && run(() => A.aplicarTipo(empresaId, c.id, e.target.value), "Tareas y peligros del cargo tipo agregados")}>
               <NativeSelectOption value="">Aplicar tareas de un cargo tipo…</NativeSelectOption>
@@ -283,7 +284,7 @@ function CargoCard({ c, empresaId, tareas, tareasTipo, cargosTipo, procesos, zon
             </Field>
 
             <Field>
-              <FieldLabel htmlFor={`fn-${c.id}`} className="text-xs">Funciones del cargo</FieldLabel>
+              <FieldLabel htmlFor={`fn-${c.id}`} className="text-xs gap-1">Funciones del cargo <Ayuda k="funciones" /></FieldLabel>
               <Textarea id={`fn-${c.id}`} className="text-xs min-h-20" value={funciones} onChange={(e) => setFunciones(e.target.value)} placeholder="Ej: recibe mercancía, la sube a estantes con escalera, maneja montacargas, hace inventarios…" />
               <Button size="sm" variant="secondary" className="w-fit" disabled={!funciones || cargandoIA} onClick={() => startIA(async () => {
                 const r = await A.sugerirConIA(empresaId, c.id, funciones);
@@ -321,7 +322,7 @@ function NuevoCargo({ empresaId, cargosTipo, sectorTipoId, run, pend }: { empres
   const [tipo, setTipo] = useState("");
   return (
     <Card size="sm" className="border-dashed ring-0 border">
-      <CardHeader><CardTitle className="text-sm">Nuevo cargo</CardTitle></CardHeader>
+      <CardHeader><CardTitle className="text-sm flex items-center gap-1">Nuevo cargo <Ayuda k="cargos" /></CardTitle></CardHeader>
       <CardContent className="space-y-2">
         <div className="grid grid-cols-[1fr_72px] gap-2">
           <Input placeholder="Nombre" value={nombre} onChange={(e) => setNombre(e.target.value)} />

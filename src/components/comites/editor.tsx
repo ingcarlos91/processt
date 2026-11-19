@@ -14,6 +14,7 @@ import { Field, FieldLabel } from "@/components/ui/field";
 import { NormaRef } from "@/components/app/ui";
 import { Confirmar } from "@/components/app/confirmar";
 import { Porque } from "@/components/app/porque";
+import { Ayuda } from "@/components/app/ayuda";
 import * as A from "@/app/actions/sgsst";
 
 type Miembro = { id: string; nombre: string; cedula: string; cargo: string; rol: string; representa: string };
@@ -96,9 +97,9 @@ function NuevoMiembro({ tipo, onAgregar }: { tipo: string; onAgregar: (m: { nomb
       <Field className="md:col-span-2"><FieldLabel className="text-xs">Nombre</FieldLabel><Input value={m.nombre} onChange={(e) => setM({ ...m, nombre: e.target.value })} /></Field>
       <Field><FieldLabel className="text-xs">Cédula</FieldLabel><Input value={m.cedula} onChange={(e) => setM({ ...m, cedula: e.target.value })} /></Field>
       <Field><FieldLabel className="text-xs">Cargo</FieldLabel><Input value={m.cargo} onChange={(e) => setM({ ...m, cargo: e.target.value })} /></Field>
-      <Field><FieldLabel className="text-xs">Rol</FieldLabel><NativeSelect className="w-full" value={m.rol} onChange={(e) => setM({ ...m, rol: e.target.value })}>{ROLES.map(([v, l]) => <NativeSelectOption key={v} value={v}>{l}</NativeSelectOption>)}</NativeSelect></Field>
+      <Field><FieldLabel className="text-xs gap-1">Rol <Ayuda k="rolComite" /></FieldLabel><NativeSelect className="w-full" value={m.rol} onChange={(e) => setM({ ...m, rol: e.target.value })}>{ROLES.map(([v, l]) => <NativeSelectOption key={v} value={v}>{l}</NativeSelectOption>)}</NativeSelect></Field>
       {tipo !== "BRIGADA" ? (
-        <Field><FieldLabel className="text-xs">Representa</FieldLabel><NativeSelect className="w-full" value={m.representa} onChange={(e) => setM({ ...m, representa: e.target.value })}><NativeSelectOption value="trabajadores">Trabajadores</NativeSelectOption><NativeSelectOption value="empleador">Empleador</NativeSelectOption></NativeSelect></Field>
+        <Field><FieldLabel className="text-xs gap-1">Representa <Ayuda k="representa" /></FieldLabel><NativeSelect className="w-full" value={m.representa} onChange={(e) => setM({ ...m, representa: e.target.value })}><NativeSelectOption value="trabajadores">Trabajadores</NativeSelectOption><NativeSelectOption value="empleador">Empleador</NativeSelectOption></NativeSelect></Field>
       ) : <div />}
       <Button className="md:col-span-6 w-fit" size="sm" disabled={!m.nombre} onClick={() => { onAgregar(m); setM({ ...m, nombre: "", cedula: "", cargo: "" }); }}><Plus /> Agregar integrante</Button>
     </div>

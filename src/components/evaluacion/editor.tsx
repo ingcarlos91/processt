@@ -15,6 +15,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Section, Stat, NormaRef } from "@/components/app/ui";
 import { Confirmar } from "@/components/app/confirmar";
 import { Porque } from "@/components/app/porque";
+import { Ayuda } from "@/components/app/ayuda";
 import * as A from "@/app/actions/sgsst";
 import { cn } from "@/lib/utils";
 
@@ -89,7 +90,7 @@ export function EvaluacionEditor({ empresaId, nivel, evaluaciones, actual }: {
         return (
           <Section key={g} title={g} description={`${its[0].ciclo} · ${ob} de ${mx} puntos`} contentClassName="px-0">
             <Table className="[&_td]:whitespace-normal [&_td]:align-top">
-              <TableHeader><TableRow><TableHead className="pl-6 w-16">Ítem</TableHead><TableHead>Estándar y modo de verificación</TableHead><TableHead className="w-14">Valor</TableHead><TableHead className="w-80">Calificación</TableHead><TableHead className="pr-6 w-72">Observación / justificación</TableHead></TableRow></TableHeader>
+              <TableHeader><TableRow><TableHead className="pl-6 w-16">Ítem</TableHead><TableHead>Estándar y modo de verificación</TableHead><TableHead className="w-14">Valor</TableHead><TableHead className="w-80"><span className="flex items-center gap-1">Calificación <Ayuda k="calificacion" /></span></TableHead><TableHead className="pr-6 w-72">Observación / justificación</TableHead></TableRow></TableHeader>
               <TableBody>
                 {its.map((i) => (
                   <TableRow key={i.id} className={cn(i.estado === "NO_CUMPLE" && "bg-red-50/60", i.estado === "PENDIENTE" && "bg-muted/40")}>

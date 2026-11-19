@@ -11,6 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Section, Stat, NormaRef } from "@/components/app/ui";
+import { Ayuda } from "@/components/app/ayuda";
 import * as A from "@/app/actions/sgsst";
 import { MESES } from "@/lib/plan/generar";
 import type { Indicador } from "@/lib/indicadores";
@@ -46,7 +47,7 @@ export function IndicadoresEditor({ empresaId, anio, trabajadoresBase, cargos, m
         </div>
         <Section title="Indicadores mensuales" description="Registre el número de trabajadores de cada mes (incluye contratistas y en misión, art. 30). Los indicadores se calculan solos." contentClassName="px-0">
           <Table>
-            <TableHeader><TableRow><TableHead className="pl-6">Mes</TableHead><TableHead>Trabajadores</TableHead><TableHead>Días programados</TableHead><TableHead>AT</TableHead><TableHead>Frecuencia (%)</TableHead><TableHead>Severidad (%)</TableHead><TableHead className="pr-6">Ausentismo (%)</TableHead></TableRow></TableHeader>
+            <TableHeader><TableRow><TableHead className="pl-6">Mes</TableHead><TableHead><span className="flex items-center gap-1">Trabajadores <Ayuda k="trabajadoresMes" /></span></TableHead><TableHead><span className="flex items-center gap-1">Días programados <Ayuda k="diasProgramados" /></span></TableHead><TableHead>AT</TableHead><TableHead>Frecuencia (%)</TableHead><TableHead>Severidad (%)</TableHead><TableHead className="pr-6">Ausentismo (%)</TableHead></TableRow></TableHeader>
             <TableBody>
               {mensuales.map((m) => {
                 const t = tm.find((x) => x.mes === m.mes);
@@ -70,10 +71,10 @@ export function IndicadoresEditor({ empresaId, anio, trabajadoresBase, cargos, m
       <TabsContent value="eventos" className="space-y-6 mt-4">
         <Section title="Registrar evento" description="Accidentes: reporte a la ARL y EPS en máximo 2 días hábiles (FURAT) e investigación en 15 días (Res. 1401/2007).">
           <div className="grid md:grid-cols-6 gap-3 items-end">
-            <Field><FieldLabel className="text-xs">Tipo</FieldLabel><NativeSelect className="w-full" value={ev.tipo} onChange={(e) => setEv({ ...ev, tipo: e.target.value })}>{Object.entries(TIPOS).map(([k, v]) => <NativeSelectOption key={k} value={k}>{v}</NativeSelectOption>)}</NativeSelect></Field>
+            <Field><FieldLabel className="text-xs gap-1">Tipo <Ayuda k="tipoEvento" /></FieldLabel><NativeSelect className="w-full" value={ev.tipo} onChange={(e) => setEv({ ...ev, tipo: e.target.value })}>{Object.entries(TIPOS).map(([k, v]) => <NativeSelectOption key={k} value={k}>{v}</NativeSelectOption>)}</NativeSelect></Field>
             <Field><FieldLabel className="text-xs">Fecha</FieldLabel><Input type="date" value={ev.fecha} onChange={(e) => setEv({ ...ev, fecha: e.target.value })} /></Field>
             <Field><FieldLabel className="text-xs">Cargo</FieldLabel><NativeSelect className="w-full" value={ev.cargo} onChange={(e) => setEv({ ...ev, cargo: e.target.value })}><NativeSelectOption value="">—</NativeSelectOption>{cargos.map((c) => <NativeSelectOption key={c} value={c}>{c}</NativeSelectOption>)}</NativeSelect></Field>
-            <Field><FieldLabel className="text-xs">Días de incapacidad</FieldLabel><Input type="number" min={0} value={ev.diasIncapacidad} onChange={(e) => setEv({ ...ev, diasIncapacidad: Number(e.target.value) })} /></Field>
+            <Field><FieldLabel className="text-xs gap-1">Días de incapacidad <Ayuda k="diasIncapacidad" /></FieldLabel><Input type="number" min={0} value={ev.diasIncapacidad} onChange={(e) => setEv({ ...ev, diasIncapacidad: Number(e.target.value) })} /></Field>
             <Field className="md:col-span-2"><FieldLabel className="text-xs">Descripción</FieldLabel><Input value={ev.descripcion} onChange={(e) => setEv({ ...ev, descripcion: e.target.value })} /></Field>
             <label className="flex items-center gap-2 text-sm"><Checkbox checked={ev.mortal} onCheckedChange={(v) => setEv({ ...ev, mortal: !!v })} /> Mortal</label>
             <label className="flex items-center gap-2 text-sm"><Checkbox checked={ev.reportadoArl} onCheckedChange={(v) => setEv({ ...ev, reportadoArl: !!v })} /> Reportado a la ARL</label>

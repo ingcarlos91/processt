@@ -10,6 +10,7 @@ import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, FieldDescription, FieldGroup, FieldLabel, FieldSeparator } from "@/components/ui/field";
 import { NormaRef } from "@/components/app/ui";
+import { Ayuda } from "@/components/app/ayuda";
 import { guardarConsultora, type DatosConsultora } from "@/app/actions/empresas";
 
 type D = Required<Omit<DatosConsultora, "curso50h">> & { curso50h: boolean };
@@ -18,8 +19,9 @@ export function ConsultoraForm({ inicial, ia }: { inicial: D; ia: { activa: bool
   const [d, setD] = useState(inicial);
   const [pend, start] = useTransition();
   const set = <K extends keyof D>(k: K, v: D[K]) => setD((x) => ({ ...x, [k]: v }));
+  const AY: Partial<Record<keyof D, string>> = { profesional: "respNombre", cargo: "cargoProfesional", licenciaSst: "licencia", licenciaFecha: "licenciaFecha", curso50hFecha: "curso50h" };
   const campo = (k: keyof D, l: string, opts?: { tipo?: string; desc?: string }) => (
-    <Field><FieldLabel htmlFor={k}>{l}</FieldLabel><Input id={k} type={opts?.tipo} value={String(d[k] ?? "")} onChange={(e) => set(k, e.target.value as never)} />{opts?.desc && <FieldDescription>{opts.desc}</FieldDescription>}</Field>
+    <Field><FieldLabel htmlFor={k} className="gap-1">{l}{AY[k] && <Ayuda k={AY[k]} />}</FieldLabel><Input id={k} type={opts?.tipo} value={String(d[k] ?? "")} onChange={(e) => set(k, e.target.value as never)} />{opts?.desc && <FieldDescription>{opts.desc}</FieldDescription>}</Field>
   );
   return (
     <div className="grid lg:grid-cols-[1fr_380px] gap-6 items-start max-w-6xl">
@@ -34,7 +36,7 @@ export function ConsultoraForm({ inicial, ia }: { inicial: D; ia: { activa: bool
             {campo("cedula", "Cédula")}
             {campo("cargo", "Cargo o vínculo con las empresas", { desc: "Por ejemplo: Asesora externa en SST" })}
             <Field>
-              <FieldLabel htmlFor="perfil">Perfil</FieldLabel>
+              <FieldLabel htmlFor="perfil" className="gap-1">Perfil <Ayuda k="perfil" /></FieldLabel>
               <NativeSelect id="perfil" className="w-full" value={d.perfil} onChange={(e) => set("perfil", e.target.value)}>
                 <NativeSelectOption value="">— Seleccione —</NativeSelectOption>
                 <NativeSelectOption value="tecnico">Técnico en SST</NativeSelectOption>
@@ -48,7 +50,7 @@ export function ConsultoraForm({ inicial, ia }: { inicial: D; ia: { activa: bool
             {campo("licenciaFecha", "Fecha de la licencia", { tipo: "date" })}
             <Field orientation="horizontal" className="md:col-span-1">
               <Switch id="c50" checked={d.curso50h} onCheckedChange={(v) => set("curso50h", v)} />
-              <FieldLabel htmlFor="c50" className="font-normal">Curso virtual de 50 horas aprobado <NormaRef>Decreto 1072/2015 art. 2.2.4.6.35</NormaRef></FieldLabel>
+              <FieldLabel htmlFor="c50" className="font-normal">Curso virtual de 50 horas aprobado <NormaRef>Decreto 1072/2015 art. 2.2.4.6.35</NormaRef> <Ayuda k="curso50h" /></FieldLabel>
             </Field>
             {campo("curso50hFecha", "Fecha del curso de 50 horas", { tipo: "date" })}
             <FieldSeparator className="md:col-span-2">Contacto</FieldSeparator>

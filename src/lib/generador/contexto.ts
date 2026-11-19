@@ -6,6 +6,7 @@ import { calificar } from "@/lib/evaluacion";
 import { generarPlan, MESES, anioPlanDefecto } from "@/lib/plan/generar";
 import { disparadoresDesdeMatriz } from "@/lib/reglas/matriz-disparadores";
 import { contexto as ctxReglas } from "@/lib/reglas/motor";
+import { TURNOS } from "@/lib/ayuda";
 
 const ROMANO = ["", "I", "II", "III", "IV", "V"];
 const PERFIL_TEXTO: Record<string, string> = { tecnico: "Técnico en SST", tecnologo: "Tecnólogo en SST", profesional: "Profesional en SST", especialista: "Profesional con posgrado en SST" };
@@ -215,7 +216,7 @@ export async function construirContexto(empresaId: string) {
       direccion: e.direccion ?? "", ciudad: e.ciudad ?? "", departamento: e.departamento ?? "", telefono: e.telefono ?? "", correo: e.correo ?? "",
       representanteLegal: e.representanteLegal ?? "", representanteCedula: e.representanteCedula ?? "", ciiu: e.ciiu ?? "", actividad: e.descripcionActividad ?? "",
       claseRiesgo: e.claseRiesgo, claseRiesgoRomano: ROMANO[e.claseRiesgo], arl: e.arl ?? "", eps: e.epsPrincipal ?? "",
-      trabajadores, contratistas: e.nContratistas, aprendices: e.nAprendices, vehiculos: e.nVehiculos, horario: e.horario ?? "", turnos: e.turnos ?? "",
+      trabajadores, contratistas: e.nContratistas, aprendices: e.nAprendices, vehiculos: e.nVehiculos, horario: e.horario ?? "", turnos: (e.turnos ?? "").split(",").map((t) => TURNOS.find((x) => x.valor === t)?.etiqueta ?? t).filter(Boolean).join("; "),
       nivel: rr.nivel, sector: e.sectorTipo?.nombre ?? "", logoUrl: e.logoUrl ?? "", tieneLogo: !!e.logoUrl,
     },
     // Si la empresa no tiene responsable propio, se usan los datos de la profesional de la consultora.

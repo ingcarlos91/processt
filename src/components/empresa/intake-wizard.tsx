@@ -12,6 +12,8 @@ import { NativeSelect, NativeSelectOptGroup, NativeSelectOption } from "@/compon
 import { Field, FieldDescription, FieldGroup, FieldLabel, FieldLegend, FieldSet } from "@/components/ui/field";
 import { Spinner } from "@/components/ui/spinner";
 import { NormaRef } from "@/components/app/ui";
+import { Ayuda } from "@/components/app/ayuda";
+import { TURNOS, DIAS } from "@/lib/ayuda";
 import { Porque } from "@/components/app/porque";
 import { explicarNivel } from "@/lib/reglas/explicar";
 import { crearEmpresa, actualizarEmpresa, subirLogo, quitarLogo, type IntakeData } from "@/app/actions/empresas";
@@ -62,9 +64,16 @@ export function nivelPreview(trab: number, riesgo: number) {
   return { nivel: 7, ref: "Res. 0312/2019 art. 3" };
 }
 
-function Campo({ id, label, children, desc, className }: { id: string; label: string; children: React.ReactNode; desc?: React.ReactNode; className?: string }) {
-  return <Field className={className}><FieldLabel htmlFor={id}>{label}</FieldLabel>{children}{desc && <FieldDescription>{desc}</FieldDescription>}</Field>;
+function Campo({ id, label, children, desc, className, ayuda }: { id: string; label: string; children: React.ReactNode; desc?: React.ReactNode; className?: string; ayuda?: string }) {
+  return <Field className={className}><FieldLabel htmlFor={id} className="gap-1">{label}{ayuda && <Ayuda k={ayuda} />}</FieldLabel>{children}{desc && <FieldDescription>{desc}</FieldDescription>}</Field>;
 }
+
+/** Horario estructurado: días + hora de entrada y salida. Se guarda como texto legible. */
+function parseHorario(h?: string) {
+  const m = (h ?? "").match(/^(.*?),\s*(\d{1,2}:\d{2})\s*a\s*(\d{1,2}:\d{2})$/);
+  return m ? { dias: m[1], entrada: m[2].padStart(5, "0"), salida: m[3].padStart(5, "0") } : { dias: h && !h.includes(":") ? h : "Lunes a viernes", entrada: "08:00", salida: "17:00" };
+}
+const horarioTexto = (x: { dias: string; entrada: string; salida: string }) => `${x.dias}, ${x.entrada.replace(/^0/, "")} a ${x.salida.replace(/^0/, "")}`;
 
 function Opcion({ id, checked, onChange, children, extra }: { id: string; checked: boolean; onChange: (v: boolean) => void; children: React.ReactNode; extra?: React.ReactNode }) {
   return (
@@ -103,6 +112,10 @@ export function IntakeWizard({ sectores, cargosTipo, ciius, inicial, empresaId, 
     sedes: [{ nombre: "Sede principal" }], cargos: [{ nombre: "", nPersonas: 1 }], disparadores: {}, estadoActual: {}, responsableSst: { ...profesional },
   });
   const set = <K extends keyof IntakeData>(k: K, v: IntakeData[K]) => setD((x) => ({ ...x, [k]: v }));
+  const [hor, setHorState] = useState(() => parseHorario(d.horario));
+  const setHor = (h: typeof hor) => { setHorState(h); set("horario", horarioTexto(h)); };
+  const turnos = (d.turnos ?? "").split(",").filter((x) => TURNOS.some((t) => t.valor === x));
+  const setTurnos = (xs: string[]) => set("turnos", xs.join(","));
   const setR = (k: keyof IntakeData["responsableSst"], v: string | boolean) => setD((x) => ({ ...x, responsableSst: { ...x.responsableSst, [k]: v } }));
   const [busq, setBusq] = useState("");
   const filtro = useMemo(() => {
@@ -169,20 +182,20 @@ export function IntakeWizard({ sectores, cargosTipo, ciius, inicial, empresaId, 
         <CardContent>
           {paso === 0 && (
             <FieldGroup className="grid md:grid-cols-2 gap-4">
-              <Campo id="rs" label="Razón social *" className="md:col-span-2"><Input id="rs" value={d.razonSocial} onChange={(e) => set("razonSocial", e.target.value)} /></Campo>
+              <Campo id="rs" ayuda="razonSocial" label="Razón social *" className="md:col-span-2"><Input id="rs" value={d.razonSocial} onChange={(e) => set("razonSocial", e.target.value)} /></Campo>
               <div className="grid grid-cols-[1fr_80px] gap-2">
-                <Campo id="nit" label="NIT *"><Input id="nit" value={d.nit} onChange={(e) => set("nit", e.target.value)} /></Campo>
-                <Campo id="dv" label="DV"><Input id="dv" value={d.digitoVerificacion ?? ""} onChange={(e) => set("digitoVerificacion", e.target.value)} /></Campo>
+                <Campo id="nit" ayuda="nit" label="NIT *"><Input id="nit" value={d.nit} onChange={(e) => set("nit", e.target.value)} /></Campo>
+                <Campo id="dv" ayuda="dv" label="DV"><Input id="dv" value={d.digitoVerificacion ?? ""} onChange={(e) => set("digitoVerificacion", e.target.value)} /></Campo>
               </div>
-              <Campo id="tel" label="Teléfono"><Input id="tel" value={d.telefono ?? ""} onChange={(e) => set("telefono", e.target.value)} /></Campo>
-              <Campo id="dir" label="Dirección"><Input id="dir" value={d.direccion ?? ""} onChange={(e) => set("direccion", e.target.value)} /></Campo>
-              <Campo id="mail" label="Correo"><Input id="mail" type="email" value={d.correo ?? ""} onChange={(e) => set("correo", e.target.value)} /></Campo>
-              <Campo id="ciu" label="Ciudad"><Input id="ciu" value={d.ciudad ?? ""} onChange={(e) => set("ciudad", e.target.value)} /></Campo>
-              <Campo id="dep" label="Departamento"><Input id="dep" value={d.departamento ?? ""} onChange={(e) => set("departamento", e.target.value)} /></Campo>
-              <Campo id="rl" label="Representante legal"><Input id="rl" value={d.representanteLegal ?? ""} onChange={(e) => set("representanteLegal", e.target.value)} /></Campo>
-              <Campo id="rlc" label="Cédula del representante legal"><Input id="rlc" value={d.representanteCedula ?? ""} onChange={(e) => set("representanteCedula", e.target.value)} /></Campo>
+              <Campo id="tel" ayuda="telefono" label="Teléfono"><Input id="tel" value={d.telefono ?? ""} onChange={(e) => set("telefono", e.target.value)} /></Campo>
+              <Campo id="dir" ayuda="direccion" label="Dirección"><Input id="dir" value={d.direccion ?? ""} onChange={(e) => set("direccion", e.target.value)} /></Campo>
+              <Campo id="mail" ayuda="correo" label="Correo"><Input id="mail" type="email" value={d.correo ?? ""} onChange={(e) => set("correo", e.target.value)} /></Campo>
+              <Campo id="ciu" ayuda="ciudad" label="Ciudad"><Input id="ciu" value={d.ciudad ?? ""} onChange={(e) => set("ciudad", e.target.value)} /></Campo>
+              <Campo id="dep" ayuda="departamento" label="Departamento"><Input id="dep" value={d.departamento ?? ""} onChange={(e) => set("departamento", e.target.value)} /></Campo>
+              <Campo id="rl" ayuda="representanteLegal" label="Representante legal"><Input id="rl" value={d.representanteLegal ?? ""} onChange={(e) => set("representanteLegal", e.target.value)} /></Campo>
+              <Campo id="rlc" ayuda="representanteCedula" label="Cédula del representante legal"><Input id="rlc" value={d.representanteCedula ?? ""} onChange={(e) => set("representanteCedula", e.target.value)} /></Campo>
               <Field className="md:col-span-2">
-                <FieldLabel>Logo de la empresa</FieldLabel>
+                <FieldLabel className="gap-1">Logo de la empresa <Ayuda k="logo" /></FieldLabel>
                 <div className="flex items-center gap-4">
                   <div className="flex h-16 w-40 items-center justify-center rounded-lg border border-dashed bg-muted/40 overflow-hidden">
                     {/* eslint-disable-next-line @next/next/no-img-element -- vista previa local (blob) */}
@@ -199,7 +212,7 @@ export function IntakeWizard({ sectores, cargosTipo, ciius, inicial, empresaId, 
 
           {paso === 1 && (
             <FieldGroup className="grid md:grid-cols-2 gap-4">
-              <Campo id="busq" label="Buscar actividad económica" className="md:col-span-2" desc="Escriba el código CIIU o una palabra. La clase de riesgo se sugiere según el Decreto 1607/2002 (actualizado por el Decreto 768/2022); confírmela con el certificado de la ARL.">
+              <Campo id="busq" ayuda="busquedaCiiu" label="Buscar actividad económica" className="md:col-span-2" desc="Escriba el código CIIU o una palabra. La clase de riesgo se sugiere según el Decreto 1607/2002 (actualizado por el Decreto 768/2022); confírmela con el certificado de la ARL.">
                 <Input id="busq" placeholder="Ej: 5611 o restaurante" value={busq} onChange={(e) => setBusq(e.target.value)} />
                 {filtro.length > 0 && (
                   <Card size="sm" className="py-1 gap-0">
@@ -211,44 +224,64 @@ export function IntakeWizard({ sectores, cargosTipo, ciius, inicial, empresaId, 
                   </Card>
                 )}
               </Campo>
-              <Campo id="ciiu" label="Código CIIU"><Input id="ciiu" value={d.ciiu ?? ""} onChange={(e) => set("ciiu", e.target.value)} /></Campo>
-              <Campo id="cr" label="Clase de riesgo (según ARL)">
+              <Campo id="ciiu" ayuda="ciiu" label="Código CIIU"><Input id="ciiu" value={d.ciiu ?? ""} onChange={(e) => set("ciiu", e.target.value)} /></Campo>
+              <Campo id="cr" ayuda="claseRiesgo" label="Clase de riesgo (según ARL)">
                 <NativeSelect id="cr" className="w-full" value={d.claseRiesgo} onChange={(e) => set("claseRiesgo", Number(e.target.value))}>
                   {[1, 2, 3, 4, 5].map((r) => <NativeSelectOption key={r} value={r}>Clase {R[r]}</NativeSelectOption>)}
                 </NativeSelect>
               </Campo>
-              <Campo id="act" label="Descripción de la actividad" className="md:col-span-2"><Input id="act" value={d.descripcionActividad ?? ""} onChange={(e) => set("descripcionActividad", e.target.value)} /></Campo>
-              <Campo id="sec" label="Sector" desc="Precarga procesos, zonas, cargos y peligros desde la biblioteca.">
+              <Campo id="act" ayuda="descripcionActividad" label="Descripción de la actividad" className="md:col-span-2"><Input id="act" value={d.descripcionActividad ?? ""} onChange={(e) => set("descripcionActividad", e.target.value)} /></Campo>
+              <Campo id="sec" ayuda="sector" label="Sector" desc="Precarga procesos, zonas, cargos y peligros desde la biblioteca.">
                 <NativeSelect id="sec" className="w-full" value={d.sectorTipoId ?? ""} onChange={(e) => set("sectorTipoId", e.target.value || null)}>
                   <NativeSelectOption value="">— Seleccione —</NativeSelectOption>
                   {sectores.map((s) => <NativeSelectOption key={s.id} value={s.id}>{s.nombre}</NativeSelectOption>)}
                 </NativeSelect>
               </Campo>
-              <Campo id="arl" label="ARL">
+              <Campo id="arl" ayuda="arl" label="ARL">
                 <Input id="arl" list="arls" value={d.arl ?? ""} onChange={(e) => set("arl", e.target.value)} />
                 <datalist id="arls">{ARLS.map((a) => <option key={a} value={a} />)}</datalist>
               </Campo>
-              <Campo id="eps" label="EPS principal"><Input id="eps" value={d.epsPrincipal ?? ""} onChange={(e) => set("epsPrincipal", e.target.value)} /></Campo>
-              <Campo id="just" label="Justificación si cambió la clase sugerida"><Input id="just" value={d.claseRiesgoJustificacion ?? ""} onChange={(e) => set("claseRiesgoJustificacion", e.target.value)} /></Campo>
-              <div className="md:col-span-2"><Opcion id="upa" checked={!!d.esUpa} onChange={(v) => set("esUpa", v)} extra={<NormaRef>Res. 0312/2019 art. 7</NormaRef>}>Es unidad de producción agropecuaria (UPA)</Opcion></div>
+              <Campo id="eps" ayuda="eps" label="EPS principal"><Input id="eps" value={d.epsPrincipal ?? ""} onChange={(e) => set("epsPrincipal", e.target.value)} /></Campo>
+              <Campo id="just" ayuda="justificacion" label="Justificación si cambió la clase sugerida"><Input id="just" value={d.claseRiesgoJustificacion ?? ""} onChange={(e) => set("claseRiesgoJustificacion", e.target.value)} /></Campo>
+              <div className="md:col-span-2"><Opcion id="upa" checked={!!d.esUpa} onChange={(v) => set("esUpa", v)} extra={<><NormaRef>Res. 0312/2019 art. 7</NormaRef><Ayuda k="esUpa" /></>}>Es unidad de producción agropecuaria (UPA)</Opcion></div>
             </FieldGroup>
           )}
 
           {paso === 2 && (
             <div className="space-y-6">
               <FieldGroup className="grid md:grid-cols-5 gap-4">
-                <Campo id="np" label="Planta *"><Input id="np" type="number" min={0} value={d.nTrabajadoresPlanta} onChange={(e) => set("nTrabajadoresPlanta", Number(e.target.value))} /></Campo>
-                <Campo id="nm" label="En misión"><Input id="nm" type="number" min={0} value={d.nEnMision} onChange={(e) => set("nEnMision", Number(e.target.value))} /></Campo>
-                <Campo id="nc" label="Contratistas"><Input id="nc" type="number" min={0} value={d.nContratistas} onChange={(e) => set("nContratistas", Number(e.target.value))} /></Campo>
-                <Campo id="na" label="Aprendices"><Input id="na" type="number" min={0} value={d.nAprendices} onChange={(e) => set("nAprendices", Number(e.target.value))} /></Campo>
-                <Campo id="nv" label="Vehículos" desc="10 o más: PESV"><Input id="nv" type="number" min={0} value={d.nVehiculos} onChange={(e) => set("nVehiculos", Number(e.target.value))} /></Campo>
-                <Campo id="hor" label="Horario" className="md:col-span-3"><Input id="hor" value={d.horario ?? ""} onChange={(e) => set("horario", e.target.value)} placeholder="Lunes a viernes 8:00 a 17:00" /></Campo>
-                <Campo id="tur" label="Turnos" className="md:col-span-2"><Input id="tur" value={d.turnos ?? ""} onChange={(e) => set("turnos", e.target.value)} placeholder="Un turno / rotativos" /></Campo>
+                <Campo id="np" ayuda="planta" label="Planta *"><Input id="np" type="number" min={0} value={d.nTrabajadoresPlanta} onChange={(e) => set("nTrabajadoresPlanta", Number(e.target.value))} /></Campo>
+                <Campo id="nm" ayuda="enMision" label="En misión"><Input id="nm" type="number" min={0} value={d.nEnMision} onChange={(e) => set("nEnMision", Number(e.target.value))} /></Campo>
+                <Campo id="nc" ayuda="contratistas" label="Contratistas"><Input id="nc" type="number" min={0} value={d.nContratistas} onChange={(e) => set("nContratistas", Number(e.target.value))} /></Campo>
+                <Campo id="na" ayuda="aprendices" label="Aprendices"><Input id="na" type="number" min={0} value={d.nAprendices} onChange={(e) => set("nAprendices", Number(e.target.value))} /></Campo>
+                <Campo id="nv" ayuda="vehiculos" label="Vehículos" desc="10 o más: PESV"><Input id="nv" type="number" min={0} value={d.nVehiculos} onChange={(e) => set("nVehiculos", Number(e.target.value))} /></Campo>
+                <Campo id="hor-dias" ayuda="horario" label="Días de trabajo" className="md:col-span-2">
+                  <NativeSelect id="hor-dias" className="w-full" value={hor.dias} onChange={(e) => setHor({ ...hor, dias: e.target.value })}>
+                    {DIAS.map((x) => <NativeSelectOption key={x.valor} value={x.valor}>{x.etiqueta}</NativeSelectOption>)}
+                  </NativeSelect>
+                </Campo>
+                <Campo id="hor-ent" label="Hora de entrada"><Input id="hor-ent" type="time" value={hor.entrada} onChange={(e) => setHor({ ...hor, entrada: e.target.value })} /></Campo>
+                <Campo id="hor-sal" label="Hora de salida"><Input id="hor-sal" type="time" value={hor.salida} onChange={(e) => setHor({ ...hor, salida: e.target.value })} /></Campo>
+                <Field className="md:col-span-1"><FieldLabel>Resultado</FieldLabel><Badge variant="outline" className="h-8 justify-start font-normal">{horarioTexto(hor)}</Badge></Field>
+                <FieldSet className="md:col-span-5">
+                  <FieldLegend variant="label" className="flex items-center gap-1">Turnos <Ayuda k="turnos" /></FieldLegend>
+                  <FieldDescription>Marque todas las que apliquen. El trabajo nocturno o rotativo activa el peligro psicosocial por jornada.</FieldDescription>
+                  <div className="grid md:grid-cols-3 gap-2">
+                    {TURNOS.map((t) => (
+                      <Opcion key={t.valor} id={`tur-${t.valor}`} checked={turnos.includes(t.valor)} onChange={(v) => setTurnos(v ? [...turnos, t.valor] : turnos.filter((x) => x !== t.valor))}>
+                        <span><span className="font-medium">{t.etiqueta}</span><span className="block text-xs text-muted-foreground">{t.explica}</span></span>
+                      </Opcion>
+                    ))}
+                  </div>
+                </FieldSet>
               </FieldGroup>
               {!empresaId && (
                 <FieldSet>
-                  <FieldLegend>Cargos</FieldLegend>
+                  <FieldLegend className="flex items-center gap-1">Cargos <Ayuda k="cargos" /></FieldLegend>
                   <FieldDescription>Cada cargo trae sus tareas y peligros desde la biblioteca. <span className={cn(sumaCargos !== trab && "text-amber-600")}>Personas en cargos: {sumaCargos} de {trab}.</span></FieldDescription>
+                  <div className="hidden md:grid md:grid-cols-[1fr_90px_1fr_auto] gap-2 text-xs text-muted-foreground">
+                    <span className="flex items-center gap-1">Nombre del cargo <Ayuda k="cargos" /></span><span className="flex items-center gap-1">Personas <Ayuda k="nPersonas" /></span><span className="flex items-center gap-1">Tipo de cargo <Ayuda k="cargoTipo" /></span><span className="w-8" />
+                  </div>
                   <div className="space-y-2">
                     {d.cargos.map((c, i) => (
                       <div key={i} className="grid md:grid-cols-[1fr_90px_1fr_auto] gap-2">
@@ -271,6 +304,7 @@ export function IntakeWizard({ sectores, cargosTipo, ciius, inicial, empresaId, 
 
           {paso === 3 && (
             <div className="space-y-2">
+              <p className="flex items-center gap-1 text-sm font-medium">Sedes o centros de trabajo <Ayuda k="sedes" /></p>
               {d.sedes.map((s, i) => (
                 <div key={i} className="grid md:grid-cols-[1fr_1fr_1fr_auto] gap-2">
                   <Input placeholder="Nombre" value={s.nombre} onChange={(e) => set("sedes", d.sedes.map((x, j) => (j === i ? { ...x, nombre: e.target.value } : x)))} />
@@ -285,6 +319,7 @@ export function IntakeWizard({ sectores, cargosTipo, ciius, inicial, empresaId, 
 
           {paso === 4 && (
             <div className="grid md:grid-cols-2 gap-2">
+              <p className="md:col-span-2 flex items-center gap-1 text-sm font-medium">Marque lo que ocurre en la empresa <Ayuda k="disparadores" /></p>
               {DISPARADORES.map((x) => (
                 <Opcion key={x.clave} id={`dis-${x.clave}`} checked={!!d.disparadores[x.clave]} onChange={(v) => set("disparadores", { ...d.disparadores, [x.clave]: v })} extra={x.norma && <NormaRef>{x.norma}</NormaRef>}>{x.etiqueta}</Opcion>
               ))}
@@ -293,6 +328,7 @@ export function IntakeWizard({ sectores, cargosTipo, ciius, inicial, empresaId, 
 
           {paso === 5 && (
             <div className="grid md:grid-cols-2 gap-2">
+              <p className="md:col-span-2 flex items-center gap-1 text-sm font-medium">Marque lo que la empresa ya tiene funcionando <Ayuda k="estadoActual" /></p>
               {ESTADO_ACTUAL.map((x) => (
                 <Opcion key={x.k} id={`ea-${x.k}`} checked={!!d.estadoActual[x.k]} onChange={(v) => set("estadoActual", { ...d.estadoActual, [x.k]: v })} extra={<NormaRef>{x.e}</NormaRef>}>{x.t}</Opcion>
               ))}
@@ -305,10 +341,10 @@ export function IntakeWizard({ sectores, cargosTipo, ciius, inicial, empresaId, 
                 <span className="flex-1">Por defecto se usan los datos de la profesional configurados en “Mi consultora”{profesional.nombre ? `: ${profesional.nombre}` : ""}. Cámbielos solo si el responsable en esta empresa es otra persona.</span>
                 <Button variant="outline" size="sm" onClick={() => set("responsableSst", { ...profesional })}><UserCheck /> Usar mis datos</Button>
               </div>
-              <Campo id="rn" label="Nombre"><Input id="rn" value={d.responsableSst.nombre ?? ""} onChange={(e) => setR("nombre", e.target.value)} /></Campo>
-              <Campo id="rc" label="Cédula"><Input id="rc" value={d.responsableSst.cedula ?? ""} onChange={(e) => setR("cedula", e.target.value)} /></Campo>
-              <Campo id="rcar" label="Cargo o vínculo"><Input id="rcar" placeholder="Asesora externa SST" value={d.responsableSst.cargo ?? ""} onChange={(e) => setR("cargo", e.target.value)} /></Campo>
-              <Campo id="rp" label="Perfil">
+              <Campo id="rn" ayuda="respNombre" label="Nombre"><Input id="rn" value={d.responsableSst.nombre ?? ""} onChange={(e) => setR("nombre", e.target.value)} /></Campo>
+              <Campo id="rc" ayuda="respNombre" label="Cédula"><Input id="rc" value={d.responsableSst.cedula ?? ""} onChange={(e) => setR("cedula", e.target.value)} /></Campo>
+              <Campo id="rcar" ayuda="cargoProfesional" label="Cargo o vínculo"><Input id="rcar" placeholder="Asesora externa SST" value={d.responsableSst.cargo ?? ""} onChange={(e) => setR("cargo", e.target.value)} /></Campo>
+              <Campo id="rp" ayuda="perfil" label="Perfil">
                 <NativeSelect id="rp" className="w-full" value={d.responsableSst.perfil ?? ""} onChange={(e) => setR("perfil", e.target.value)}>
                   <NativeSelectOption value="">— Seleccione —</NativeSelectOption>
                   <NativeSelectOption value="tecnico">Técnico en SST</NativeSelectOption>
@@ -317,10 +353,10 @@ export function IntakeWizard({ sectores, cargosTipo, ciius, inicial, empresaId, 
                   <NativeSelectOption value="especialista">Profesional con posgrado en SST</NativeSelectOption>
                 </NativeSelect>
               </Campo>
-              <Campo id="rl2" label="Licencia en SST (resolución)"><Input id="rl2" value={d.responsableSst.licencia ?? ""} onChange={(e) => setR("licencia", e.target.value)} /></Campo>
-              <Campo id="rlf" label="Fecha de la licencia"><Input id="rlf" type="date" value={d.responsableSst.licenciaFecha ?? ""} onChange={(e) => setR("licenciaFecha", e.target.value)} /></Campo>
-              <Opcion id="c50" checked={!!d.responsableSst.curso50h} onChange={(v) => setR("curso50h", v)} extra={<NormaRef>Decreto 1072 art. 2.2.4.6.35</NormaRef>}>Tiene el curso virtual de 50 horas</Opcion>
-              <Campo id="c50f" label="Fecha del curso de 50 horas"><Input id="c50f" type="date" value={d.responsableSst.curso50hFecha ?? ""} onChange={(e) => setR("curso50hFecha", e.target.value)} /></Campo>
+              <Campo id="rl2" ayuda="licencia" label="Licencia en SST (resolución)"><Input id="rl2" value={d.responsableSst.licencia ?? ""} onChange={(e) => setR("licencia", e.target.value)} /></Campo>
+              <Campo id="rlf" ayuda="licenciaFecha" label="Fecha de la licencia"><Input id="rlf" type="date" value={d.responsableSst.licenciaFecha ?? ""} onChange={(e) => setR("licenciaFecha", e.target.value)} /></Campo>
+              <Opcion id="c50" checked={!!d.responsableSst.curso50h} onChange={(v) => setR("curso50h", v)} extra={<><NormaRef>Decreto 1072 art. 2.2.4.6.35</NormaRef><Ayuda k="curso50h" /></>}>Tiene el curso virtual de 50 horas</Opcion>
+              <Campo id="c50f" ayuda="curso50h" label="Fecha del curso de 50 horas"><Input id="c50f" type="date" value={d.responsableSst.curso50hFecha ?? ""} onChange={(e) => setR("curso50hFecha", e.target.value)} /></Campo>
             </FieldGroup>
           )}
         </CardContent>

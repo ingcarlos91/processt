@@ -52,6 +52,8 @@ export const reglas: ReglaSeed[] = [
     condicion: { siempre: true }, efecto: { documentos: ["PRG-03", "POL-02"], capacitaciones: ["Promoción de la salud mental y prevención del consumo de SPA"], mensaje: "Integrar acciones de salud mental y prevención de SPA en matriz de peligros, plan anual y vigilancia epidemiológica." }, normaRef: "Decreto 728/2025; Ley 2460/2025; Res. 1075/1992" },
   { codigo: "ACOSO-SEXUAL", nombre: "Protocolo de acoso sexual", prioridad: 40,
     condicion: { siempre: true }, efecto: { documentos: ["PRC-06"], mensaje: "Protocolo de prevención y atención del acoso sexual, separado del Comité de Convivencia." }, normaRef: "Ley 2365/2024" },
+  { codigo: "TRABAJO-NOCTURNO", nombre: "Trabajo nocturno o por turnos", prioridad: 40,
+    condicion: { disparador: "trabajoNocturno" }, efecto: { capacitaciones: ["Higiene del sueño y manejo de turnos"], mensaje: "Incluir la jornada nocturna o por turnos como factor de riesgo psicosocial en la matriz y en la evaluación con la batería." }, normaRef: "Res. 2646/2008 art. 6; Res. 2764/2022" },
   { codigo: "ALTO-RIESGO-PENSION", nombre: "Cotización especial de pensión", prioridad: 30,
     condicion: { disparador: "altoRiesgoPension" }, efecto: { mensaje: "Verificar cotización especial de pensión para trabajadores en actividades de alto riesgo." }, normaRef: "Decreto 2090/2003" },
   { codigo: "APRENDICES", nombre: "Aprendices y practicantes", prioridad: 30,
