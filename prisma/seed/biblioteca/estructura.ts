@@ -199,3 +199,20 @@ export const sectores: {
     ],
     cargos: ["gerente", "coordinador_academico", "docente", "auxiliar_administrativo", "servicios_generales", "vigilante", "jardinero"] },
 ];
+
+// Zonas preferidas por tarea (claves de `zonas`), en orden. Si la empresa no tiene ninguna, se usa la zona del cargo o la primera.
+export const zonasTarea: Record<string, string[]> = {
+  trabajo_computador: ["oficina", "domicilio_teletrabajo"], atencion_telefonica: ["oficina"], atencion_publico_oficina: ["oficina", "punto_venta", "consultorio"],
+  archivo_documentos: ["oficina", "bodega"], diligencias_externas: ["vehiculo"], reuniones_direccion: ["oficina"],
+  manejo_caja: ["punto_venta", "comedor_salon", "oficina"], recibo_mercancia: ["bodega", "cocina", "obra", "taller"], almacenamiento_estanteria: ["bodega", "cocina"],
+  alistamiento_pedidos: ["bodega"], operacion_montacargas: ["bodega", "taller"], exhibicion_ventas: ["punto_venta"], inventarios: ["bodega", "punto_venta"],
+  aseo_limpieza: ["oficina", "punto_venta", "comedor_salon", "taller", "aula", "consultorio", "obra"], aseo_banos: ["oficina", "punto_venta", "comedor_salon", "aula", "consultorio"],
+  manejo_residuos: ["exterior_zonas_verdes", "bodega", "cocina", "obra", "taller", "consultorio"],
+  preparacion_alimentos: ["cocina"], corte_alimentos: ["cocina"], lavado_menaje: ["cocina"], servicio_mesa: ["comedor_salon"], cuarto_frio_tarea: ["cuarto_frio", "cocina"],
+  domicilios_moto: ["vehiculo"], mamposteria: ["obra"], trabajo_andamios: ["obra"], excavacion: ["obra"], mezcla_concreto: ["obra"], corte_materiales: ["obra", "taller"],
+  instalaciones_electricas: ["obra", "taller", "oficina"], pintura: ["obra"], supervision_obra: ["obra"], operacion_maquinas: ["taller"], soldadura: ["taller", "obra"],
+  ensamble: ["taller"], mantenimiento_maquinas: ["taller"], control_calidad: ["taller"], manejo_quimicos_produccion: ["taller"], conduccion_vehiculo: ["vehiculo"],
+  cargue_descargue: ["vehiculo", "bodega"], inspeccion_preoperacional: ["vehiculo"], atencion_pacientes: ["consultorio"], procedimientos_cortopunzantes: ["consultorio"],
+  movilizacion_pacientes: ["consultorio"], esterilizacion: ["consultorio"], docencia: ["aula"], mantenimiento_locativo: ["oficina", "taller", "punto_venta", "aula", "exterior_zonas_verdes"],
+  jardineria: ["exterior_zonas_verdes"], vigilancia: ["exterior_zonas_verdes", "oficina", "punto_venta"],
+};

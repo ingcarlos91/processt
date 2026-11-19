@@ -264,18 +264,19 @@ model CargoTipo {
 }
 
 model TareaTipo {
-  id            String             @id @default(cuid())
-  procesoTipoId String?            @map("proceso_tipo_id")
-  procesoTipo   ProcesoTipo?       @relation(fields: [procesoTipoId], references: [id])
-  nombre        String
-  actividad     String?
-  rutinaria     Boolean            @default(true)
-  altoRiesgo    String?            @map("alto_riesgo")
-  validado      Boolean            @default(false)
-  peligros      TareaTipoPeligro[]
-  cargos        CargoTipoTarea[]
-  procesosTipo  ProcesoTipoTarea[]
-  tareas        Tarea[]
+  id              String             @id @default(cuid())
+  procesoTipoId   String?            @map("proceso_tipo_id")
+  procesoTipo     ProcesoTipo?       @relation(fields: [procesoTipoId], references: [id])
+  nombre          String
+  actividad       String?
+  rutinaria       Boolean            @default(true)
+  altoRiesgo      String?            @map("alto_riesgo")
+  zonasPreferidas String[]           @default([]) @map("zonas_preferidas") // nombres de zona tipo, en orden de preferencia
+  validado        Boolean            @default(false)
+  peligros        TareaTipoPeligro[]
+  cargos          CargoTipoTarea[]
+  procesosTipo    ProcesoTipoTarea[]
+  tareas          Tarea[]
 
   @@map("tarea_tipo")
 }

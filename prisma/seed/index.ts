@@ -6,7 +6,7 @@ import { normas } from "./normas";
 import { reglas } from "./reglas";
 import { ciiu } from "./ciiu";
 import { peligros } from "./biblioteca/peligros";
-import { zonas, tareas, cargos, sectores } from "./biblioteca/estructura";
+import { zonas, tareas, cargos, sectores, zonasTarea } from "./biblioteca/estructura";
 import { parsePlantilla } from "../../src/lib/generador/plantilla";
 
 const db = new PrismaClient();
@@ -103,6 +103,12 @@ async function main() {
     // la relación proceso→tareas se guarda en el JSON de sectores y se aplica al instanciar).
     console.log(`Biblioteca: ${Object.keys(peligros).length} peligros, ${Object.keys(zonas).length} zonas, ${Object.keys(tareas).length} tareas, ${sectores.length} sectores`);
   } else console.log("Biblioteca ya existente: no se modifica.");
+
+  // Zonas preferidas por tarea (actualización no destructiva por nombre)
+  for (const [k, zs] of Object.entries(zonasTarea)) {
+    const t = tareas[k]; if (!t) throw new Error(`Tarea no existe: ${k}`);
+    await db.tareaTipo.updateMany({ where: { nombre: t.nombre, zonasPreferidas: { isEmpty: true } }, data: { zonasPreferidas: zs.map((z) => zonas[z].nombre) } });
+  }
 
   // Consultora por defecto
   if ((await db.consultora.count()) === 0) {

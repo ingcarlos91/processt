@@ -1,69 +1,75 @@
+import Link from "next/link";
 import Image from "next/image";
+import { Plus } from "lucide-react";
+import { db } from "@/lib/db";
+import { Page, PageHeader, Section, Stat } from "@/components/app/ui";
+import { buttonVariants } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
 
-export default function Home() {
+export const dynamic = "force-dynamic";
+
+const VARIANTE: Record<string, "destructive" | "secondary" | "default"> = { "CRÍTICO": "destructive", "MODERADAMENTE ACEPTABLE": "secondary", ACEPTABLE: "default" };
+
+export default async function Home() {
+  const empresas = await db.empresa.findMany({
+    orderBy: { razonSocial: "asc" },
+    include: { evaluaciones: { orderBy: { fecha: "desc" }, take: 1 }, actividades: { select: { estado: true, mes: true, anio: true } }, _count: { select: { documentos: true, peligros: true } } },
+  });
+  const mes = new Date().getMonth() + 1;
+  const anio = new Date().getFullYear();
+  const pendientesMes = empresas.reduce((s, e) => s + e.actividades.filter((a) => a.anio === anio && a.mes === mes && a.estado === "PENDIENTE").length, 0);
+  const vencidas = empresas.reduce((s, e) => s + e.actividades.filter((a) => a.anio === anio && a.mes < mes && a.estado === "PENDIENTE").length, 0);
+  const nueva = <Link href="/empresas/nueva" className={buttonVariants()}><Plus /> Nueva empresa</Link>;
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+    <Page>
+      <PageHeader title="Empresas" description="Cada empresa cliente con su SG-SST: nivel de estándares mínimos (Res. 0312/2019), evaluación, matriz de peligros, documentos y plan anual." actions={nueva} />
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <Stat label="Empresas activas" value={empresas.length} />
+        <Stat label="Actividades pendientes este mes" value={pendientesMes} />
+        <Stat label="Actividades vencidas" value={vencidas} tone={vencidas ? "bad" : "ok"} />
+        <Stat label="Documentos generados" value={empresas.reduce((s, e) => s + e._count.documentos, 0)} />
+      </div>
+      {empresas.length === 0 ? (
+        <Empty className="border bg-background">
+          <EmptyHeader>
+            <EmptyMedia><Image src="/brand/icono.png" alt="" width={56} height={52} /></EmptyMedia>
+            <EmptyTitle>Aún no hay empresas</EmptyTitle>
+            <EmptyDescription>Cree la primera empresa y el sistema generará su SG-SST completo según la norma.</EmptyDescription>
+          </EmptyHeader>
+          <EmptyContent>{nueva}</EmptyContent>
+        </Empty>
+      ) : (
+        <Section contentClassName="px-0">
+          <Table>
+            <TableHeader>
+              <TableRow><TableHead className="pl-6">Empresa</TableHead><TableHead>Riesgo</TableHead><TableHead>Trabajadores</TableHead><TableHead>Estándares</TableHead><TableHead>Última evaluación</TableHead><TableHead>Plan anual</TableHead><TableHead>Matriz</TableHead><TableHead className="pr-6">Documentos</TableHead></TableRow>
+            </TableHeader>
+            <TableBody>
+              {empresas.map((e) => {
+                const ev = e.evaluaciones[0];
+                const p = ev ? (ev.nivel === 60 ? ev.puntajeBruto : ev.puntajeAjustado) : null;
+                const acts = e.actividades.filter((a) => a.anio === anio);
+                const ej = acts.filter((a) => a.estado === "EJECUTADA").length;
+                return (
+                  <TableRow key={e.id}>
+                    <TableCell className="pl-6"><Link href={`/empresas/${e.id}`} className="font-medium hover:underline">{e.razonSocial}</Link><div className="text-xs text-muted-foreground">NIT {e.nit}{e.digitoVerificacion ? `-${e.digitoVerificacion}` : ""} · {e.ciudad}</div></TableCell>
+                    <TableCell>{["", "I", "II", "III", "IV", "V"][e.claseRiesgo]}</TableCell>
+                    <TableCell>{e.nTrabajadoresPlanta + e.nEnMision}</TableCell>
+                    <TableCell><Badge variant="outline">{e.nivelEstandares}</Badge></TableCell>
+                    <TableCell>{ev?.valoracion ? <Badge variant={VARIANTE[ev.valoracion]}>{p}% · {ev.valoracion}</Badge> : <span className="text-xs text-muted-foreground">{ev ? "En curso" : "Sin evaluar"}</span>}</TableCell>
+                    <TableCell>{acts.length ? `${Math.round((ej / acts.length) * 100)}% (${ej}/${acts.length})` : <span className="text-xs text-muted-foreground">Sin plan</span>}</TableCell>
+                    <TableCell>{e._count.peligros} peligros</TableCell>
+                    <TableCell className="pr-6">{e._count.documentos}</TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </Section>
+      )}
+    </Page>
   );
 }

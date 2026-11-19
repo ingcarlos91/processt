@@ -1,0 +1,33 @@
+import { db } from "@/lib/db";
+import { IntakeWizard } from "@/components/empresa/intake-wizard";
+import type { IntakeData } from "@/app/actions/empresas";
+import { BotonEliminarEmpresa } from "@/components/empresa/eliminar";
+
+export const dynamic = "force-dynamic";
+
+export default async function Datos({ params }: PageProps<"/empresas/[id]/datos">) {
+  const { id } = await params;
+  const [e, sectores, cargosTipo, ciius] = await Promise.all([
+    db.empresa.findUniqueOrThrow({ where: { id }, include: { sedes: true, cargos: true } }),
+    db.sectorTipo.findMany({ orderBy: { nombre: "asc" }, select: { id: true, nombre: true, ciius: true } }),
+    db.cargoTipo.findMany({ orderBy: { nombre: "asc" }, select: { id: true, nombre: true, sectorTipoId: true } }),
+    db.ciiuClaseRiesgo.findMany({ orderBy: { codigo: "asc" }, select: { codigo: true, descripcion: true, claseRiesgo: true } }),
+  ]);
+  const inicial: IntakeData = {
+    razonSocial: e.razonSocial, nit: e.nit, digitoVerificacion: e.digitoVerificacion ?? "", direccion: e.direccion ?? "", ciudad: e.ciudad ?? "", departamento: e.departamento ?? "",
+    telefono: e.telefono ?? "", correo: e.correo ?? "", representanteLegal: e.representanteLegal ?? "", representanteCedula: e.representanteCedula ?? "",
+    ciiu: e.ciiu ?? "", descripcionActividad: e.descripcionActividad ?? "", claseRiesgo: e.claseRiesgo, claseRiesgoJustificacion: e.claseRiesgoJustificacion ?? "",
+    arl: e.arl ?? "", epsPrincipal: e.epsPrincipal ?? "", sectorTipoId: e.sectorTipoId, esUpa: e.esUpa,
+    nTrabajadoresPlanta: e.nTrabajadoresPlanta, nContratistas: e.nContratistas, nAprendices: e.nAprendices, nEnMision: e.nEnMision, nVehiculos: e.nVehiculos,
+    horario: e.horario ?? "", turnos: e.turnos ?? "", sedes: e.sedes.map((s) => ({ nombre: s.nombre, direccion: s.direccion ?? "", ciudad: s.ciudad ?? "" })),
+    cargos: [], disparadores: (e.disparadores ?? {}) as Record<string, boolean>, estadoActual: (e.estadoActual ?? {}) as Record<string, boolean>,
+    responsableSst: (e.responsableSst ?? {}) as IntakeData["responsableSst"],
+  };
+  return (
+    <>
+      <p className="text-sm text-muted-foreground max-w-4xl">Edite los datos de la empresa. Los cargos se gestionan en la pestaña “Cargos y matriz de peligros”. Al guardar se recalculan el nivel de estándares, comités y normas; luego regenere los documentos.</p>
+      <IntakeWizard sectores={sectores} cargosTipo={cargosTipo} ciius={ciius} inicial={inicial} empresaId={id} />
+      <BotonEliminarEmpresa id={id} nombre={e.razonSocial} />
+    </>
+  );
+}
