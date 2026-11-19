@@ -13,6 +13,7 @@ import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/in
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Section } from "@/components/app/ui";
+import { Ayuda } from "@/components/app/ayuda";
 import { CLASIFICACIONES, CLASIFICACION_ETIQUETA, ND, NE, NC, calcular, COLOR_NIVEL } from "@/lib/gtc45";
 import { actualizarPeligroCatalogo } from "@/app/actions/sgsst";
 import { cn } from "@/lib/utils";
@@ -32,7 +33,7 @@ export function BibliotecaEditor({ peligros, sectores }: { peligros: P[]; sector
 
   return (
     <Tabs defaultValue="peligros">
-      <TabsList><TabsTrigger value="peligros">Peligros</TabsTrigger><TabsTrigger value="sectores">Sectores, cargos y tareas</TabsTrigger></TabsList>
+      <div className="flex items-center gap-2"><TabsList><TabsTrigger value="peligros">Peligros</TabsTrigger><TabsTrigger value="sectores">Sectores, cargos y tareas</TabsTrigger></TabsList><Ayuda k="sectoresBiblioteca" /></div>
       <TabsContent value="peligros" className="mt-4">
         <Section
           title="Catálogo de peligros (GTC 45)"
@@ -44,7 +45,7 @@ export function BibliotecaEditor({ peligros, sectores }: { peligros: P[]; sector
           contentClassName="px-0"
         >
           <Table className="[&_td]:whitespace-normal [&_td]:align-top">
-            <TableHeader><TableRow><TableHead className="pl-6 w-8" /><TableHead>Clasificación</TableHead><TableHead>Peligro</TableHead><TableHead>ND</TableHead><TableHead>NE</TableHead><TableHead>NC</TableHead><TableHead>Nivel sugerido</TableHead><TableHead>Usos</TableHead><TableHead className="pr-6">Validado</TableHead></TableRow></TableHeader>
+            <TableHeader><TableRow><TableHead className="pl-6 w-8" /><TableHead><span className="flex items-center gap-1">Clasificación <Ayuda k="clasificacionPeligro" /></span></TableHead><TableHead><span className="flex items-center gap-1">Peligro <Ayuda k="descripcionPeligro" /></span></TableHead><TableHead><span className="flex items-center gap-1">ND <Ayuda k="nd" /></span></TableHead><TableHead><span className="flex items-center gap-1">NE <Ayuda k="ne" /></span></TableHead><TableHead><span className="flex items-center gap-1">NC <Ayuda k="nc" /></span></TableHead><TableHead><span className="flex items-center gap-1">Nivel sugerido <Ayuda k="nivelSugerido" /></span></TableHead><TableHead><span className="flex items-center gap-1">Usos <Ayuda k="usos" /></span></TableHead><TableHead className="pr-6"><span className="flex items-center gap-1">Validado <Ayuda k="validado" /></span></TableHead></TableRow></TableHeader>
             <TableBody>
               {lista.map((p) => {
                 const c = calcular(p.nd, p.ne, p.nc);
@@ -66,11 +67,11 @@ export function BibliotecaEditor({ peligros, sectores }: { peligros: P[]; sector
                         <TableCell />
                         <TableCell colSpan={8} className="pr-6">
                           <div className="grid md:grid-cols-3 gap-3 py-2">
-                            {([["descripcion", "Descripción", p.descripcion], ["efectosPosibles", "Efectos posibles", p.efectos], ["medidaIngenieria", "Controles de ingeniería", p.ingenieria], ["medidaAdministrativa", "Controles administrativos", p.administrativa]] as const).map(([k, l, v]) => (
-                              <Field key={k}><FieldLabel className="text-xs">{l}</FieldLabel><Textarea className="text-xs min-h-16" defaultValue={v} onBlur={(e) => e.target.value !== v && upd(p.id, { [k]: e.target.value })} /></Field>
+                            {([["descripcion", "Descripción", p.descripcion, "descripcionPeligro"], ["efectosPosibles", "Efectos posibles", p.efectos, "efectos"], ["medidaIngenieria", "Controles de ingeniería", p.ingenieria, "medidaIngenieria"], ["medidaAdministrativa", "Controles administrativos", p.administrativa, "medidaAdministrativa"]] as const).map(([k, l, v, a]) => (
+                              <Field key={k}><FieldLabel className="text-xs gap-1">{l} <Ayuda k={a} /></FieldLabel><Textarea className="text-xs min-h-16" defaultValue={v} onBlur={(e) => e.target.value !== v && upd(p.id, { [k]: e.target.value })} /></Field>
                             ))}
-                            {([["eppSugerido", "EPP (uno por línea)", p.epp], ["examenesSugeridos", "Exámenes para el profesiograma (uno por línea)", p.examenes], ["capacitacionesSugeridas", "Capacitaciones (una por línea)", p.capacitaciones], ["normas", "Códigos de normas (uno por línea)", p.normas]] as const).map(([k, l, v]) => (
-                              <Field key={k}><FieldLabel className="text-xs">{l}</FieldLabel><Textarea className="text-xs min-h-16" defaultValue={v.join("\n")} onBlur={(e) => e.target.value !== v.join("\n") && upd(p.id, { [k]: aLista(e.target.value) })} /></Field>
+                            {([["eppSugerido", "EPP (uno por línea)", p.epp, "eppSugerido"], ["examenesSugeridos", "Exámenes para el profesiograma (uno por línea)", p.examenes, "examenesSugeridos"], ["capacitacionesSugeridas", "Capacitaciones (una por línea)", p.capacitaciones, "capacitacionesSugeridas"], ["normas", "Códigos de normas (uno por línea)", p.normas, "normasPeligro"]] as const).map(([k, l, v, a]) => (
+                              <Field key={k}><FieldLabel className="text-xs gap-1">{l} <Ayuda k={a} /></FieldLabel><Textarea className="text-xs min-h-16" defaultValue={v.join("\n")} onBlur={(e) => e.target.value !== v.join("\n") && upd(p.id, { [k]: aLista(e.target.value) })} /></Field>
                             ))}
                           </div>
                         </TableCell>

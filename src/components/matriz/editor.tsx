@@ -110,8 +110,8 @@ export function MatrizEditor(props: {
             <Table className="text-xs [&_td]:whitespace-normal [&_td]:align-top">
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-6" /><TableHead>Origen</TableHead><TableHead>Proceso / zona / tarea</TableHead><TableHead>Clasificación</TableHead><TableHead className="min-w-56">Peligro</TableHead>
-                  <TableHead><span className="flex items-center gap-1">ND <Ayuda k="nd" /></span></TableHead><TableHead><span className="flex items-center gap-1">NE <Ayuda k="ne" /></span></TableHead><TableHead><span className="flex items-center gap-1">NC <Ayuda k="nc" /></span></TableHead><TableHead>NR</TableHead><TableHead>Nivel</TableHead><TableHead>Expuestos</TableHead><TableHead />
+                  <TableHead className="w-6" /><TableHead><span className="flex items-center gap-1">Origen <Ayuda k="origenPeligro" /></span></TableHead><TableHead><span className="flex items-center gap-1">Proceso / zona / tarea <Ayuda k="lugarTarea" /></span></TableHead><TableHead><span className="flex items-center gap-1">Clasificación <Ayuda k="clasificacionPeligro" /></span></TableHead><TableHead className="min-w-56"><span className="flex items-center gap-1">Peligro <Ayuda k="descripcionPeligro" /></span></TableHead>
+                  <TableHead><span className="flex items-center gap-1">ND <Ayuda k="nd" /></span></TableHead><TableHead><span className="flex items-center gap-1">NE <Ayuda k="ne" /></span></TableHead><TableHead><span className="flex items-center gap-1">NC <Ayuda k="nc" /></span></TableHead><TableHead><span className="flex items-center gap-1">NR <Ayuda k="nr" /></span></TableHead><TableHead><span className="flex items-center gap-1">Nivel <Ayuda k="nr" /></span></TableHead><TableHead><span className="flex items-center gap-1">Expuestos <Ayuda k="expuestos" /></span></TableHead><TableHead />
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -158,7 +158,7 @@ type Run = (fn: () => Promise<unknown>, ok?: string) => void;
 function DetallePeligro({ p, empresaId, run }: { p: Peligro; empresaId: string; run: Run }) {
   const campo = (k: keyof Peligro, label: string) => (
     <Field>
-      <FieldLabel htmlFor={`${String(k)}-${p.id}`} className="text-xs">{label}</FieldLabel>
+      <FieldLabel htmlFor={`${String(k)}-${p.id}`} className="text-xs gap-1">{label} <Ayuda k={({ descripcion: "descripcionPeligro", efectosPosibles: "efectos" } as Record<string, string>)[String(k)] ?? String(k)} /></FieldLabel>
       <Textarea id={`${String(k)}-${p.id}`} className="text-xs min-h-14" defaultValue={String(p[k] ?? "")} onBlur={(e) => e.target.value !== String(p[k] ?? "") && run(() => A.actualizarPeligro(empresaId, p.id, { [k]: e.target.value }))} />
     </Field>
   );
@@ -167,7 +167,7 @@ function DetallePeligro({ p, empresaId, run }: { p: Peligro; empresaId: string; 
       <TableCell />
       <TableCell colSpan={11} className="p-3">
         <div className="grid md:grid-cols-3 gap-3">
-          <Field><FieldLabel className="text-xs">Clasificación</FieldLabel>
+          <Field><FieldLabel className="text-xs gap-1">Clasificación <Ayuda k="clasificacionPeligro" /></FieldLabel>
             <NativeSelect className="w-full" defaultValue={p.clasificacion} onChange={(e) => run(() => A.actualizarPeligro(empresaId, p.id, { clasificacion: e.target.value }))}>{CLASIFICACIONES.map((c) => <NativeSelectOption key={c} value={c}>{CLASIFICACION_ETIQUETA[c]}</NativeSelectOption>)}</NativeSelect>
           </Field>
           {campo("descripcion", "Descripción del peligro")}
