@@ -153,8 +153,9 @@ function Fila({ f, global, pend, onHecho, onEditar, onEliminar }: { f: Fecha; gl
         </div>
         {f.detalle && <p className="mt-1 text-xs text-muted-foreground">{f.detalle}</p>}
       </div>
+      <div className="flex shrink-0 items-center gap-2">
       <Badge variant="outline" className={cn("shrink-0", ESTADO[f.estado].c)}>{ESTADO[f.estado].t}</Badge>
-      <div className="flex shrink-0 gap-0.5">
+      <div className="flex items-center gap-0.5">
         {f.recordatorioId ? (
           <>
             {f.estado === "hecho"
@@ -164,6 +165,7 @@ function Fila({ f, global, pend, onHecho, onEditar, onEliminar }: { f: Fecha; gl
             <Button size="icon-sm" variant="ghost" aria-label="Eliminar" disabled={pend} onClick={onEliminar}><Trash2 /></Button>
           </>
         ) : <Link href={f.href} className={buttonVariants({ size: "sm", variant: "ghost" })}>Abrir</Link>}
+      </div>
       </div>
     </li>
   );
