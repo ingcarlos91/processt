@@ -86,6 +86,24 @@ export const MANUAL: SeccionManual[] = [
     relacionadas: ["versiones", "biblioteca-propia", "accidentes"],
   },
   {
+    id: "trabajadores", titulo: "Trabajadores", ruta: new RegExp(`^${E}/trabajadores$`),
+    resumen: "Listado de trabajadores de la empresa con sus exámenes médicos (solo conceptos de aptitud), entregas de EPP y capacitaciones. Alimenta FOR-01 (perfil sociodemográfico), FOR-02 (conceptos de aptitud), MTZ-04 (entrega de EPP), PRG-01 (capacitaciones) y el planeador.",
+    partes: [
+      { titulo: "Indicadores", que: "Trabajadores activos (y si coinciden con las personas de los cargos), exámenes vencidos o faltantes, cobertura de capacitación y entregas de EPP." },
+      { titulo: "Pestaña Trabajadores", que: "Lista con cargo, vinculación, ingreso, último examen, EPP y capacitaciones. Clic en un trabajador para ver su ficha.", botones: [
+        { nombre: "Importar desde Excel", hace: "Pegue filas copiadas de Excel: nombre, documento, cargo, fecha de ingreso y vinculación. Si el documento ya existe, se actualiza." },
+        { nombre: "Agregar trabajador", hace: "Registra uno a uno, con sexo, nacimiento y escolaridad para el perfil sociodemográfico." },
+        { nombre: "Estetoscopio / casco / lápiz", hace: "Registrar examen médico, registrar entrega de EPP (precarga los EPP del cargo según la matriz) o editar datos." },
+        { nombre: "Retirar (en la ficha)", hace: "Lo deja como retirado conservando su historial; recuerde el examen de retiro." },
+      ] },
+      { titulo: "Exámenes médicos", que: "Último examen de cada trabajador con su concepto, restricciones y próximo examen. Solo conceptos, nunca diagnósticos (Ley 1581/2012). El próximo examen aparece en el planeador." },
+      { titulo: "Entrega de EPP", que: "Registro de entregas a uno o varios trabajadores; si indica la próxima reposición, el planeador la avisa." },
+      { titulo: "Capacitaciones", que: "Cada sesión con tema, horas, facilitador y asistentes. Si la liga a una actividad del plan anual, la actividad queda ejecutada." },
+    ],
+    normas: ["Ley 1581/2012", "Res. 1843/2025", "Decreto 1072/2015 arts. 2.2.4.6.11 y 2.2.4.6.13", "Res. 0312/2019 estándar 3.1.1"],
+    relacionadas: ["planeador", "plan", "documentos"],
+  },
+  {
     id: "versiones", titulo: "Versiones de la matriz", ruta: new RegExp(`^${E}/matriz/versiones$`),
     resumen: "Historial de las versiones cerradas de la matriz. Es el soporte de que la matriz se revisa y actualiza.",
     partes: [

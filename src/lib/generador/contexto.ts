@@ -264,6 +264,7 @@ export async function construirContexto(empresaId: string) {
   // Accidentalidad (FOR-08, FOR-06, ACT-06, ACT-02): Res. 1401/2007; Decreto 1072/2015 arts. 2.2.4.6.32-34; Res. 0312/2019 art. 30.
   const accidentalidad = await contextoAccidentalidad(e.id);
   const ultimaVersion = await db.matrizVersion.findFirst({ where: { empresaId: e.id }, orderBy: { numero: "desc" } });
+  const nomina = await contextoNomina(e.id);
 
   return {
     empresa: {
@@ -296,7 +297,7 @@ export async function construirContexto(empresaId: string) {
     normas: normasDb.map((n) => ({ codigo: n.codigo, tipo: n.tipo === "Resolucion" ? "Resolución" : n.tipo === "GuiaTecnica" ? "Guía técnica" : n.tipo, numero: n.numero, anio: n.anio, entidad: n.entidad, nombre: n.nombre, articulosClave: n.articulosClave ?? "", resumen: n.resumen, evidenciaCumplimiento: n.evidenciaCumplimiento ?? "" })),
     estandares: (await db.estandar.findMany({ where: { codigo: { in: rr.estandares } }, orderBy: { orden: "asc" } })).map((s) => ({ codigo: s.codigo, ciclo: s.ciclo, grupo: s.grupo, descripcion: s.descripcion, puntaje: s.puntaje })),
     comites: { copasst: { aplica: true, esVigia: cop.tipo === "VIGIA", composicion: cop.texto, porParte: cop.porParte }, ccl: { aplica: rr.comites.includes("CCL") }, brigada: { aplica: true } },
-    capacitaciones, plan, evaluacion, planMejora, dis, indicadores: INDICADORES, pve, amenazas, presupuesto: presupuestoConValor, altoRiesgo, op, integrantes, accidentalidad, acciones: accidentalidad.acciones,
+    capacitaciones, plan, evaluacion, planMejora, dis, indicadores: INDICADORES, pve, amenazas, presupuesto: presupuestoConValor, altoRiesgo, op, integrantes, accidentalidad, acciones: accidentalidad.acciones, nomina,
     documentosLista: plantillas.map((p) => ({ codigo: p.codigo, nombre: p.nombre, version: e.documentos.find((d) => d.codigo === p.codigo)?.version ?? 1, carpeta: p.carpeta ?? "" })),
     _reglas: rr,
   };
@@ -383,6 +384,50 @@ export async function contextoEvento(eventoId: string) {
       lecciones: ev.lecciones ?? "",
       acciones: ev.acciones.map((x, i) => ({ n: i + 1, descripcion: x.descripcion, tipo: x.tipo, jerarquia: x.jerarquia ? JER[x.jerarquia] ?? x.jerarquia : "", responsable: x.responsable ?? "", fechaLimite: ddmm(x.fechaLimite), estado: x.estado === "cerrada" ? "Cerrada" : "Abierta" })),
       soportes: ev.archivos.map((x) => x.descripcion),
+    },
+  };
+}
+
+
+const TIPO_EXAMEN: Record<string, string> = { ingreso: "Ingreso", periodico: "Periódico", retiro: "Retiro", post_incapacidad: "Post incapacidad", cambio_ocupacion: "Cambio de ocupación" };
+const CONCEPTO: Record<string, string> = { apto: "Apto", apto_restricciones: "Apto con restricciones", aplazado: "Aplazado", no_apto: "No apto" };
+
+/** Trabajadores, exámenes (solo conceptos), entregas de EPP, capacitaciones y perfil sociodemográfico consolidado. */
+export async function contextoNomina(empresaId: string) {
+  const ts = await db.trabajador.findMany({ where: { empresaId }, orderBy: { nombres: "asc" }, include: { cargo: true, examenes: { orderBy: { fecha: "desc" } }, entregasEpp: { orderBy: { fecha: "desc" } } } });
+  const caps = await db.capacitacion.findMany({ where: { empresaId }, orderBy: { fecha: "asc" }, include: { _count: { select: { asistentes: true } }, asistentes: { select: { trabajadorId: true } } } });
+  const activos = ts.filter((t) => t.activo);
+  const doc = (t: (typeof ts)[number]) => (t.documento ? docTexto(t.tipoDoc, t.documento) : "");
+  const examenes = ts.flatMap((t) => t.examenes.map((x) => ({ t, x }))).sort((a, b) => b.x.fecha.getTime() - a.x.fecha.getTime()).map(({ t, x }, i) => ({
+    n: i + 1, trabajador: t.nombres, doc: doc(t), cargo: t.cargo?.nombre ?? "", tipo: TIPO_EXAMEN[x.tipo] ?? x.tipo, fecha: ddmm(x.fecha),
+    concepto: CONCEPTO[x.concepto] ?? x.concepto, restricciones: x.restricciones ?? "", comunicado: ddmm(x.comunicadoTrabajador), proximo: ddmm(x.proximo),
+  }));
+  const entregas = ts.flatMap((t) => t.entregasEpp.map((x) => ({ t, x }))).sort((a, b) => b.x.fecha.getTime() - a.x.fecha.getTime()).map(({ t, x }) => ({
+    fecha: ddmm(x.fecha), trabajador: t.nombres, doc: doc(t), cargo: t.cargo?.nombre ?? "", elemento: x.elemento, cantidad: x.cantidad, tipo: x.tipo === "reposicion" ? "Reposición" : "Dotación", capacitado: x.capacitado ? "S" : "N",
+  }));
+  const capacitados = new Set(caps.flatMap((c) => c.asistentes.map((a) => a.trabajadorId)));
+  const hoy = new Date();
+  const edad = (d: Date) => Math.floor((hoy.getTime() - d.getTime()) / (365.25 * 864e5));
+  const pct = (n: number, d: number) => (d ? `${Math.round((n / d) * 100)} %` : "—");
+  const tabla = (pares: [string, number][]) => pares.filter(([, n]) => n > 0).map(([nombre, n]) => ({ nombre, n, pct: pct(n, activos.length) }));
+  const cuenta = (f: (t: (typeof activos)[number]) => string | null | undefined) => { const m = new Map<string, number>(); for (const t of activos) { const k = f(t) || "Sin dato"; m.set(k, (m.get(k) ?? 0) + 1); } return [...m.entries()].sort((a, b) => b[1] - a[1]); };
+  const conEdad = activos.filter((t) => t.fechaNacimiento);
+  const rangos: [string, (e: number) => boolean][] = [["Menos de 25", (e) => e < 25], ["25 a 34", (e) => e >= 25 && e < 35], ["35 a 44", (e) => e >= 35 && e < 45], ["45 a 54", (e) => e >= 45 && e < 55], ["55 o más", (e) => e >= 55]];
+  const antig: [string, (a: number) => boolean][] = [["Menos de 1 año", (a) => a < 1], ["1 a 5 años", (a) => a >= 1 && a < 5], ["5 a 10 años", (a) => a >= 5 && a < 10], ["10 o más años", (a) => a >= 10]];
+  const VINC: Record<string, string> = { planta: "Planta", contratista: "Contratista", aprendiz: "Aprendiz", mision: "En misión" };
+  return {
+    hay: ts.length > 0, total: activos.length, examenes, hayExamenes: examenes.length > 0, entregas, hayEntregas: entregas.length > 0,
+    capacitaciones: caps.map((c) => ({ fecha: ddmm(c.fecha), tema: c.tema, horas: c.horas, modalidad: c.modalidad === "virtual" ? "Virtual" : "Presencial", facilitador: c.facilitador ?? "", asistentes: c._count.asistentes })),
+    hayCapacitaciones: caps.length > 0, horasCapacitacion: caps.reduce((s, c) => s + c.horas, 0),
+    cobertura: pct(activos.filter((t) => capacitados.has(t.id)).length, activos.length),
+    perfil: {
+      hay: activos.length > 0,
+      sexo: tabla(cuenta((t) => (t.sexo === "F" ? "Mujeres" : t.sexo === "M" ? "Hombres" : t.sexo ? "Otro" : null))),
+      edad: tabla(rangos.map(([n, f]) => [n, conEdad.filter((t) => f(edad(t.fechaNacimiento!))).length])),
+      escolaridad: tabla(cuenta((t) => t.escolaridad)),
+      vinculacion: tabla(cuenta((t) => VINC[t.vinculacion] ?? t.vinculacion)),
+      antiguedad: tabla(antig.map(([n, f]) => [n, activos.filter((t) => t.fechaIngreso && f((hoy.getTime() - t.fechaIngreso.getTime()) / (365.25 * 864e5))).length])),
+      cargos: tabla(cuenta((t) => t.cargo?.nombre)),
     },
   };
 }

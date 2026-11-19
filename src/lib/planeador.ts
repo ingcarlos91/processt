@@ -3,7 +3,7 @@
 import { db } from "@/lib/db";
 import { plazos } from "@/lib/eventos";
 
-export type Categoria = "plan" | "comite" | "accidente" | "accion" | "matriz" | "evaluacion" | "responsable" | "recordatorio";
+export type Categoria = "plan" | "comite" | "accidente" | "accion" | "matriz" | "evaluacion" | "responsable" | "examen" | "epp" | "recordatorio";
 export type EstadoFecha = "vencido" | "hoy" | "proximo" | "pendiente" | "hecho";
 
 export type Fecha = {
@@ -19,6 +19,8 @@ export const CATEGORIAS: Record<Categoria, { t: string; color: string }> = {
   matriz: { t: "Matriz de peligros", color: "bg-amber-500" },
   evaluacion: { t: "Autoevaluación", color: "bg-emerald-500" },
   responsable: { t: "Responsable SG-SST", color: "bg-teal-500" },
+  examen: { t: "Exámenes médicos", color: "bg-pink-500" },
+  epp: { t: "Reposición de EPP", color: "bg-lime-600" },
   recordatorio: { t: "Mis recordatorios", color: "bg-slate-500" },
 };
 
@@ -49,6 +51,7 @@ export async function fechasPlaneador({ empresaId, desde, hasta, hoy = new Date(
       matrizVersiones: { orderBy: { numero: "desc" }, take: 1, select: { numero: true, fecha: true } },
       evaluaciones: { orderBy: { fecha: "desc" }, take: 1, select: { fecha: true, anio: true } },
       recordatorios: true,
+      trabajadores: { where: { activo: true }, select: { id: true, nombres: true, examenes: { orderBy: { fecha: "desc" }, take: 1, select: { id: true, proximo: true, tipo: true } }, entregasEpp: { where: { proximaReposicion: { not: null } }, orderBy: { fecha: "desc" }, select: { id: true, elemento: true, proximaReposicion: true } } } },
     },
   });
   const out: Fecha[] = [];
@@ -91,6 +94,16 @@ export async function fechasPlaneador({ empresaId, desde, hasta, hoy = new Date(
     if (r.curso50h && /^\d{4}-\d{2}-\d{2}$/.test(r.curso50hFecha ?? "")) {
       const f = masAnios(new Date(r.curso50hFecha + "T12:00:00Z"), 3);
       if (dentro(f, false)) add({ id: `curso-${e.id}`, fecha: iso(f), titulo: `Actualización del curso virtual de 20 horas${r.nombre ? ` — ${r.nombre}` : ""}`, detalle: "El responsable del SG-SST actualiza el curso de 50 horas con un curso de 20 horas cada tres años.", categoria: "responsable", estado: estadoDe(f, false, hoy), normaRef: "Res. 4927/2016", href: `${base}/datos` });
+    }
+    for (const t of e.trabajadores) {
+      const x = t.examenes[0];
+      if (x?.proximo && dentro(x.proximo, false)) add({ id: `exa-${x.id}`, fecha: iso(x.proximo), titulo: `Examen médico periódico — ${t.nombres}`, detalle: "Programe la evaluación médica ocupacional según el profesiograma.", categoria: "examen", estado: estadoDe(x.proximo, false, hoy), normaRef: "Res. 1843/2025", href: `${base}/trabajadores` });
+      // Solo la última entrega de cada elemento cuenta para la reposición.
+      const vistos = new Set<string>();
+      for (const ep of t.entregasEpp) {
+        if (vistos.has(ep.elemento)) continue; vistos.add(ep.elemento);
+        if (ep.proximaReposicion && dentro(ep.proximaReposicion, false)) add({ id: `epp-${ep.id}`, fecha: iso(ep.proximaReposicion), titulo: `Reposición de EPP: ${ep.elemento} — ${t.nombres}`, categoria: "epp", estado: estadoDe(ep.proximaReposicion, false, hoy), normaRef: "Decreto 1072/2015 art. 2.2.4.6.24", href: `${base}/trabajadores` });
+      }
     }
     for (const rc of e.recordatorios) {
       if (dentro(rc.fecha, rc.hecho)) add({ id: `rec-${rc.id}`, recordatorioId: rc.id, fecha: iso(rc.fecha), titulo: rc.titulo, detalle: rc.notas ?? undefined, categoria: "recordatorio", estado: estadoDe(rc.fecha, rc.hecho, hoy), href: base });

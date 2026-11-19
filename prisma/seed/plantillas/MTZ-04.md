@@ -29,13 +29,19 @@ Definir los elementos de protección personal (EPP) requeridos por cargo en **{{
 
 ## Registro de entrega de EPP
 
-Una fila por cargo con sus EPP; complete fecha, trabajador y firma en cada entrega.
+{{#if nomina.hayEntregas}}Entregas registradas en PROCESST; cada trabajador firma al recibir.{{else}}Una fila por cargo con sus EPP; complete fecha, trabajador y firma en cada entrega.{{/if}}
 
 | Fecha | Trabajador | Documento | Cargo | EPP entregado | Cantidad | Tipo (dotación / reposición) | Capacitado en uso (S/N) | Firma |
 |---|---|---|---|---|---|---|---|---|
+{{#if nomina.hayEntregas}}
+{{#each nomina.entregas}}
+| {{fecha}} | {{celda trabajador}} | {{doc}} | {{celda cargo}} | {{celda elemento}} | {{cantidad}} | {{tipo}} | {{capacitado}} | |
+{{/each}}
+{{else}}
 {{#each cargos}}
 {{#if epp.length}}
 | | | | {{nombre}} | {{join epp "; "}} | | | | |
 {{/if}}
 {{/each}}
+{{/if}}
 | | | | | | | | | |

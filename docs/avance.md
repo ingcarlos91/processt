@@ -63,6 +63,11 @@ IA opcional: agregar `AI_GATEWAY_API_KEY=...` en `.env`. Sin clave, “Sugerir t
 
 - Documento de identidad con tipo (C.C., C.E., Pasaporte, PPT, PEP, T.I.) para representante legal, responsable SG-SST, profesional, integrantes de comités (editables) y trabajador accidentado; todas las firmas y actas lo precargan.
 
+- Planeador (global y por empresa): plan anual, comités, plazos de accidentes, acciones, matriz, autoevaluación, curso 20 h, exámenes, reposición de EPP y recordatorios; agenda y calendario; exportar .ics.
+- Tablero de la consultora en el inicio (cartera, atención 14 días, prioridad por empresa).
+- Informe mensual de gestión en Word por empresa.
+- Trabajadores: importar desde Excel, exámenes (solo conceptos), entregas de EPP, capacitaciones con asistencia; alimentan FOR-01 (consolidado), FOR-02, MTZ-04, PRG-01 y el planeador.
+
 ## Pendiente
 
 - PDF directo (hoy: Word; PDF desde Word o imprimir).

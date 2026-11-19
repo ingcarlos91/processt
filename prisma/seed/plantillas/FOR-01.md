@@ -57,3 +57,47 @@ Marque los síntomas que ha presentado:
 ## Firma del trabajador
 
 Fecha: __________  Firma: __________________
+
+## Resultados consolidados
+
+{{#if nomina.perfil.hay}}
+Consolidado de {{nomina.total}} trabajadores activos registrados en PROCESST (Decreto 1072 de 2015, art. 2.2.4.6.16; Resolución 0312 de 2019, estándar 3.1.1).
+
+| Sexo | N.º | % |
+|---|---|---|
+{{#each nomina.perfil.sexo}}
+| {{nombre}} | {{n}} | {{pct}} |
+{{/each}}
+
+| Edad | N.º | % |
+|---|---|---|
+{{#each nomina.perfil.edad}}
+| {{nombre}} | {{n}} | {{pct}} |
+{{/each}}
+
+| Escolaridad | N.º | % |
+|---|---|---|
+{{#each nomina.perfil.escolaridad}}
+| {{celda nombre}} | {{n}} | {{pct}} |
+{{/each}}
+
+| Vinculación | N.º | % |
+|---|---|---|
+{{#each nomina.perfil.vinculacion}}
+| {{nombre}} | {{n}} | {{pct}} |
+{{/each}}
+
+| Antigüedad | N.º | % |
+|---|---|---|
+{{#each nomina.perfil.antiguedad}}
+| {{nombre}} | {{n}} | {{pct}} |
+{{/each}}
+
+| Cargo | N.º | % |
+|---|---|---|
+{{#each nomina.perfil.cargos}}
+| {{celda nombre}} | {{n}} | {{pct}} |
+{{/each}}
+{{else}}
+Registre los trabajadores en PROCESST para obtener el consolidado del perfil sociodemográfico.
+{{/if}}

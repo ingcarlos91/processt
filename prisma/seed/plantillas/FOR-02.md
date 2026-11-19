@@ -11,9 +11,15 @@ normas: ["RES-1843-2025","RES-0312-2019"]
 
 | N.º | Trabajador | Documento | Cargo | Tipo de evaluación | Fecha | Concepto de aptitud | Restricciones / recomendaciones | Comunicado al trabajador (fecha) | Comunicado al jefe (fecha) | Acciones implementadas | Próximo control |
 |---|---|---|---|---|---|---|---|---|---|---|---|
+{{#if nomina.hayExamenes}}
+{{#each nomina.examenes}}
+| {{n}} | {{celda trabajador}} | {{doc}} | {{celda cargo}} | {{tipo}} | {{fecha}} | {{concepto}} | {{celda restricciones}} | {{comunicado}} | | | {{proximo}} |
+{{/each}}
+{{else}}
 | 1 | | | | | | | | | | | |
 | 2 | | | | | | | | | | | |
 | 3 | | | | | | | | | | | |
+{{/if}}
 
 ## Instrucciones
 

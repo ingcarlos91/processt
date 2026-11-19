@@ -45,6 +45,20 @@ La reinducción se realiza una vez al año o cuando cambien las condiciones de t
 | {{nombre}} | {{join capacitaciones "; "}} |
 {{/each}}
 
+## Ejecución
+
+{{#if nomina.hayCapacitaciones}}
+| Fecha | Tema | Horas | Modalidad | Facilitador | Asistentes |
+|---|---|---|---|---|---|
+{{#each nomina.capacitaciones}}
+| {{fecha}} | {{celda tema}} | {{horas}} | {{modalidad}} | {{celda facilitador}} | {{asistentes}} |
+{{/each}}
+
+Total de horas de capacitación: {{nomina.horasCapacitacion}}. Cobertura: {{nomina.cobertura}} de los trabajadores activos ha asistido al menos a una capacitación.
+{{else}}
+Las capacitaciones ejecutadas, con su lista de asistencia, se registran en PROCESST y se consolidan en esta sección.
+{{/if}}
+
 ## Evaluación y registros
 
 - Cada capacitación se registra en el formato de asistencia con fecha, tema, duración, facilitador y firma de los asistentes.

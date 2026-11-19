@@ -122,6 +122,8 @@ model Empresa {
   usuarios        Usuario[]
   acciones        Accion[]
   recordatorios   Recordatorio[]
+  trabajadores    Trabajador[]
+  capacitaciones  Capacitacion[]
 
   @@map("empresa")
 }
@@ -188,6 +190,7 @@ model Cargo {
   tareas               CargoTarea[]
   peligros             PeligroEvaluado[]
   eventos              Evento[]
+  trabajadores         Trabajador[]
 
   @@map("cargo")
 }
@@ -643,22 +646,23 @@ model DocumentoSeccion {
 // ─────────────────────────── Plan anual, evidencias, eventos ───────────────────────────
 
 model ActividadPlan {
-  id             String      @id @default(cuid())
-  empresaId      String      @map("empresa_id")
-  empresa        Empresa     @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  id             String         @id @default(cuid())
+  empresaId      String         @map("empresa_id")
+  empresa        Empresa        @relation(fields: [empresaId], references: [id], onDelete: Cascade)
   anio           Int
   mes            Int // 1..12
   nombre         String
   descripcion    String?
-  estandarCodigo String?     @map("estandar_codigo")
-  normaRef       String?     @map("norma_ref")
+  estandarCodigo String?        @map("estandar_codigo")
+  normaRef       String?        @map("norma_ref")
   responsable    String?
   recursos       String?
-  origen         String      @default("nivel") // nivel | matriz | mejoramiento | comite | periodica | manual
-  estado         String      @default("PENDIENTE") // PENDIENTE | EJECUTADA | VENCIDA | CANCELADA
-  fechaEjecucion DateTime?   @map("fecha_ejecucion")
+  origen         String         @default("nivel") // nivel | matriz | mejoramiento | comite | periodica | manual
+  estado         String         @default("PENDIENTE") // PENDIENTE | EJECUTADA | VENCIDA | CANCELADA
+  fechaEjecucion DateTime?      @map("fecha_ejecucion")
   evidencias     Evidencia[]
   acciones       Accion[]
+  capacitaciones Capacitacion[]
 
   @@map("actividad_plan")
 }
@@ -790,6 +794,99 @@ model Recordatorio {
 
   @@index([fecha])
   @@map("recordatorio")
+}
+
+// ─────────────────────────── Trabajadores ───────────────────────────
+// Datos personales mínimos (Ley 1581/2012). De salud solo el concepto de aptitud, nunca diagnósticos.
+model Trabajador {
+  id              String                   @id @default(cuid())
+  empresaId       String                   @map("empresa_id")
+  empresa         Empresa                  @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  nombres         String
+  tipoDoc         String                   @default("CC") @map("tipo_doc")
+  documento       String?
+  cargoId         String?                  @map("cargo_id")
+  cargo           Cargo?                   @relation(fields: [cargoId], references: [id], onDelete: SetNull)
+  vinculacion     String                   @default("planta") // planta | contratista | aprendiz | mision
+  fechaIngreso    DateTime?                @map("fecha_ingreso")
+  fechaRetiro     DateTime?                @map("fecha_retiro")
+  activo          Boolean                  @default(true)
+  sexo            String? // F | M | otro
+  fechaNacimiento DateTime?                @map("fecha_nacimiento")
+  escolaridad     String?
+  telefono        String?
+  correo          String?
+  eps             String?
+  afp             String?
+  creadoEn        DateTime                 @default(now()) @map("creado_en")
+  examenes        ExamenMedico[]
+  entregasEpp     EntregaEpp[]
+  asistencias     AsistenciaCapacitacion[]
+
+  @@index([empresaId])
+  @@map("trabajador")
+}
+
+// Evaluación médica ocupacional (Res. 1843/2025): solo concepto y recomendaciones, nunca diagnóstico.
+model ExamenMedico {
+  id                   String     @id @default(cuid())
+  trabajadorId         String     @map("trabajador_id")
+  trabajador           Trabajador @relation(fields: [trabajadorId], references: [id], onDelete: Cascade)
+  tipo                 String // ingreso | periodico | retiro | post_incapacidad | cambio_ocupacion
+  fecha                DateTime
+  ips                  String?
+  concepto             String // apto | apto_restricciones | aplazado | no_apto
+  restricciones        String? // recomendaciones y restricciones (sin diagnósticos)
+  comunicadoTrabajador DateTime?  @map("comunicado_trabajador")
+  proximo              DateTime?
+  creadoEn             DateTime   @default(now()) @map("creado_en")
+
+  @@map("examen_medico")
+}
+
+model EntregaEpp {
+  id                String     @id @default(cuid())
+  trabajadorId      String     @map("trabajador_id")
+  trabajador        Trabajador @relation(fields: [trabajadorId], references: [id], onDelete: Cascade)
+  fecha             DateTime
+  elemento          String
+  cantidad          Int        @default(1)
+  tipo              String     @default("dotacion") // dotacion | reposicion
+  capacitado        Boolean    @default(true)
+  proximaReposicion DateTime?  @map("proxima_reposicion")
+  creadoEn          DateTime   @default(now()) @map("creado_en")
+
+  @@map("entrega_epp")
+}
+
+// Sesión de capacitación ejecutada (Decreto 1072/2015 art. 2.2.4.6.11) con su asistencia.
+model Capacitacion {
+  id          String                   @id @default(cuid())
+  empresaId   String                   @map("empresa_id")
+  empresa     Empresa                  @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  fecha       DateTime
+  tema        String
+  horas       Float                    @default(1)
+  facilitador String?
+  modalidad   String                   @default("presencial") // presencial | virtual
+  actividadId String?                  @map("actividad_id")
+  actividad   ActividadPlan?           @relation(fields: [actividadId], references: [id], onDelete: SetNull)
+  creadoEn    DateTime                 @default(now()) @map("creado_en")
+  asistentes  AsistenciaCapacitacion[]
+
+  @@map("capacitacion")
+}
+
+model AsistenciaCapacitacion {
+  id             String       @id @default(cuid())
+  capacitacionId String       @map("capacitacion_id")
+  capacitacion   Capacitacion @relation(fields: [capacitacionId], references: [id], onDelete: Cascade)
+  trabajadorId   String       @map("trabajador_id")
+  trabajador     Trabajador   @relation(fields: [trabajadorId], references: [id], onDelete: Cascade)
+  aprobo         Boolean?
+
+  @@unique([capacitacionId, trabajadorId])
+  @@map("asistencia_capacitacion")
 }
 
 model TrabajadoresMes {
