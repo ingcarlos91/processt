@@ -150,3 +150,16 @@
     @apply font-sans;
   }
 }
+/* Vista previa de documentos generados (Markdown → HTML) */
+@layer components {
+  .prose-doc { @apply text-sm leading-relaxed space-y-3; }
+  .prose-doc h3 { @apply text-base font-semibold mt-4; }
+  .prose-doc h4 { @apply font-semibold mt-3; }
+  .prose-doc ul { list-style: disc; @apply pl-5 space-y-1; }
+  .prose-doc ol { list-style: decimal; @apply pl-5 space-y-1; }
+  .prose-doc table { @apply w-full text-xs border-collapse my-2; }
+  .prose-doc th { @apply bg-muted text-left font-medium border px-2 py-1.5; }
+  .prose-doc td { @apply border px-2 py-1.5 align-top; }
+  .prose-doc blockquote { @apply border-l-4 border-amber-400 bg-amber-50 px-3 py-2 text-amber-900; }
+  .prose-doc strong { @apply font-semibold; }
+}

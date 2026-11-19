@@ -1,6 +1,7 @@
 import { unified } from "unified";
 import remarkParse from "remark-parse";
 import remarkGfm from "remark-gfm";
+import remarkBreaks from "remark-breaks";
 import remarkRehype from "remark-rehype";
 import rehypeStringify from "rehype-stringify";
 import type { Root, RootContent, PhrasingContent, Table } from "mdast";
@@ -10,7 +11,7 @@ import {
 } from "docx";
 
 export async function mdAHtml(md: string) {
-  const f = await unified().use(remarkParse).use(remarkGfm).use(remarkRehype).use(rehypeStringify).process(md.replace(/&nbsp;/g, " "));
+  const f = await unified().use(remarkParse).use(remarkGfm).use(remarkBreaks).use(remarkRehype).use(rehypeStringify).process(md.replace(/&nbsp;/g, " "));
   return String(f);
 }
 
@@ -81,7 +82,8 @@ function bloques(nodes: RootContent[], nivelLista = 0, ordenada = false): (Parag
 }
 
 export async function mdADocx(md: string, meta: Meta) {
-  const tree = unified().use(remarkParse).use(remarkGfm).parse(md.replace(/&nbsp;/g, " ")) as Root;
+  const proc = unified().use(remarkParse).use(remarkGfm).use(remarkBreaks);
+  const tree = (await proc.run(proc.parse(md.replace(/&nbsp;/g, "\u00a0")))) as Root;
   const celda = (t: string, bold = false, w?: number) => new TableCell({
     width: w ? { size: w, type: WidthType.PERCENTAGE } : undefined,
     children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: t, bold, size: 18 })] })],
