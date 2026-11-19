@@ -9,9 +9,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
 import { BotonGenerarTodo } from "@/components/empresa/acciones";
 import { Porque } from "@/components/app/porque";
-import { Alert, AlertAction, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ClipboardList } from "lucide-react";
-import { faltantes, type Complementarios } from "@/lib/complementarios";
+import { faltantes, SECCIONES, type Complementarios } from "@/lib/complementarios";
 
 export const dynamic = "force-dynamic";
 const ESTADO: Record<string, "outline" | "secondary" | "default"> = { BORRADOR: "outline", APROBADO: "secondary", FIRMADO: "default" };
@@ -29,6 +29,16 @@ export default async function Documentos({ params }: PageProps<"/empresas/[id]/d
   const faltaResp = [!resp.nombre?.trim() && "nombre", !resp.cedula?.trim() && "cédula", !resp.licencia?.trim() && "licencia"].filter(Boolean) as string[];
   const falta = faltantes((emp.datosComplementarios ?? {}) as Complementarios, (emp.disparadores ?? {}) as Record<string, boolean>, rr.documentos.map((d) => d.codigo));
   const comitesSinIntegrantes = [...new Set(rr.comites)].filter((c) => !emp.comites.some((x) => (x.tipo === c || (c === "COPASST" && x.tipo === "VIGIA")) && x._count.miembros > 0));
+  const NOMBRE_COMITE: Record<string, string> = { COPASST: "COPASST", VIGIA: "Vigía de SST", CCL: "Comité de Convivencia Laboral", BRIGADA: "Brigada de emergencias" };
+  const DOCS_COMITE: Record<string, string[]> = { COPASST: ["ACT-01", "ACT-02"], VIGIA: ["ACT-01", "ACT-02"], CCL: ["ACT-04"], BRIGADA: ["ACT-05", "PLN-04"] };
+  const seccionDe = (k: string) => SECCIONES.find((x) => x.campos.some((c) => c.k === k));
+  const grupos = [
+    ...(faltaResp.length ? [{ titulo: "Responsable del SG-SST", boton: "Ir a Datos", href: `/empresas/${id}/datos`, items: [{ t: `Falta: ${faltaResp.join(", ")}`, docs: ["DOC-03", "Firmas", "Elaboró"] }] }] : []),
+    ...SECCIONES.map((sec) => ({ sec, items: falta.filter((f) => seccionDe(f.k)?.id === sec.id) })).filter((x) => x.items.length)
+      .map(({ sec, items }) => ({ titulo: sec.titulo, boton: "Completar datos", href: `/empresas/${id}/datos#complementarios`, items: items.map((f) => ({ t: f.etiqueta, docs: f.documentos })) })),
+    ...(comitesSinIntegrantes.length ? [{ titulo: "Comités", boton: "Ir a Comités", href: `/empresas/${id}/comites`, items: comitesSinIntegrantes.map((c) => ({ t: `Integrantes: ${NOMBRE_COMITE[c] ?? c}`, docs: DOCS_COMITE[c] ?? [] })) }] : []),
+  ];
+  const totalFaltantes = grupos.reduce((n, g) => n + g.items.length, 0);
   const acciones = (
     <div className="flex gap-2">
       <BotonGenerarTodo empresaId={id} />
@@ -51,24 +61,29 @@ export default async function Documentos({ params }: PageProps<"/empresas/[id]/d
         <span className="text-sm text-muted-foreground">{docs.length} de {rr.documentos.length} documentos generados · se actualizan solos al guardar Datos y Comités</span>
         <div className="flex-1" />{acciones}
       </div>
-      {(falta.length > 0 || faltaResp.length > 0 || comitesSinIntegrantes.length > 0) && (
-        <Alert>
-          <ClipboardList />
-          <AlertTitle>Para que los documentos salgan completos faltan algunos datos</AlertTitle>
-          <AlertDescription>
-            <ul className="list-disc pl-4 space-y-0.5">
-              {faltaResp.length > 0 && <li>Responsable del SG-SST: {faltaResp.join(", ")} <span className="text-muted-foreground">(DOC-03, firmas y “Elaboró” de todos los formatos)</span></li>}
-              {falta.map((f) => <li key={f.k}>{f.etiqueta} <span className="text-muted-foreground">({f.documentos.join(", ")})</span></li>)}
-              {comitesSinIntegrantes.map((c) => <li key={c}>Integrantes de {c === "COPASST" ? "COPASST o Vigía" : c === "CCL" ? "Comité de Convivencia" : "brigada"} <span className="text-muted-foreground">(se registran en Comités)</span></li>)}
-            </ul>
-            <strong className="font-medium text-foreground">No tiene que volver a generar:</strong> al guardar estos datos, los documentos se actualizan solos. Mientras tanto salen con espacios en blanco para llenar a mano.
-          </AlertDescription>
-          <AlertAction className="flex flex-col gap-1">
-            {faltaResp.length > 0 && <Link href={`/empresas/${id}/datos`} className={buttonVariants({ size: "sm", variant: "outline" })}>Responsable SG-SST</Link>}
-            {falta.length > 0 && <Link href={`/empresas/${id}/datos#complementarios`} className={buttonVariants({ size: "sm" })}>Completar datos</Link>}
-            {comitesSinIntegrantes.length > 0 && <Link href={`/empresas/${id}/comites`} className={buttonVariants({ size: "sm", variant: "outline" })}>Ir a Comités</Link>}
-          </AlertAction>
-        </Alert>
+      {grupos.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2"><ClipboardList className="size-4 text-muted-foreground" /> Faltan {totalFaltantes} datos para que los documentos salgan completos</CardTitle>
+            <CardDescription>No tiene que volver a generar: al guardar estos datos, los documentos se actualizan solos. Mientras tanto salen con espacios en blanco para llenar a mano.</CardDescription>
+          </CardHeader>
+          <CardContent className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            {grupos.map((g) => (
+              <div key={g.titulo} className="flex flex-col gap-3 rounded-lg border bg-muted/30 p-4">
+                <div className="text-sm font-medium">{g.titulo}</div>
+                <ul className="flex-1 space-y-2.5">
+                  {g.items.map((it) => (
+                    <li key={it.t} className="text-sm leading-snug">
+                      <div>{it.t}</div>
+                      <div className="mt-1 flex flex-wrap gap-1">{it.docs.map((d) => <Badge key={d} variant="outline" className="font-mono text-[10px]">{d}</Badge>)}</div>
+                    </li>
+                  ))}
+                </ul>
+                <Link href={g.href} className={buttonVariants({ size: "sm", variant: "outline", className: "w-full" })}>{g.boton}</Link>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
       )}
       {carpetas.map((c) => (
         <Section key={c} title={c} contentClassName="px-0">
