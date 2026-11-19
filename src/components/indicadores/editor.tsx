@@ -1,14 +1,14 @@
 "use client";
-import { useState, useTransition } from "react";
+import { useTransition } from "react";
 import { toast } from "sonner";
-import { Plus, Trash2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { ShieldAlert } from "lucide-react";
+import { buttonVariants } from "@/components/ui/button";
+import Link from "next/link";
+import { Alert, AlertAction, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Field, FieldLabel } from "@/components/ui/field";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Section, Stat, NormaRef } from "@/components/app/ui";
 import { Ayuda } from "@/components/app/ayuda";
@@ -21,14 +21,13 @@ type Ev = { id: string; tipo: string; fecha: string; descripcion: string; cargo:
 const f = (n: number | null | undefined, d = 2) => (n == null ? "—" : n.toLocaleString("es-CO", { maximumFractionDigits: d }));
 const TIPOS: Record<string, string> = { AT: "Accidente de trabajo", INCIDENTE: "Incidente", EL: "Enfermedad laboral", AUSENTISMO: "Ausentismo por enfermedad común" };
 
-export function IndicadoresEditor({ empresaId, anio, trabajadoresBase, cargos, mensuales, anuales, plan, estandares, tm, eventos, fichas }: {
+export function IndicadoresEditor({ empresaId, anio, trabajadoresBase, mensuales, anuales, plan, estandares, tm, eventos, fichas }: {
   empresaId: string; anio: number; trabajadoresBase: number; cargos: string[]; mensuales: Mensual[];
   anuales: { mortalidad: number; prevalencia: number | null; incidencia: number | null; promedioTrabajadores: number };
   plan: number | null; estandares: number | null; tm: { mes: number; n: number; dias: number | null }[]; eventos: Ev[]; fichas: Indicador[];
 }) {
-  const [pend, start] = useTransition();
+  const [, start] = useTransition();
   const run = (fn: () => Promise<unknown>, ok?: string) => start(async () => { await fn(); if (ok) toast.success(ok); });
-  const [ev, setEv] = useState({ tipo: "AT", fecha: new Date().toISOString().slice(0, 10), descripcion: "", cargo: "", diasIncapacidad: 0, mortal: false, reportadoArl: true });
   return (
     <Tabs defaultValue="tablero">
       <div className="flex flex-wrap items-center gap-2">
@@ -69,18 +68,12 @@ export function IndicadoresEditor({ empresaId, anio, trabajadoresBase, cargos, m
       </TabsContent>
 
       <TabsContent value="eventos" className="space-y-6 mt-4">
-        <Section title="Registrar evento" description="Accidentes: reporte a la ARL y EPS en máximo 2 días hábiles (FURAT) e investigación en 15 días (Res. 1401/2007).">
-          <div className="grid md:grid-cols-6 gap-3 items-end">
-            <Field><FieldLabel className="text-xs gap-1">Tipo <Ayuda k="tipoEvento" /></FieldLabel><NativeSelect className="w-full" value={ev.tipo} onChange={(e) => setEv({ ...ev, tipo: e.target.value })}>{Object.entries(TIPOS).map(([k, v]) => <NativeSelectOption key={k} value={k}>{v}</NativeSelectOption>)}</NativeSelect></Field>
-            <Field><FieldLabel className="text-xs">Fecha</FieldLabel><Input type="date" value={ev.fecha} onChange={(e) => setEv({ ...ev, fecha: e.target.value })} /></Field>
-            <Field><FieldLabel className="text-xs">Cargo</FieldLabel><NativeSelect className="w-full" value={ev.cargo} onChange={(e) => setEv({ ...ev, cargo: e.target.value })}><NativeSelectOption value="">—</NativeSelectOption>{cargos.map((c) => <NativeSelectOption key={c} value={c}>{c}</NativeSelectOption>)}</NativeSelect></Field>
-            <Field><FieldLabel className="text-xs gap-1">Días de incapacidad <Ayuda k="diasIncapacidad" /></FieldLabel><Input type="number" min={0} value={ev.diasIncapacidad} onChange={(e) => setEv({ ...ev, diasIncapacidad: Number(e.target.value) })} /></Field>
-            <Field className="md:col-span-2"><FieldLabel className="text-xs">Descripción</FieldLabel><Input value={ev.descripcion} onChange={(e) => setEv({ ...ev, descripcion: e.target.value })} /></Field>
-            <label className="flex items-center gap-2 text-sm"><Checkbox checked={ev.mortal} onCheckedChange={(v) => setEv({ ...ev, mortal: !!v })} /> Mortal</label>
-            <label className="flex items-center gap-2 text-sm"><Checkbox checked={ev.reportadoArl} onCheckedChange={(v) => setEv({ ...ev, reportadoArl: !!v })} /> Reportado a la ARL</label>
-            <Button className="w-fit" disabled={pend} onClick={() => run(() => A.registrarEvento(empresaId, ev), "Evento registrado")}><Plus /> Registrar</Button>
-          </div>
-        </Section>
+        <Alert>
+          <ShieldAlert />
+          <AlertTitle>Los eventos se registran en la pestaña Accidentes</AlertTitle>
+          <AlertDescription>Allí se gestiona cada caso: reporte FURAT, investigación, acciones e informe. Los indicadores se calculan solos a partir de esos registros.</AlertDescription>
+          <AlertAction><Link href={`/empresas/${empresaId}/accidentes`} className={buttonVariants({ size: "sm" })}>Ir a Accidentes</Link></AlertAction>
+        </Alert>
         <Section title={`Eventos ${anio}`} contentClassName="px-0">
           <Table className="[&_td]:whitespace-normal">
             <TableHeader><TableRow><TableHead className="pl-6">Fecha</TableHead><TableHead>Tipo</TableHead><TableHead>Cargo</TableHead><TableHead>Descripción</TableHead><TableHead>Días</TableHead><TableHead>ARL</TableHead><TableHead className="pr-6" /></TableRow></TableHeader>
@@ -91,7 +84,7 @@ export function IndicadoresEditor({ empresaId, anio, trabajadoresBase, cargos, m
                   <TableCell>{TIPOS[x.tipo]}{x.mortal && <Badge variant="destructive" className="ml-1">mortal</Badge>}</TableCell>
                   <TableCell>{x.cargo}</TableCell><TableCell>{x.descripcion}</TableCell><TableCell>{x.dias}</TableCell>
                   <TableCell>{x.reportado ? <Badge variant="secondary">Sí</Badge> : <Badge variant="destructive">No</Badge>}</TableCell>
-                  <TableCell className="pr-6"><Button size="icon-xs" variant="ghost" aria-label="Eliminar" onClick={() => run(() => A.eliminarEvento(empresaId, x.id))}><Trash2 /></Button></TableCell>
+                  <TableCell className="pr-6"><Link href={`/empresas/${empresaId}/accidentes/${x.id}`} className={buttonVariants({ size: "xs", variant: "ghost" })}>Abrir</Link></TableCell>
                 </TableRow>
               ))}
               {!eventos.length && <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-6">Sin eventos registrados en {anio}</TableCell></TableRow>}

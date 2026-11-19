@@ -36,7 +36,7 @@ export type EmpresaCompleta = Awaited<ReturnType<typeof cargarEmpresa>>;
 
 export async function datosReglas() {
   const [reglas, plantillas, normas, estandares] = await Promise.all([
-    db.reglaAplicabilidad.findMany(), db.plantilla.findMany({ orderBy: { codigo: "asc" } }), db.norma.findMany(), db.estandar.findMany({ orderBy: { orden: "asc" } }),
+    db.reglaAplicabilidad.findMany(), db.plantilla.findMany({ where: { tipo: { not: "INF" } }, orderBy: { codigo: "asc" } }), db.norma.findMany(), db.estandar.findMany({ orderBy: { orden: "asc" } }),
   ]);
   return { reglas, plantillas, normas, estandares };
 }
@@ -252,6 +252,9 @@ export async function construirContexto(empresaId: string) {
   const cop = composicionCopasst(trabajadores);
   const plantillas = await db.plantilla.findMany({ where: { codigo: { in: rr.documentos.map((d) => d.codigo) } }, orderBy: { codigo: "asc" } });
 
+  // Accidentalidad (FOR-08, FOR-06, ACT-06, ACT-02): Res. 1401/2007; Decreto 1072/2015 arts. 2.2.4.6.32-34; Res. 0312/2019 art. 30.
+  const accidentalidad = await contextoAccidentalidad(e.id);
+
   return {
     empresa: {
       id: e.id, razonSocial: e.razonSocial, nit: e.digitoVerificacion ? `${e.nit}-${e.digitoVerificacion}` : e.nit,
@@ -283,9 +286,93 @@ export async function construirContexto(empresaId: string) {
     normas: normasDb.map((n) => ({ codigo: n.codigo, tipo: n.tipo === "Resolucion" ? "Resolución" : n.tipo === "GuiaTecnica" ? "Guía técnica" : n.tipo, numero: n.numero, anio: n.anio, entidad: n.entidad, nombre: n.nombre, articulosClave: n.articulosClave ?? "", resumen: n.resumen, evidenciaCumplimiento: n.evidenciaCumplimiento ?? "" })),
     estandares: (await db.estandar.findMany({ where: { codigo: { in: rr.estandares } }, orderBy: { orden: "asc" } })).map((s) => ({ codigo: s.codigo, ciclo: s.ciclo, grupo: s.grupo, descripcion: s.descripcion, puntaje: s.puntaje })),
     comites: { copasst: { aplica: true, esVigia: cop.tipo === "VIGIA", composicion: cop.texto, porParte: cop.porParte }, ccl: { aplica: rr.comites.includes("CCL") }, brigada: { aplica: true } },
-    capacitaciones, plan, evaluacion, planMejora, dis, indicadores: INDICADORES, pve, amenazas, presupuesto: presupuestoConValor, altoRiesgo, op, integrantes,
+    capacitaciones, plan, evaluacion, planMejora, dis, indicadores: INDICADORES, pve, amenazas, presupuesto: presupuestoConValor, altoRiesgo, op, integrantes, accidentalidad, acciones: accidentalidad.acciones,
     documentosLista: plantillas.map((p) => ({ codigo: p.codigo, nombre: p.nombre, version: e.documentos.find((d) => d.codigo === p.codigo)?.version ?? 1, carpeta: p.carpeta ?? "" })),
     _reglas: rr,
   };
 }
 export type Contexto = Awaited<ReturnType<typeof construirContexto>>;
+
+const TIPO_EV: Record<string, string> = { AT: "Accidente de trabajo", INCIDENTE: "Incidente", EL: "Enfermedad laboral", AUSENTISMO: "Ausentismo (enfermedad común)" };
+const INV_EV: Record<string, string> = { pendiente: "Pendiente", en_curso: "En curso", cerrada: "Cerrada", no_aplica: "No aplica" };
+const JER: Record<string, string> = { eliminacion: "Eliminación", sustitucion: "Sustitución", ingenieria: "Ingeniería", administrativo: "Administrativo", epp: "EPP" };
+const ORIG: Record<string, string> = { investigacion: "Investigación", inspeccion: "Inspección", auditoria: "Auditoría", revision: "Revisión por la dirección", arl: "ARL", autoridad: "Autoridad", trabajador: "Trabajador" };
+const ddmm = (d?: Date | null) => (d ? d.toISOString().slice(0, 10).split("-").reverse().join("/") : "");
+
+function contar<T>(xs: T[], k: (x: T) => string | null | undefined) {
+  const m = new Map<string, number>();
+  for (const x of xs) { const v = k(x) || "Sin dato"; m.set(v, (m.get(v) ?? 0) + 1); }
+  return [...m.entries()].sort((a, b) => b[1] - a[1]).map(([nombre, n]) => ({ nombre, n }));
+}
+
+/** Datos de accidentes, incidentes, enfermedades laborales y acciones para las plantillas. */
+export async function contextoAccidentalidad(empresaId: string) {
+  const anio = new Date().getUTCFullYear();
+  const [eventos, acciones] = await Promise.all([
+    db.evento.findMany({ where: { empresaId }, orderBy: { fecha: "desc" }, include: { acciones: true } }),
+    db.accion.findMany({ where: { empresaId }, orderBy: { fecha: "asc" }, include: { evento: { select: { fecha: true, tipo: true } } } }),
+  ]);
+  const delAnio = eventos.filter((e) => e.fecha.getUTCFullYear() === anio);
+  const lesivos = delAnio.filter((e) => e.tipo === "AT" || e.tipo === "INCIDENTE");
+  const investigables = delAnio.filter((e) => e.invEstado !== "no_aplica");
+  const at = delAnio.filter((e) => e.tipo === "AT");
+  const r = {
+    anio, total: delAnio.length, at: at.length, incidentes: delAnio.filter((e) => e.tipo === "INCIDENTE").length, el: delAnio.filter((e) => e.tipo === "EL").length,
+    graves: at.filter((e) => e.gravedad === "grave").length, mortales: at.filter((e) => e.gravedad === "mortal").length,
+    diasAt: at.reduce((s, e) => s + e.diasIncapacidad + e.diasCargados, 0),
+    diasAusentismo: delAnio.filter((e) => e.tipo === "AUSENTISMO").reduce((s, e) => s + e.diasIncapacidad, 0),
+    investigados: investigables.filter((e) => e.invEstado === "cerrada").length, investigables: investigables.length,
+    reportados: delAnio.filter((e) => (e.tipo === "AT" || e.tipo === "EL") && e.reportadoArl).length, reportables: delAnio.filter((e) => e.tipo === "AT" || e.tipo === "EL").length,
+    accionesAbiertas: acciones.filter((a) => a.estado === "abierta").length, accionesCerradas: acciones.filter((a) => a.estado === "cerrada").length,
+  };
+  const texto = r.total
+    ? `En ${anio}: ${r.at} accidente(s) de trabajo${r.graves ? ` (${r.graves} grave(s))` : ""}${r.mortales ? `, ${r.mortales} mortal(es)` : ""}, ${r.incidentes} incidente(s) y ${r.el} enfermedad(es) laboral(es); ${r.diasAt} día(s) perdidos por accidentes. Investigados ${r.investigados} de ${r.investigables}; reportados a la ARL ${r.reportados} de ${r.reportables}. Acciones: ${r.accionesCerradas} cerrada(s) y ${r.accionesAbiertas} abierta(s).`
+    : `En ${anio} no se registran accidentes, incidentes ni enfermedades laborales.`;
+  const fila = (e: (typeof eventos)[number]) => ({
+    id: e.id, fecha: ddmm(e.fecha), tipo: TIPO_EV[e.tipo] ?? e.tipo, gravedad: e.tipo === "AT" ? (e.gravedad === "grave" ? "Grave" : e.gravedad === "mortal" ? "Mortal" : "Leve") : "",
+    trabajador: e.trabajadorNombre ?? "", cargo: e.cargo ?? "", lugar: e.lugar ?? "", mecanismo: e.mecanismo ?? "", lesion: e.lesion ?? "", parteCuerpo: e.parteCuerpo ?? "",
+    dias: e.diasIncapacidad + e.diasCargados, reporte: e.fechaReporte ? ddmm(e.fechaReporte) : e.tipo === "AT" || e.tipo === "EL" ? "Pendiente" : "No aplica",
+    investigacion: INV_EV[e.invEstado] ?? e.invEstado, acciones: e.acciones.length, descripcion: e.descripcion ?? "",
+  });
+  return {
+    resumen: { ...r, texto }, hay: eventos.length > 0, hayAnio: delAnio.length > 0,
+    eventos: eventos.filter((e) => e.tipo !== "AUSENTISMO").slice(0, 200).map(fila),
+    pendientes: eventos.filter((e) => e.invEstado === "pendiente" || e.invEstado === "en_curso").map(fila),
+    porCargo: contar(lesivos, (e) => e.cargo), porMecanismo: contar(lesivos, (e) => e.mecanismo), porParte: contar(at, (e) => e.parteCuerpo), porLugar: contar(lesivos, (e) => e.lugar),
+    acciones: acciones.map((a, i) => ({
+      n: i + 1, fecha: ddmm(a.fecha), origen: ORIG[a.origen] ?? a.origen, hallazgo: a.hallazgo, causa: a.causa ?? "", tipo: a.tipo.charAt(0).toUpperCase() + a.tipo.slice(1),
+      jerarquia: a.jerarquia ? JER[a.jerarquia] ?? a.jerarquia : "", descripcion: a.descripcion, responsable: a.responsable ?? "", fechaLimite: ddmm(a.fechaLimite),
+      fechaCierre: ddmm(a.fechaCierre), eficacia: a.eficacia ?? "", estado: a.estado === "cerrada" ? "Cerrada" : "Abierta",
+    })),
+    hayAcciones: acciones.length > 0,
+  };
+}
+
+/** Contexto del informe de investigación de un evento (FOR-07). */
+export async function contextoEvento(eventoId: string) {
+  const ev = await db.evento.findUniqueOrThrow({ where: { id: eventoId }, include: { acciones: { orderBy: { fecha: "asc" } }, peligro: true, archivos: { where: { activo: true } } } });
+  const base = await construirContexto(ev.empresaId);
+  const a = (ev.analisis ?? {}) as { porques?: string[]; actos?: string[]; condiciones?: string[]; personales?: string[]; trabajo?: string[]; conclusion?: string };
+  const equipo = ((ev.equipo ?? []) as { nombre: string; cargo?: string; rol: string }[]);
+  const ROLES: Record<string, string> = { jefe: "Jefe inmediato o supervisor", copasst: "Representante del COPASST o Vigía", responsable: "Responsable del SG-SST", profesional: "Profesional con licencia en SST", otro: "Otro" };
+  const VINC: Record<string, string> = { planta: "Trabajador de planta", contratista: "Contratista", aprendiz: "Aprendiz o practicante", mision: "Trabajador en misión", visitante: "Visitante" };
+  return {
+    ...base,
+    ev: {
+      tipo: TIPO_EV[ev.tipo] ?? ev.tipo, esAT: ev.tipo === "AT", esIncidente: ev.tipo === "INCIDENTE", esEL: ev.tipo === "EL",
+      gravedad: ev.gravedad === "grave" ? "Grave" : ev.gravedad === "mortal" ? "Mortal" : "Leve", esGrave: ev.gravedad === "grave" || ev.gravedad === "mortal",
+      fecha: fmtDia(ev.fecha), hora: ev.hora ?? "", lugar: ev.lugar ?? "", descripcion: ev.descripcion ?? "",
+      trabajador: ev.trabajadorNombre ?? "", cedula: ev.trabajadorCedula ?? "", vinculacion: VINC[ev.vinculacion ?? ""] ?? "", antiguedad: ev.antiguedad ?? "",
+      cargo: ev.cargo ?? "", tarea: ev.tarea ?? "", mecanismo: ev.mecanismo ?? "", agente: ev.agente ?? "", lesion: ev.lesion ?? "", parteCuerpo: ev.parteCuerpo ?? "",
+      testigos: ev.testigos ?? "", dias: ev.diasIncapacidad, diasCargados: ev.diasCargados,
+      fechaReporte: ev.fechaReporte ? fmtDia(ev.fechaReporte) : "", furat: ev.furatNumero ?? "", reporteMinisterio: ev.reporteMinisterio ? fmtDia(ev.reporteMinisterio) : "",
+      invInicio: ev.invInicio ? fmtDia(ev.invInicio) : "", invCierre: ev.invCierre ? fmtDia(ev.invCierre) : "", remitidaArl: ev.invRemitidaArl ? fmtDia(ev.invRemitidaArl) : "",
+      equipo: equipo.map((x) => ({ nombre: x.nombre, cargo: x.cargo ?? "", rol: ROLES[x.rol] ?? x.rol })), hayEquipo: equipo.length > 0,
+      porques: a.porques ?? [], actos: a.actos ?? [], condiciones: a.condiciones ?? [], personales: a.personales ?? [], trabajo: a.trabajo ?? [], conclusion: a.conclusion ?? "",
+      peligro: ev.peligro ? `${ev.peligro.descripcion} (${ev.peligro.clasificacion})` : "",
+      lecciones: ev.lecciones ?? "",
+      acciones: ev.acciones.map((x, i) => ({ n: i + 1, descripcion: x.descripcion, tipo: x.tipo, jerarquia: x.jerarquia ? JER[x.jerarquia] ?? x.jerarquia : "", responsable: x.responsable ?? "", fechaLimite: ddmm(x.fechaLimite), estado: x.estado === "cerrada" ? "Cerrada" : "Abierta" })),
+      soportes: ev.archivos.map((x) => x.descripcion),
+    },
+  };
+}

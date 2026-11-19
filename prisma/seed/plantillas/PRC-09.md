@@ -37,25 +37,9 @@ Si el accidente es grave o produce la muerte, participa además un profesional c
 
 ## Formato de investigación
 
-| Campo | |
-|---|---|
-| Fecha y hora del evento | |
-| Lugar | |
-| Tipo de evento | ☐ Incidente ☐ Accidente leve ☐ Grave ☐ Mortal ☐ Enfermedad laboral |
-| Trabajador | Nombre, cédula, cargo, antigüedad |
-| Descripción del evento | |
-| Tipo de lesión y parte del cuerpo afectada | |
-| Días de incapacidad | |
-| Causas inmediatas — actos subestándar | |
-| Causas inmediatas — condiciones subestándar | |
-| Causas básicas — factores personales | |
-| Causas básicas — factores del trabajo | |
+Cada evento se registra e investiga en PROCESST, que genera el informe de investigación (FOR-07) con: datos de la empresa, del evento y del trabajador; descripción; equipo investigador; análisis de causas inmediatas y básicas; medidas de control con responsable y fecha; lecciones aprendidas y firmas. El informe firmado se archiva como soporte del estándar 3.2.2.
 
-| Medida de control | Tipo (eliminación / sustitución / ingeniería / administrativa / EPP) | Responsable | Fecha | Verificación |
-|---|---|---|---|---|
-| | | | | |
-
-Firmas del equipo investigador: ______________ ______________ ______________
+Los eventos y sus investigaciones se consolidan en el registro y análisis estadístico (FOR-08) y las medidas en el registro de acciones correctivas, preventivas y de mejora (FOR-06).
 
 ## Resultados
 

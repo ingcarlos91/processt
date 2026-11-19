@@ -53,6 +53,8 @@ IA opcional: agregar `AI_GATEWAY_API_KEY=...` en `.env`. Sin clave, “Sugerir t
 
 - Archivos: subir documento firmado (pasa a Firmado y avisa si cambió después), evidencias por actividad del plan (la marca ejecutada), soportes por ítem de la evaluación, actas por comité, pestaña Evidencias por estándar y expediente ZIP para Ministerio/ARL. PDF, imágenes, Word y Excel hasta 10 MB; nunca se borran (se retiran con motivo). Se guardan en `uploads/empresas/` (fuera de git).
 
+- Accidentes e incidentes: pestaña con registro por evento (AT, incidente, EL, ausentismo), semáforo de plazos (FURAT 2 días hábiles — Decreto Ley 1295/1994 art. 62; investigación 15 días y remisión a ARL de graves/mortales — Res. 1401/2007), investigación (equipo art. 7, porqués, causas inmediatas y básicas, peligro relacionado → matriz), sugerencias por IA o por reglas, acciones con jerarquía de controles (modelo `Accion`, FOR-06) que se pueden llevar al plan anual, informe FOR-07 por evento en Word, soportes por evento en Evidencias (3.2.1/3.2.2). Nuevos FOR-07 (por evento, tipo INF) y FOR-08 (registro y análisis estadístico); FOR-06, ACT-06, ACT-02 y PRC-09 se alimentan de los eventos. Aviso de plazos vencidos en el Resumen.
+
 ## Pendiente
 
 - PDF directo (hoy: Word; PDF desde Word o imprimir).

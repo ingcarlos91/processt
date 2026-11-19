@@ -185,3 +185,34 @@ export const AYUDA: Record<string, Ayuda> = {
   ], normas: ["Res. 2013/1986", "Res. 3461/2025"] },
   representa: { titulo: "A quién representa", que: "En los comités paritarios hay representantes del empleador (los designa la empresa) y de los trabajadores (elegidos por votación).", normas: ["Res. 2013/1986 art. 2"] },
 };
+
+// ───────── Accidentes, incidentes y enfermedades laborales ─────────
+Object.assign(AYUDA, {
+  evTipo: { titulo: "Tipo de evento", que: "Qué ocurrió.", para: "Define si se reporta a la ARL, si se investiga y qué indicadores alimenta.", opciones: [
+    { valor: "AT", etiqueta: "Accidente de trabajo", explica: "Hubo lesión, perturbación funcional o psiquiátrica, invalidez o muerte por causa o con ocasión del trabajo. Se reporta (FURAT) y se investiga." },
+    { valor: "INCIDENTE", etiqueta: "Incidente", explica: "No hubo lesionados, o solo primeros auxilios, o hubo daños materiales. No se reporta a la ARL, pero sí se investiga." },
+    { valor: "EL", etiqueta: "Enfermedad laboral", explica: "Calificada como laboral por la EPS, ARL o junta. Se reporta (FUREL) y se investiga." },
+    { valor: "AUSENTISMO", etiqueta: "Ausentismo por enfermedad común", explica: "Incapacidad de origen común. Solo para el indicador de ausentismo." },
+  ], normas: ["Ley 1562/2012 arts. 3 y 4", "Res. 1401/2007 art. 3"] },
+  evGravedad: { titulo: "Gravedad del accidente", que: "Clasificación del accidente según la lesión.", para: "Los graves y mortales tienen obligaciones adicionales: aviso al Ministerio del Trabajo, profesional con licencia en el equipo investigador y remisión del informe a la ARL.", opciones: [
+    { valor: "leve", etiqueta: "Leve", explica: "No cumple los criterios de grave." },
+    { valor: "grave", etiqueta: "Grave", explica: "Amputación; fractura de huesos largos; trauma craneoencefálico; quemaduras de segundo y tercer grado; lesiones severas de mano o de columna con compromiso de médula; lesiones oculares o auditivas que comprometan la función." },
+    { valor: "mortal", etiqueta: "Mortal", explica: "Causa la muerte del trabajador." },
+  ], normas: ["Res. 1401/2007 art. 3"] },
+  evVinculacion: { titulo: "Tipo de vinculación", que: "Relación de la persona con la empresa.", para: "Los contratistas y trabajadores en misión también cuentan en los indicadores y deben investigarse.", normas: ["Res. 0312/2019 art. 30"] },
+  evMecanismo: { titulo: "Forma del evento", que: "Cómo ocurrió: el tipo de contacto que produjo la lesión (caída, golpe, atrapamiento…).", para: "Permite analizar tendencias en el registro estadístico (FOR-08) y orienta las causas probables.", donde: "Relato del trabajador y de los testigos; el FURAT pide un dato equivalente." },
+  evAgente: { titulo: "Agente", que: "El objeto, equipo, sustancia o condición que causó la lesión.", donde: "Relato del evento y visita al sitio." },
+  evLesion: { titulo: "Tipo de lesión", que: "Naturaleza de la lesión (herida, golpe, fractura…).", para: "Estadística de accidentalidad. No escriba diagnósticos médicos: la historia clínica es dato sensible.", normas: ["Ley 1581/2012"] },
+  evParte: { titulo: "Parte del cuerpo afectada", que: "Zona del cuerpo lesionada.", para: "Muestra dónde reforzar controles y EPP." },
+  evDias: { titulo: "Días de incapacidad", que: "Días de incapacidad médica otorgados por el accidente o la enfermedad.", para: "Alimenta el índice de severidad (Res. 0312/2019 art. 30).", donde: "Certificado de incapacidad." },
+  evDiasCargados: { titulo: "Días cargados", que: "Días que se suman por secuelas permanentes (amputación, pérdida de capacidad, muerte) según la tabla de días cargados.", para: "Índice de severidad. Si no hubo secuelas, deje 0.", normas: ["Res. 0312/2019 art. 30"] },
+  evFurat: { titulo: "Reporte a la ARL (FURAT / FUREL)", que: "Formulario Único de Reporte de Accidente de Trabajo (FURAT) o de Enfermedad Laboral (FUREL) radicado ante la ARL y la EPS.", para: "Es obligatorio dentro de los dos días hábiles siguientes al accidente o al diagnóstico de la enfermedad laboral.", donde: "Plataforma o línea de atención de la ARL; guarde el número de radicado y suba el soporte.", normas: ["Decreto Ley 1295/1994 art. 62"] },
+  evEquipo: { titulo: "Equipo investigador", que: "Personas que investigan el evento.", para: "Mínimo: jefe inmediato o supervisor, un representante del COPASST o Vigía y el responsable del SG-SST. En accidentes graves o mortales participa un profesional con licencia en SST.", normas: ["Res. 1401/2007 art. 7"] },
+  evPorques: { titulo: "Análisis de los porqués", que: "Preguntar “¿por qué?” sucesivamente, desde el hecho hasta la causa raíz (normalmente 3 a 5 veces).", ejemplo: "Se cortó la mano → la cuchilla no tenía guarda → la guarda se retiró para limpiar → no hay procedimiento de limpieza segura." },
+  evInmediatas: { titulo: "Causas inmediatas", que: "Lo que ocurrió justo antes del evento.", para: "Actos subestándar (lo que hizo o dejó de hacer la persona) y condiciones subestándar (estado del lugar, equipo o ambiente).", normas: ["Res. 1401/2007"] },
+  evBasicas: { titulo: "Causas básicas", que: "Por qué existieron los actos y las condiciones subestándar.", para: "Factores personales (capacidad, conocimiento, motivación, fatiga) y factores del trabajo (supervisión, ingeniería, compras, mantenimiento, procedimientos). Las medidas deben atacar estas causas.", normas: ["Res. 1401/2007"] },
+  evPeligro: { titulo: "Peligro relacionado", que: "El peligro de la matriz (GTC 45) que se materializó.", para: "Si el peligro no estaba en la matriz del cargo, se agrega para valorarlo; si estaba, se revisan su valoración y sus controles.", normas: ["GTC 45", "Decreto 1072/2015 art. 2.2.4.6.15"] },
+  evLecciones: { titulo: "Lecciones aprendidas", que: "Lo que todos deben saber para que no se repita.", para: "Se divulgan a los trabajadores y al COPASST o Vigía.", normas: ["Decreto 1072/2015 art. 2.2.4.6.32"] },
+  evJerarquia: { titulo: "Jerarquía de controles", que: "Orden en que se prefieren las medidas: primero eliminar el peligro, luego sustituirlo, después controles de ingeniería, administrativos y, por último, EPP.", normas: ["Decreto 1072/2015 art. 2.2.4.6.24"] },
+  evEficacia: { titulo: "Verificación de eficacia", que: "Cómo se comprobó que la acción funcionó (inspección, medición, seguimiento sin repetición del evento).", normas: ["Decreto 1072/2015 art. 2.2.4.6.33"] },
+});

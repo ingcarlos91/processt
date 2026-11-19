@@ -33,14 +33,14 @@ normas: ["DEC-1072-2015","RES-0312-2019"]
 | 11 | Decisiones para mejorar la identificación de peligros y el control de riesgos | |
 | 12 | Promoción de la participación de los trabajadores | |
 | 13 | Cumplimiento de la normatividad y de los estándares mínimos | |
-| 14 | Acciones de mejora continua | |
+| 14 | Acciones de mejora continua | {{#if accidentalidad.hayAcciones}}{{accidentalidad.resumen.accionesCerradas}} acción(es) cerrada(s) y {{accidentalidad.resumen.accionesAbiertas}} abierta(s) en el registro FOR-06.{{/if}} |
 | 15 | Cumplimiento de planes específicos, metas y objetivos | |
 | 16 | Inspecciones sistemáticas de puestos, máquinas, equipos e instalaciones | |
 | 17 | Vigilancia de las condiciones de los ambientes de trabajo | |
 | 18 | Vigilancia de las condiciones de salud de los trabajadores | |
 | 19 | Actualización de la identificación de peligros y evaluación de riesgos | |
-| 20 | Notificación e investigación de incidentes, accidentes y enfermedades | |
-| 21 | Ausentismo laboral por causas asociadas a SST | |
+| 20 | Notificación e investigación de incidentes, accidentes y enfermedades | {{accidentalidad.resumen.texto}} |
+| 21 | Ausentismo laboral por causas asociadas a SST | {{accidentalidad.resumen.diasAt}} día(s) perdidos por accidentes de trabajo en {{accidentalidad.resumen.anio}}. |
 | 22 | Pérdidas (daños a la propiedad, máquinas, equipos) relacionadas con SST | |
 | 23 | Deficiencias en la gestión de SST | |
 | 24 | Efectividad de los programas de rehabilitación | |

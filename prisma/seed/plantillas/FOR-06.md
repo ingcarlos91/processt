@@ -15,9 +15,15 @@ Registrar y hacer seguimiento a las acciones preventivas, correctivas y de mejor
 
 | N.º | Fecha | Fuente (inspección / investigación / auditoría / revisión / ARL / autoridad / trabajador) | Descripción del hallazgo | Causa raíz | Tipo (correctiva / preventiva / mejora) | Acción | Responsable | Fecha límite | Fecha de cierre | Verificación de eficacia |
 |---|---|---|---|---|---|---|---|---|---|---|
+{{#if acciones.length}}
+{{#each acciones}}
+| {{n}} | {{fecha}} | {{origen}} | {{celda hallazgo}} | {{celda causa}} | {{tipo}}{{#if jerarquia}} ({{jerarquia}}){{/if}} | {{celda descripcion}} | {{celda responsable}} | {{fechaLimite}} | {{fechaCierre}} | {{celda eficacia}} |
+{{/each}}
+{{else}}
 | 1 | | | | | | | | | | |
 | 2 | | | | | | | | | | |
 | 3 | | | | | | | | | | |
+{{/if}}
 
 ## Instrucciones
 

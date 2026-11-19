@@ -20,6 +20,7 @@ export async function subirArchivo(empresaId: string, fd: FormData) {
   const documentoId = (fd.get("documentoId") as string) || null;
   const actividadId = (fd.get("actividadId") as string) || null;
   const comiteId = (fd.get("comiteId") as string) || null;
+  const eventoId = (fd.get("eventoId") as string) || null;
   let estandarCodigo = (fd.get("estandarCodigo") as string) || null;
   const fechaTxt = (fd.get("fecha") as string) || "";
   const fecha = /^\d{4}-\d{2}-\d{2}$/.test(fechaTxt) ? new Date(fechaTxt + "T12:00:00Z") : new Date();
@@ -41,16 +42,23 @@ export async function subirArchivo(empresaId: string, fd: FormData) {
     estandarCodigo ||= ESTANDAR_COMITE[c.tipo] ?? null;
     descripcion ||= `Acta ${c.tipo}`;
   }
+  if (eventoId) {
+    const ev = await db.evento.findUniqueOrThrow({ where: { id: eventoId } });
+    if (ev.empresaId !== empresaId) return { error: "Evento no encontrado." };
+    estandarCodigo ||= "3.2.2";
+    descripcion ||= `Soporte del evento del ${ev.fecha.toISOString().slice(0, 10)}`;
+  }
   descripcion ||= file.name;
 
   let guardado;
   try { guardado = await guardarArchivo(empresaId, file); } catch (e) { return { error: e instanceof Error ? e.message : String(e) }; }
   const nombreUsuario = (await db.usuario.findUnique({ where: { id: u.id }, select: { nombre: true } }))?.nombre;
   await db.evidencia.create({ data: {
-    empresaId, tipo, documentoId, documentoVersion, actividadId, comiteId, estandarCodigo, descripcion, fecha,
+    empresaId, tipo, documentoId, documentoVersion, actividadId, comiteId, eventoId, estandarCodigo, descripcion, fecha,
     archivoUrl: guardado.ruta, nombreArchivo: file.name, mime: file.type, tamano: file.size, subidoPor: nombreUsuario,
   } });
   if (documentoId) await db.documento.update({ where: { id: documentoId }, data: { estado: "FIRMADO" } });
+  if (eventoId) revalidatePath(`/empresas/${empresaId}/accidentes/${eventoId}`);
   if (actividadId) await db.actividadPlan.update({ where: { id: actividadId }, data: { estado: "EJECUTADA", fechaEjecucion: fecha } });
   rv(empresaId);
   return { ok: true };

@@ -47,6 +47,16 @@ normas: ["RES-2013-1986"]
 
 (Registrar lo tratado en cada punto)
 
+{{#if accidentalidad.pendientes.length}}
+**Punto 3 — Eventos con investigación pendiente o en curso**
+
+| Fecha | Tipo | Cargo | Investigación |
+|---|---|---|---|
+{{#each accidentalidad.pendientes}}
+| {{fecha}} | {{tipo}} | {{celda cargo}} | {{investigacion}} |
+{{/each}}
+{{/if}}
+
 ## Compromisos
 
 | N.º | Compromiso | Responsable | Fecha |

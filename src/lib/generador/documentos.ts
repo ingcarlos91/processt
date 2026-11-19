@@ -63,3 +63,9 @@ export async function actualizarDocumentosExistentes(empresaId: string) {
   const docs = await db.documento.findMany({ where: { empresaId }, select: { codigo: true } });
   if (docs.length) await generarDocumentos(empresaId, docs.map((d) => d.codigo));
 }
+
+/** Regenera solo algunos documentos, si ya existen (para cambios puntuales: eventos, acciones). */
+export async function actualizarDocumentos(empresaId: string, codigos: string[]) {
+  const docs = await db.documento.findMany({ where: { empresaId, codigo: { in: codigos } }, select: { codigo: true } });
+  if (docs.length) await generarDocumentos(empresaId, docs.map((d) => d.codigo));
+}

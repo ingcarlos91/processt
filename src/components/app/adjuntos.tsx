@@ -1,5 +1,5 @@
 "use client";
-import { useRef, useState, useTransition, type ReactNode } from "react";
+import { useRef, useState, useTransition, type ReactElement, type ReactNode } from "react";
 import { toast } from "sonner";
 import { Download, Eye, FileText, Image as ImageIcon, Paperclip, Upload, Archive, RotateCcw, FileSpreadsheet } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -15,7 +15,7 @@ import { subirArchivo, retirarArchivo, restaurarArchivo } from "@/app/actions/ar
 import { cn } from "@/lib/utils";
 
 export type ArchivoUI = { id: string; tipo: string; descripcion: string; nombreArchivo: string | null; mime: string | null; tamano: number | null; fecha: string; subidoPor: string | null; activo: boolean; documentoVersion?: number | null };
-export type ContextoAdjunto = { tipo: "DOCUMENTO_FIRMADO" | "EVIDENCIA" | "ACTA"; documentoId?: string; actividadId?: string; comiteId?: string; estandarCodigo?: string };
+export type ContextoAdjunto = { tipo: "DOCUMENTO_FIRMADO" | "EVIDENCIA" | "ACTA"; documentoId?: string; actividadId?: string; comiteId?: string; eventoId?: string; estandarCodigo?: string };
 
 const ACEPTA = "application/pdf,image/jpeg,image/png,image/webp,image/heic,.docx,.xlsx";
 const tam = (n: number | null) => (n == null ? "" : n > 1048576 ? `${(n / 1048576).toFixed(1)} MB` : `${Math.round(n / 1024)} KB`);
@@ -38,14 +38,14 @@ export function SubirArchivo({ empresaId, ctx, trigger, titulo = "Subir archivo"
     if (!file) return;
     const fd = new FormData();
     fd.append("archivo", file); fd.append("tipo", ctx.tipo); fd.append("descripcion", desc); fd.append("fecha", fecha);
-    for (const k of ["documentoId", "actividadId", "comiteId", "estandarCodigo"] as const) if (ctx[k]) fd.append(k, ctx[k]!);
+    for (const k of ["documentoId", "actividadId", "comiteId", "eventoId", "estandarCodigo"] as const) if (ctx[k]) fd.append(k, ctx[k]!);
     const r = await subirArchivo(empresaId, fd);
     if ("error" in r) toast.error(r.error);
     else { toast.success(ctx.tipo === "DOCUMENTO_FIRMADO" ? "Documento firmado guardado" : ctx.actividadId ? "Evidencia guardada; actividad marcada como ejecutada" : "Archivo guardado"); setOpen(false); setFile(null); }
   });
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger render={<span />}>{trigger ?? <Button size="sm" variant="outline"><Upload /> {titulo}</Button>}</DialogTrigger>
+      <DialogTrigger render={(trigger ?? <Button size="sm" variant="outline"><Upload /> {titulo}</Button>) as ReactElement} />
       <DialogContent>
         <DialogHeader><DialogTitle>{titulo}</DialogTitle>{ayuda && <DialogDescription>{ayuda}</DialogDescription>}</DialogHeader>
         <Field>

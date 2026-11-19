@@ -12,6 +12,7 @@ import { calcular } from "@/lib/gtc45";
 import { BotonGenerarTodo } from "@/components/empresa/acciones";
 import { Porque } from "@/components/app/porque";
 import { explicarNivel, explicarConteo } from "@/lib/reglas/explicar";
+import { plazos, TIPOS_EVENTO } from "@/lib/eventos";
 
 export const dynamic = "force-dynamic";
 
@@ -45,8 +46,22 @@ export default async function Resumen({ params }: PageProps<"/empresas/[id]">) {
   for (const c of e.comites) if (c.periodoFin && c.periodoFin < en60) alertas.push(`El periodo del ${c.tipo} vence el ${c.periodoFin.toLocaleDateString("es-CO")}: convoque elecciones.`);
   if (vencidas) alertas.push(`${vencidas} actividades del plan anual están vencidas.`);
 
+  // Plazos de reporte e investigación vencidos o por vencer (Decreto Ley 1295/1994; Res. 1401/2007).
+  const eventosAbiertos = await db.evento.findMany({ where: { empresaId: id, OR: [{ invEstado: { in: ["pendiente", "en_curso"] } }, { reportadoArl: false, tipo: { in: ["AT", "EL"] } }] } });
+  const alertasEventos = eventosAbiertos.flatMap((ev) => plazos(ev).filter((p) => p.estado === "vencido" || p.estado === "por_vencer").map((p) => ({ ev, p })));
   return (
     <>
+      {alertasEventos.length > 0 && (
+        <Alert variant="destructive">
+          <AlertTriangle />
+          <AlertTitle>Accidentes e incidentes: {alertasEventos.length} plazo(s) vencido(s) o por vencer</AlertTitle>
+          <AlertDescription>
+            <ul className="space-y-0.5">
+              {alertasEventos.slice(0, 5).map(({ ev, p }) => <li key={ev.id + p.clave}><Link className="underline underline-offset-2" href={`/empresas/${id}/accidentes/${ev.id}`}>{TIPOS_EVENTO[ev.tipo].t} del {ev.fecha.toISOString().slice(0, 10).split("-").reverse().join("/")}</Link>: {p.t.toLowerCase()} ({p.estado === "vencido" ? "vencido" : "vence pronto"}) <NormaRef>{p.normaRef}</NormaRef></li>)}
+            </ul>
+          </AlertDescription>
+        </Alert>
+      )}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
         <Stat label="Estándares mínimos" value={rr.nivel} hint={<NormaRef>{rr.nivelNormaRef}</NormaRef>} porque={<>{explicarNivel(rr.nivel, rr.trabajadores, e.claseRiesgo)} {explicarConteo(e)}</>} normas={[rr.nivelNormaRef]} />
         <Stat label="Última evaluación" value={puntaje != null && ev?.valoracion ? `${puntaje}%` : "—"} hint={ev?.valoracion ?? "Sin evaluación cerrada"} tone={ev?.valoracion === "ACEPTABLE" ? "ok" : ev?.valoracion === "CRÍTICO" ? "bad" : ev?.valoracion ? "warn" : undefined} />
