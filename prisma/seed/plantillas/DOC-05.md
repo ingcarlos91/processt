@@ -23,7 +23,7 @@ Identificar el estado del SG-SST de **{{empresa.razonSocial}}** frente a la norm
 | Número de trabajadores | {{empresa.trabajadores}} (contratistas: {{empresa.contratistas}}) |
 | Estándares mínimos aplicables | {{empresa.nivel}} |
 | Fecha de evaluación | {{#if evaluacion.existe}}{{evaluacion.fecha}}{{else}}{{fecha}}{{/if}} |
-| Evaluador | {{consultora.profesional}} — Licencia SST {{consultora.licencia}} |
+| Evaluador | {{responsable.nombre}} — Licencia SST {{default responsable.licencia "______"}} |
 
 ## Aspectos evaluados (art. 2.2.4.6.16)
 
@@ -67,7 +67,7 @@ Las prioridades se definen al completar la tabla de valores.
 Los resultados de esta evaluación son la línea base para la planificación del SG-SST y para el plan anual de trabajo {{anio}}.
 
 ______________________________________
-**{{consultora.profesional}}** — Evaluador(a), Licencia SST {{consultora.licencia}}
+**{{responsable.nombre}}** — Evaluador(a), Licencia SST {{default responsable.licencia "______"}}
 
 ______________________________________
 **{{empresa.representanteLegal}}** — Representante Legal

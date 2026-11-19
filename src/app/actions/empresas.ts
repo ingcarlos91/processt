@@ -1,6 +1,7 @@
 "use server";
 import { requiereUsuario } from "@/lib/auth/sesion";
 import { revalidatePath } from "next/cache";
+import { actualizarDocumentosExistentes } from "@/lib/generador/documentos";
 import { redirect } from "next/navigation";
 import { db, consultoraActual } from "@/lib/db";
 import { recalcularEmpresa } from "@/lib/empresa";
@@ -85,9 +86,11 @@ export async function actualizarEmpresa(id: string, d: IntakeData) {
   await db.empresa.update({ where: { id }, data: datosEmpresa(d) });
   if (d.sectorTipoId && d.sectorTipoId !== prev.sectorTipoId) await prepararEstructura(id, "aprobado");
   await recalcularEmpresa(id);
+  await actualizarDocumentosExistentes(id);
   revalidatePath(`/empresas/${id}`, "layout");
   return { ok: true };
 }
+
 
 export async function eliminarEmpresa(id: string) {
   await requiereUsuario();

@@ -50,7 +50,7 @@ Informar al médico que realiza las evaluaciones médicas ocupacionales los perf
 - Evaluación post incapacidad o por reintegro: cuando la incapacidad sea prolongada o el médico lo recomiende.
 - Está prohibido exigir prueba de embarazo o de VIH como requisito de ingreso.
 
-Elaboró: {{consultora.profesional}} — Licencia SST {{consultora.licencia}}  |  Fecha: {{fecha}}
+Elaboró: {{responsable.nombre}} — Licencia SST {{default responsable.licencia "______"}}  |  Fecha: {{fecha}}
 
 IPS: {{op.ips}}
 

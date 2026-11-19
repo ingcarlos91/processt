@@ -27,4 +27,4 @@ La aplicabilidad se determinó con base en: actividad económica (CIIU {{empresa
 
 La matriz legal se revisa como mínimo una vez al año y cada vez que se expida una norma aplicable o cambien las condiciones de la empresa. Última actualización: {{fecha}}.
 
-Elaboró: {{consultora.profesional}} — Licencia SST {{consultora.licencia}}
+Elaboró: {{responsable.nombre}} — Licencia SST {{default responsable.licencia "______"}}

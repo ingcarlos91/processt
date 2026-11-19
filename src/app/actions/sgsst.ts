@@ -1,4 +1,5 @@
 "use server";
+import { actualizarDocumentosExistentes } from "@/lib/generador/documentos";
 import { requiereUsuario } from "@/lib/auth/sesion";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
@@ -226,6 +227,7 @@ export async function actualizarPeligroCatalogo(id: string, d: Record<string, st
 export async function guardarComplementarios(empresaId: string, datos: Record<string, unknown>) {
   await requiereUsuario();
   await db.empresa.update({ where: { id: empresaId }, data: { datosComplementarios: datos as object } });
+  await actualizarDocumentosExistentes(empresaId);
   rv(empresaId);
   return { ok: true };
 }
@@ -233,6 +235,7 @@ export async function guardarComplementarios(empresaId: string, datos: Record<st
 export async function guardarDatosComite(empresaId: string, comiteId: string, datos: Record<string, unknown>) {
   await requiereUsuario();
   await db.comite.update({ where: { id: comiteId }, data: { datos: datos as object } });
+  await actualizarDocumentosExistentes(empresaId);
   rv(empresaId);
   return { ok: true };
 }
