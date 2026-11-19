@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { BotonInformeGestion } from "@/components/empresa/informe-gestion";
 import { estadoDocumento } from "@/lib/estado-documento";
 import { AlertTriangle, Check, FileText, ListChecks, ShieldAlert, CalendarDays } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -89,6 +90,8 @@ export default async function Resumen({ params }: PageProps<"/empresas/[id]">) {
         <Link href={`/empresas/${id}/evaluacion`} className={buttonVariants({ variant: "outline" })}><ListChecks /> Evaluación</Link>
         <Link href={`/empresas/${id}/documentos`} className={buttonVariants({ variant: "outline" })}><FileText /> Documentos</Link>
         <Link href={`/empresas/${id}/plan`} className={buttonVariants({ variant: "outline" })}><CalendarDays /> Plan anual</Link>
+        <div className="flex-1" />
+        <BotonInformeGestion empresaId={id} />
       </div>
 
       <div className="grid lg:grid-cols-2 gap-6">

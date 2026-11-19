@@ -49,6 +49,7 @@ export const MANUAL: SeccionManual[] = [
       { titulo: "Indicadores", que: "Estándares mínimos, última evaluación, riesgos prioritarios (I y II), documentos y avance del plan anual. Pase el mouse para ver de dónde sale cada dato." },
       { titulo: "Alertas", que: "Plazos de accidentes vencidos o por vencer, y otros pendientes. Cada alerta lleva a donde se resuelve." },
       { titulo: "Qué exige la norma a esta empresa", que: "Comités, programas y normas que aplican, con su razón." },
+      { titulo: "Accesos y informe de gestión", que: "Botones a matriz, evaluación, documentos y plan.", botones: [{ nombre: "Informe de gestión (elija el mes)", hace: "Descarga en Word el informe mensual para el cliente: resumen, actividades del mes y vencidas, accidentalidad e indicadores, acciones, documentos, comités, lo programado para el mes siguiente, recomendaciones y firmas." }] },
       { titulo: "Próximas actividades del plan anual", que: "Lo que viene en el plan.", botones: [{ nombre: "Ver plan", hace: "Abre el plan anual." }] },
     ],
     relacionadas: ["matriz", "evaluacion", "plan", "documentos"],
