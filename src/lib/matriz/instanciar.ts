@@ -64,7 +64,7 @@ export async function agregarTareaTipo(empresaId: string, cargoId: string, tarea
   }
   const tt = await db.tareaTipo.findUniqueOrThrow({ where: { id: tareaTipoId }, include: { peligros: { include: { peligro: true } }, procesosTipo: true } });
   const procesos = await db.proceso.findMany({ where: { empresaId } });
-  const proceso = procesos.find((p) => p.procesoTipoId && tt.procesosTipo.some((x) => x.procesoTipoId === p.procesoTipoId)) ?? procesos[0];
+  const proceso = procesos.find((p) => p.procesoTipoId && tt.procesosTipo.some((x) => x.procesoTipoId === p.procesoTipoId)) ?? procesos.find((p) => /producci|operaci|servicio al cliente|cocina|obra/i.test(p.nombre)) ?? procesos[0];
   const cargo = await db.cargo.findUniqueOrThrow({ where: { id: cargoId } });
   const zonas = await db.zona.findMany({ where: { empresaId }, include: { zonaTipo: true } });
   const preferida = tt.zonasPreferidas.map((n) => zonas.find((z) => z.zonaTipo?.nombre === n || z.nombre === n)).find(Boolean);

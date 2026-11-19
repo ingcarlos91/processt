@@ -90,3 +90,13 @@ export function generarPlan(e: Entrada): ActividadGen[] {
 export function anioPlanDefecto(hoy = new Date()) {
   return hoy.getMonth() >= 10 ? hoy.getFullYear() + 1 : hoy.getFullYear();
 }
+
+/**
+ * Año del plan que se muestra en Resumen y tablero: entre el año actual y el siguiente, el que tiene
+ * el plan (más actividades). Así una acción suelta llevada al año actual no esconde el plan generado.
+ */
+export function anioPlanVigente(actividades: { anio: number }[], hoy = new Date()) {
+  const a = hoy.getFullYear();
+  const n = (y: number) => actividades.filter((x) => x.anio === y).length;
+  return n(a + 1) > n(a) ? a + 1 : a;
+}

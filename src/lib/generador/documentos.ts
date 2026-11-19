@@ -40,7 +40,9 @@ export async function generarDocumentos(empresaId: string, codigos?: string[]) {
       for (const x of existente.secciones) if (!usados.has(x.id) && !x.contenidoEditado) await db.documentoSeccion.delete({ where: { id: x.id } });
       await db.documento.update({
         where: { id: existente.id },
-        data: { nombre: p.nombre, generadoEn: new Date(), ...(cambio ? { version: existente.version + 1, estado: "BORRADOR" } : {}) },
+        // La versión solo sube si la vigente ya fue aprobada o firmada; mientras es borrador, los cambios
+        // quedan en la misma versión (si no, cada examen o integrante nuevo inflaría la numeración).
+        data: { nombre: p.nombre, generadoEn: new Date(), ...(cambio ? { estado: "BORRADOR", ...(existente.estado !== "BORRADOR" || (await db.evidencia.count({ where: { documentoId: existente.id, tipo: "DOCUMENTO_FIRMADO", activo: true, documentoVersion: existente.version } })) > 0 ? { version: existente.version + 1 } : {}) } : {}) },
       });
     }
     resultado.push({ codigo: p.codigo, secciones: secciones.length, revisar });

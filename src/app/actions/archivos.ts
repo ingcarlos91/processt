@@ -29,6 +29,12 @@ export async function subirArchivo(empresaId: string, fd: FormData) {
   const fecha = /^\d{4}-\d{2}-\d{2}$/.test(fechaTxt) ? new Date(fechaTxt + "T12:00:00Z") : new Date();
   let descripcion = String(fd.get("descripcion") ?? "").trim();
 
+  // Estándar de la evidencia: el primero de la lista que aplique a la empresa (7, 21 o 60 estándares),
+  // para que la evidencia aparezca en Evidencias bajo un estándar que la empresa sí tiene.
+  const emp = await db.empresa.findUniqueOrThrow({ where: { id: empresaId }, select: { resultadoReglas: true } });
+  const aplican = new Set(((emp.resultadoReglas as { estandares?: string[] } | null)?.estandares ?? []));
+  const pref = (...codigos: string[]) => codigos.find((c) => aplican.has(c)) ?? codigos[0];
+
   let documentoVersion: number | null = null;
   if (documentoId) {
     const d = await db.documento.findUniqueOrThrow({ where: { id: documentoId } });
@@ -42,31 +48,31 @@ export async function subirArchivo(empresaId: string, fd: FormData) {
   }
   if (comiteId) {
     const c = await db.comite.findUniqueOrThrow({ where: { id: comiteId } });
-    estandarCodigo ||= ESTANDAR_COMITE[c.tipo] ?? null;
+    estandarCodigo ||= c.tipo === "BRIGADA" ? pref("5.1.2", "5.1.1") : c.tipo === "CCL" ? pref("1.1.8", "1.1.6") : pref(ESTANDAR_COMITE[c.tipo] ?? "1.1.6", "1.1.1");
     descripcion ||= `Acta ${c.tipo}`;
   }
   if (eventoId) {
     const ev = await db.evento.findUniqueOrThrow({ where: { id: eventoId } });
     if (ev.empresaId !== empresaId) return { error: "Evento no encontrado." };
-    estandarCodigo ||= "3.2.2";
+    estandarCodigo ||= pref("3.2.2", "3.2.1", "1.1.4");
     descripcion ||= `Soporte del evento del ${ev.fecha.toISOString().slice(0, 10)}`;
   }
   if (inspeccionId) {
     const ins = await db.inspeccion.findUniqueOrThrow({ where: { id: inspeccionId } });
     if (ins.empresaId !== empresaId) return { error: "Inspección no encontrada." };
-    estandarCodigo ||= "4.2.4";
+    estandarCodigo ||= pref("4.2.4", "4.2.1", "4.1.2");
     descripcion ||= `Registro de ${ins.lista}`;
   }
   if (auditoriaId) {
     const au = await db.auditoria.findUniqueOrThrow({ where: { id: auditoriaId } });
     if (au.empresaId !== empresaId) return { error: "Auditoría no encontrada." };
-    estandarCodigo ||= "6.1.2";
+    estandarCodigo ||= pref("6.1.2", "6.1.3", "2.4.1");
     descripcion ||= `Auditoría interna ${au.anio}`;
   }
   if (diagnosticoId) {
     const dg = await db.diagnostico.findUniqueOrThrow({ where: { id: diagnosticoId } });
     if (dg.empresaId !== empresaId) return { error: "Diagnóstico no encontrado." };
-    estandarCodigo ||= "2.3.1";
+    estandarCodigo ||= pref("2.3.1", "2.4.1");
     descripcion ||= "Diagnóstico inicial";
   }
   descripcion ||= file.name;

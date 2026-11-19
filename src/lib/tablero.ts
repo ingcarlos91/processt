@@ -2,6 +2,7 @@
 // para decidir a qué cliente atender primero.
 import { db } from "@/lib/db";
 import { plazos } from "@/lib/eventos";
+import { anioPlanVigente } from "@/lib/plan/generar";
 import { estadoDocumento } from "@/lib/estado-documento";
 
 export type FilaEmpresa = {
@@ -35,7 +36,8 @@ export async function tableroConsultora(hoy = new Date()) {
   const filas: FilaEmpresa[] = empresas.map((e) => {
     const ev = e.evaluaciones[0];
     const puntaje = ev ? (ev.nivel === 60 ? ev.puntajeBruto : ev.puntajeAjustado) : null;
-    const plan = e.actividades.filter((a) => a.anio === anio && a.estado !== "CANCELADA");
+    const anioPlan = anioPlanVigente(e.actividades.filter((a) => a.anio >= anio), hoy);
+    const plan = e.actividades.filter((a) => a.anio === anioPlan && a.estado !== "CANCELADA");
     const finMes = (a: { anio: number; mes: number }) => new Date(Date.UTC(a.anio, a.mes, 0, 23, 59));
     const vencidas = e.actividades.filter((a) => a.estado === "PENDIENTE" && finMes(a) < hoy).length;
     const estados = e.documentos.map((d) => estadoDocumento({ estado: d.estado, version: d.version, firmadoVersion: d.archivos[0]?.documentoVersion, revisar: d.secciones.some((s) => s.requiereRevision) }));

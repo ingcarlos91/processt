@@ -115,7 +115,7 @@ ______________________________________
     md, empresa: e, consultora: co,
     meta: {
       codigo: "DIAG", nombre: `Diagnóstico inicial del SG-SST — ${e.razonSocial}`, version: 1, fecha: fecha(dg.fecha),
-      empresa: co?.nombre || "PROCESST", nit: co?.nit || "", elaboro: co?.profesional || "", aprobo: [co?.correo, co?.telefono].filter(Boolean).join(" · ") || "PROCESST",
+      empresa: co?.nombre || "PROCESST", nit: co?.nit || "", elaboro: co?.profesional || "", aprobo: co?.profesional || "",
       sistema: "PROCESST — CONSULTORÍA EN SEGURIDAD Y SALUD EN EL TRABAJO",
       logo: logo ? { buf: logo, tipo: "png" as const, ancho: 120, alto: 30 } : null,
       insertar: { GLOBAL: graficaGlobal(cal.puntaje, cal.valoracion), CICLOS: graficaCiclos(cal.porCiclo) },

@@ -63,7 +63,15 @@ export async function agregarTareaDeBiblioteca(empresaId: string, cargoId: strin
 
 export async function agregarTareaManual(empresaId: string, cargoId: string, d: { nombre: string; procesoId?: string; zonaId?: string; rutinaria?: boolean; altoRiesgo?: string | null }) {
   await requiereUsuario();
-  await db.tarea.create({ data: { empresaId, nombre: d.nombre, procesoId: d.procesoId || null, zonaId: d.zonaId || null, rutinaria: d.rutinaria ?? true, altoRiesgo: d.altoRiesgo || null, fuente: "manual", cargos: { create: { cargoId } } } });
+  // Sin proceso elegido: el proceso más usado por las demás tareas de este cargo (no el primero de la lista).
+  let procesoId = d.procesoId || null;
+  if (!procesoId) {
+    const delCargo = await db.tarea.findMany({ where: { empresaId, cargos: { some: { cargoId } }, procesoId: { not: null } }, select: { procesoId: true } });
+    const cuenta = new Map<string, number>();
+    for (const t of delCargo) cuenta.set(t.procesoId!, (cuenta.get(t.procesoId!) ?? 0) + 1);
+    procesoId = [...cuenta.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
+  }
+  await db.tarea.create({ data: { empresaId, nombre: d.nombre, procesoId, zonaId: d.zonaId || null, rutinaria: d.rutinaria ?? true, altoRiesgo: d.altoRiesgo || null, fuente: "manual", cargos: { create: { cargoId } } } });
   rv(empresaId);
 }
 

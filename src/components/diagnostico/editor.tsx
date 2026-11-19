@@ -114,7 +114,7 @@ export function DiagnosticoEditor({ empresaId, d, etapa, profesional }: { empres
         <Textarea rows={4} disabled={cerrado} value={conclusiones} placeholder="Situación general, riesgos legales y operativos, prioridades y recomendación de trabajo." onChange={(e) => setConclusiones(e.target.value)} />
       </Section>
 
-      <Section title="Fotos y soportes de la visita" actions={<SubirArchivo empresaId={empresaId} ctx={{ tipo: "EVIDENCIA", diagnosticoId: d.id, estandarCodigo: "2.3.1" }} titulo="Subir foto o soporte" trigger={<Button size="sm"><Plus /> Subir</Button>} descripcionInicial="Diagnóstico inicial" />}>
+      <Section title="Fotos y soportes de la visita" actions={<SubirArchivo empresaId={empresaId} ctx={{ tipo: "EVIDENCIA", diagnosticoId: d.id }} titulo="Subir foto o soporte" trigger={<Button size="sm"><Plus /> Subir</Button>} descripcionInicial="Diagnóstico inicial" />}>
         <ListaArchivos empresaId={empresaId} archivos={d.archivos} vacio="Sin soportes." />
       </Section>
     </div>

@@ -159,7 +159,7 @@ export function InspeccionesEditor({ empresaId, inspecciones, listas, lugares, p
                   {insVer.acciones.length === 0 ? <p className="text-sm text-muted-foreground">Ninguna.</p> : insVer.acciones.map((a) => <div key={a.id} className="flex gap-2 text-sm"><Badge variant={a.estado === "cerrada" ? "default" : "outline"}>{a.estado === "cerrada" ? "Cerrada" : "Abierta"}</Badge><span className="flex-1">{a.descripcion}<span className="block text-xs text-muted-foreground">{a.responsable}{a.fechaLimite ? ` · ${fecha(a.fechaLimite)}` : ""}</span></span></div>)}
                 </section>
                 <section className="space-y-2">
-                  <div className="flex items-center justify-between"><h3 className="text-sm font-semibold">Fotos y registro firmado</h3><SubirArchivo empresaId={empresaId} ctx={{ tipo: "EVIDENCIA", inspeccionId: insVer.id, estandarCodigo: "4.2.4" }} titulo="Subir foto o registro" trigger={<Button size="xs"><Plus /> Subir</Button>} descripcionInicial={`${insVer.lista} ${insVer.lugar}`.trim()} ayuda="Fotos de los hallazgos o el formato firmado. Quedan como soporte del estándar 4.2.4." /></div>
+                  <div className="flex items-center justify-between"><h3 className="text-sm font-semibold">Fotos y registro firmado</h3><SubirArchivo empresaId={empresaId} ctx={{ tipo: "EVIDENCIA", inspeccionId: insVer.id }} titulo="Subir foto o registro" trigger={<Button size="xs"><Plus /> Subir</Button>} descripcionInicial={`${insVer.lista} ${insVer.lugar}`.trim()} ayuda="Fotos de los hallazgos o el formato firmado. Quedan como soporte del estándar 4.2.4." /></div>
                   <ListaArchivos empresaId={empresaId} archivos={insVer.archivos} vacio="Sin fotos." />
                 </section>
               </div>

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { anioPlanVigente } from "@/lib/plan/generar";
 import { comparativoDiagnostico } from "@/lib/diagnostico";
 import { completitud } from "@/lib/completitud";
 import { BotonIniciarSgsst } from "@/components/diagnostico/acciones";
@@ -32,7 +33,7 @@ export default async function Resumen({ params }: PageProps<"/empresas/[id]">) {
     },
   });
   const ev = e.evaluaciones[0];
-  const anioAct = e.actividades.some((a) => a.anio === new Date().getFullYear()) ? new Date().getFullYear() : new Date().getFullYear() + 1;
+  const anioAct = anioPlanVigente(e.actividades);
   e.actividades = e.actividades.filter((a) => a.anio === anioAct);
   const puntaje = ev ? (ev.nivel === 60 ? ev.puntajeBruto : ev.puntajeAjustado) : null;
   const ej = e.actividades.filter((a) => a.estado === "EJECUTADA").length;

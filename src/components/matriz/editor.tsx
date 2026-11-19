@@ -288,7 +288,7 @@ function CargoCard({ c, empresaId, tareas, tareasTipo, cargosTipo, procesos, zon
               </div>
               <div className="flex gap-1">
                 <Input placeholder="Tarea nueva (fuera de la biblioteca)" value={manual} onChange={(e) => setManual(e.target.value)} />
-                <Button size="icon" variant="outline" aria-label="Agregar tarea nueva" disabled={!manual || pend} onClick={() => { run(() => A.agregarTareaManual(empresaId, c.id, { nombre: manual, procesoId: procesos[0]?.id, zonaId: zonas[0]?.id })); setManual(""); }}><Plus /></Button>
+                <Button size="icon" variant="outline" aria-label="Agregar tarea nueva" disabled={!manual || pend} onClick={() => { run(() => A.agregarTareaManual(empresaId, c.id, { nombre: manual, procesoId: undefined, zonaId: zonas[0]?.id })); setManual(""); }}><Plus /></Button>
               </div>
             </Field>
 

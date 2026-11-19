@@ -350,7 +350,8 @@ export async function contextoAccidentalidad(empresaId: string) {
     diasAusentismo: delAnio.filter((e) => e.tipo === "AUSENTISMO").reduce((s, e) => s + e.diasIncapacidad, 0),
     investigados: investigables.filter((e) => e.invEstado === "cerrada").length, investigables: investigables.length,
     reportados: delAnio.filter((e) => (e.tipo === "AT" || e.tipo === "EL") && e.reportadoArl).length, reportables: delAnio.filter((e) => e.tipo === "AT" || e.tipo === "EL").length,
-    accionesAbiertas: acciones.filter((a) => a.estado === "abierta").length, accionesCerradas: acciones.filter((a) => a.estado === "cerrada").length,
+    // FOR-08 informa solo las acciones de accidentes, incidentes y enfermedades (no las de inspecciones o auditorías).
+    accionesAbiertas: acciones.filter((a) => a.eventoId && a.estado === "abierta").length, accionesCerradas: acciones.filter((a) => a.eventoId && a.estado === "cerrada").length,
   };
   const texto = r.total
     ? `En ${anio}: ${r.at} accidente(s) de trabajo${r.graves ? ` (${r.graves} grave(s))` : ""}${r.mortales ? `, ${r.mortales} mortal(es)` : ""}, ${r.incidentes} incidente(s) y ${r.el} enfermedad(es) laboral(es); ${r.diasAt} día(s) perdidos por accidentes. Investigados ${r.investigados} de ${r.investigables}; reportados a la ARL ${r.reportados} de ${r.reportables}. Acciones: ${r.accionesCerradas} cerrada(s) y ${r.accionesAbiertas} abierta(s).`
