@@ -2,7 +2,10 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { Building2, BookOpen, FileText, Scale, Settings, Plus } from "lucide-react";
+import { Building2, BookOpen, FileText, Scale, Settings, Plus, LogOut, Users, ChevronsUpDown } from "lucide-react";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { salir } from "@/app/actions/auth";
 import {
   Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarRail,
   SidebarMenuSub, SidebarMenuSubButton, SidebarMenuSubItem,
@@ -15,7 +18,8 @@ const nav = [
   { href: "/normas", label: "Normas y estándares", icon: Scale },
 ];
 
-export function AppSidebar({ empresas, consultora }: { empresas: { id: string; razonSocial: string }[]; consultora: { nombre: string; profesional: string | null } }) {
+export function AppSidebar({ empresas, consultora, usuario }: { empresas: { id: string; razonSocial: string }[]; consultora: { nombre: string; profesional: string | null }; usuario: { nombre: string; email: string; rol: string } }) {
+  const iniciales = usuario.nombre.split(/\s+/).map((x) => x[0]).slice(0, 2).join("").toUpperCase();
   const p = usePathname();
   const activo = (href: string) => (href === "/" ? p === "/" : p.startsWith(href));
   return (
@@ -59,13 +63,28 @@ export function AppSidebar({ empresas, consultora }: { empresas: { id: string; r
       <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton size="lg" tooltip="Mi consultora" isActive={p.startsWith("/configuracion")} render={<Link href="/configuracion" />}>
-              <div className="flex size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground"><Settings className="size-4" /></div>
-              <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-medium">{consultora.profesional || "Mi consultora"}</span>
-                <span className="truncate text-xs opacity-70">{consultora.nombre}</span>
-              </div>
-            </SidebarMenuButton>
+            <DropdownMenu>
+              <DropdownMenuTrigger render={<SidebarMenuButton size="lg" tooltip={usuario.nombre} className="data-popup-open:bg-sidebar-accent" />}>
+                <Avatar className="size-8 rounded-lg"><AvatarFallback className="rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">{iniciales}</AvatarFallback></Avatar>
+                <div className="grid flex-1 text-left text-sm leading-tight">
+                  <span className="truncate font-medium">{usuario.nombre}</span>
+                  <span className="truncate text-xs opacity-70">{consultora.nombre}</span>
+                </div>
+                <ChevronsUpDown className="ml-auto size-4" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent side="right" align="end" className="w-60">
+                <DropdownMenuGroup>
+                  <DropdownMenuLabel><div className="font-medium text-foreground">{usuario.nombre}</div><div className="text-xs font-normal text-muted-foreground">{usuario.email}</div></DropdownMenuLabel>
+                </DropdownMenuGroup>
+                <DropdownMenuSeparator />
+                <DropdownMenuGroup>
+                  <DropdownMenuItem render={<Link href="/configuracion" />}><Settings /> Mi consultora</DropdownMenuItem>
+                  {usuario.rol === "admin" && <DropdownMenuItem render={<Link href="/usuarios" />}><Users /> Usuarios</DropdownMenuItem>}
+                </DropdownMenuGroup>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => salir()}><LogOut /> Cerrar sesión</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>

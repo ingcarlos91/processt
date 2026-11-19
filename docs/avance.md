@@ -10,8 +10,11 @@ npm install
 npx prisma migrate dev      # crea/actualiza tablas
 npx prisma db seed          # normas, 60 estándares, reglas, CIIU, biblioteca GTC 45, 48 plantillas
 npx tsx scripts/demo.ts     # (opcional) empresa de demostración: restaurante de 15 trabajadores
-npm run dev                 # http://localhost:3000
+npx tsx scripts/usuario.ts correo@dominio.com "Nombre Apellido" "ContraseñaSegura1" admin   # crea o restablece un usuario
+npm run dev                 # http://localhost:3000 → pide login
 ```
+
+`.env` debe tener `DATABASE_URL` y `AUTH_SECRET` (secreto para firmar sesiones; genérelo con `openssl rand -base64 48`).
 
 IA opcional: agregar `AI_GATEWAY_API_KEY=...` en `.env`. Sin clave, “Sugerir tareas y peligros” busca por palabras clave en la biblioteca.
 
@@ -43,10 +46,12 @@ IA opcional: agregar `AI_GATEWAY_API_KEY=...` en `.env`. Sin clave, “Sugerir t
 
 - Biblioteca en dos niveles: general (todas las empresas) y propia de cada empresa (pestaña “Biblioteca propia”). Lo propio no aparece en otras empresas; “Publicar en general” lo comparte. Al guardar desde la matriz se elige el nivel.
 
+- Login propio (sin servicios externos): usuarios con contraseña cifrada (scrypt), sesión firmada en cookie httpOnly (jose, 7 días), `proxy.ts` protege páginas y descargas, y cada server action verifica la sesión. Página Usuarios (admin) y cambio de contraseña en Mi consultora.
+
 ## Pendiente
 
 - Archivos de la fuente BW Modelica en `public/fonts/bw-modelica/`.
 - PDF directo (hoy: Word; PDF desde Word o imprimir).
-- Correos de recordatorio, autenticación y despliegue (Vercel + Neon + Clerk).
+- Correos de recordatorio y despliegue (Vercel + Neon). Recuperación de contraseña por correo.
 - Validar con la consultora: textos de plantillas, valores ND/NE/NC de la biblioteca, umbral del CCL en la Res. 3461/2025.
 - Calidad: pruebas automatizadas (fase siguiente).

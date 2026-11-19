@@ -1,4 +1,5 @@
 "use server";
+import { requiereUsuario } from "@/lib/auth/sesion";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { db, consultoraActual } from "@/lib/db";
@@ -35,6 +36,7 @@ function datosEmpresa(d: IntakeData) {
 }
 
 export async function crearEmpresa(d: IntakeData) {
+  await requiereUsuario();
   if (!d.razonSocial?.trim() || !d.nit?.trim()) return { error: "Razón social y NIT son obligatorios." };
   const c = await consultoraActual();
   const sedes = d.sedes.filter((s) => s.nombre?.trim());
@@ -57,6 +59,7 @@ export async function crearEmpresa(d: IntakeData) {
 
 /** Sube o reemplaza el logo de la empresa. Se usa en los encabezados de los documentos. */
 export async function subirLogo(empresaId: string, fd: FormData) {
+  await requiereUsuario();
   const file = fd.get("logo");
   if (!(file instanceof File) || file.size === 0) return { error: "Seleccione un archivo." };
   try {
@@ -70,12 +73,14 @@ export async function subirLogo(empresaId: string, fd: FormData) {
 }
 
 export async function quitarLogo(empresaId: string) {
+  await requiereUsuario();
   await borrarLogo(empresaId);
   await db.empresa.update({ where: { id: empresaId }, data: { logoUrl: null } });
   revalidatePath(`/empresas/${empresaId}`, "layout");
 }
 
 export async function actualizarEmpresa(id: string, d: IntakeData) {
+  await requiereUsuario();
   const prev = await db.empresa.findUniqueOrThrow({ where: { id } });
   await db.empresa.update({ where: { id }, data: datosEmpresa(d) });
   if (d.sectorTipoId && d.sectorTipoId !== prev.sectorTipoId) await prepararEstructura(id, "aprobado");
@@ -85,12 +90,14 @@ export async function actualizarEmpresa(id: string, d: IntakeData) {
 }
 
 export async function eliminarEmpresa(id: string) {
+  await requiereUsuario();
   await db.empresa.delete({ where: { id } });
   revalidatePath("/");
   redirect("/");
 }
 
 export async function guardarSede(empresaId: string, s: { id?: string; nombre: string; direccion?: string; ciudad?: string }) {
+  await requiereUsuario();
   if (s.id) await db.sede.update({ where: { id: s.id }, data: { nombre: s.nombre, direccion: s.direccion, ciudad: s.ciudad } });
   else await db.sede.create({ data: { empresaId, nombre: s.nombre, direccion: s.direccion, ciudad: s.ciudad } });
   revalidatePath(`/empresas/${empresaId}`, "layout");
@@ -99,6 +106,7 @@ export async function guardarSede(empresaId: string, s: { id?: string; nombre: s
 export type DatosConsultora = { nombre: string; nit?: string; profesional?: string; cedula?: string; cargo?: string; perfil?: string; licenciaSst?: string; licenciaFecha?: string; curso50h?: boolean; curso50hFecha?: string; telefono?: string; correo?: string };
 
 export async function guardarConsultora(d: DatosConsultora) {
+  await requiereUsuario();
   const c = await consultoraActual();
   await db.consultora.update({ where: { id: c.id }, data: { ...d, licenciaFecha: d.licenciaFecha ? new Date(d.licenciaFecha) : null } });
   revalidatePath("/", "layout");

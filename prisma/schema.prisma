@@ -30,8 +30,27 @@ model Consultora {
   logoUrl       String?   @map("logo_url")
   creadoEn      DateTime  @default(now()) @map("creado_en")
   empresas      Empresa[]
+  usuarios      Usuario[]
 
   @@map("consultora")
+}
+
+model Usuario {
+  id           String     @id @default(cuid())
+  consultoraId String     @map("consultora_id")
+  consultora   Consultora @relation(fields: [consultoraId], references: [id], onDelete: Cascade)
+  // Para el futuro acceso de clientes (rol "cliente"): empresa a la que pertenece.
+  empresaId    String?    @map("empresa_id")
+  empresa      Empresa?   @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  email        String     @unique
+  nombre       String
+  passwordHash String     @map("password_hash") // scrypt: sal:hash
+  rol          String     @default("admin") // admin | consultor | cliente
+  activo       Boolean    @default(true)
+  ultimoAcceso DateTime?  @map("ultimo_acceso")
+  creadoEn     DateTime   @default(now()) @map("creado_en")
+
+  @@map("usuario")
 }
 
 // ─────────────────────────── Empresa cliente ───────────────────────────
@@ -94,6 +113,7 @@ model Empresa {
   tareasPropias   TareaTipo[]       @relation("BibliotecaTareaTipo")
   cargosPropios   CargoTipo[]       @relation("BibliotecaCargoTipo")
   catalogoPropio  CatalogoItem[]    @relation("BibliotecaCatalogoItem")
+  usuarios        Usuario[]
 
   @@map("empresa")
 }
