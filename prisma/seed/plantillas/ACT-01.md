@@ -5,14 +5,14 @@ tipo: ACT
 nivelMin: 7
 carpeta: 1. Recursos
 estandares: ["1.1.6"]
-normas: ["RES-2013-1986","DEC-1072-2015","RES-0312-2019"]
+normas: ["RES-2013-1986","DL-1295-1994","DEC-1072-2015","RES-0312-2019"]
 ---
 ## Fundamento
 
 {{#if comites.copasst.esVigia}}
-Por tener menos de diez (10) trabajadores, **{{empresa.razonSocial}}** debe contar con un Vigía de Seguridad y Salud en el Trabajo, designado por el empleador (Decreto 1072 de 2015, art. 2.2.4.6.2; Resolución 2013 de 1986).
+Por tener menos de diez (10) trabajadores, **{{empresa.razonSocial}}** debe contar con un Vigía de Seguridad y Salud en el Trabajo, designado por el empleador, que cumple las funciones del COPASST (Decreto Ley 1295 de 1994, art. 35 parágrafo; Decreto 1072 de 2015, art. 2.2.4.6.12 numeral 10; Resolución 2013 de 1986, arts. 1 y 3).
 {{else}}
-Por tener {{empresa.trabajadores}} trabajadores, **{{empresa.razonSocial}}** debe conformar un Comité Paritario de Seguridad y Salud en el Trabajo (COPASST) con la siguiente composición: {{comites.copasst.composicion}} (Resolución 2013 de 1986, art. 2). El periodo es de dos (2) años y el comité se reúne como mínimo una vez al mes.
+Por tener {{empresa.trabajadores}} trabajadores, **{{empresa.razonSocial}}** debe conformar un Comité Paritario de Seguridad y Salud en el Trabajo (COPASST) con la siguiente composición: {{comites.copasst.composicion}} (Resolución 2013 de 1986, art. 2). El periodo es de dos (2) años (Decreto Ley 1295 de 1994, art. 63 literal a) y el comité se reúne como mínimo una vez al mes dentro de la jornada laboral (Resolución 2013 de 1986, art. 7).
 {{/if}}
 
 {{#if comites.copasst.esVigia}}
@@ -107,7 +107,7 @@ En {{empresa.ciudad}}, el día {{integrantes.copasst.inicio}}, se reunieron los 
 - Presidente (designado por el empleador): {{integrantes.copasst.presidente}}
 - Secretario (elegido por el comité): {{integrantes.copasst.secretario}}
 
-El empleador concede a los miembros del comité cuatro (4) horas semanales dentro de la jornada para el cumplimiento de sus funciones (Resolución 2013 de 1986, art. 7). Las reuniones ordinarias se realizarán mensualmente.
+El empleador concede a los miembros del comité cuatro (4) horas semanales dentro de la jornada para el cumplimiento de sus funciones (Decreto Ley 1295 de 1994, art. 63 literal b). Las reuniones ordinarias se realizarán mensualmente (Resolución 2013 de 1986, art. 7).
 
 ## Funciones del COPASST
 

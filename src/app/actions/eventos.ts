@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 import { requiereUsuario } from "@/lib/auth/sesion";
 import { actualizarDocumentos } from "@/lib/generador/documentos";
 import { agregarPeligroCatalogo } from "@/lib/matriz/instanciar";
-import { TIPOS_EVENTO, type Analisis, type Integrante } from "@/lib/eventos";
+import { TIPOS_EVENTO, faltasParaCerrar, type Analisis, type Integrante } from "@/lib/eventos";
 import { sugerirInvestigacion } from "@/lib/ia/investigacion";
 
 // Documentos que se alimentan de eventos y acciones.
@@ -26,6 +26,9 @@ export type DatosEvento = {
   trabajadorNombre?: string; trabajadorTipoDoc?: string; trabajadorCedula?: string; vinculacion?: string; antiguedad?: string;
   cargoId?: string; cargo?: string; tarea?: string; mecanismo?: string; agente?: string; lesion?: string; parteCuerpo?: string;
   gravedad?: string; testigos?: string; diasIncapacidad?: number; diasCargados?: number; casoNuevo?: boolean; origenAusencia?: string;
+  // Variables del FURAT que el informe retoma (Res. 1401/2007 arts. 9 y 10)
+  sitioExacto?: string; tipoAccidente?: string; jornadaHabitual?: string; turno?: string; tiempoEmpresa?: string; tiempoLaborado?: string;
+  versionTrabajador?: string; versionTestigos?: string;
 };
 
 function datos(d: DatosEvento) {
@@ -41,6 +44,10 @@ function datos(d: DatosEvento) {
     lesion: d.lesion || null, parteCuerpo: d.parteCuerpo || null, gravedad, mortal: gravedad === "mortal", testigos: d.testigos || null,
     diasIncapacidad: Math.max(0, Number(d.diasIncapacidad) || 0), diasCargados: Math.max(0, Number(d.diasCargados) || 0),
     casoNuevo: d.casoNuevo ?? true, origenAusencia: d.origenAusencia || null,
+    sitioExacto: d.sitioExacto || null, tipoAccidente: d.tipo === "AT" ? d.tipoAccidente || null : null,
+    jornadaHabitual: d.jornadaHabitual === "si" ? true : d.jornadaHabitual === "no" ? false : null, turno: d.turno || null,
+    tiempoEmpresa: d.tiempoEmpresa || null, tiempoLaborado: d.tiempoLaborado || null,
+    versionTrabajador: d.versionTrabajador || null, versionTestigos: d.versionTestigos || null,
   };
 }
 
@@ -85,33 +92,36 @@ export async function guardarReporte(empresaId: string, eventoId: string, d: { f
   return { ok: true as const };
 }
 
-export async function guardarInvestigacion(empresaId: string, eventoId: string, d: { equipo: Integrante[]; analisis: Analisis; lecciones?: string; peligroId?: string | null; invInicio?: string }) {
+export type DatosInvestigacion = { equipo: Integrante[]; analisis: Analisis; lecciones?: string; peligroId?: string | null; invInicio?: string; invLugar?: string; invFechas?: string };
+
+export async function guardarInvestigacion(empresaId: string, eventoId: string, d: DatosInvestigacion) {
   await requiereUsuario();
   const ev = await delaEmpresa(empresaId, eventoId);
   const limpio = (xs?: string[]) => (xs ?? []).map((x) => x.trim()).filter(Boolean);
   const analisis: Analisis = { porques: limpio(d.analisis.porques), actos: limpio(d.analisis.actos), condiciones: limpio(d.analisis.condiciones), personales: limpio(d.analisis.personales), trabajo: limpio(d.analisis.trabajo), conclusion: d.analisis.conclusion?.trim() || "" };
+  const equipo: Integrante[] = d.equipo.filter((x) => x.nombre.trim()).map((x) => ({ nombre: x.nombre.trim(), cargo: x.cargo?.trim() || "", documento: x.documento?.trim() || "", rol: x.rol || "otro" }));
   await db.evento.update({ where: { id: eventoId }, data: {
-    equipo: d.equipo.filter((x) => x.nombre.trim()), analisis, lecciones: d.lecciones || null, peligroId: d.peligroId || null,
-    invInicio: dia(d.invInicio) ?? ev.invInicio ?? new Date(), invEstado: ev.invEstado === "cerrada" ? "cerrada" : "en_curso",
+    equipo, analisis, lecciones: d.lecciones || null, peligroId: d.peligroId || null,
+    invInicio: dia(d.invInicio) ?? ev.invInicio ?? new Date(), invLugar: d.invLugar?.trim() || null, invFechas: d.invFechas?.trim() || null,
+    invEstado: ev.invEstado === "cerrada" ? "cerrada" : "en_curso",
   } });
   await listo(empresaId, eventoId);
   return { ok: true as const };
 }
 
-/** Cierra la investigación: exige equipo, causas y al menos una acción (Res. 1401/2007). */
+/**
+ * Cierra la investigación. Exige lo que la Res. 1401/2007 pide en el informe: descripción (art. 10), equipo según la gravedad
+ * con identificación (arts. 7 y 13), causas inmediatas y básicas (art. 11) y medidas con responsable y fecha (art. 12).
+ */
 export async function cerrarInvestigacion(empresaId: string, eventoId: string, fechaCierre: string) {
   await requiereUsuario();
   const ev = await db.evento.findUniqueOrThrow({ where: { id: eventoId }, include: { acciones: true } });
   if (ev.empresaId !== empresaId) return { error: "Evento no encontrado." };
-  const eq = (ev.equipo as Integrante[]) ?? [];
-  const a = (ev.analisis ?? {}) as Analisis;
-  const faltas: string[] = [];
-  if (eq.length < 2) faltas.push("el equipo investigador (al menos dos personas: jefe inmediato y responsable del SG-SST, más COPASST o Vigía)");
-  if (!(a.actos?.length || a.condiciones?.length)) faltas.push("las causas inmediatas");
-  if (!(a.personales?.length || a.trabajo?.length)) faltas.push("las causas básicas");
-  if (!ev.acciones.length) faltas.push("al menos una medida de control");
-  if (faltas.length) return { error: `Para cerrar la investigación falta: ${faltas.join("; ")}.` };
-  await db.evento.update({ where: { id: eventoId }, data: { invEstado: "cerrada", investigado: true, invCierre: dia(fechaCierre) ?? new Date() } });
+  const faltas = faltasParaCerrar(ev);
+  if (faltas.length) return { error: `Para cerrar la investigación falta (Res. 1401/2007): ${faltas.join("; ")}.` };
+  const cierre = dia(fechaCierre) ?? new Date();
+  if (cierre < ev.fecha) return { error: "La fecha de cierre no puede ser anterior a la fecha del evento." };
+  await db.evento.update({ where: { id: eventoId }, data: { invEstado: "cerrada", investigado: true, invCierre: cierre, invInicio: ev.invInicio ?? cierre } });
   await listo(empresaId, eventoId);
   return { ok: true as const };
 }

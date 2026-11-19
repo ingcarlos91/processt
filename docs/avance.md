@@ -75,6 +75,11 @@ IA opcional: agregar `AI_GATEWAY_API_KEY=...` en `.env`. Sin clave, “Sugerir t
 - Diagnóstico inicial opcional: crear empresa «Empezar con diagnóstico» (etapa diagnóstico, sin matriz ni documentos), lista de chequeo por PHVA con puntaje Res. 0312, informe PDF membreteado por la consultora y firmado, «Iniciar el SG-SST con este diagnóstico» (evaluación inicial + plan de mejoramiento + plan anual + documentos), línea base en Resumen e informe mensual.
 - Trazabilidad de datos (lib/completitud): cada dato faltante con dónde se llena y qué documentos lo usan (leído de las plantillas); panel en Documentos, insignia por documento, aviso dentro de cada documento y alerta en Resumen. Evaluación de cumplimiento de la matriz legal (columna «Cumple» de MTZ-01). Celdas de registros sin dato muestran «Pendiente», «Sin registrar», «Por definir» o «Ninguno identificado». Verificado: 270 pantallas sin errores y 309 descargas (Word, PDF, Excel, ZIP) correctas.
 
+- Auditoría normativa completa (docs/09): catálogo ampliado a ~60 normas verificadas, reglas con umbrales corregidos (PESV 11 vehículos o 2 conductores con niveles, alturas 2,0 m, Decreto 2157 restringido, Res. 1075 derogada, Decreto 768/2022), campo de conductores, nuevos disparadores, reporte de EL al Ministerio.
+- Biblioteca "universo grande": 321 peligros (GTC 45 completo, todos con controles existentes, cinco medidas de la jerarquía, EPP, exámenes, capacitaciones, normas y PVE), 138 zonas, 659 tareas, 621 cargos, 80 sectores con 472 procesos, en módulos `prisma/seed/biblioteca/estructura-*.ts` validados por `scripts/validar-biblioteca.ts`. La semilla actualiza lo no validado y enlaza peligros por `claveSemilla`.
+- Trazabilidad de condiciones: panel "¿Por qué? → 9. Qué dato dispara cada condición" (solo las que aplican), marcas por trabajador (conduce, modalidad, turno nocturno, alimentos, alto riesgo) que alimentan el motor, campos de experiencia/rol/curso de 20 h del responsable, obligaciones legales periódicas en el planeador, POL-04 desconexión.
+- Accidentes alineados con la Res. 1401/2007 (campos de los arts. 9-13, equipo por gravedad, formato FOR-07 reordenado, PRC-09 en 16 pasos). UI: login, sidebar, móvil, descripciones cortas, formularios largos en panel lateral con secciones.
+
 ## Pendiente
 
 - PDF directo (hoy: Word; PDF desde Word o imprimir).

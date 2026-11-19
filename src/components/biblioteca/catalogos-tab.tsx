@@ -5,6 +5,7 @@ import { Plus, Search, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
+import { Ayuda } from "@/components/app/ayuda";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -52,7 +53,7 @@ function Lista({ tipo, items, empresaId }: { tipo: string; items: It[]; empresaI
       </Card>
       <Section title={cfg.titulo} actions={<InputGroup className="w-72"><InputGroupAddon><Search /></InputGroupAddon><InputGroupInput placeholder="Buscar…" value={q} onChange={(e) => setQ(e.target.value)} /></InputGroup>} contentClassName="px-0">
         <Table className="[&_td]:whitespace-normal [&_td]:align-top">
-          <TableHeader><TableRow><TableHead className="pl-6">Nombre</TableHead><TableHead>Descripción</TableHead>{cfg.campos.map(([, l]) => <TableHead key={l}>{l}</TableHead>)}<TableHead>Validado</TableHead><TableHead className="pr-6" /></TableRow></TableHeader>
+          <TableHeader><TableRow><TableHead className="pl-6">Nombre</TableHead><TableHead>Descripción</TableHead>{cfg.campos.map(([, l]) => <TableHead key={l}>{l}</TableHead>)}<TableHead><span className="flex items-center gap-1">Validado <Ayuda k="validado" /></span></TableHead><TableHead className="pr-6" /></TableRow></TableHeader>
           <TableBody>
             {lista.map((i) => (
               <TableRow key={i.id}>

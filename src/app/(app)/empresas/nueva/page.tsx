@@ -14,7 +14,7 @@ export default async function NuevaEmpresa() {
   ]);
   return (
     <Page>
-      <PageHeader title="Nueva empresa" description="Responda el cuestionario. Al crear, el sistema determina el nivel de estándares, los comités, las normas aplicables y precarga la matriz de peligros por cargo." />
+      <PageHeader title="Nueva empresa" description="Responda el cuestionario paso a paso. Al crear la empresa quedan definidos su nivel de estándares, comités, normas aplicables y la matriz de peligros inicial." />
       <IntakeWizard sectores={sectores} cargosTipo={cargosTipo} ciius={ciius} profesional={profesionalDe(await consultoraActual())} entidades={await cargarEntidades()} />
     </Page>
   );

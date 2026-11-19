@@ -30,7 +30,7 @@ export default async function Datos({ params }: PageProps<"/empresas/[id]/datos"
   };
   return (
     <>
-      <p className="text-sm text-muted-foreground max-w-4xl">Edite los datos de la empresa. Los cargos se gestionan en la pestaña “Cargos y matriz de peligros”. Al guardar se recalculan el nivel de estándares, comités y normas; luego regenere los documentos.</p>
+      <p className="text-sm text-muted-foreground max-w-3xl text-pretty">Datos de la empresa. Al guardar se recalculan el nivel de estándares, los comités y las normas aplicables; luego regenere los documentos.</p>
       <IntakeWizard sectores={sectores} cargosTipo={cargosTipo} ciius={ciius} profesional={profesionalDe(await consultoraActual())} entidades={await cargarEntidades()} inicial={inicial} empresaId={id} tieneLogo={!!e.logoUrl} />
       {await (async () => {
         const ctx = await construirContexto(id);

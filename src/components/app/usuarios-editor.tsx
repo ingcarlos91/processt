@@ -7,10 +7,12 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
+import { Selector } from "@/components/app/selector";
+import { SeccionFormulario, SeccionesFormulario } from "@/components/app/formulario-largo";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field";
+import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from "@/components/ui/input-group";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogBody, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Section } from "@/components/app/ui";
 import * as A from "@/app/actions/usuarios";
@@ -130,27 +132,31 @@ export function UsuariosEditor({ usuarios, yoId }: { usuarios: U[]; yoId: string
       </Section>
 
       <Dialog open={!!modal} onOpenChange={(o) => !o && setModal(null)}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className={modal?.tipo === "nuevo" || modal?.tipo === "editar" ? "sm:max-w-xl" : "sm:max-w-md"}>
           {(modal?.tipo === "nuevo" || modal?.tipo === "editar") && (
             <>
               <DialogHeader>
                 <DialogTitle>{modal.tipo === "nuevo" ? "Nuevo usuario" : `Editar a ${modal.u.nombre}`}</DialogTitle>
                 <DialogDescription>{modal.tipo === "nuevo" ? "Entregue la contraseña inicial a la persona por un medio seguro; podrá cambiarla en “Mi cuenta”." : "Los cambios de rol aplican de inmediato."}</DialogDescription>
               </DialogHeader>
-              <FieldGroup>
-                <Field><FieldLabel htmlFor="u-n">Nombre completo</FieldLabel><Input id="u-n" placeholder="Nombres y apellidos" value={f.nombre} onChange={(e) => setF({ ...f, nombre: e.target.value })} /></Field>
-                <Field><FieldLabel htmlFor="u-e">Correo</FieldLabel><Input id="u-e" placeholder="nombre@empresa.com" type="email" value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} /><FieldDescription>Es el usuario con el que inicia sesión.</FieldDescription></Field>
-                <Field>
-                  <FieldLabel htmlFor="u-r">Rol</FieldLabel>
-                  <NativeSelect id="u-r" className="w-full" value={f.rol} onChange={(e) => setF({ ...f, rol: e.target.value })} disabled={modal.tipo === "editar" && modal.u.id === yoId}>
-                    {Object.entries(ROLES).map(([k, r]) => <NativeSelectOption key={k} value={k}>{r.t}</NativeSelectOption>)}
-                  </NativeSelect>
-                  <FieldDescription>{ROLES[f.rol]?.d}{modal.tipo === "editar" && modal.u.id === yoId ? " No puede cambiar su propio rol." : ""}</FieldDescription>
-                </Field>
-                {modal.tipo === "nuevo" && (
-                  <Field><FieldLabel htmlFor="u-p">Contraseña inicial</FieldLabel><CampoClave id="u-p" value={f.password} onChange={(v) => setF({ ...f, password: v })} /><FieldDescription>Mínimo 8 caracteres, con letras y números.</FieldDescription></Field>
-                )}
-              </FieldGroup>
+              <DialogBody>
+                <SeccionesFormulario>
+                  <SeccionFormulario titulo="Datos" columnas={2}>
+                    <Field><FieldLabel htmlFor="u-n">Nombre completo</FieldLabel><Input id="u-n" placeholder="Nombres y apellidos" value={f.nombre} onChange={(e) => setF({ ...f, nombre: e.target.value })} /></Field>
+                    <Field><FieldLabel htmlFor="u-e">Correo</FieldLabel><Input id="u-e" placeholder="nombre@empresa.com" type="email" value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} /><FieldDescription>Es el usuario con el que inicia sesión.</FieldDescription></Field>
+                  </SeccionFormulario>
+                  <SeccionFormulario titulo="Acceso" descripcion={modal.tipo === "nuevo" ? "El rol define qué puede hacer; la contraseña inicial se entrega por un medio seguro." : "El rol define qué puede hacer en PROCESST."} columnas={2}>
+                    <Field className={modal.tipo === "nuevo" ? undefined : "sm:col-span-2"}>
+                      <FieldLabel htmlFor="u-r">Rol</FieldLabel>
+                      <Selector id="u-r" value={f.rol} onChange={(v) => setF({ ...f, rol: v })} disabled={modal.tipo === "editar" && modal.u.id === yoId} opciones={Object.entries(ROLES).map(([k, r]) => ({ valor: k, etiqueta: r.t }))} />
+                      <FieldDescription>{ROLES[f.rol]?.d}{modal.tipo === "editar" && modal.u.id === yoId ? " No puede cambiar su propio rol." : ""}</FieldDescription>
+                    </Field>
+                    {modal.tipo === "nuevo" && (
+                      <Field><FieldLabel htmlFor="u-p">Contraseña inicial</FieldLabel><CampoClave id="u-p" value={f.password} onChange={(v) => setF({ ...f, password: v })} /><FieldDescription>Mínimo 8 caracteres, con letras y números.</FieldDescription></Field>
+                    )}
+                  </SeccionFormulario>
+                </SeccionesFormulario>
+              </DialogBody>
               <DialogFooter>
                 <Button variant="outline" onClick={() => setModal(null)}>Cancelar</Button>
                 <Button disabled={pend} onClick={() => run(() => modal.tipo === "nuevo" ? A.crearUsuario(f) : A.actualizarUsuario(modal.u.id, f), modal.tipo === "nuevo" ? "Usuario creado" : "Cambios guardados")}>{pend && <Spinner />} {modal.tipo === "nuevo" ? "Crear usuario" : "Guardar"}</Button>

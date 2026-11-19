@@ -10,6 +10,8 @@ condicion: {"trabajadoresMin":10}
 ---
 ## Identificación de la empresa
 
+Reglamento elaborado conforme a los artículos 348 a 352 del Código Sustantivo del Trabajo: obligatorio para los empleadores con diez (10) o más trabajadores permanentes, dentro de los tres (3) meses siguientes al inicio de labores, sin aprobación del Ministerio del Trabajo (art. 349, modificado por el art. 55 de la Ley 962 de 2005), con el contenido del art. 350 y fijado en dos lugares visibles (art. 351).
+
 | Campo | Información |
 |---|---|
 | Razón social | {{empresa.razonSocial}} |
@@ -53,7 +55,7 @@ La empresa ha implementado un proceso de inducción del trabajador a las activid
 
 ## Artículo 6. Publicación y vigencia
 
-Este reglamento permanecerá exhibido en por lo menos dos (2) lugares visibles de los locales de trabajo, junto con la resolución aprobatoria si la hubiere, cuyos contenidos se dan a conocer a todos los trabajadores en el momento de su ingreso. El reglamento entra en vigencia a partir de su publicación y durante el tiempo que la empresa conserve, sin cambios sustanciales, las condiciones existentes en el momento de su aprobación.
+Este reglamento permanecerá fijado en por lo menos dos (2) lugares visibles de los locales de trabajo (Código Sustantivo del Trabajo, art. 351) y su contenido se da a conocer a todos los trabajadores en el momento de su ingreso. No requiere aprobación de autoridad alguna (art. 349, modificado por la Ley 962 de 2005, art. 55). El reglamento entra en vigencia a partir de su publicación y durante el tiempo que la empresa conserve, sin cambios sustanciales, las condiciones existentes en el momento de su expedición.
 
 ## Firma
 

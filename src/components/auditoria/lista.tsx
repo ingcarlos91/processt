@@ -12,7 +12,8 @@ import { Progress } from "@/components/ui/progress";
 import { Spinner } from "@/components/ui/spinner";
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogBody, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { SeccionFormulario, SeccionesFormulario } from "@/components/app/formulario-largo";
 import { Section, NormaRef } from "@/components/app/ui";
 import { Combo } from "@/components/app/combo";
 import { Confirmar } from "@/components/app/confirmar";
@@ -31,7 +32,7 @@ export function AuditoriasLista({ empresaId, auditorias, personasCopasst, sugere
   return (
     <div className="space-y-5">
       <div className="flex flex-wrap items-center gap-2">
-        <p className="max-w-3xl text-sm text-muted-foreground">Auditoría interna anual del SG-SST, planificada con el COPASST o Vigía y realizada por una persona idónea e independiente. Evalúa los 13 aspectos de la norma, genera acciones y su informe. <NormaRef>Decreto 1072/2015 arts. 2.2.4.6.29-30</NormaRef><NormaRef>Res. 0312/2019 estándares 6.1.2 y 6.1.4</NormaRef></p>
+        <p className="max-w-3xl text-sm text-muted-foreground text-pretty">Auditoría anual del SG-SST, planificada con el COPASST o Vigía y hecha por una persona independiente. Evalúa los 13 aspectos de la norma y genera acciones e informe. <NormaRef>Decreto 1072/2015 arts. 2.2.4.6.29-30</NormaRef><NormaRef>Res. 0312/2019 estándares 6.1.2 y 6.1.4</NormaRef></p>
         <div className="flex-1" />
         <Button onClick={nueva}><Plus /> Planificar auditoría {anio}</Button>
       </div>
@@ -71,18 +72,24 @@ export function AuditoriasLista({ empresaId, auditorias, personasCopasst, sugere
         <DialogContent className="sm:max-w-2xl">
           <DialogHeader><DialogTitle>Planificar auditoría interna</DialogTitle><DialogDescription>El auditor debe ser idóneo e independiente: no puede auditar su propio trabajo. Si el responsable del SG-SST ({responsable || "sin registrar"}) diseñó el sistema, conviene que audite otra persona.</DialogDescription></DialogHeader>
           {plan && (
-            <div className="grid gap-4 sm:grid-cols-3">
-              <Field><FieldLabel htmlFor="a-a">Año auditado</FieldLabel><Input id="a-a" placeholder="Ej.: 2026" type="number" value={plan.anio} onChange={(e) => setPlan({ ...plan, anio: Number(e.target.value) })} /></Field>
-              <Field><FieldLabel htmlFor="a-f">Fecha de inicio</FieldLabel><Input id="a-f" type="date" value={plan.fechaInicio} onChange={(e) => setPlan({ ...plan, fechaInicio: e.target.value })} /></Field>
-              <Field><FieldLabel>Auditor</FieldLabel><Combo value={plan.auditor} onChange={(v) => setPlan({ ...plan, auditor: v })} grupos={[{ titulo: "Sugerido", opciones: sugerenciaAuditor ? [{ valor: sugerenciaAuditor, detalle: "Profesional de la consultora" }] : [] }]} placeholder="Nombre del auditor" /></Field>
-              <Field className="sm:col-span-3"><FieldLabel htmlFor="a-p">Perfil e independencia del auditor</FieldLabel><Input id="a-p" value={plan.auditorPerfil} placeholder="Ej: Especialista en SST con curso de auditor interno; no participó en la ejecución auditada" onChange={(e) => setPlan({ ...plan, auditorPerfil: e.target.value })} /></Field>
-              <Field className="sm:col-span-3"><FieldLabel htmlFor="a-c">Planificada con (COPASST o Vigía)</FieldLabel><Input id="a-c" placeholder="Ej.: COPASST, en reunión ordinaria" value={plan.participantes} onChange={(e) => setPlan({ ...plan, participantes: e.target.value })} /><FieldDescription>Estándar 6.1.4: la auditoría se planifica con el COPASST o Vigía.</FieldDescription></Field>
-              <Field className="sm:col-span-3"><FieldLabel htmlFor="a-al">Alcance</FieldLabel><Textarea id="a-al" rows={2} placeholder="Describa qué procesos, sedes y periodo cubre la auditoría" value={plan.alcance} onChange={(e) => setPlan({ ...plan, alcance: e.target.value })} /></Field>
-              <Field className="sm:col-span-3"><FieldLabel htmlFor="a-m">Metodología</FieldLabel><Input id="a-m" placeholder="Ej.: Entrevistas, revisión documental e inspección en sitio" value={plan.metodologia} onChange={(e) => setPlan({ ...plan, metodologia: e.target.value })} /></Field>
-            </div>
+            <DialogBody>
+              <SeccionesFormulario>
+                <SeccionFormulario titulo="Auditoría" descripcion="Quién audita y cuándo. El sistema registra la independencia del auditor en el informe." columnas={2}>
+                  <Field><FieldLabel htmlFor="a-a">Año auditado</FieldLabel><Input id="a-a" placeholder="Ej.: 2026" type="number" value={plan.anio} onChange={(e) => setPlan({ ...plan, anio: Number(e.target.value) })} /></Field>
+                  <Field><FieldLabel htmlFor="a-f">Fecha de inicio</FieldLabel><Input id="a-f" type="date" value={plan.fechaInicio} onChange={(e) => setPlan({ ...plan, fechaInicio: e.target.value })} /></Field>
+                  <Field className="sm:col-span-2"><FieldLabel>Auditor</FieldLabel><Combo value={plan.auditor} onChange={(v) => setPlan({ ...plan, auditor: v })} grupos={[{ titulo: "Sugerido", opciones: sugerenciaAuditor ? [{ valor: sugerenciaAuditor, detalle: "Profesional de la consultora" }] : [] }]} placeholder="Nombre del auditor" /></Field>
+                  <Field className="sm:col-span-2"><FieldLabel htmlFor="a-p">Perfil e independencia del auditor</FieldLabel><Input id="a-p" value={plan.auditorPerfil} placeholder="Ej: Especialista en SST con curso de auditor interno; no participó en la ejecución auditada" onChange={(e) => setPlan({ ...plan, auditorPerfil: e.target.value })} /></Field>
+                </SeccionFormulario>
+                <SeccionFormulario titulo="Planificación" descripcion="Estándar 6.1.4: la auditoría se planifica con el COPASST o Vigía. Alcance y metodología van al programa de auditoría.">
+                  <Field><FieldLabel htmlFor="a-c">Planificada con (COPASST o Vigía)</FieldLabel><Input id="a-c" placeholder="Ej.: COPASST, en reunión ordinaria" value={plan.participantes} onChange={(e) => setPlan({ ...plan, participantes: e.target.value })} /></Field>
+                  <Field><FieldLabel htmlFor="a-al">Alcance</FieldLabel><Textarea id="a-al" rows={3} placeholder="Describa qué procesos, sedes y periodo cubre la auditoría" value={plan.alcance} onChange={(e) => setPlan({ ...plan, alcance: e.target.value })} /></Field>
+                  <Field><FieldLabel htmlFor="a-m">Metodología</FieldLabel><Textarea id="a-m" rows={2} placeholder="Ej.: Entrevistas, revisión documental e inspección en sitio" value={plan.metodologia} onChange={(e) => setPlan({ ...plan, metodologia: e.target.value })} /></Field>
+                </SeccionFormulario>
+              </SeccionesFormulario>
+            </DialogBody>
           )}
           <DialogFooter><Button variant="outline" onClick={() => setPlan(null)}>Cancelar</Button>
-            <Button disabled={pend || !plan?.auditor.trim()} onClick={() => plan && start(async () => { const r = await A.crearAuditoria(empresaId, plan); if ("error" in r) { toast.error(r.error); return; } toast.success("Auditoría creada con los 13 aspectos de la norma"); setPlan(null); router.push(`/empresas/${empresaId}/auditoria/${r.id}`); })}>{pend && <Spinner />} Crear auditoría</Button></DialogFooter>
+            <Button disabled={pend || !plan?.auditor.trim()} tooltip={!plan?.auditor.trim() ? "Indique quién audita" : undefined} onClick={() => plan && start(async () => { const r = await A.crearAuditoria(empresaId, plan); if ("error" in r) { toast.error(r.error); return; } toast.success("Auditoría creada con los 13 aspectos de la norma"); setPlan(null); router.push(`/empresas/${empresaId}/auditoria/${r.id}`); })}>{pend && <Spinner />} Crear auditoría</Button></DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

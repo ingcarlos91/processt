@@ -78,7 +78,7 @@ Campos obligatorios de `empresa`: razon_social, nit, digito_verificacion, direcc
    - `trabajadores < 10` → Vigía; `>= 10` → COPASST con tamaño según Res. 2013/1986; `>= 10` → Reglamento de Higiene (art. 349 CST).
    - CCL para todas (Res. 3461/2025; confirmar umbral); protocolo acoso sexual (Ley 2365/2024).
    - `alturas` → PRG-08 + Res. 4272/2021; `confinados` → Res. 0491/2020; `quimicos` → MTZ-03 + Decreto 1496/2018; `vehiculos >= 10` → PESV; `ruido` → Res. 8321/1983 + PVE auditivo; `> 50 trabajadores` → batería psicosocial Res. 2764/2022; siempre → Decreto 728/2025 programa salud mental/SPA.
-4. `ciiu.ts`: tabla CIIU rev. 4 A.C. → clase de riesgo según Decreto 1607/2002. Empezar con las divisiones (2 dígitos) más frecuentes y permitir override manual; completar después.
+4. `ciiu.ts`: tabla CIIU rev. 4 A.C. → clase de riesgo según Decreto 768/2022 (derogó el Decreto 1607/2002). Empezar con las divisiones (2 dígitos) más frecuentes y permitir override manual; completar después.
 5. Semilla de `plantilla` con los archivos `prisma/seed/plantillas/*.md` (ver H6 y Anexo A).
 
 **Funciona si:** `prisma db seed` carga 60 estándares, ≥ 25 normas, ≥ 12 reglas, y en la UI `/biblioteca/normas` se listan.
@@ -159,7 +159,7 @@ Variables disponibles en todas: `empresa.*`, `consultora.*`, `fecha`, `anio`, `c
 | Código | Secciones mínimas | Norma que lo define |
 |---|---|---|
 | POL-01 Política de SST | 1 Compromiso de la alta dirección; 2 Alcance (todos los centros y trabajadores, contratistas); 3 Objetivos (identificar peligros/controlar riesgos; proteger seguridad y salud mediante mejora continua; cumplir normativa); 4 Compromiso con recursos y participación; 5 Firma rep. legal, fecha, "revisión anual" | D.1072 arts. 2.2.4.6.5, .6, .7 |
-| POL-02 Política de prevención de alcohol, tabaco, SPA y promoción de salud mental | compromiso, prohibiciones, medidas, confidencialidad, firma | Res. 1075/1992, Decreto 728/2025, Ley 2460/2025 |
+| POL-02 Política de prevención de alcohol, tabaco, SPA y promoción de salud mental | compromiso, prohibiciones, medidas, confidencialidad, firma | Res. 1843/2025 art. 25, Ley 1335/2009, Decreto 728/2025, Ley 2460/2025 |
 | POL-03 Política de prevención del acoso laboral y convivencia | compromiso, definición de acoso (Ley 1010), canales, CCL, no represalias | Ley 1010/2006, Res. 3461/2025 |
 | DOC-01 Objetivos e indicadores | tabla objetivo → indicador → meta → fórmula → fuente → periodicidad → responsable; fichas técnicas (7 campos) | D.1072 arts. 2.2.4.6.18, .19 |
 | DOC-02 Roles y responsabilidades + rendición de cuentas | por rol (alta dirección, responsable SG-SST, jefes, trabajadores, COPASST/Vigía, CCL, brigada, contratistas); mecanismo anual de rendición | D.1072 art. 2.2.4.6.8 nums. 2-3, 2.2.4.6.10 |

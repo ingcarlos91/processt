@@ -6,20 +6,13 @@
 import { execSync } from "node:child_process";
 import { db, consultoraActual } from "../src/lib/db";
 import { cifrarPassword, validarPassword } from "../src/lib/auth/password";
-import { sincronizarPlantillas } from "../prisma/seed/sincronizar-plantillas";
 
 async function main() {
   if (!process.env.DATABASE_URL) { console.log("[sembrar] Sin DATABASE_URL: se omite."); return; }
-  const normas = await db.norma.count();
-  if (normas === 0) {
-    console.log("[sembrar] Base vacía: sembrando catálogos y plantillas…");
-    execSync("npx tsx prisma/seed/index.ts", { stdio: "inherit" });
-  } else {
-    console.log(`[sembrar] La base ya tiene ${normas} normas: no se siembra.`);
-    // Las plantillas del sistema sí se sincronizan en cada despliegue (salvo las editadas por la consultora).
-    const pl = await sincronizarPlantillas(db);
-    console.log(`[sembrar] Plantillas: ${pl.actualizadas} actualizadas, ${pl.respetadas} editadas por la consultora sin tocar.`);
-  }
+  // Siembra completa en cada despliegue: es idempotente (upserts de estándares, normas, reglas y CIIU; plantillas
+  // respetando las editadas por la consultora; biblioteca aditiva que solo actualiza lo no validado).
+  console.log("[sembrar] Sincronizando catálogos, normas, reglas, plantillas y biblioteca…");
+  execSync("npx tsx prisma/seed/index.ts", { stdio: "inherit" });
 
   const email = process.env.ADMIN_EMAIL?.trim().toLowerCase(), nombre = process.env.ADMIN_NOMBRE?.trim(), password = process.env.ADMIN_PASSWORD;
   if (email && nombre && password) {

@@ -17,7 +17,7 @@ El diagnóstico se construye a partir de: (a) la encuesta de perfil sociodemogr�
 
 ## Evaluaciones médicas ocupacionales
 
-Se realizan conforme a la Resolución 1843 de 2025 y al profesiograma de la empresa (documento DOC-07): ingreso, periódicas (con la periodicidad que defina el médico, máximo cada tres años), por cambio de ocupación, post incapacidad y de retiro. El costo es asumido por el empleador. La empresa recibe únicamente el concepto de aptitud y las recomendaciones; la historia clínica queda bajo custodia de la IPS.
+Se realizan conforme a la Resolución 1843 de 2025 y al perfil de cargo (profesiograma) de la empresa (documento DOC-07), que el empleador elabora y entrega al prestador con la matriz de peligros (arts. 5 literal d y 16). Son seis tipos (arts. 8 a 14): pre-ingreso; periódicas programadas y por cambio de ocupación; de egreso, dentro de los cinco (5) días hábiles siguientes al retiro y con constancia de notificación; de retorno laboral tras ausencia no médica de noventa (90) días o más; post-incapacidad de treinta (30) días o más; y de seguimiento. La periodicidad de las periódicas la define la empresa en este programa con justificación técnica, sin superar tres (3) años (art. 15). El costo lo asume en su totalidad el empleador y la ARL no puede pagarlas (arts. 5 literal a y 6). La empresa recibe únicamente el concepto de aptitud (apto, apto con recomendaciones, apto con restricciones o aplazado; se evita "no apto", art. 19) y las recomendaciones; la historia clínica queda bajo custodia del prestador durante veinte (20) años, sin copia en la empresa (art. 30). Está prohibido exigir prueba de embarazo, VIH o VDRL (art. 21).
 
 ## Programas de vigilancia epidemiológica (PVE)
 
@@ -36,17 +36,17 @@ Con base en los peligros prioritarios de la matriz se establecen los siguientes 
 
 | Actividad | Periodicidad | Responsable |
 |---|---|---|
-| Pausas activas | Diaria | Responsable del SG-SST / líderes |
+| Pausas activas (Resolución 1843 de 2025, art. 5 literal h) | Diaria | Responsable del SG-SST / líderes |
 | Semana de la salud (tamizajes con EPS/ARL) | Anual | Responsable del SG-SST |
 | Campañas de estilos de vida saludable (alimentación, actividad física, sueño) | Trimestral | Responsable del SG-SST |
-| Prevención del consumo de alcohol, tabaco y SPA | Semestral | Responsable del SG-SST |
-| Promoción de la salud mental (Decreto 728 de 2025) | Semestral | Responsable del SG-SST / ARL |
+| Campañas de prevención de la farmacodependencia, el alcoholismo y el tabaquismo (Resolución 1843 de 2025, art. 25; Decreto 1072 de 2015, art. 2.2.4.13.3) | Semestral | Responsable del SG-SST / ARL |
+| Plan de intervención en salud mental basado en la evaluación psicosocial (Decreto 1072 de 2015, art. 2.2.4.13.4) | Semestral | Responsable del SG-SST / ARL |
 | Seguimiento a restricciones y recomendaciones médicas | Mensual | Responsable del SG-SST |
 | Vacunación según riesgo | Según esquema | Responsable del SG-SST / EPS |
 
 ## Restricciones y recomendaciones médico-laborales
 
-Las recomendaciones emitidas por el médico se comunican por escrito al trabajador y al jefe inmediato, se registran en el formato FOR-02 y se verifica su cumplimiento mensualmente (Resolución 0312 de 2019, estándar 3.1.6).
+El concepto y las recomendaciones emitidas por el médico se comunican por escrito a cada trabajador, con evidencia (Resolución 1843 de 2025, art. 5 literal i), se registran en el formato FOR-02 y se verifica su cumplimiento mensualmente (Resolución 0312 de 2019, estándar 3.1.6). Cuando hay restricciones, la empresa adapta las condiciones del puesto en máximo veinte (20) días hábiles (art. 5 literal f).
 
 ## Servicios de higiene
 

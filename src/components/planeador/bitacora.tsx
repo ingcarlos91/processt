@@ -9,7 +9,8 @@ import { Progress } from "@/components/ui/progress";
 import { Spinner } from "@/components/ui/spinner";
 import { Badge } from "@/components/ui/badge";
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogBody, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { SeccionFormulario, SeccionesFormulario } from "@/components/app/formulario-largo";
 import { Section, Stat } from "@/components/app/ui";
 import { Selector } from "@/components/app/selector";
 import { Combo } from "@/components/app/combo";
@@ -82,16 +83,22 @@ export function Bitacora({ empresaId, visitas, horasMes, valorMes, personas }: {
         <DialogContent className="sm:max-w-xl">
           <DialogHeader><DialogTitle>{v?.id ? "Editar visita" : "Registrar visita"}</DialogTitle><DialogDescription>Queda en la bitácora y en el informe mensual de gestión.</DialogDescription></DialogHeader>
           {v && (
-            <div className="grid gap-4 sm:grid-cols-3">
-              <Field><FieldLabel htmlFor="v-f">Fecha</FieldLabel><Input id="v-f" type="date" value={v.fecha} onChange={(e) => setV({ ...v, fecha: e.target.value })} /></Field>
-              <Field><FieldLabel htmlFor="v-h">Horas</FieldLabel><Input id="v-h" placeholder="Ej.: 2" type="number" min={0.25} step={0.25} value={v.horas} onChange={(e) => setV({ ...v, horas: Number(e.target.value) })} /></Field>
-              <Field><FieldLabel>Modalidad</FieldLabel><Selector value={v.modalidad} onChange={(m) => setV({ ...v, modalidad: m })} opciones={[{ valor: "presencial", etiqueta: "Presencial" }, { valor: "virtual", etiqueta: "Virtual" }]} /></Field>
-              <Field className="sm:col-span-3"><FieldLabel>Atendió (por el cliente)</FieldLabel><Combo value={v.atendio} placeholder="Seleccione o escriba quién atendió" onChange={(a) => setV({ ...v, atendio: a })} grupos={[{ titulo: "Personas de la empresa", opciones: personas.map((p) => ({ valor: p })) }]} /></Field>
-              <Field className="sm:col-span-3"><FieldLabel htmlFor="v-a">Qué se hizo</FieldLabel><Textarea id="v-a" rows={4} value={v.actividades} placeholder={"Ej: Inspección locativa con el Vigía\nCapacitación en manejo de extintores\nRevisión del plan anual"} onChange={(e) => setV({ ...v, actividades: e.target.value })} /><FieldDescription>Una actividad por línea.</FieldDescription></Field>
-              <Field className="sm:col-span-3"><FieldLabel htmlFor="v-c">Compromisos</FieldLabel><Textarea id="v-c" rows={2} placeholder="Ej.: La empresa enviará el listado de trabajadores antes del viernes" value={v.compromisos} onChange={(e) => setV({ ...v, compromisos: e.target.value })} /></Field>
-            </div>
+            <DialogBody>
+              <SeccionesFormulario>
+                <SeccionFormulario titulo="Visita" descripcion="Fecha, duración y quién atendió por la empresa." contenidoClassName="sm:grid-cols-3">
+                  <Field><FieldLabel htmlFor="v-f">Fecha</FieldLabel><Input id="v-f" type="date" value={v.fecha} onChange={(e) => setV({ ...v, fecha: e.target.value })} /></Field>
+                  <Field><FieldLabel htmlFor="v-h">Horas</FieldLabel><Input id="v-h" placeholder="Ej.: 2" type="number" min={0.25} step={0.25} value={v.horas} onChange={(e) => setV({ ...v, horas: Number(e.target.value) })} /></Field>
+                  <Field><FieldLabel>Modalidad</FieldLabel><Selector value={v.modalidad} onChange={(m) => setV({ ...v, modalidad: m })} opciones={[{ valor: "presencial", etiqueta: "Presencial" }, { valor: "virtual", etiqueta: "Virtual" }]} /></Field>
+                  <Field className="sm:col-span-3"><FieldLabel>Atendió (por el cliente)</FieldLabel><Combo value={v.atendio} placeholder="Seleccione o escriba quién atendió" onChange={(a) => setV({ ...v, atendio: a })} grupos={[{ titulo: "Personas de la empresa", opciones: personas.map((p) => ({ valor: p })) }]} /></Field>
+                </SeccionFormulario>
+                <SeccionFormulario titulo="Qué se hizo y compromisos" descripcion="Aparece tal cual en el informe mensual de gestión.">
+                  <Field><FieldLabel htmlFor="v-a">Actividades</FieldLabel><Textarea id="v-a" rows={4} value={v.actividades} placeholder={"Ej: Inspección locativa con el Vigía\nCapacitación en manejo de extintores\nRevisión del plan anual"} onChange={(e) => setV({ ...v, actividades: e.target.value })} /><FieldDescription>Una actividad por línea.</FieldDescription></Field>
+                  <Field><FieldLabel htmlFor="v-c">Compromisos</FieldLabel><Textarea id="v-c" rows={2} placeholder="Ej.: La empresa enviará el listado de trabajadores antes del viernes" value={v.compromisos} onChange={(e) => setV({ ...v, compromisos: e.target.value })} /></Field>
+                </SeccionFormulario>
+              </SeccionesFormulario>
+            </DialogBody>
           )}
-          <DialogFooter><Button variant="outline" onClick={() => setV(null)}>Cancelar</Button><Button disabled={pend || !v?.actividades.trim()} onClick={() => v && run(() => A.guardarVisita(empresaId, v), "Visita guardada", () => setV(null))}>{pend && <Spinner />} Guardar</Button></DialogFooter>
+          <DialogFooter><Button variant="outline" onClick={() => setV(null)}>Cancelar</Button><Button disabled={pend || !v?.actividades.trim()} tooltip={!v?.actividades.trim() ? "Describa qué se hizo" : undefined} onClick={() => v && run(() => A.guardarVisita(empresaId, v), "Visita guardada", () => setV(null))}>{pend && <Spinner />} Guardar</Button></DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

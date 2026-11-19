@@ -8,11 +8,11 @@ import { Porque } from "@/components/app/porque";
 export function PageHeader({ title, description, actions }: { title: ReactNode; description?: ReactNode; actions?: ReactNode }) {
   return (
     <div className="flex flex-wrap items-start justify-between gap-4">
-      <div className="space-y-1">
-        <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
-        {description && <p className="text-muted-foreground text-sm max-w-3xl">{description}</p>}
+      <div className="min-w-0 space-y-1">
+        <h1 className="text-xl font-semibold tracking-tight md:text-2xl">{title}</h1>
+        {description && <p className="text-muted-foreground text-sm max-w-3xl text-pretty">{description}</p>}
       </div>
-      {actions && <div className="flex flex-wrap gap-2">{actions}</div>}
+      {actions && <div className="flex w-full flex-wrap gap-2 sm:w-auto [&>*]:flex-1 sm:[&>*]:flex-none">{actions}</div>}
     </div>
   );
 }
@@ -42,12 +42,12 @@ export function Section({ title, description, children, actions, className, cont
 export function Stat({ label, value, hint, tone, porque, normas }: { label: string; value: ReactNode; hint?: ReactNode; tone?: "ok" | "warn" | "bad"; porque?: ReactNode; normas?: string[] }) {
   const c = tone === "ok" ? "text-emerald-600" : tone === "warn" ? "text-amber-600" : tone === "bad" ? "text-destructive" : "";
   return (
-    <Card className="@container/card gap-2">
-      <CardHeader>
-        <CardDescription className="flex items-center gap-1">{label}{porque && <Porque titulo={label} normas={normas}>{porque}</Porque>}</CardDescription>
-        <CardTitle className={cn("text-2xl font-semibold tabular-nums", c)}>{value}</CardTitle>
+    <Card className="@container/card min-w-0 gap-2">
+      <CardHeader className="gap-1.5">
+        <CardDescription className="flex items-start gap-1 text-xs leading-snug text-pretty @[12rem]/card:text-sm"><span className="min-w-0">{label}</span>{porque && <Porque titulo={label} normas={normas} className="mt-0.5 shrink-0">{porque}</Porque>}</CardDescription>
+        <CardTitle className={cn("text-2xl font-semibold tabular-nums leading-none @[14rem]/card:text-3xl", c)}>{value}</CardTitle>
       </CardHeader>
-      {hint && <CardFooter className="text-muted-foreground text-xs">{hint}</CardFooter>}
+      {hint && <CardFooter className="min-h-9 py-2 text-muted-foreground text-xs leading-snug [&>*]:min-w-0">{hint}</CardFooter>}
     </Card>
   );
 }

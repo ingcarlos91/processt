@@ -14,10 +14,12 @@ export function EmpresaTabs({ id, conDiagnostico }: { id: string; conDiagnostico
   const todas = conDiagnostico ? [...TABS, ["/diagnostico", "Diagnóstico"] as const] : [...TABS];
   const activo = [...todas].reverse().find(([h]) => (h === "" ? p === base : p.startsWith(base + h)))?.[0] ?? "";
   return (
-    <Tabs value={activo}>
-      <TabsList variant="line" className="h-auto max-w-full flex-wrap !justify-start gap-x-0 gap-y-1 group-data-horizontal/tabs:h-auto">
+    <Tabs value={activo} className="relative -mx-4 md:mx-0">
+      {/* Móvil: una sola fila con desplazamiento horizontal y degradado en el borde; escritorio: varias filas con espaciado uniforme */}
+      <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-8 bg-linear-to-l from-background to-transparent md:hidden" />
+      <TabsList variant="line" className="h-auto w-full max-w-full !justify-start gap-x-1 gap-y-1 overflow-x-auto overscroll-x-contain scroll-smooth px-4 pb-1.5 md:pb-0 [-ms-overflow-style:none] [scrollbar-width:none] group-data-horizontal/tabs:h-auto md:flex-wrap md:overflow-visible md:px-0 [&::-webkit-scrollbar]:hidden">
         {(conDiagnostico ? [TABS[0], ["/diagnostico", "Diagnóstico"] as const, ...TABS.slice(1)] : TABS).map(([h, label]) => (
-          <TabsTrigger key={h} value={h} className="flex-none" render={<Link href={base + h} />} nativeButton={false}>{label}</TabsTrigger>
+          <TabsTrigger key={h} value={h} className="flex-none scroll-mx-4 px-2.5" render={<Link href={base + h} />} nativeButton={false}>{label}</TabsTrigger>
         ))}
       </TabsList>
     </Tabs>

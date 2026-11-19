@@ -22,7 +22,7 @@ Identificar de manera sistemática condiciones y actos inseguros en instalacione
 | Instalaciones eléctricas | Semestral | Responsable SG-SST |
 | Saneamiento básico (agua, baños, residuos) | Trimestral | Responsable SG-SST |
 {{#if dis.maquinaria}}| Máquinas y equipos | Mensual | Jefe de producción / mantenimiento |
-{{/if}}{{#if dis.alturas}}| Equipos de protección contra caídas (preuso y periódica) | Preuso y semestral | Coordinador de alturas |
+{{/if}}{{#if dis.alturas}}| Equipos de protección contra caídas (Res. 4272/2021 art. 61) | Preuso y al menos anual por persona competente | Coordinador de alturas |
 {{/if}}{{#if dis.quimicos}}| Almacenamiento de sustancias químicas | Mensual | Responsable SG-SST |
 {{/if}}{{#if dis.conduccion}}| Vehículos (preoperacional) | Diaria | Conductor |
 {{/if}}| Herramientas manuales | Trimestral | Jefes de área |

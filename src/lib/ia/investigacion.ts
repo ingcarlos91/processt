@@ -28,7 +28,7 @@ export async function sugerirInvestigacion(eventoId: string): Promise<{ fuente: 
   const e = await cargarEmpresa(ev.empresaId);
   const filas = filasMatriz(e);
   const delCargo = filas.filter((f) => !ev.cargo || f.cargos.includes(ev.cargo));
-  const relato = [ev.descripcion, ev.tarea, ev.mecanismo, ev.agente, ev.lesion, ev.parteCuerpo].filter(Boolean).join(". ");
+  const relato = [ev.descripcion, ev.versionTrabajador && `Versión del trabajador: ${ev.versionTrabajador}`, ev.versionTestigos && `Versión de los testigos: ${ev.versionTestigos}`, ev.sitioExacto && `Sitio exacto: ${ev.sitioExacto}`, ev.tarea, ev.mecanismo, ev.agente, ev.lesion, ev.parteCuerpo].filter(Boolean).join(". ");
   // Biblioteca global (Biblioteca → Accidentes): causas, medidas y palabras clave por forma del evento.
   const forma = (await cargarCatalogoAccidentes()).formas.find((f) => f.nombre === ev.mecanismo);
 

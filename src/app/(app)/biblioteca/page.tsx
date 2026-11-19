@@ -27,12 +27,12 @@ export default async function Biblioteca() {
   const catalogoLite = catalogo.map((c) => ({ tipo: c.tipo, nombre: c.nombre }));
   return (
     <Page>
-      <PageHeader title="Biblioteca general" description="Todo lo parametrizable que sirve a todas las empresas: sectores y cargos, tareas, peligros (GTC 45), exámenes, EPP, capacitaciones, guías de accidentes, listas de inspección y entidades (EPS, fondos de pensiones, ARL). Lo propio de un cliente se maneja en la pestaña “Biblioteca” de esa empresa y se puede publicar aquí. Lo marcado “sin validar” viene de la semilla o de la IA y espera su revisión." />
+      <PageHeader title="Biblioteca general" description="Sectores, cargos, tareas, peligros, exámenes, EPP, capacitaciones y entidades que comparten todas las empresas. Lo que marque como validado queda listo para usar en cualquier cliente." />
       <div className="grid grid-cols-2 lg:grid-cols-6 gap-4">
         <Stat label="Sectores" value={sectores.length} />
         <Stat label="Cargos tipo" value={sectores.reduce((s, x) => s + x.cargos.length, 0)} />
-        <Stat label="Tareas tipo" value={tareas.length} hint={`${tareas.filter((t) => t.validado).length} validadas`} />
-        <Stat label="Peligros" value={peligros.length} hint={`${peligros.filter((p) => p.validado).length} validados`} />
+        <Stat label="Tareas tipo" value={tareas.length} hint={`${tareas.filter((t) => t.validado).length} validadas`} porque="Validada quiere decir que usted revisó la tarea y la aprueba para usarla en cualquier empresa. Las que aún no revisa aparecen como “sin validar”." />
+        <Stat label="Peligros" value={peligros.length} hint={`${peligros.filter((p) => p.validado).length} validados`} porque="Validado quiere decir que usted revisó el peligro y sus valores y los aprueba para usarlos en cualquier empresa." />
         <Stat label="Exámenes" value={cuenta("EXAMEN")} />
         <Stat label="EPP · Capacitaciones" value={`${cuenta("EPP")} · ${cuenta("CAPACITACION")}`} />
       </div>

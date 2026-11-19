@@ -5,7 +5,7 @@ tipo: ACT
 nivelMin: 7
 carpeta: 5. Gestión de amenazas
 estandares: ["5.1.2"]
-normas: ["DEC-1072-2015","DEC-2157-2017"]
+normas: ["DEC-1072-2015","RES-0312-2019"]
 ---
 ## Fundamento
 
@@ -28,7 +28,7 @@ En {{empresa.ciudad}}, el {{integrantes.brigada.inicio}}, **{{empresa.razonSocia
 | | | | Evacuación | |
 {{/if}}
 
-Se recomienda al menos un brigadista por área y por turno.
+Se recomienda al menos un brigadista por área y por turno. La brigada participa en el simulacro anual de todos los trabajadores (Decreto 1072 de 2015, art. 2.2.4.6.25 numeral 10; Resolución 0312 de 2019, estándar 5.1.1) y en la inspección periódica de los equipos de emergencia.
 
 ## Funciones
 

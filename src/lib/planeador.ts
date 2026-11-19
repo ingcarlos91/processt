@@ -1,9 +1,9 @@
 // Planeador: reúne en un solo calendario todas las fechas que la consultora debe tener en cuenta,
 // por empresa. Cada fecha cita la norma que la origina y enlaza a donde se gestiona.
 import { db } from "@/lib/db";
-import { plazos } from "@/lib/eventos";
+import { plazos, sumarHabiles } from "@/lib/eventos";
 
-export type Categoria = "plan" | "comite" | "accidente" | "accion" | "matriz" | "evaluacion" | "responsable" | "examen" | "epp" | "inspeccion" | "auditoria" | "visita" | "recordatorio";
+export type Categoria = "plan" | "comite" | "accidente" | "accion" | "matriz" | "evaluacion" | "responsable" | "examen" | "epp" | "inspeccion" | "auditoria" | "visita" | "recordatorio" | "legal";
 export type EstadoFecha = "vencido" | "hoy" | "proximo" | "pendiente" | "hecho";
 
 export type Fecha = {
@@ -20,6 +20,7 @@ export const CATEGORIAS: Record<Categoria, { t: string; color: string }> = {
   evaluacion: { t: "Autoevaluación", color: "bg-emerald-500" },
   responsable: { t: "Responsable SG-SST", color: "bg-teal-500" },
   examen: { t: "Exámenes médicos", color: "bg-pink-500" },
+  legal: { t: "Obligaciones legales periódicas", color: "bg-indigo-500" },
   epp: { t: "Reposición de EPP", color: "bg-lime-600" },
   inspeccion: { t: "Inspecciones", color: "bg-indigo-500" },
   auditoria: { t: "Auditoría interna", color: "bg-fuchsia-600" },
@@ -46,7 +47,7 @@ export async function fechasPlaneador({ empresaId, desde, hasta, hoy = new Date(
   const where = empresaId ? { id: empresaId } : {};
   const empresas = await db.empresa.findMany({
     where, select: {
-      id: true, razonSocial: true, responsableSst: true,
+      id: true, razonSocial: true, responsableSst: true, resultadoReglas: true,
       actividades: { where: { origen: { not: "accion" } }, select: { id: true, anio: true, mes: true, nombre: true, estado: true, normaRef: true } },
       comites: { select: { id: true, tipo: true, periodoFin: true, normaRef: true } },
       eventos: { select: { id: true, tipo: true, fecha: true, gravedad: true, fechaReporte: true, reportadoArl: true, invEstado: true, invCierre: true, invRemitidaArl: true, reporteMinisterio: true, trabajadorNombre: true } },
@@ -57,7 +58,7 @@ export async function fechasPlaneador({ empresaId, desde, hasta, hoy = new Date(
       inspecciones: { orderBy: { fecha: "desc" }, select: { lista: true, fecha: true } },
       auditorias: { orderBy: { fechaInicio: "desc" }, take: 1, select: { id: true, anio: true, fechaInicio: true, estado: true } },
       visitas: { where: { fecha: { gte: desde, lte: hasta } }, select: { id: true, fecha: true, horas: true, actividades: true } },
-      trabajadores: { where: { activo: true }, select: { id: true, nombres: true, examenes: { orderBy: { fecha: "desc" }, take: 1, select: { id: true, proximo: true, tipo: true } }, entregasEpp: { where: { proximaReposicion: { not: null } }, orderBy: { fecha: "desc" }, select: { id: true, elemento: true, proximaReposicion: true } } } },
+      trabajadores: { where: { OR: [{ activo: true }, { fechaRetiro: { gte: new Date(Date.now() - 90 * 864e5) } }] }, select: { id: true, nombres: true, activo: true, fechaRetiro: true, examenes: { orderBy: { fecha: "desc" }, take: 3, select: { id: true, proximo: true, tipo: true, fecha: true, concepto: true } }, entregasEpp: { where: { proximaReposicion: { not: null } }, orderBy: { fecha: "desc" }, select: { id: true, elemento: true, proximaReposicion: true } } } },
     },
   });
   const out: Fecha[] = [];
@@ -112,6 +113,19 @@ export async function fechasPlaneador({ empresaId, desde, hasta, hoy = new Date(
       if (dentro(f, false)) add({ id: `insp-${e.id}-${ins.lista}`, fecha: iso(f), titulo: `Próxima ${ins.lista.toLowerCase()}`, detalle: `Frecuencia sugerida: cada ${dias} días. Última: ${ins.fecha.toISOString().slice(0, 10)}.`, categoria: "inspeccion", estado: estadoDe(f, false, hoy), normaRef: "Res. 0312/2019 estándar 4.2.4", href: `${base}/inspecciones` });
     }
     for (const t of e.trabajadores) {
+      // Res. 1843/2025 art. 11: evaluación de egreso dentro de los 5 días hábiles siguientes al retiro.
+      if (!t.activo && t.fechaRetiro) {
+        const hecho = t.examenes.find((x) => /retiro|egreso/i.test(x.tipo) && x.fecha >= t.fechaRetiro!);
+        const f = sumarHabiles(t.fechaRetiro, 5);
+        if (dentro(f, !!hecho)) add({ id: `egr-${t.id}`, fecha: iso(f), titulo: `Evaluación médica de egreso — ${t.nombres}`, detalle: "Al terminar el contrato, la empresa ordena la evaluación de egreso dentro de los 5 días hábiles siguientes y conserva la constancia de haberla notificado al trabajador.", categoria: "examen", estado: estadoDe(f, !!hecho, hoy), normaRef: "Res. 1843/2025 art. 11", href: `${base}/trabajadores` });
+      }
+      // Res. 1843/2025 art. 5 lit. f: adaptar las condiciones de trabajo a las restricciones en máximo 20 días hábiles.
+      const conRestr = t.activo ? t.examenes.find((x) => x.concepto === "apto_restricciones") : undefined;
+      if (conRestr) {
+        const f = sumarHabiles(conRestr.fecha, 20);
+        if (dentro(f, false) && f.getTime() > hoy.getTime() - 60 * DIA) add({ id: `adapt-${conRestr.id}`, fecha: iso(f), titulo: `Adaptar el puesto a las restricciones médicas — ${t.nombres}`, detalle: "Implementar las restricciones o recomendaciones del concepto médico y dejar constancia (reubicación, ajuste de tareas o de jornada).", categoria: "examen", estado: estadoDe(f, false, hoy), normaRef: "Res. 1843/2025 art. 5 lit. f; Ley 776/2002 arts. 4 y 8", href: `${base}/trabajadores` });
+      }
+      if (!t.activo) continue;
       const x = t.examenes[0];
       if (x?.proximo && dentro(x.proximo, false)) add({ id: `exa-${x.id}`, fecha: iso(x.proximo), titulo: `Examen médico periódico — ${t.nombres}`, detalle: "Programe la evaluación médica ocupacional según el profesiograma.", categoria: "examen", estado: estadoDe(x.proximo, false, hoy), normaRef: "Res. 1843/2025", href: `${base}/trabajadores` });
       // Solo la última entrega de cada elemento cuenta para la reposición.
@@ -119,6 +133,20 @@ export async function fechasPlaneador({ empresaId, desde, hasta, hoy = new Date(
       for (const ep of t.entregasEpp) {
         if (vistos.has(ep.elemento)) continue; vistos.add(ep.elemento);
         if (ep.proximaReposicion && dentro(ep.proximaReposicion, false)) add({ id: `epp-${ep.id}`, fecha: iso(ep.proximaReposicion), titulo: `Reposición de EPP: ${ep.elemento} — ${t.nombres}`, categoria: "epp", estado: estadoDe(ep.proximaReposicion, false, hoy), normaRef: "Decreto 1072/2015 art. 2.2.4.6.24", href: `${base}/trabajadores` });
+      }
+    }
+    // Obligaciones legales periódicas que no dependen de un registro previo.
+    {
+      const rr = (e.resultadoReglas ?? {}) as { documentos?: { codigo: string }[]; comites?: string[] };
+      const docs = new Set((rr.documentos ?? []).map((d) => d.codigo));
+      const anios = new Set<number>(); for (let y = desde.getUTCFullYear(); y <= hasta.getUTCFullYear(); y++) anios.add(y);
+      for (const y of anios) {
+        const fecha = (m: number, d: number) => new Date(Date.UTC(y, m - 1, d, 12));
+        if (docs.has("PRG-09")) { const f = fecha(1, 31); if (dentro(f, false)) add({ id: `pesv-${e.id}-${y}`, fecha: iso(f), titulo: "Reporte anual de autogestión del PESV al Ministerio del Trabajo", detalle: "Indicadores del PESV con corte al 31 de diciembre; plazo general 31 de enero, escalonado por el último dígito del NIT.", categoria: "legal", estado: estadoDe(f, false, hoy), normaRef: "Circular 034/2026; Res. 40595/2022", href: `${base}/documentos/PRG-09` }); }
+        for (const [m, d] of [[6, 30], [12, 31]] as const) { const f = fecha(m, d); if (dentro(f, false)) add({ id: `acoso-${e.id}-${y}-${m}`, fecha: iso(f), titulo: "Publicación semestral anonimizada de quejas por acoso sexual y remisión al SIVIGE", detalle: "Número de quejas tramitadas y sanciones, sin datos personales.", categoria: "legal", estado: estadoDe(f, false, hoy), normaRef: "Ley 2365/2024 art. 11 num. 7", href: `${base}/documentos/PRC-06` }); }
+        { const f = fecha(12, 15); if (dentro(f, false)) add({ id: `spa-${e.id}-${y}`, fecha: iso(f), titulo: "Información anual del programa de salud mental y prevención de SPA", detalle: "Planeación, implementación, seguimiento y ajustes, desagregados por actividad económica, número de trabajadores, ocupación, sexo y edad, a disposición de los inspectores.", categoria: "legal", estado: estadoDe(f, false, hoy), normaRef: "Decreto 728/2025 (Decreto 1072 art. 2.2.4.13.10)", href: `${base}/documentos/PRG-03` }); }
+        if (docs.has("MTZ-03")) { const f = fecha(3, 31); if (dentro(f, false)) add({ id: `sga-${e.id}-${y}`, fecha: iso(f), titulo: "Capacitación anual en SGA (etiquetas, pictogramas, FDS y emergencias)", categoria: "legal", estado: estadoDe(f, false, hoy), normaRef: "Res. 0773/2021 art. 21 num. 7", href: `${base}/documentos/MTZ-03` }); }
+        if ((rr.comites ?? []).includes("CCL")) for (const m of [3, 6, 9, 12]) { const f = fecha(m, 30 - (m === 3 || m === 12 ? -1 : 0)); if (dentro(f, false)) add({ id: `ccl-inf-${e.id}-${y}-${m}`, fecha: iso(f), titulo: m === 12 ? "Informe anual del Comité de Convivencia Laboral a la alta dirección" : "Informe trimestral del Comité de Convivencia Laboral", categoria: "legal", estado: estadoDe(f, false, hoy), normaRef: "Res. 3461/2025 art. 6", href: `${base}/comites` }); }
       }
     }
     const au = e.auditorias[0];

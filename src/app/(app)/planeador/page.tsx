@@ -13,7 +13,7 @@ export default async function PlaneadorGeneral() {
   ]);
   return (
     <Page>
-      <PageHeader title="Planeador" description="Todas las fechas de todas sus empresas en un solo lugar: plan anual, comités, plazos de accidentes, acciones, actualización de la matriz, autoevaluación, curso del responsable y sus propios recordatorios. Cada fecha cita la norma que la origina." />
+      <PageHeader title="Planeador" description="Todas las fechas de sus empresas en un solo lugar: plan anual, comités, plazos legales, acciones y recordatorios. Cada fecha cita la norma que la origina." />
       <Planeador fechas={fechas} empresas={empresas.map((e) => ({ id: e.id, nombre: e.razonSocial }))} icsHref="/api/planeador.ics" />
     </Page>
   );

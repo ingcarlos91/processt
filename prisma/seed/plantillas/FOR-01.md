@@ -11,7 +11,7 @@ normas: ["DEC-1072-2015","RES-0312-2019","LEY-1581-2012"]
 
 Esta encuesta permite elaborar la descripción sociodemográfica y el diagnóstico de condiciones de salud de los trabajadores de **{{empresa.razonSocial}}** (Decreto 1072 de 2015, arts. 2.2.4.6.12 numeral 4 y 2.2.4.6.16 numeral 7). La información es confidencial y se usa solo de forma agregada.
 
-**Autorización de tratamiento de datos:** autorizo a {{empresa.razonSocial}} el tratamiento de mis datos personales y sensibles para fines exclusivos del SG-SST, conforme a la Ley 1581 de 2012. Firma: __________________
+**Autorización de tratamiento de datos personales (Ley 1581 de 2012, arts. 6 y 12; Decreto 1377 de 2013, art. 6):** autorizo a {{empresa.razonSocial}}, como responsable del tratamiento, a recolectar y tratar los datos de esta encuesta con la finalidad exclusiva de elaborar la descripción sociodemográfica y el diagnóstico de condiciones de salud del SG-SST, de forma agregada y confidencial. Se me informó que las preguntas de las secciones "Hábitos y estilos de vida", "Morbilidad sentida" y "Antecedentes de salud" recogen **datos sensibles** (datos relativos a la salud), que **no estoy obligado a responderlas** y que puedo dejarlas en blanco sin ninguna consecuencia laboral; que puedo conocer, actualizar, rectificar y suprimir mis datos y revocar esta autorización escribiendo a {{default empresa.correo "la empresa"}}; y que la empresa no entregará esta información a terceros ni la usará para decisiones individuales sobre mi vínculo laboral. Firma: __________________  Fecha: ____________
 
 ## Datos generales
 

@@ -46,7 +46,7 @@ export function IndicadoresEditor({ empresaId, anio, trabajadoresBase, mensuales
         </div>
         <Section title="Indicadores mensuales" description="Registre el número de trabajadores de cada mes (incluye contratistas y en misión, art. 30). Los indicadores se calculan solos." contentClassName="px-0">
           <Table>
-            <TableHeader><TableRow><TableHead className="pl-6">Mes</TableHead><TableHead><span className="flex items-center gap-1">Trabajadores <Ayuda k="trabajadoresMes" /></span></TableHead><TableHead><span className="flex items-center gap-1">Días programados <Ayuda k="diasProgramados" /></span></TableHead><TableHead>AT</TableHead><TableHead>Frecuencia (%)</TableHead><TableHead>Severidad (%)</TableHead><TableHead className="pr-6">Ausentismo (%)</TableHead></TableRow></TableHeader>
+            <TableHeader><TableRow><TableHead className="pl-6">Mes</TableHead><TableHead><span className="flex items-center gap-1">Trabajadores <Ayuda k="trabajadoresMes" /></span></TableHead><TableHead><span className="flex items-center gap-1">Días programados <Ayuda k="diasProgramados" /></span></TableHead><TableHead className="text-right">AT</TableHead><TableHead className="text-right">Frecuencia (%)</TableHead><TableHead className="text-right">Severidad (%)</TableHead><TableHead className="pr-6 text-right">Ausentismo (%)</TableHead></TableRow></TableHeader>
             <TableBody>
               {mensuales.map((m) => {
                 const t = tm.find((x) => x.mes === m.mes);
@@ -55,10 +55,10 @@ export function IndicadoresEditor({ empresaId, anio, trabajadoresBase, mensuales
                     <TableCell className="pl-6">{MESES[m.mes - 1]}</TableCell>
                     <TableCell><Input type="number" min={0} className="h-7 w-24" defaultValue={t?.n ?? ""} placeholder={String(trabajadoresBase)} onBlur={(e) => e.target.value && Number(e.target.value) !== t?.n && run(() => A.guardarTrabajadoresMes(empresaId, anio, m.mes, Number(e.target.value), t?.dias ?? undefined))} /></TableCell>
                     <TableCell><Input type="number" min={0} className="h-7 w-24" defaultValue={t?.dias ?? ""} placeholder="trab. × 24" onBlur={(e) => e.target.value && run(() => A.guardarTrabajadoresMes(empresaId, anio, m.mes, t?.n ?? trabajadoresBase, Number(e.target.value)))} /></TableCell>
-                    <TableCell className="tabular-nums">{m.accidentes}</TableCell>
-                    <TableCell className="tabular-nums">{f(m.frecuencia)}</TableCell>
-                    <TableCell className="tabular-nums">{f(m.severidad)}</TableCell>
-                    <TableCell className="pr-6 tabular-nums">{f(m.ausentismo)}</TableCell>
+                    <TableCell className="text-right tabular-nums">{m.accidentes}</TableCell>
+                    <TableCell className="text-right tabular-nums">{f(m.frecuencia)}</TableCell>
+                    <TableCell className="text-right tabular-nums">{f(m.severidad)}</TableCell>
+                    <TableCell className="pr-6 text-right tabular-nums">{f(m.ausentismo)}</TableCell>
                   </TableRow>
                 );
               })}

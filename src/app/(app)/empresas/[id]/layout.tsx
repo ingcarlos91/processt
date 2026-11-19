@@ -13,20 +13,25 @@ export default async function EmpresaLayout({ children, params }: LayoutProps<"/
   const decisiones = await construirDecisiones(id);
   return (
     <div className="flex flex-1 flex-col">
-      <div className="border-b bg-background px-4 md:px-6 pt-4 space-y-3 print:hidden">
-        <div className="flex flex-wrap items-center gap-2">
-          {/* eslint-disable-next-line @next/next/no-img-element -- logo servido por la API local */}
-          {e.logoUrl && <img src={`/api/empresas/${id}/logo`} alt="" className="h-9 max-w-32 object-contain mr-1" />}
-          <h1 className="text-xl font-semibold tracking-tight mr-2">{e.razonSocial}</h1>
-          <Badge variant="outline">NIT {e.nit}{e.digitoVerificacion ? `-${e.digitoVerificacion}` : ""}</Badge>
-          <Badge>{e.nivelEstandares} estándares</Badge><Porque titulo="Estándares mínimos" normas={decisiones[0].items[2].normas}>{decisiones[0].items[2].porque}</Porque>
-          <Badge variant="outline">Riesgo {["", "I", "II", "III", "IV", "V"][e.claseRiesgo]}</Badge><Porque titulo="Clase de riesgo" normas={decisiones[0].items[1].normas}>{decisiones[0].items[1].porque}</Porque>
-          <Badge variant="outline">{e.nTrabajadoresPlanta + e.nEnMision} trabajadores</Badge><Porque titulo="Cómo se cuentan los trabajadores">{decisiones[0].items[0].porque}</Porque>
-          {e.ciudad && <Badge variant="outline">{e.ciudad}</Badge>}
-          <div className="flex-1" />
-          <PanelDecisiones grupos={decisiones} empresa={e.razonSocial} />
+      <div className="border-b bg-background px-4 pt-3 md:px-6 md:pt-4 print:hidden">
+        <div className="flex flex-col gap-2 md:flex-row md:flex-wrap md:items-center md:gap-x-3 md:gap-y-2">
+          <div className="flex min-w-0 items-center gap-2.5">
+            {/* eslint-disable-next-line @next/next/no-img-element -- logo servido por la API local */}
+            {e.logoUrl && <img src={`/api/empresas/${id}/logo`} alt="" className="h-8 max-w-28 shrink-0 object-contain md:h-9 md:max-w-32" />}
+            <h1 className="min-w-0 text-lg font-semibold leading-tight tracking-tight text-balance md:text-xl" title={e.razonSocial}>{e.razonSocial}</h1>
+          </div>
+          <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1.5 text-xs">
+            <Badge variant="outline">NIT {e.nit}{e.digitoVerificacion ? `-${e.digitoVerificacion}` : ""}</Badge>
+            <span className="inline-flex items-center gap-0.5"><Badge>{e.nivelEstandares} estándares</Badge><Porque titulo="Estándares mínimos" normas={decisiones[0].items[2].normas}>{decisiones[0].items[2].porque}</Porque></span>
+            <span className="inline-flex items-center gap-0.5"><Badge variant="outline">Riesgo {["", "I", "II", "III", "IV", "V"][e.claseRiesgo]}</Badge><Porque titulo="Clase de riesgo" normas={decisiones[0].items[1].normas}>{decisiones[0].items[1].porque}</Porque></span>
+            <span className="inline-flex items-center gap-0.5"><Badge variant="outline">{e.nTrabajadoresPlanta + e.nEnMision} trabajadores</Badge><Porque titulo="Cómo se cuentan los trabajadores">{decisiones[0].items[0].porque}</Porque></span>
+            {e.ciudad && <Badge variant="outline">{e.ciudad}</Badge>}
+          </div>
+          <div className="md:ml-auto"><PanelDecisiones grupos={decisiones} empresa={e.razonSocial} /></div>
         </div>
-        <EmpresaTabs id={id} conDiagnostico={e.etapa === "diagnostico" || e._count.diagnosticos > 0} />
+        <div className="mt-2 md:mt-3">
+          <EmpresaTabs id={id} conDiagnostico={e.etapa === "diagnostico" || e._count.diagnosticos > 0} />
+        </div>
       </div>
       <div className="flex flex-1 flex-col gap-6 p-4 md:p-6">{children}</div>
     </div>

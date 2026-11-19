@@ -60,6 +60,7 @@ function SelectContent({
   children,
   side = "bottom",
   sideOffset = 4,
+  collisionPadding = 8,
   align = "center",
   alignOffset = 0,
   alignItemWithTrigger = false,
@@ -67,13 +68,14 @@ function SelectContent({
 }: SelectPrimitive.Popup.Props &
   Pick<
     SelectPrimitive.Positioner.Props,
-    "align" | "alignOffset" | "side" | "sideOffset" | "alignItemWithTrigger"
+    "align" | "alignOffset" | "side" | "sideOffset" | "alignItemWithTrigger" | "collisionPadding"
   >) {
   return (
     <SelectPrimitive.Portal>
       <SelectPrimitive.Positioner
         side={side}
         sideOffset={sideOffset}
+        collisionPadding={collisionPadding}
         align={align}
         alignOffset={alignOffset}
         alignItemWithTrigger={alignItemWithTrigger}

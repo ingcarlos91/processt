@@ -24,7 +24,7 @@ export default async function Evidencias({ params }: PageProps<"/empresas/[id]/e
   return (
     <>
       <div className="flex flex-wrap items-center gap-2">
-        <p className="text-sm text-muted-foreground max-w-3xl">Todo lo que demuestra el cumplimiento, organizado por estándar como lo revisa el inspector (Res. 0312/2019 art. 16). Los archivos nunca se borran: se retiran y quedan en el historial (Decreto 1072/2015 art. 2.2.4.6.13).</p>
+        <p className="text-sm text-muted-foreground max-w-3xl text-pretty">Soportes del cumplimiento, organizados por estándar como los revisa el inspector (Res. 0312/2019 art. 16). Los archivos retirados quedan en el historial.</p>
         <div className="flex-1" />
         <BotonDescarga variant="default" texto="Armando el expediente…" href={`/api/empresas/${id}/expediente.zip`} tooltip="Una carpeta por estándar con documentos firmados, evidencias e índice; lista para una visita del Ministerio o la ARL"><Download /> Descargar expediente (ZIP)</BotonDescarga>
       </div>

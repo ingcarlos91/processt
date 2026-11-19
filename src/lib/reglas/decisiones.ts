@@ -1,6 +1,9 @@
 import { db } from "@/lib/db";
 import { construirContexto } from "@/lib/generador/contexto";
-import { composicionCopasst } from "./motor";
+import { composicionCopasst, contexto as contextoReglas } from "./motor";
+import { explicarCondiciones } from "./condiciones-ui";
+import { disparadoresDesdeMatriz } from "./matriz-disparadores";
+import type { Condicion } from "./condicion";
 import { explicarConteo, explicarNivel, explicarClaseRiesgo } from "./explicar";
 
 export type Decision = { que: string; porque: string; normas?: string[]; pasos?: string[] };
@@ -22,7 +25,7 @@ export async function construirDecisiones(empresaId: string): Promise<GrupoDecis
     id: "clasificacion", titulo: "1. Tamaño, riesgo y estándares", resumen: `${rr.trabajadores} trabajadores · riesgo ${ctx.empresa.claseRiesgoRomano} · ${rr.nivel} estándares`,
     items: [
       { que: `Se cuentan ${rr.trabajadores} trabajadores`, porque: explicarConteo(e) },
-      { que: `Clase de riesgo ${ctx.empresa.claseRiesgoRomano}`, porque: explicarClaseRiesgo(e, sug), normas: ["Decreto 1607/2002", "Decreto 768/2022"] },
+      { que: `Clase de riesgo ${ctx.empresa.claseRiesgoRomano}`, porque: explicarClaseRiesgo(e, sug), normas: ["Decreto 768/2022 (deroga el Decreto 1607/2002)"] },
       { que: `Aplican ${rr.nivel} estándares mínimos`, porque: explicarNivel(rr.nivel, rr.trabajadores, e.claseRiesgo) + ` Por eso la evaluación tiene ${rr.estandares.length} ítems.`, normas: [rr.nivelNormaRef] },
       {
         que: `Perfil exigido para quien diseña el SG-SST`,
@@ -95,6 +98,37 @@ export async function construirDecisiones(empresaId: string): Promise<GrupoDecis
       { que: "Cómo se califica", porque: `Cada ítem vale unos puntos. “Cumple” suma todos sus puntos, “No cumple” suma cero y “No aplica” (con justificación) suma todos sus puntos. ${rr.nivel === 60 ? "Para 60 estándares el total es sobre 100." : `Para ${rr.nivel} estándares el puntaje se expresa como porcentaje de los puntos de los ${rr.estandares.length} ítems que aplican.`}`, normas: ["Res. 0312/2019 art. 27"] },
       { que: "Qué significa el resultado", porque: "Menos de 60 %: crítico (plan de mejoramiento inmediato y reporte a la ARL a los 3 meses). Entre 60 % y 85 %: moderadamente aceptable (reporte a los 6 meses). Más de 85 %: aceptable (mantener y mejorar)." + (ev.existe ? ` Resultado actual: ${ev.puntaje}% → ${ev.valoracion}.` : ""), normas: ["Res. 0312/2019 art. 28"] },
     ],
+  });
+
+  // 9. Qué dato dispara cada regla y cada norma condicionada (trazabilidad para la consultora)
+  const [nSedes, ts, reglasDb, normasDb] = await Promise.all([
+    db.sede.count({ where: { empresaId } }),
+    db.trabajador.findMany({ where: { empresaId, activo: true }, select: { sexo: true, conduce: true, vinculacion: true } }),
+    db.reglaAplicabilidad.findMany({ where: { activa: true }, orderBy: { prioridad: "desc" } }),
+    db.norma.findMany({ where: { vigente: true }, orderBy: [{ anio: "asc" }] }),
+  ]);
+  const ctxR = contextoReglas({
+    ...e, nSedes: Math.max(1, nSedes), nMujeres: ts.filter((t) => t.sexo === "F").length,
+    nConductores: Math.max(e.nConductores ?? 0, ts.filter((t) => t.conduce).length),
+    nContratistas: Math.max(e.nContratistas ?? 0, ts.filter((t) => t.vinculacion === "contratista").length),
+    nAprendices: Math.max(e.nAprendices ?? 0, ts.filter((t) => t.vinculacion === "aprendiz").length),
+    disparadoresMatriz: await disparadoresDesdeMatriz(empresaId),
+  }, rr.nivel);
+  const base = `/empresas/${empresaId}`;
+  const condicionadas = explicarCondiciones([
+    ...reglasDb.map((r) => ({ codigo: r.codigo, nombre: r.nombre, tipo: "regla" as const, condicion: r.condicion as Condicion, normaRef: r.normaRef })),
+    ...normasDb.filter((n) => { const c = n.condicionAplicabilidad as Condicion | null; return c && !c.siempre && Object.keys(c).length > 0; }).map((n) => ({ codigo: n.codigo, nombre: n.nombre, tipo: "norma" as const, condicion: n.condicionAplicabilidad as Condicion, normaRef: `${n.tipo === "Resolucion" ? "Res." : n.tipo} ${n.numero}/${n.anio}` })),
+  ], ctxR, base);
+  // Solo las condiciones que aplican a esta empresa, con el dato que las disparó y dónde se registra.
+  const activas = condicionadas.filter((c) => c.aplica);
+  grupos.push({
+    id: "condiciones", titulo: "9. Qué dato dispara cada condición", resumen: `${activas.length} condiciones activas · conductores ${ctxR.conductores}, vehículos ${ctxR.vehiculos}, contratistas ${ctxR.contratistas}, aprendices ${ctxR.aprendices}, trabajadoras ${ctxR.mujeres}, sedes ${ctxR.sedes}`,
+    items: activas.map((c) => ({
+      que: `${c.nombre}${c.tipo === "norma" ? " (norma)" : ""}`,
+      porque: `Aplica porque ${c.condicion === "todas las empresas" ? "rige para todas las empresas" : `la condición es: ${c.condicion}`}.${c.valores ? ` Dato de la empresa: ${c.valores}.` : ""}`,
+      normas: [c.normaRef],
+      pasos: c.campos.map((x) => `${x.campo}: se registra en ${x.donde}`),
+    })),
   });
 
   return grupos;

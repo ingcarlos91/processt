@@ -20,7 +20,7 @@ export const SECCIONES: Seccion[] = [
       { k: "correoQuejas", etiqueta: "Correo para quejas de acoso laboral", tipo: "text", que: "Buzón confidencial del Comité de Convivencia Laboral.", ejemplo: "convivencia@empresa.com", usadoEn: ["POL-03", "ACT-04"], normas: ["Res. 3461/2025"] },
       { k: "acosoSexual", etiqueta: "Persona que recibe denuncias de acoso sexual", tipo: "persona", que: "Persona designada por la gerencia, distinta del Comité de Convivencia, para recibir denuncias de acoso sexual con confidencialidad.", usadoEn: ["PRC-06"], normas: ["Ley 2365/2024"] },
       { k: "ips", etiqueta: "IPS que realiza las evaluaciones médicas", tipo: "text", que: "Institución de salud con licencia en SST que hace los exámenes de ingreso, periódicos y de retiro.", donde: "Contrato o cotización con la IPS.", ejemplo: "IPS Salud Ocupacional del Cauca S.A.S.", usadoEn: ["DOC-07", "PRC-07", "PRG-02"], normas: ["Res. 1843/2025"] },
-      { k: "medicoIps", etiqueta: "Médico que valida el profesiograma", tipo: "persona", que: "Médico especialista en SST o medicina del trabajo de la IPS.", usadoEn: ["DOC-07"], normas: ["Res. 1843/2025"] },
+      { k: "medicoIps", etiqueta: "Médico de la IPS que revisa el perfil de cargo (profesiograma)", tipo: "persona", que: "Médico especialista en SST o medicina del trabajo del prestador que recibe el perfil de cargo y recomienda los énfasis de las evaluaciones.", usadoEn: ["DOC-07"], normas: ["Res. 1843/2025 arts. 5-d y 16"] },
     ],
   },
   {

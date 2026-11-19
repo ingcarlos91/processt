@@ -69,7 +69,7 @@ Convención de código sugerida: `SST-{TIPO}-{NN}` con tipos DOC (documento), PR
 | PRG-07 | Programa de mantenimiento preventivo + hojas de vida de equipos | 21 | 4.2.5 | |
 | MTZ-04 | Matriz de EPP por cargo + formato de entrega y reposición | 21 | 4.2.6 | Se deriva de la matriz de peligros. |
 | PRG-08 | Programa de protección contra caídas (alturas) | si aplica | — | Res. 4272/2021. |
-| PRG-09 | Programa de seguridad vial (PESV) | si ≥ 10 vehículos | — | Res. 40595/2022. |
+| PRG-09 | Programa de seguridad vial (PESV) | si más de 10 vehículos o 2 o más conductores | — | Ley 1503/2011 art. 12; Decreto 1079/2015 art. 2.3.2.3.2; Res. 40595/2022 (nivel básico, estándar o avanzado). |
 
 ## E. Gestión de amenazas
 

@@ -6,7 +6,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider  = "postgresql"
   url       = env("DATABASE_URL")
   // Neon: migraciones por la conexión directa (sin pooler). En local es la misma URL.
   directUrl = env("DATABASE_URL_UNPOOLED")
@@ -86,6 +86,7 @@ model Empresa {
   nAprendices              Int         @default(0) @map("n_aprendices")
   nEnMision                Int         @default(0) @map("n_en_mision")
   nVehiculos               Int         @default(0) @map("n_vehiculos")
+  nConductores             Int         @default(0) @map("n_conductores") // personas que conducen al servicio de la empresa (PESV: desde 2)
   horario                  String?
   turnos                   String?
   nivelEstandares          Int         @default(7) @map("nivel_estandares") // 7 | 21 | 60
@@ -353,6 +354,7 @@ model PeligroCatalogo {
   id                       String             @id @default(cuid())
   clasificacion            String // Biologico | Fisico | Quimico | Psicosocial | Biomecanico | Condiciones de seguridad | Fenomenos naturales
   subclasificacion         String? // p. ej. "Ruido", "Iluminación", "Locativo", "Mecánico", "Eléctrico", "Postura", "Esfuerzo"
+  claveSemilla             String?            @map("clave_semilla") // clave del peligro en la semilla; permite renombrar sin duplicar
   descripcion              String
   efectosPosibles          String             @map("efectos_posibles")
   ndDefault                Int                @default(2) @map("nd_default") // 0,2,6,10
@@ -599,23 +601,23 @@ model PlanMejoramientoItem {
 // ─────────────────────────── Plantillas y documentos ───────────────────────────
 
 model Plantilla {
-  id           String      @id @default(cuid())
-  codigo       String      @unique // "POL-01"
-  nombre       String
-  tipo         String // POL | DOC | PRG | PRC | FOR | ACT | MTZ | PLN
-  nivelMin     Int         @default(7) @map("nivel_min") // 7 | 21 | 60
-  condicion    Json? // condición adicional (disparador, trabajadores>=10, etc.)
-  estandares   String[]    @default([])
-  normas       String[]    @default([]) // codigos de Norma
-  descripcion  String?
-  contenidoMd  String      @map("contenido_md") // Markdown + Handlebars; secciones separadas por "## "
-  version      Int         @default(1)
-  vigenteDesde DateTime    @default(now()) @map("vigente_desde")
-  carpeta      String? // carpeta destino en el ZIP (p. ej. "2. Gestion integral")
-  documentos   Documento[]
+  id                String      @id @default(cuid())
+  codigo            String      @unique // "POL-01"
+  nombre            String
+  tipo              String // POL | DOC | PRG | PRC | FOR | ACT | MTZ | PLN
+  nivelMin          Int         @default(7) @map("nivel_min") // 7 | 21 | 60
+  condicion         Json? // condición adicional (disparador, trabajadores>=10, etc.)
+  estandares        String[]    @default([])
+  normas            String[]    @default([]) // codigos de Norma
+  descripcion       String?
+  contenidoMd       String      @map("contenido_md") // Markdown + Handlebars; secciones separadas por "## "
+  version           Int         @default(1)
+  vigenteDesde      DateTime    @default(now()) @map("vigente_desde")
+  carpeta           String? // carpeta destino en el ZIP (p. ej. "2. Gestion integral")
+  documentos        Documento[]
+  editadaPorUsuario Boolean     @default(false) @map("editada_por_usuario") // si la consultora la editó, los despliegues no la sobrescriben
 
   @@map("plantilla")
-  editadaPorUsuario Boolean @default(false) @map("editada_por_usuario") // si la consultora la editó, los despliegues no la sobrescriben
 }
 
 model Documento {
@@ -742,6 +744,15 @@ model Evento {
   parteCuerpo       String?          @map("parte_cuerpo")
   gravedad          String           @default("leve") // leve | grave | mortal (grave: Res. 1401/2007 art. 3)
   testigos          String?
+  // Variables del FURAT (Res. 156/2005) que el informe de investigación debe contener (Res. 1401/2007 art. 9)
+  sitioExacto       String?          @map("sitio_exacto") // sitio exacto donde ocurrió el evento (art. 9)
+  tipoAccidente     String?          @map("tipo_accidente") // propio_trabajo | transito | violencia | deportivo_recreativo (FURAT)
+  jornadaHabitual   Boolean?         @map("jornada_habitual") // ¿estaba en su jornada o labor habitual? (FURAT)
+  turno             String? // jornada o turno de trabajo (FURAT)
+  tiempoEmpresa     String?          @map("tiempo_empresa") // antigüedad en la empresa (FURAT); `antiguedad` es en el cargo
+  tiempoLaborado    String?          @map("tiempo_laborado") // tiempo laborado previo al evento (FURAT)
+  versionTrabajador String?          @map("version_trabajador") // relato del trabajador (Res. 1401/2007 art. 10)
+  versionTestigos   String?          @map("version_testigos") // versión de los testigos (art. 10)
   diasIncapacidad   Int              @default(0) @map("dias_incapacidad")
   diasCargados      Int              @default(0) @map("dias_cargados")
   mortal            Boolean          @default(false)
@@ -758,7 +769,9 @@ model Evento {
   invInicio         DateTime?        @map("inv_inicio")
   invCierre         DateTime?        @map("inv_cierre")
   invRemitidaArl    DateTime?        @map("inv_remitida_arl")
-  equipo            Json             @default("[]") // [{ nombre, cargo, rol }]
+  invLugar          String?          @map("inv_lugar") // lugar y dirección donde se hizo la investigación (Res. 1401/2007 art. 13)
+  invFechas         String?          @map("inv_fechas") // fechas y horas de las sesiones de investigación (art. 13)
+  equipo            Json             @default("[]") // [{ nombre, cargo, documento, rol }] (art. 7 y 13)
   analisis          Json             @default("{}") // { porques[], actos[], condiciones[], personales[], trabajo[], conclusion }
   lecciones         String?
   peligroId         String?          @map("peligro_id")
@@ -819,29 +832,35 @@ model Recordatorio {
 // ─────────────────────────── Trabajadores ───────────────────────────
 // Datos personales mínimos (Ley 1581/2012). De salud solo el concepto de aptitud, nunca diagnósticos.
 model Trabajador {
-  id              String                   @id @default(cuid())
-  empresaId       String                   @map("empresa_id")
-  empresa         Empresa                  @relation(fields: [empresaId], references: [id], onDelete: Cascade)
-  nombres         String
-  tipoDoc         String                   @default("CC") @map("tipo_doc")
-  documento       String?
-  cargoId         String?                  @map("cargo_id")
-  cargo           Cargo?                   @relation(fields: [cargoId], references: [id], onDelete: SetNull)
-  vinculacion     String                   @default("planta") // planta | contratista | aprendiz | mision
-  fechaIngreso    DateTime?                @map("fecha_ingreso")
-  fechaRetiro     DateTime?                @map("fecha_retiro")
-  activo          Boolean                  @default(true)
-  sexo            String? // F | M | otro
-  fechaNacimiento DateTime?                @map("fecha_nacimiento")
-  escolaridad     String?
-  telefono        String?
-  correo          String?
-  eps             String?
-  afp             String?
-  creadoEn        DateTime                 @default(now()) @map("creado_en")
-  examenes        ExamenMedico[]
-  entregasEpp     EntregaEpp[]
-  asistencias     AsistenciaCapacitacion[]
+  id                String                   @id @default(cuid())
+  empresaId         String                   @map("empresa_id")
+  empresa           Empresa                  @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  nombres           String
+  tipoDoc           String                   @default("CC") @map("tipo_doc")
+  documento         String?
+  cargoId           String?                  @map("cargo_id")
+  cargo             Cargo?                   @relation(fields: [cargoId], references: [id], onDelete: SetNull)
+  vinculacion       String                   @default("planta") // planta | contratista | aprendiz | mision
+  fechaIngreso      DateTime?                @map("fecha_ingreso")
+  fechaRetiro       DateTime?                @map("fecha_retiro")
+  activo            Boolean                  @default(true)
+  sexo              String? // F | M | otro
+  // Condiciones normativas que dispara esta persona (PESV, teletrabajo, jornada nocturna, alto riesgo pensional)
+  conduce           Boolean                  @default(false) // conduce vehículos al servicio de la empresa (PESV: desde 2 conductores)
+  modalidad         String                   @default("presencial") // presencial | teletrabajo | remoto | trabajo_en_casa
+  turnoNocturno     Boolean                  @default(false) @map("turno_nocturno") // trabaja entre 7:00 p. m. y 6:00 a. m.
+  altoRiesgoPension Boolean                  @default(false) @map("alto_riesgo_pension") // actividad del art. 2 del Decreto 2090/2003
+  manipulaAlimentos Boolean                  @default(false) @map("manipula_alimentos") // Res. 2674/2013: certificado médico anual y 10 h de capacitación
+  fechaNacimiento   DateTime?                @map("fecha_nacimiento")
+  escolaridad       String?
+  telefono          String?
+  correo            String?
+  eps               String?
+  afp               String?
+  creadoEn          DateTime                 @default(now()) @map("creado_en")
+  examenes          ExamenMedico[]
+  entregasEpp       EntregaEpp[]
+  asistencias       AsistenciaCapacitacion[]
 
   @@index([empresaId])
   @@map("trabajador")

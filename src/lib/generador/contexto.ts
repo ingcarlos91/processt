@@ -1,4 +1,5 @@
-import { abrevDoc, docTexto } from "@/lib/documento-identidad";
+import { abrevDoc, docTexto, RE_DOC } from "@/lib/documento-identidad";
+import { ROLES_EQUIPO, TIPO_ACCIDENTE, rolesExigidos, type Integrante } from "@/lib/eventos";
 import { db, consultoraActual } from "@/lib/db";
 import { evaluarEmpresa, composicionCopasst, type ResultadoReglas } from "@/lib/reglas/motor";
 import { calcular, CLASIFICACION_ETIQUETA } from "@/lib/gtc45";
@@ -7,6 +8,7 @@ import { calificar } from "@/lib/evaluacion";
 import { generarPlan, MESES, anioPlanDefecto } from "@/lib/plan/generar";
 import { disparadoresDesdeMatriz } from "@/lib/reglas/matriz-disparadores";
 import { contexto as ctxReglas } from "@/lib/reglas/motor";
+import { composicionCcl, nivelPesv } from "@/lib/reglas/condicion";
 import { TURNOS } from "@/lib/ayuda";
 import type { Complementarios, Persona } from "@/lib/complementarios";
 
@@ -97,7 +99,9 @@ export async function construirContexto(empresaId: string) {
   const filas = filasMatriz(e);
   const prioritarios = filas.filter((f) => f.nivelRiesgo === "I" || f.nivelRiesgo === "II");
   const resp = (e.responsableSst ?? {}) as Record<string, string | boolean | undefined>;
-  const dis = ctxReglas({ ...e, disparadoresMatriz: await disparadoresDesdeMatriz(e.id) }).disparadores as Record<string, boolean>;
+  const ctxR = ctxReglas({ ...e, disparadoresMatriz: await disparadoresDesdeMatriz(e.id) });
+  const dis = ctxR.disparadores as Record<string, boolean>;
+  const pesv = contextoPesv(ctxR);
 
   // Cargos con derivados (profesiograma, EPP, capacitaciones)
   const cargos = e.cargos.map((c) => {
@@ -200,7 +204,7 @@ export async function construirContexto(empresaId: string) {
     { rubro: "Asesoría profesional en SST", descripcion: "Diseño, implementación y seguimiento del SG-SST", estandar: "1.1.1" },
     { rubro: "Mantenimiento preventivo", descripcion: "Instalaciones, equipos y herramientas", estandar: "4.2.5" },
     { rubro: "Promoción de la salud y salud mental", descripcion: "Actividades de PyP, semana de la salud, salud mental", estandar: "3.1.7" },
-    ...(rr.nivel >= 21 ? [{ rubro: "Evaluación de riesgo psicosocial", descripcion: "Aplicación de batería por psicólogo especialista", estandar: "4.1.2" }] : []),
+    { rubro: "Evaluación de riesgo psicosocial", descripcion: "Aplicación de la batería por psicólogo con licencia (Res. 2764/2022: obligatoria para todo empleador)", estandar: "4.1.2" },
     ...(rr.nivel >= 60 ? [{ rubro: "Mediciones ambientales", descripcion: "Higiene industrial de riesgos prioritarios", estandar: "4.1.4" }] : []),
     ...(dis.alturas ? [{ rubro: "Trabajo en alturas", descripcion: "Certificación, equipos de protección contra caídas, coordinador", estandar: "4.2.3" }] : []),
   ];
@@ -261,7 +265,8 @@ export async function construirContexto(empresaId: string) {
       },
     };
   };
-  const integrantes = { copasst: comite(["COPASST", "VIGIA"]), ccl: comite(["CCL"]), brigada: comite(["BRIGADA"]) };
+  // Composición del CCL por tramos de la Res. 3461/2025 art. 3.
+  const integrantes = { copasst: comite(["COPASST", "VIGIA"]), ccl: { ...comite(["CCL"]), composicion: composicionCcl(rr.trabajadores) }, brigada: comite(["BRIGADA"]) };
 
   const porClas = new Map<string, { total: number; prioritarios: number }>();
   for (const f of filas) { const v = porClas.get(f.clasificacion) ?? { total: 0, prioritarios: 0 }; v.total++; if (f.nivelRiesgo === "I" || f.nivelRiesgo === "II") v.prioritarios++; porClas.set(f.clasificacion, v); }
@@ -295,7 +300,7 @@ export async function construirContexto(empresaId: string) {
       direccion: e.direccion ?? "", ciudad: e.ciudad ?? "", departamento: e.departamento ?? "", telefono: e.telefono ?? "", correo: e.correo ?? "",
       representanteLegal: e.representanteLegal?.trim() || "______________________", representanteCedula: e.representanteCedula ?? "", representanteTipoDoc: abrevDoc(e.representanteTipoDoc), representanteDoc: docTexto(e.representanteTipoDoc, e.representanteCedula), ciiu: e.ciiu ?? "", actividad: e.descripcionActividad ?? "",
       claseRiesgo: e.claseRiesgo, claseRiesgoRomano: ROMANO[e.claseRiesgo], arl: e.arl ?? "", eps: e.epsPrincipal ?? "",
-      trabajadores, contratistas: e.nContratistas, aprendices: e.nAprendices, vehiculos: e.nVehiculos, horario: e.horario ?? "", turnos: (e.turnos ?? "").split(",").map((t) => TURNOS.find((x) => x.valor === t)?.etiqueta ?? t).filter(Boolean).join("; "),
+      trabajadores, contratistas: e.nContratistas, aprendices: e.nAprendices, vehiculos: e.nVehiculos, conductores: ctxR.conductores, esTransporte: ctxR.esTransporte, horario: e.horario ?? "", turnos: (e.turnos ?? "").split(",").map((t) => TURNOS.find((x) => x.valor === t)?.etiqueta ?? t).filter(Boolean).join("; "),
       nivel: rr.nivel, sector: e.sectorTipo?.nombre ?? "", logoUrl: e.logoUrl ?? "", tieneLogo: !!e.logoUrl,
     },
     // Responsable del SG-SST registrado en cada empresa. Si falta, quedan espacios para llenar a mano.
@@ -320,12 +325,55 @@ export async function construirContexto(empresaId: string) {
     normas: normasDb.map((n) => ({ codigo: n.codigo, tipo: n.tipo === "Resolucion" ? "Resolución" : n.tipo === "GuiaTecnica" ? "Guía técnica" : n.tipo, numero: n.numero, anio: n.anio, entidad: n.entidad, nombre: n.nombre, articulosClave: n.articulosClave ?? "", resumen: n.resumen, evidenciaCumplimiento: legal[n.codigo]?.evidencia?.trim() || n.evidenciaCumplimiento || "", cumple: legal[n.codigo]?.cumple || "Por evaluar" })),
     estandares: (await db.estandar.findMany({ where: { codigo: { in: rr.estandares } }, orderBy: { orden: "asc" } })).map((s) => ({ codigo: s.codigo, ciclo: s.ciclo, grupo: s.grupo, descripcion: s.descripcion, puntaje: s.puntaje })),
     comites: { copasst: { aplica: true, esVigia: cop.tipo === "VIGIA", composicion: cop.texto, porParte: cop.porParte }, ccl: { aplica: rr.comites.includes("CCL") }, brigada: { aplica: true } },
-    capacitaciones, plan, evaluacion, planMejora, dis, indicadores: INDICADORES, pve, amenazas, presupuesto: presupuestoConValor, altoRiesgo, op, integrantes, accidentalidad, acciones: accidentalidad.acciones, nomina, inspecciones, hayInspecciones: inspecciones.length > 0, auditorias, hayAuditorias: auditorias.length > 0, ultimaAuditoria,
+    capacitaciones, plan, evaluacion, planMejora, dis, pesv, indicadores: INDICADORES, pve, amenazas, presupuesto: presupuestoConValor, altoRiesgo, op, integrantes, accidentalidad, acciones: accidentalidad.acciones, nomina, inspecciones, hayInspecciones: inspecciones.length > 0, auditorias, hayAuditorias: auditorias.length > 0, ultimaAuditoria,
     documentosLista: plantillas.map((p) => ({ codigo: p.codigo, nombre: p.nombre, version: e.documentos.find((d) => d.codigo === p.codigo)?.version ?? 1, carpeta: p.carpeta ?? "" })),
     _reglas: rr,
   };
 }
 export type Contexto = Awaited<ReturnType<typeof construirContexto>>;
+
+/** Los 24 pasos de la metodología del PESV (Res. 40595/2022, anexo) y el nivel mínimo en que cada uno aplica. */
+const PASOS_PESV: { n: number; fase: string; nombre: string; desde: "basico" | "estandar" | "avanzado" }[] = [
+  { n: 1, fase: "Planificación", nombre: "Líder del diseño e implementación del PESV", desde: "basico" },
+  { n: 2, fase: "Planificación", nombre: "Comité de seguridad vial", desde: "estandar" },
+  { n: 3, fase: "Planificación", nombre: "Política de seguridad vial de la organización", desde: "basico" },
+  { n: 4, fase: "Planificación", nombre: "Liderazgo, compromiso y corresponsabilidad del nivel directivo", desde: "basico" },
+  { n: 5, fase: "Planificación", nombre: "Diagnóstico", desde: "basico" },
+  { n: 6, fase: "Planificación", nombre: "Caracterización, evaluación y control de riesgos viales", desde: "basico" },
+  { n: 7, fase: "Planificación", nombre: "Objetivos y metas del PESV", desde: "basico" },
+  { n: 8, fase: "Planificación", nombre: "Programas de gestión de riesgos críticos y factores de desempeño", desde: "basico" },
+  { n: 9, fase: "Planificación", nombre: "Plan anual de trabajo", desde: "basico" },
+  { n: 10, fase: "Implementación", nombre: "Competencia y plan anual de formación", desde: "basico" },
+  { n: 11, fase: "Implementación", nombre: "Responsabilidad y comportamiento seguro", desde: "avanzado" },
+  { n: 12, fase: "Implementación", nombre: "Plan de preparación y respuesta ante emergencias viales", desde: "basico" },
+  { n: 13, fase: "Implementación", nombre: "Investigación interna de siniestros viales", desde: "estandar" },
+  { n: 14, fase: "Implementación", nombre: "Vías seguras administradas por la organización", desde: "basico" },
+  { n: 15, fase: "Implementación", nombre: "Planificación de desplazamientos laborales", desde: "basico" },
+  { n: 16, fase: "Implementación", nombre: "Inspección de vehículos y equipos", desde: "basico" },
+  { n: 17, fase: "Implementación", nombre: "Mantenimiento y control de vehículos seguros y equipos", desde: "basico" },
+  { n: 18, fase: "Implementación", nombre: "Gestión del cambio y gestión de contratistas", desde: "estandar" },
+  { n: 19, fase: "Implementación", nombre: "Archivo y retención documental", desde: "estandar" },
+  { n: 20, fase: "Seguimiento", nombre: "Indicadores y reporte de autogestión", desde: "basico" },
+  { n: 21, fase: "Seguimiento", nombre: "Registro y análisis estadístico de siniestros viales", desde: "avanzado" },
+  { n: 22, fase: "Seguimiento", nombre: "Auditoría anual", desde: "basico" },
+  { n: 23, fase: "Mejora", nombre: "Mecanismos de comunicación y participación", desde: "basico" },
+  { n: 24, fase: "Mejora", nombre: "Mejora continua: acciones preventivas y correctivas", desde: "basico" },
+];
+const ORDEN_NIVEL = { basico: 0, estandar: 1, avanzado: 2 } as const;
+const NIVEL_PESV_TEXTO = { basico: "Básico", estandar: "Estándar", avanzado: "Avanzado" } as const;
+
+/** PESV: obligados y nivel (Ley 1503/2011 art. 12; Decreto 1079/2015 art. 2.3.2.3.2; Res. 40595/2022 Tabla 1). */
+function contextoPesv(c: { vehiculos: number; conductores: number; esTransporte: boolean }) {
+  const nivel = nivelPesv(c);
+  const pasos = nivel ? PASOS_PESV.filter((p) => ORDEN_NIVEL[p.desde] <= ORDEN_NIVEL[nivel]) : [];
+  return {
+    aplica: !!nivel, nivel, nivelTexto: nivel ? NIVEL_PESV_TEXTO[nivel] : "No obligado",
+    vehiculos: c.vehiculos, conductores: c.conductores, esTransporte: c.esTransporte,
+    misionalidad: c.esTransporte ? 1 : 2,
+    esBasico: nivel === "basico", esEstandar: nivel === "estandar", esAvanzado: nivel === "avanzado",
+    pasos, totalPasos: pasos.length,
+  };
+}
 
 const TIPO_EV: Record<string, string> = { AT: "Accidente de trabajo", INCIDENTE: "Incidente", EL: "Enfermedad laboral", AUSENTISMO: "Ausentismo (enfermedad común)" };
 const INV_EV: Record<string, string> = { pendiente: "Pendiente", en_curso: "En curso", cerrada: "Cerrada", no_aplica: "No aplica" };
@@ -388,21 +436,30 @@ export async function contextoEvento(eventoId: string) {
   const ev = await db.evento.findUniqueOrThrow({ where: { id: eventoId }, include: { acciones: { orderBy: { fecha: "asc" } }, peligro: true, archivos: { where: { activo: true } } } });
   const base = await construirContexto(ev.empresaId);
   const a = (ev.analisis ?? {}) as { porques?: string[]; actos?: string[]; condiciones?: string[]; personales?: string[]; trabajo?: string[]; conclusion?: string };
-  const equipo = ((ev.equipo ?? []) as { nombre: string; cargo?: string; rol: string }[]);
-  const ROLES: Record<string, string> = { jefe: "Jefe inmediato o supervisor", copasst: "Representante del COPASST o Vigía", responsable: "Responsable del SG-SST", profesional: "Profesional con licencia en SST", otro: "Otro" };
+  const equipo = ((ev.equipo ?? []) as Integrante[]);
   const VINC: Record<string, string> = { planta: "Trabajador de planta", contratista: "Contratista", aprendiz: "Aprendiz o practicante", mision: "Trabajador en misión", visitante: "Visitante" };
+  const DIAS = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"];
+  const esGrave = ev.tipo === "AT" && (ev.gravedad === "grave" || ev.gravedad === "mortal");
+  const direccionEmpresa = [base.empresa.direccion, base.empresa.ciudad].filter(Boolean).join(", ");
   return {
     ...base,
+    // Variables del informe de investigación (Res. 1401/2007 arts. 9 a 13). Ver _CONTRATO.md.
     ev: {
       tipo: TIPO_EV[ev.tipo] ?? ev.tipo, esAT: ev.tipo === "AT", esIncidente: ev.tipo === "INCIDENTE", esEL: ev.tipo === "EL",
-      gravedad: ev.gravedad === "grave" ? "Grave" : ev.gravedad === "mortal" ? "Mortal" : "Leve", esGrave: ev.gravedad === "grave" || ev.gravedad === "mortal",
-      fecha: fmtDia(ev.fecha), hora: ev.hora ?? "", lugar: ev.lugar ?? "", descripcion: ev.descripcion ?? "",
-      trabajador: ev.trabajadorNombre ?? "", cedula: ev.trabajadorCedula ?? "", doc: ev.trabajadorCedula ? docTexto(ev.trabajadorTipoDoc, ev.trabajadorCedula) : "", vinculacion: VINC[ev.vinculacion ?? ""] ?? "", antiguedad: ev.antiguedad ?? "",
+      gravedad: ev.gravedad === "grave" ? "Grave" : ev.gravedad === "mortal" ? "Mortal" : "Leve", esGrave, esMortal: ev.tipo === "AT" && ev.gravedad === "mortal",
+      fecha: fmtDia(ev.fecha), hora: ev.hora ?? "", diaSemana: DIAS[ev.fecha.getUTCDay()], lugar: ev.lugar ?? "", sitioExacto: ev.sitioExacto ?? "", descripcion: ev.descripcion ?? "",
+      tipoAccidente: TIPO_ACCIDENTE[ev.tipoAccidente ?? ""] ?? "", jornadaHabitual: ev.jornadaHabitual === true ? "Sí" : ev.jornadaHabitual === false ? "No" : "", turno: ev.turno ?? "", tiempoLaborado: ev.tiempoLaborado ?? "",
+      versionTrabajador: ev.versionTrabajador ?? "", versionTestigos: ev.versionTestigos ?? "",
+      trabajador: ev.trabajadorNombre ?? "", cedula: ev.trabajadorCedula ?? "", doc: ev.trabajadorCedula ? docTexto(ev.trabajadorTipoDoc, ev.trabajadorCedula) : "", vinculacion: VINC[ev.vinculacion ?? ""] ?? "", antiguedad: ev.antiguedad ?? "", tiempoEmpresa: ev.tiempoEmpresa ?? "",
       cargo: ev.cargo ?? "", tarea: ev.tarea ?? "", mecanismo: ev.mecanismo ?? "", agente: ev.agente ?? "", lesion: ev.lesion ?? "", parteCuerpo: ev.parteCuerpo ?? "",
       testigos: ev.testigos ?? "", dias: ev.diasIncapacidad, diasCargados: ev.diasCargados,
       fechaReporte: ev.fechaReporte ? fmtDia(ev.fechaReporte) : "", furat: ev.furatNumero ?? "", reporteMinisterio: ev.reporteMinisterio ? fmtDia(ev.reporteMinisterio) : "",
       invInicio: ev.invInicio ? fmtDia(ev.invInicio) : "", invCierre: ev.invCierre ? fmtDia(ev.invCierre) : "", remitidaArl: ev.invRemitidaArl ? fmtDia(ev.invRemitidaArl) : "",
-      equipo: equipo.map((x) => ({ nombre: x.nombre, cargo: x.cargo ?? "", rol: ROLES[x.rol] ?? x.rol })), hayEquipo: equipo.length > 0,
+      invLugar: ev.invLugar?.trim() || direccionEmpresa, invFechas: ev.invFechas ?? "", invCerrada: ev.invEstado === "cerrada",
+      plazoRemision: esGrave ? fmtDia(new Date(ev.fecha.getTime() + 15 * 864e5)) : "",
+      // El documento lleva su tipo para que el bloque de firmas lo reconozca (RE_DOC); si solo escribieron el número, se asume cédula.
+      equipo: equipo.map((x) => ({ nombre: x.nombre, cargo: x.cargo ?? "", documento: x.documento?.trim() ? (RE_DOC.test(x.documento.trim()) ? x.documento.trim() : `C.C. ${x.documento.trim()}`) : "", rol: ROLES_EQUIPO[x.rol] ?? x.rol })), hayEquipo: equipo.length > 0,
+      rolesMinimos: rolesExigidos(ev.tipo, ev.gravedad).map((r) => ROLES_EQUIPO[r]),
       porques: a.porques ?? [], actos: a.actos ?? [], condiciones: a.condiciones ?? [], personales: a.personales ?? [], trabajo: a.trabajo ?? [], conclusion: a.conclusion ?? "",
       peligro: ev.peligro ? `${ev.peligro.descripcion} (${ev.peligro.clasificacion})` : "",
       lecciones: ev.lecciones ?? "",

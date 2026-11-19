@@ -13,7 +13,7 @@ export default async function Diagnosticos({ params }: PageProps<"/empresas/[id]
   const ultimo = await db.diagnostico.findFirst({ where: { empresaId: id }, orderBy: { creadoEn: "desc" } });
   if (ultimo) redirect(`/empresas/${id}/diagnostico/${ultimo.id}`);
   return (
-    <EstadoVacio ilustracion="evaluacion" titulo="Sin diagnóstico inicial" descripcion="El diagnóstico es opcional: evalúa el estado actual de la empresa frente a los estándares mínimos y genera un informe en PDF con el membrete de la consultora. Sirve como línea base para medir el avance.">
+    <EstadoVacio ilustracion="evaluacion" titulo="Sin diagnóstico inicial" descripcion="Evalúa el estado actual de la empresa frente a los estándares mínimos y genera el informe en PDF. Es opcional y sirve como línea base para medir el avance.">
       <BotonNuevoDiagnostico empresaId={id} />
       <Link href={`/empresas/${id}`} className={buttonVariants({ variant: "ghost" })}>Volver al resumen</Link>
     </EstadoVacio>

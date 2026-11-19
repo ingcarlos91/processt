@@ -1,4 +1,5 @@
-import { cumple, type Condicion, type ContextoReglas, type Disparador } from "./condicion";
+import { cumple, nivelPesv, type Condicion, type ContextoReglas, type Disparador } from "./condicion";
+export { composicionCcl, nivelPesv } from "./condicion";
 import { explicarCondicion } from "./explicar";
 
 export type Conclusion = { tipo: "nivel" | "comite" | "documento" | "capacitacion" | "mensaje"; valor: string; normaRef: string; regla: string; porque: string };
@@ -23,7 +24,9 @@ type EstandarIn = { codigo: string; aplica7: boolean; aplica21: boolean };
 
 export type EmpresaReglas = {
   nTrabajadoresPlanta: number; nEnMision: number; nAprendices: number; nContratistas: number;
-  claseRiesgo: number; nVehiculos: number; esUpa: boolean; disparadores: unknown; responsableSst?: unknown;
+  claseRiesgo: number; nVehiculos: number; nConductores?: number; ciiu?: string | null; esUpa: boolean; disparadores: unknown; responsableSst?: unknown;
+  /** Número de sedes o centros de trabajo y de trabajadoras registradas (se calculan aparte; si faltan se asume 1 sede y 0 mujeres). */
+  nSedes?: number; nMujeres?: number;
   /** Disparadores detectados en la matriz aprobada: clave → descripción del peligro que lo activó. */
   disparadoresMatriz?: Partial<Record<Disparador, string>>;
 };
@@ -38,13 +41,19 @@ export function contexto(e: EmpresaReglas, nivel?: number): ContextoReglas {
   const disparadores: Partial<Record<Disparador, boolean>> = { ...marcados };
   const origenDisparadores: Partial<Record<Disparador, string>> = {};
   for (const [k, peligro] of Object.entries(e.disparadoresMatriz ?? {}) as [Disparador, string][]) {
-    if (!marcados[k]) { disparadores[k] = true; origenDisparadores[k] = `la matriz de peligros tiene “${peligro}”, aunque en el cuestionario no se marcó`; }
+    if (!marcados[k]) { disparadores[k] = true; origenDisparadores[k] = /trabajador/i.test(peligro) ? `${peligro}, aunque en el cuestionario no se marcó` : `la matriz de peligros tiene “${peligro}”, aunque en el cuestionario no se marcó`; }
   }
   return {
     trabajadores: contarTrabajadores(e),
     claseRiesgo: e.claseRiesgo,
     vehiculos: e.nVehiculos ?? 0,
+    conductores: e.nConductores ?? 0,
+    contratistas: e.nContratistas ?? 0,
     aprendices: e.nAprendices ?? 0,
+    mujeres: e.nMujeres ?? 0,
+    sedes: e.nSedes ?? 1,
+    // Misionalidad 1 del PESV: transporte terrestre automotor (CIIU división 49).
+    esTransporte: /^49/.test(String(e.ciiu ?? "")),
     esUpa: !!e.esUpa,
     nivel,
     disparadores,
@@ -108,18 +117,31 @@ export function evaluarEmpresa(
     .filter((n) => n.vigente && cumple(n.condicionAplicabilidad as Condicion, ctx))
     .map((n) => ({ codigo: n.codigo, nombre: n.nombre, razon: "condicion", porque: explicarCondicion(n.condicionAplicabilidad as Condicion, ctx) }));
 
-  // Validación del perfil del responsable (Res. 0312 arts. 4, 10, 17)
-  const resp = (e.responsableSst ?? {}) as { perfil?: string; licencia?: string; curso50h?: boolean };
+  // Validación del perfil del responsable (Res. 0312 arts. 3-4, 9-10, 16-17; Res. 4927/2016 arts. 14 y 16)
+  const resp = (e.responsableSst ?? {}) as { perfil?: string; licencia?: string; curso50h?: boolean; curso50hFecha?: string; curso20hFecha?: string; experienciaAnios?: number | string; rol?: string };
   const perfiles: Record<number, string[]> = {
     7: ["tecnico", "tecnologo", "profesional", "especialista"],
     21: ["tecnologo", "profesional", "especialista"],
     60: ["profesional", "especialista"],
   };
+  const exp = Number(resp.experienciaAnios ?? 0) || 0;
+  const disena = (resp.rol ?? "disenador") !== "ejecutor"; // quien diseña el sistema vs. quien solo lo administra y ejecuta (Res. 0312 art. 4)
   if (!resp.perfil) advertencias.push("No se ha registrado el responsable del SG-SST (Res. 0312 ítem 1.1.1).");
-  else if (!perfiles[nivel].includes(resp.perfil))
+  else if (disena && !perfiles[nivel].includes(resp.perfil))
     advertencias.push(`El perfil "${resp.perfil}" no es suficiente para diseñar el SG-SST de nivel ${nivel} (Res. 0312 arts. 4, 10, 17).`);
-  if (resp.perfil && !resp.licencia) advertencias.push("El responsable del SG-SST no tiene licencia en SST registrada.");
-  if (resp.perfil && !resp.curso50h) advertencias.push("El responsable del SG-SST no tiene registrado el curso virtual de 50 horas (Decreto 1072 art. 2.2.4.6.35).");
+  if (disena && resp.perfil === "tecnico" && nivel === 7 && exp < 1) advertencias.push("Un técnico en SST diseña el SG-SST de 7 estándares solo con mínimo 1 año de experiencia certificada (Res. 0312 art. 3).");
+  if (disena && resp.perfil === "tecnologo" && nivel === 21 && exp < 2) advertencias.push("Un tecnólogo en SST diseña el SG-SST de 21 estándares solo con mínimo 2 años de experiencia certificada (Res. 0312 art. 9).");
+  const microSinLicencia = !disena && nivel === 7; // Res. 4927/2016 art. 14: en ≤10 trabajadores riesgo I-III el ejecutor interno no requiere licencia
+  if (resp.perfil && !resp.licencia && !microSinLicencia) advertencias.push(disena ? "Quien diseña el SG-SST debe tener licencia en SST vigente (Res. 0312 arts. 4, 10, 17; Res. 908/2025)." : "El responsable del SG-SST no tiene licencia en SST registrada (exigible desde 21 estándares, Res. 0312 art. 10).");
+  if (resp.perfil && !resp.curso50h) advertencias.push("El responsable del SG-SST no tiene registrado el curso virtual de 50 horas (Decreto 1072 art. 2.2.4.6.35; Res. 4927/2016).");
+  if (resp.curso50h && resp.curso50hFecha && /^\d{4}-\d{2}-\d{2}/.test(resp.curso50hFecha)) {
+    const ultima = [resp.curso50hFecha, resp.curso20hFecha].filter((f) => f && /^\d{4}-\d{2}-\d{2}/.test(f)).sort().pop()!;
+    if (Date.now() - new Date(ultima).getTime() > 3 * 365.25 * 864e5) advertencias.push(`El certificado de 50 horas (o su última actualización, ${ultima.slice(0, 10)}) tiene más de 3 años: debe tomar el curso de actualización de 20 horas (Res. 4927/2016 art. 16; Circular 047/2025).`);
+  }
+  if (ctx.conductores >= 2 || ctx.vehiculos >= 11) {
+    const nv = nivelPesv(ctx);
+    advertencias.push(`Aplica el Plan Estratégico de Seguridad Vial en nivel ${({ basico: "básico", estandar: "estándar", avanzado: "avanzado" } as Record<string, string>)[nv ?? ""] ?? nv} (${ctx.vehiculos} vehículos, ${ctx.conductores} conductores; Res. 40595/2022 Tabla 1). Reporte anual de autogestión al Ministerio del Trabajo antes del 31 de enero (Circular 034/2026).`);
+  } else if (ctx.disparadores.conduccion) advertencias.push("Hay conducción en misión sin PESV obligatorio (menos de 11 vehículos y menos de 2 conductores): el peligro vial se gestiona en la matriz (Res. 0312 est. 4.1.2). Si contrata o administra 2 o más conductores, márquelos en Trabajadores (casilla “Conduce”) o registre el número en Datos.");
   for (const [k, v] of Object.entries(ctx.origenDisparadores ?? {})) advertencias.push(`Se activó “${k}” porque ${v}. Confírmelo en el cuestionario (Datos → Peligros especiales) o ajuste la matriz.`);
   if (e.nContratistas > 0) advertencias.push(`Hay ${e.nContratistas} contratistas: deben incluirse en inducción, capacitación, matriz de peligros e indicadores (Decreto 1072 art. 2.2.4.6.28; Res. 0312 art. 30).`);
 
@@ -129,9 +151,9 @@ export function evaluarEmpresa(
   };
 }
 
-/** Composición paritaria del COPASST según Res. 2013/1986 art. 2 */
+/** Composición paritaria del COPASST según Res. 2013/1986 art. 2 (Vigía: Decreto Ley 1295/1994 art. 35 par.) */
 export function composicionCopasst(trabajadores: number) {
-  if (trabajadores < 10) return { tipo: "VIGIA", porParte: 1, texto: "Vigía de SST (1 principal y su suplente)" };
+  if (trabajadores < 10) return { tipo: "VIGIA", porParte: 1, texto: "Vigía de SST (1 persona designada; el suplente es buena práctica, no exigencia legal)" };
   if (trabajadores <= 49) return { tipo: "COPASST", porParte: 1, texto: "1 representante del empleador y 1 de los trabajadores, con sus suplentes" };
   if (trabajadores <= 499) return { tipo: "COPASST", porParte: 2, texto: "2 representantes del empleador y 2 de los trabajadores, con sus suplentes" };
   if (trabajadores <= 999) return { tipo: "COPASST", porParte: 3, texto: "3 representantes del empleador y 3 de los trabajadores, con sus suplentes" };

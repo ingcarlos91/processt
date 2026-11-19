@@ -43,7 +43,7 @@ export default async function Documentos({ params, searchParams }: PageProps<"/e
   });
   const totalFaltantes = grupos.reduce((n, g) => n + g.items.length, 0);
   const acciones = (
-    <div className="flex gap-2">
+    <div className="flex flex-wrap gap-2 [&>*]:flex-1 sm:[&>*]:flex-none">
       <BotonGenerarTodo empresaId={id} />
       <BotonDescarga href={`/api/empresas/${id}/paquete.zip`} variant="outline" texto="Armando el ZIP…" tooltip="Todos los documentos en Word organizados por carpetas, con la matriz y la evaluación en Excel"><Download /> Descargar todo (ZIP)</BotonDescarga>
     </div>

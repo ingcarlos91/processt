@@ -49,9 +49,12 @@ export function ConsultoraForm({ inicial, ia }: { inicial: D; ia: { activa: bool
             </Field>
             {campo("licenciaSst", "Licencia en SST", { desc: "Número de resolución (Res. 908/2025: licencia digital)", ph: "Número de la resolución que otorgó la licencia" })}
             {campo("licenciaFecha", "Fecha de la licencia", { tipo: "date" })}
-            <Field orientation="horizontal" className="md:col-span-1">
-              <Switch id="c50" checked={d.curso50h} onCheckedChange={(v) => set("curso50h", v)} />
-              <FieldLabel htmlFor="c50" className="font-normal">Curso virtual de 50 horas aprobado <NormaRef>Decreto 1072/2015 art. 2.2.4.6.35</NormaRef> <Ayuda k="curso50h" /></FieldLabel>
+            <Field orientation="horizontal" className="items-start md:col-span-1">
+              <Switch id="c50" className="mt-0.5" checked={d.curso50h} onCheckedChange={(v) => set("curso50h", v)} />
+              <div className="flex min-w-0 flex-col gap-1">
+                <FieldLabel htmlFor="c50" className="font-normal">Curso virtual de 50 horas aprobado <Ayuda k="curso50h" /></FieldLabel>
+                <NormaRef>Decreto 1072/2015 art. 2.2.4.6.35</NormaRef>
+              </div>
             </Field>
             {campo("curso50hFecha", "Fecha del curso de 50 horas", { tipo: "date" })}
             <FieldSeparator className="md:col-span-2">Contacto</FieldSeparator>

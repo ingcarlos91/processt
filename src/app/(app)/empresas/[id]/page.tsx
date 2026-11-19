@@ -59,6 +59,7 @@ export default async function Resumen({ params }: PageProps<"/empresas/[id]">) {
   const alertasEventos = eventosAbiertos.flatMap((ev) => plazos(ev).filter((p) => p.estado === "vencido" || p.estado === "por_vencer").map((p) => ({ ev, p })));
   return (
     <>
+      {/* 1. Alertas: lo que requiere atención hoy */}
       {alertasEventos.length > 0 && (
         <Alert variant="destructive">
           <AlertTriangle />
@@ -86,6 +87,26 @@ export default async function Resumen({ params }: PageProps<"/empresas/[id]">) {
           <AlertAction><Link href={`/empresas/${id}/documentos`} className={buttonVariants({ size: "sm", variant: "outline" })}>Ver qué falta</Link></AlertAction>
         </Alert>
       )}
+      {alertas.length > 0 && (
+        <Alert className="border-amber-200 bg-amber-50/60 text-amber-950 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-100">
+          <AlertTriangle className="text-amber-600" />
+          <AlertTitle>Alertas ({alertas.length})</AlertTitle>
+          <AlertDescription><ul className="list-disc pl-4 space-y-0.5">{alertas.map((a, i) => <li key={i}>{a}</li>)}</ul></AlertDescription>
+        </Alert>
+      )}
+
+      {/* 2. Indicadores: estado del sistema */}
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-5">
+        <Stat label="Estándares mínimos" value={rr.nivel} hint={<NormaRef>{rr.nivelNormaRef}</NormaRef>} porque={<>{explicarNivel(rr.nivel, rr.trabajadores, e.claseRiesgo)} {explicarConteo(e)}</>} normas={[rr.nivelNormaRef]} />
+        <Stat label="Última evaluación" value={puntaje != null && ev?.valoracion ? `${puntaje}%` : "—"} hint={ev?.valoracion ?? "Sin evaluación cerrada"} tone={ev?.valoracion === "ACEPTABLE" ? "ok" : ev?.valoracion === "CRÍTICO" ? "bad" : ev?.valoracion ? "warn" : undefined} />
+        <Stat label="Plan anual" value={e.actividades.length ? `${Math.round((ej / e.actividades.length) * 100)}%` : "—"} hint={`${ej} de ${e.actividades.length} actividades`} />
+        <Stat porque="Son los riesgos de nivel I y II según la GTC 45: “no aceptables”. Deben intervenirse primero y pasan al plan anual." normas={["GTC 45", "Decreto 1072/2015 art. 2.2.4.6.24"]} label="Riesgos prioritarios (I y II)" value={niveles.filter((n) => n === "I" || n === "II").length} hint={`${niveles.length} peligros en la matriz`} tone={niveles.includes("I") ? "bad" : undefined} />
+        <Stat label="Documentos" value={`${e.documentos.length} / ${rr.documentos.length}`} hint={(() => {
+          const est = e.documentos.map((d) => estadoDocumento({ estado: d.estado, version: d.version, firmadoVersion: d.archivos[0]?.documentoVersion, revisar: d.secciones.some((x) => x.requiereRevision) }));
+          const n = (k: string) => est.filter((x) => x === k).length;
+          return `${n("firmado")} firmados · ${n("aprobado")} aprobados · ${n("borrador") + n("por_revisar")} en borrador${n("volver_a_firmar") ? ` · ${n("volver_a_firmar")} por volver a firmar` : ""}`;
+        })()} />
+      </div>
       {comparativo?.actual && (
         <Section title="Avance desde el diagnóstico" description={`Línea base del ${comparativo.fecha} frente a la autoevaluación del ${comparativo.actual.fecha}.`}>
           <div className="grid gap-3 sm:grid-cols-5">
@@ -100,27 +121,9 @@ export default async function Resumen({ params }: PageProps<"/empresas/[id]">) {
         </Section>
       )}
       {comparativo && !comparativo.actual && <p className="text-sm text-muted-foreground">Línea base del diagnóstico ({comparativo.fecha}): {comparativo.base.puntaje}% · {comparativo.base.valoracion}. El avance se mostrará al cerrar la próxima autoevaluación.</p>}
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
-        <Stat label="Estándares mínimos" value={rr.nivel} hint={<NormaRef>{rr.nivelNormaRef}</NormaRef>} porque={<>{explicarNivel(rr.nivel, rr.trabajadores, e.claseRiesgo)} {explicarConteo(e)}</>} normas={[rr.nivelNormaRef]} />
-        <Stat label="Última evaluación" value={puntaje != null && ev?.valoracion ? `${puntaje}%` : "—"} hint={ev?.valoracion ?? "Sin evaluación cerrada"} tone={ev?.valoracion === "ACEPTABLE" ? "ok" : ev?.valoracion === "CRÍTICO" ? "bad" : ev?.valoracion ? "warn" : undefined} />
-        <Stat label="Plan anual" value={e.actividades.length ? `${Math.round((ej / e.actividades.length) * 100)}%` : "—"} hint={`${ej} de ${e.actividades.length} actividades`} />
-        <Stat porque="Son los riesgos de nivel I y II según la GTC 45: “no aceptables”. Deben intervenirse primero y pasan al plan anual." normas={["GTC 45", "Decreto 1072/2015 art. 2.2.4.6.24"]} label="Riesgos prioritarios (I y II)" value={niveles.filter((n) => n === "I" || n === "II").length} hint={`${niveles.length} peligros en la matriz`} tone={niveles.includes("I") ? "bad" : undefined} />
-        <Stat label="Documentos" value={`${e.documentos.length} / ${rr.documentos.length}`} hint={(() => {
-          const est = e.documentos.map((d) => estadoDocumento({ estado: d.estado, version: d.version, firmadoVersion: d.archivos[0]?.documentoVersion, revisar: d.secciones.some((x) => x.requiereRevision) }));
-          const n = (k: string) => est.filter((x) => x === k).length;
-          return `${n("firmado")} firmados · ${n("aprobado")} aprobados · ${n("borrador") + n("por_revisar")} en borrador${n("volver_a_firmar") ? ` · ${n("volver_a_firmar")} por volver a firmar` : ""}`;
-        })()} />
-      </div>
 
-      {alertas.length > 0 && (
-        <Alert>
-          <AlertTriangle />
-          <AlertTitle>Alertas</AlertTitle>
-          <AlertDescription><ul className="list-disc pl-4 space-y-0.5">{alertas.map((a, i) => <li key={i}>{a}</li>)}</ul></AlertDescription>
-        </Alert>
-      )}
-
-      <div className="flex flex-wrap gap-2">
+      {/* 3. Accesos rápidos */}
+      <div className="flex flex-wrap items-center gap-2 [&>a]:flex-1 sm:[&>a]:flex-none">
         <BotonGenerarTodo empresaId={id} />
         <Link href={`/empresas/${id}/matriz`} className={buttonVariants({ variant: "outline" })}><ShieldAlert /> Matriz de peligros</Link>
         <Link href={`/empresas/${id}/evaluacion`} className={buttonVariants({ variant: "outline" })}><ListChecks /> Evaluación</Link>
@@ -130,6 +133,7 @@ export default async function Resumen({ params }: PageProps<"/empresas/[id]">) {
         <BotonInformeGestion empresaId={id} />
       </div>
 
+      {/* 4. Qué exige la norma, próximas actividades y documentos aplicables */}
       <div className="grid lg:grid-cols-2 gap-6">
         <Section title="Qué exige la norma a esta empresa" description="Conclusiones del motor de reglas con su fundamento.">
           <ul className="space-y-2 text-sm">

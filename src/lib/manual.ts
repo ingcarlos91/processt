@@ -27,6 +27,8 @@ export const MANUAL: SeccionManual[] = [
     id: "nueva", titulo: "Nueva empresa / Datos de la empresa", ruta: new RegExp(`^(/empresas/nueva|${E}/datos)$`),
     resumen: "Cuestionario con los datos que definen todo el SG-SST: actividad, riesgo, trabajadores, sedes, peligros especiales, estado actual y responsable. En “Datos” se edita lo mismo después de creada.",
     partes: [
+      { titulo: "Responsable del SG-SST", que: "Nombre, documento, perfil, licencia, curso de 50 horas y su fecha, fecha del último curso de 20 horas, rol (diseña y firma, o solo administra y ejecuta) y años de experiencia certificada. El sistema avisa si el perfil no alcanza para el nivel (técnico: 1 año de experiencia para 7 estándares; tecnólogo: 2 años para 21), si falta licencia a quien diseña y si el curso de 50 horas tiene más de 3 años sin actualización de 20 horas." },
+      { titulo: "Personas y vehículos", que: "Planta, en misión, contratistas, aprendices, vehículos y conductores. Cada campo indica el umbral que dispara una obligación (10 o más: COPASST y reglamento; 11 a 50: 21 estándares; más de 10 vehículos o 2 o más conductores: PESV; contratistas: afiliación a ARL por el contratante; aprendices: ARL desde la fase lectiva). Las marcas por persona en Trabajadores complementan estos números." },
       { titulo: "1. Identificación", que: "Razón social, NIT, dirección, representante legal y logo (el logo aparece en todos los Word y Excel)." },
       { titulo: "2. Actividad y riesgo", que: "Código CIIU, clase de riesgo según la ARL, ARL y EPS. Definen el sector de la biblioteca (cargos, tareas y peligros típicos)." },
       { titulo: "3. Personas y cargos", que: "Número de trabajadores, contratistas, aprendices y en misión, horario y turnos, y los cargos con cuántas personas tiene cada uno.", botones: [{ nombre: "Agregar cargo", hace: "Agrega un cargo; si coincide con un cargo tipo de la biblioteca, trae sus tareas y peligros." }] },
@@ -45,6 +47,7 @@ export const MANUAL: SeccionManual[] = [
     id: "resumen", titulo: "Resumen de la empresa", ruta: new RegExp(`^${E}$`),
     resumen: "Tablero de la empresa: qué le exige la norma, su avance y las alertas.",
     partes: [
+      { titulo: "¿Por qué? Decisiones → 9. Qué dato dispara cada condición", que: "Lista todas las reglas y normas condicionadas: si aplican o no, cómo se lee la condición, qué valor tiene hoy la empresa (vehículos, conductores, contratistas, aprendices, trabajadoras, sedes, peligros especiales), qué la activaría y en qué pantalla se registra ese dato. Úselo para explicar al cliente por qué le exigen algo o por qué todavía no." },
       { titulo: "Encabezado", que: "Nombre, NIT, nivel de estándares, clase de riesgo, trabajadores y ciudad. Las pestañas de abajo llevan a cada parte del SG-SST.", botones: [{ nombre: "¿Por qué? Decisiones", hace: "Abre el panel con cada decisión que tomó el sistema (nivel, comités, normas, documentos) y la norma que la define." }] },
       { titulo: "Indicadores", que: "Estándares mínimos, última evaluación, riesgos prioritarios (I y II), documentos y avance del plan anual. Pase el mouse para ver de dónde sale cada dato." },
       { titulo: "Alertas", que: "Plazos de accidentes vencidos o por vencer, y otros pendientes. Cada alerta lleva a donde se resuelve." },
@@ -89,6 +92,7 @@ export const MANUAL: SeccionManual[] = [
     id: "trabajadores", titulo: "Trabajadores", ruta: new RegExp(`^${E}/trabajadores$`),
     resumen: "Listado de trabajadores de la empresa con sus exámenes médicos (solo conceptos de aptitud), entregas de EPP y capacitaciones. Alimenta FOR-01 (perfil sociodemográfico), FOR-02 (conceptos de aptitud), MTZ-04 (entrega de EPP), PRG-01 (capacitaciones) y el planeador.",
     partes: [
+      { titulo: "Condiciones que activan normas (por persona)", que: "En cada trabajador se marca si conduce para la empresa, su modalidad (presencial, teletrabajo, remoto o trabajo en casa), si trabaja de noche o por turnos, si manipula alimentos y si está en actividad de alto riesgo pensional; además el sexo. Con esas marcas el sistema deriva las condiciones: 2 o más conductores exigen el PESV; teletrabajo o trabajo en casa activan sus normas; el turno nocturno entra a la matriz y a la batería; manipular alimentos exige certificado médico anual; el alto riesgo exige cotización especial; más de 50 trabajadoras exigen sala de lactancia. Si el número registrado aquí supera el del cuestionario de Datos, manda el de aquí." },
       { titulo: "Indicadores", que: "Trabajadores activos (y si coinciden con las personas de los cargos), exámenes vencidos o faltantes, cobertura de capacitación y entregas de EPP." },
       { titulo: "Pestaña Trabajadores", que: "Lista con cargo, vinculación, ingreso, último examen, EPP y capacitaciones. Clic en un trabajador para ver su ficha.", botones: [
         { nombre: "Importar desde Excel", hace: "Pegue filas copiadas de Excel: nombre, documento, cargo, fecha de ingreso y vinculación. Si el documento ya existe, se actualiza." },
@@ -265,30 +269,30 @@ export const MANUAL: SeccionManual[] = [
       { titulo: "Indicadores del año", que: "Accidentes, incidentes, enfermedades laborales, días perdidos, investigados y acciones abiertas." },
       { titulo: "Tabla de eventos", que: "Cada evento con su semáforo de plazos y el estado de la investigación. Clic en la fila para abrirlo.", botones: [{ nombre: "Registrar evento", hace: "Abre el formulario del evento; al guardar calcula los plazos y abre el detalle." }] },
     ],
-    pasos: ["Registre el evento el mismo día.", "Radique el FURAT dentro de 2 días hábiles y registre la fecha.", "Investigue dentro de 15 días.", "Defina acciones y llévelas al plan.", "Descargue el informe, hágalo firmar y súbalo."],
-    normas: ["Decreto Ley 1295/1994 art. 62", "Res. 1401/2007", "Decreto 1072/2015 art. 2.2.4.6.32", "Res. 0312/2019 estándares 3.2.1 a 3.2.3"],
+    pasos: ["Registre el evento el mismo día (también los incidentes: Res. 1401/2007 art. 4 num. 2).", "Radique el FURAT o FUREL dentro de 2 días hábiles y registre la fecha; en graves, mortales y enfermedades laborales avise también al Ministerio.", "Investigue dentro de 15 días con el equipo del art. 7.", "Defina medidas con responsable y fecha y llévelas al plan.", "Descargue el informe FOR-07, hágalo firmar por el equipo y el representante legal y súbalo; si es grave o mortal remítalo a la ARL en 15 días."],
+    normas: ["Decreto Ley 1295/1994 art. 62", "Res. 156/2005", "Res. 1401/2007", "Decreto 1072/2015 arts. 2.2.4.1.7 y 2.2.4.6.32", "Res. 0312/2019 estándares 3.2.1 a 3.2.3"],
     relacionadas: ["accidente", "indicadores"],
   },
   {
     id: "accidente", titulo: "Detalle del evento", ruta: new RegExp(`^${E}/accidentes/[^/]+$`),
-    resumen: "Un evento se trabaja por pasos: registro, reporte, investigación, acciones e informe.",
+    resumen: "Un evento se trabaja por pasos: registro, reporte, investigación, medidas e informe. El informe FOR-07 sigue el contenido que exige la Res. 1401/2007 (arts. 9 a 13).",
     partes: [
-      { titulo: "1. Registro", que: "Datos del evento, la persona, qué pasó, la lesión y la incapacidad. Las listas vienen de Biblioteca → Accidentes; lo típico de la forma del evento aparece primero.", botones: [{ nombre: "Marcar como grave", hace: "Aparece si la lesión suele hacer grave el accidente." }] },
-      { titulo: "2. Reporte", que: "Fecha y número de radicado del FURAT o FUREL; aviso al Ministerio si es grave o mortal.", botones: [{ nombre: "Subir FURAT radicado", hace: "Guarda el soporte en el estándar 3.2.1." }] },
-      { titulo: "3. Investigación", que: "Equipo investigador, porqués, causas inmediatas y básicas, peligro relacionado y lecciones.", botones: [
-        { nombre: "Proponer equipo", hace: "Arma el equipo con el responsable del SG-SST y el COPASST o Vigía." },
+      { titulo: "1. Registro", que: "Las variables del FURAT que el informe de investigación debe retomar (Res. 1401/2007 art. 9): información del evento (fecha, hora, lugar, sitio exacto, tipo de accidente, jornada habitual, turno, tiempo laborado), identificación del trabajador (nombre, documento, vinculación, cargo, antigüedad en el cargo y en la empresa), descripción con la versión del trabajador y de los testigos (art. 10), forma, agente, lesión y parte del cuerpo. Solo el tipo de lesión, nunca diagnósticos (Ley 1581/2012). Las listas vienen de Biblioteca → Accidentes.", botones: [{ nombre: "Marcar como grave", hace: "Aparece si la lesión suele hacer grave el accidente (art. 3)." }] },
+      { titulo: "2. Reporte", que: "Fecha y número de radicado del FURAT o FUREL (2 días hábiles, Decreto Ley 1295/1994 art. 62; Res. 156/2005); aviso al Ministerio si es grave, mortal o enfermedad laboral (Decreto 1072/2015 art. 2.2.4.1.7).", botones: [{ nombre: "Subir FURAT radicado", hace: "Guarda el soporte en el estándar 3.2.1." }] },
+      { titulo: "3. Investigación", que: "Equipo investigador con nombre, cargo, documento y rol (arts. 7 y 13): jefe inmediato, COPASST o Vigía y responsable del SG-SST; en graves y mortales, además profesional con licencia en SST y personal de diseño de normas, procesos o mantenimiento. Datos de la investigación: fecha de inicio, lugar y dirección, fechas y horas de las sesiones (art. 13). Porqués, causas inmediatas y básicas (art. 11), peligro relacionado y lecciones. En accidentes mortales se usa el formato de la ARL (art. 4 num. 3) y se sube como soporte.", botones: [
+        { nombre: "Proponer equipo", hace: "Arma el equipo con el responsable del SG-SST y el COPASST o Vigía; en graves agrega al profesional con licencia." },
         { nombre: "Sugerir causas y medidas (o con IA)", hace: "Propone causas y medidas; aparecen como botones morados que usted acepta o ignora." },
         { nombre: "Agregar a la matriz", hace: "Si el peligro no estaba en la matriz del cargo, lo agrega como sugerido." },
-        { nombre: "Cerrar investigación", hace: "Verifica equipo, causas y al menos una medida, y la cierra." },
+        { nombre: "Cerrar investigación", hace: "Verifica descripción, equipo completo e identificado según la gravedad, causas inmediatas y básicas y medidas con responsable y fecha; cada falta cita su artículo." },
       ] },
-      { titulo: "4. Acciones", que: "Medidas con jerarquía de controles, responsable y fecha.", botones: [
+      { titulo: "4. Medidas de intervención", que: "Cada medida con tipo, jerarquía de controles, responsable y fecha de ejecución, ligada a una causa (art. 12). Se registran en FOR-06.", botones: [
         { nombre: "Agregar acción / Usar", hace: "Crea una acción (o usa una propuesta)." },
-        { nombre: "Llevar al plan anual", hace: "Crea la actividad en el plan en el mes de su fecha límite." },
-        { nombre: "Cerrar acción", hace: "Pide la verificación de eficacia y la cierra." },
+        { nombre: "Llevar al plan anual", hace: "Crea la actividad en el plan en el mes de su fecha límite (art. 4 num. 6)." },
+        { nombre: "Cerrar acción", hace: "Pide la verificación de eficacia y la cierra (art. 12; Decreto 1072/2015 art. 2.2.4.6.33)." },
       ] },
-      { titulo: "5. Informe y soportes", que: "Informe FOR-07 en Word y soportes del caso.", botones: [{ nombre: "Descargar FOR-07 / Subir informe firmado", hace: "Descarga el informe para firmar y súbalo firmado al estándar 3.2.2." }] },
+      { titulo: "5. Informe y soportes", que: "Informe FOR-07 en Word o PDF con las secciones de la resolución: identificación del aportante y del trabajador, información del evento, descripción, causas, medidas, lecciones, equipo con firmas y firma del representante legal, datos de la investigación y remisión a la ARL. En graves y mortales registre la fecha de remisión a la ARL (15 días, art. 14).", botones: [{ nombre: "Descargar FOR-07 / Subir informe firmado", hace: "Descarga el informe para firmar y súbalo firmado al estándar 3.2.2. Los archivos de la investigación se conservan como soporte (art. 4 num. 10)." }] },
     ],
-    normas: ["Res. 1401/2007", "Decreto 1072/2015 arts. 2.2.4.6.24 y 2.2.4.6.32"],
+    normas: ["Res. 1401/2007 arts. 4, 7, 9 a 14", "Res. 156/2005", "Decreto 1072/2015 arts. 2.2.4.6.24 y 2.2.4.6.32"],
     relacionadas: ["accidentes", "matriz"],
   },
   {
@@ -337,6 +341,7 @@ export const MANUAL: SeccionManual[] = [
     id: "planeador", titulo: "Planeador", ruta: new RegExp(`^(/planeador|${E}/planeador)$`),
     resumen: "Todas las fechas a tener en cuenta, de todas las empresas (o de una): plan anual, fin de periodo de comités, plazos de accidentes, acciones, actualización anual de la matriz, autoevaluación anual, curso del responsable y recordatorios propios. Cada fecha cita su norma.",
     partes: [
+      { titulo: "Obligaciones legales periódicas", que: "Fechas que no dependen de un registro previo: reporte anual de autogestión del PESV (31 de enero, Circular 034/2026), publicación semestral de quejas por acoso sexual (Ley 2365/2024), información anual del programa de salud mental y SPA (Decreto 728/2025), capacitación anual en SGA (Res. 0773/2021), informes trimestrales y anual del Comité de Convivencia (Res. 3461/2025). También la evaluación de egreso a los 5 días hábiles del retiro y la adaptación del puesto a los 20 días hábiles de un concepto con restricciones (Res. 1843/2025)." },
       { titulo: "Indicadores", que: "Vencidos, esta semana, próximos 30 días y cumplidos." },
       { titulo: "Filtros", que: "Estado (pendientes y vencidos, solo vencidos, esta semana, cumplidos), empresa y categorías (pulse una categoría para ocultarla o mostrarla)." },
       { titulo: "Agenda y Calendario", que: "La agenda agrupa por mes; el calendario muestra el mes por días y arriba las actividades del plan sin día exacto. Clic en un día para ver su detalle.", botones: [{ nombre: "Abrir", hace: "Lleva a donde se gestiona esa fecha (plan, comité, accidente, matriz…)." }] },

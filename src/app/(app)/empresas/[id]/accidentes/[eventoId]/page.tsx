@@ -15,7 +15,7 @@ export default async function Evento({ params }: PageProps<"/empresas/[id]/accid
   const ev = await db.evento.findUnique({ where: { id: eventoId }, include: { acciones: { orderBy: { fecha: "asc" }, include: { actividad: { select: { anio: true, mes: true } } } }, archivos: { orderBy: { subidoEn: "desc" } } } });
   if (!ev || ev.empresaId !== id) notFound();
   const [empresa, cargos, peligros, enMatriz, comites, consultora, cat, sedes, zonas] = await Promise.all([
-    db.empresa.findUniqueOrThrow({ where: { id }, select: { responsableSst: true, representanteLegal: true } }),
+    db.empresa.findUniqueOrThrow({ where: { id }, select: { responsableSst: true, representanteLegal: true, direccion: true, ciudad: true } }),
     db.cargo.findMany({ where: { empresaId: id }, orderBy: { nombre: "asc" }, include: { tareas: { include: { tarea: { select: { nombre: true } } } } } }),
     db.peligroCatalogo.findMany({ where: { OR: [{ empresaId: null }, { empresaId: id }] }, select: { id: true, descripcion: true, clasificacion: true, subclasificacion: true }, orderBy: { descripcion: "asc" } }),
     ev.cargoId ? db.peligroEvaluado.findMany({ where: { empresaId: id, peligroId: { not: null }, OR: [{ cargoId: ev.cargoId }, { tarea: { cargos: { some: { cargoId: ev.cargoId } } } }] }, select: { peligroId: true } }) : Promise.resolve([]),
@@ -34,7 +34,10 @@ export default async function Evento({ params }: PageProps<"/empresas/[id]/accid
     { nombre: "", cargo: "", rol: "jefe" },
     ...(miembros.length ? [miembros[0]] : [{ nombre: "", cargo: "", rol: "copasst" }]),
     { nombre: resp.nombre ?? "", cargo: resp.cargo ?? "Responsable del SG-SST", rol: "responsable" },
-    ...(ev.gravedad !== "leve" ? [{ nombre: consultora?.profesional ?? "", cargo: "Profesional con licencia en SST", rol: "profesional" }] : []),
+    ...(ev.gravedad !== "leve" ? [
+      { nombre: consultora?.profesional ?? "", cargo: "Profesional con licencia en SST", documento: consultora?.cedula ?? "", rol: "profesional" },
+      { nombre: "", cargo: "", rol: "diseno" },
+    ] : []),
   ];
   const idsMatriz = new Set(enMatriz.map((p) => p.peligroId));
   return (
@@ -47,9 +50,11 @@ export default async function Evento({ params }: PageProps<"/empresas/[id]/accid
           trabajadorNombre: ev.trabajadorNombre ?? "", trabajadorTipoDoc: ev.trabajadorTipoDoc ?? "CC", trabajadorCedula: ev.trabajadorCedula ?? "", vinculacion: ev.vinculacion ?? "", antiguedad: ev.antiguedad ?? "",
           cargoId: ev.cargoId ?? "", cargo: ev.cargo ?? "", tarea: ev.tarea ?? "", mecanismo: ev.mecanismo ?? "", agente: ev.agente ?? "", lesion: ev.lesion ?? "",
           parteCuerpo: ev.parteCuerpo ?? "", testigos: ev.testigos ?? "", diasIncapacidad: ev.diasIncapacidad, diasCargados: ev.diasCargados, casoNuevo: ev.casoNuevo,
+          sitioExacto: ev.sitioExacto ?? "", tipoAccidente: ev.tipoAccidente ?? "", jornadaHabitual: ev.jornadaHabitual === true ? "si" : ev.jornadaHabitual === false ? "no" : "", turno: ev.turno ?? "",
+          tiempoEmpresa: ev.tiempoEmpresa ?? "", tiempoLaborado: ev.tiempoLaborado ?? "", versionTrabajador: ev.versionTrabajador ?? "", versionTestigos: ev.versionTestigos ?? "",
         },
         reporte: { fechaReporte: iso(ev.fechaReporte), furatNumero: ev.furatNumero ?? "", reporteMinisterio: iso(ev.reporteMinisterio), invRemitidaArl: iso(ev.invRemitidaArl) },
-        inv: { estado: ev.invEstado, inicio: iso(ev.invInicio), cierre: iso(ev.invCierre), equipo: (ev.equipo as Integrante[]) ?? [], analisis: (ev.analisis ?? {}) as Analisis, lecciones: ev.lecciones ?? "", peligroId: ev.peligroId ?? "" },
+        inv: { estado: ev.invEstado, inicio: iso(ev.invInicio), cierre: iso(ev.invCierre), lugar: ev.invLugar ?? "", fechas: ev.invFechas ?? "", equipo: (ev.equipo as Integrante[]) ?? [], analisis: (ev.analisis ?? {}) as Analisis, lecciones: ev.lecciones ?? "", peligroId: ev.peligroId ?? "" },
         acciones: ev.acciones.map((a) => ({ id: a.id, hallazgo: a.hallazgo, causa: a.causa ?? "", tipo: a.tipo, jerarquia: a.jerarquia ?? "", descripcion: a.descripcion, responsable: a.responsable ?? "", fechaLimite: iso(a.fechaLimite), estado: a.estado, fechaCierre: iso(a.fechaCierre), eficacia: a.eficacia ?? "", enPlan: a.actividad ? `${a.actividad.mes}/${a.actividad.anio}` : "" })),
         archivos: ev.archivos.map(aArchivoUI),
         plazos: plazosUI(ev),
@@ -60,7 +65,7 @@ export default async function Evento({ params }: PageProps<"/empresas/[id]/accid
       equipoSugerido={sugeridos}
       responsable={resp.nombre ?? ""}
       avisoMatriz={avisoMatriz}
-      cat={cat} lugares={[...new Set([...zonas, ...sedes].map((x) => x.nombre))]}
+      cat={cat} lugares={[...new Set([...zonas, ...sedes].map((x) => x.nombre))]} direccionEmpresa={[empresa.direccion, empresa.ciudad].filter(Boolean).join(", ")}
       personas={[...new Set([resp.nombre, empresa.representanteLegal, ...miembros.map((m) => m.nombre)].filter(Boolean) as string[])]}
     />
   );

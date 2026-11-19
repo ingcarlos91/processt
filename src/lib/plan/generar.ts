@@ -49,8 +49,8 @@ export function generarPlan(e: Entrada): ActividadGen[] {
   if (n21) add(4, "Recibir informe de condiciones de salud de la IPS y definir actividades de PyP", "3.1.2", "Res. 0312/2019 est. 3.1.2");
   if (n21) for (let m = 3; m <= 12; m += 3) add(m, "Seguimiento a restricciones y recomendaciones médico-laborales", "3.1.6", "Res. 0312/2019 est. 3.1.6");
   add(5, "Campaña de promoción de la salud mental y prevención del consumo de SPA", "3.1.7", "Decreto 728/2025; Ley 2460/2025");
-  add(10, "Semana de la salud y estilos de vida saludable (mes de la salud mental)", "3.1.7", "Decreto 728/2025; Res. 1075/1992");
-  if (n21) add(6, "Aplicación o seguimiento de la batería de riesgo psicosocial", "4.1.2", "Res. 2764/2022", "Psicólogo con licencia en SST", "nivel", "Financieros");
+  add(10, "Semana de la salud y estilos de vida saludable (mes de la salud mental)", "3.1.7", "Decreto 728/2025; Res. 1843/2025 art. 25");
+  add(6, "Aplicación o seguimiento de la batería de riesgo psicosocial (todo empleador)", "4.1.2", "Res. 2764/2022 arts. 2-3; Res. 2646/2008", "Psicólogo con licencia en SST", "nivel", "Financieros");
   if (n60) for (let m = 1; m <= 12; m++) add(m, "Registro y cálculo de indicadores de accidentalidad y ausentismo", "3.3.1", "Res. 0312/2019 art. 30");
   else for (let m = 3; m <= 12; m += 3) add(m, "Registro estadístico de accidentes, incidentes y ausentismo", "3.2.3", "Res. 0312/2019 art. 30");
   if (n60) add(12, "Cálculo de mortalidad, prevalencia e incidencia de enfermedad laboral", "3.3.3", "Res. 0312/2019 art. 30");

@@ -13,12 +13,12 @@ export type IntakeData = {
   razonSocial: string; nit: string; digitoVerificacion?: string; direccion?: string; ciudad?: string; departamento?: string; telefono?: string; correo?: string;
   representanteLegal?: string; representanteTipoDoc?: string; representanteCedula?: string; logoUrl?: string;
   ciiu?: string; descripcionActividad?: string; claseRiesgo: number; claseRiesgoJustificacion?: string; arl?: string; epsPrincipal?: string; sectorTipoId?: string | null; esUpa?: boolean;
-  nTrabajadoresPlanta: number; nContratistas: number; nAprendices: number; nEnMision: number; nVehiculos: number; horario?: string; turnos?: string;
+  nTrabajadoresPlanta: number; nContratistas: number; nAprendices: number; nEnMision: number; nVehiculos: number; nConductores?: number; horario?: string; turnos?: string;
   sedes: { nombre: string; direccion?: string; ciudad?: string }[];
   cargos: { nombre: string; nPersonas: number; cargoTipoId?: string | null; funciones?: string }[];
   disparadores: Record<string, boolean>;
   estadoActual: Record<string, boolean>;
-  responsableSst: { nombre?: string; tipoDoc?: string; cedula?: string; cargo?: string; perfil?: string; licencia?: string; licenciaFecha?: string; curso50h?: boolean; curso50hFecha?: string };
+  responsableSst: { nombre?: string; tipoDoc?: string; cedula?: string; cargo?: string; perfil?: string; licencia?: string; licenciaFecha?: string; curso50h?: boolean; curso50hFecha?: string; curso20hFecha?: string; rol?: string; experienciaAnios?: string | number };
 };
 
 const n = (v: unknown) => (Number.isFinite(Number(v)) ? Number(v) : 0);
@@ -29,7 +29,7 @@ function datosEmpresa(d: IntakeData) {
     telefono: d.telefono, correo: d.correo, representanteLegal: d.representanteLegal, representanteTipoDoc: d.representanteTipoDoc || "CC", representanteCedula: d.representanteCedula,
     ciiu: d.ciiu, descripcionActividad: d.descripcionActividad, claseRiesgo: Math.min(5, Math.max(1, n(d.claseRiesgo) || 1)), claseRiesgoJustificacion: d.claseRiesgoJustificacion,
     arl: d.arl, epsPrincipal: d.epsPrincipal, sectorTipoId: d.sectorTipoId || null, esUpa: !!d.esUpa,
-    nTrabajadoresPlanta: n(d.nTrabajadoresPlanta), nContratistas: n(d.nContratistas), nAprendices: n(d.nAprendices), nEnMision: n(d.nEnMision), nVehiculos: n(d.nVehiculos),
+    nTrabajadoresPlanta: n(d.nTrabajadoresPlanta), nContratistas: n(d.nContratistas), nAprendices: n(d.nAprendices), nEnMision: n(d.nEnMision), nVehiculos: n(d.nVehiculos), nConductores: n(d.nConductores ?? 0),
     horario: d.horario, turnos: d.turnos,
     // Turnos nocturnos o rotativos activan el peligro especial de trabajo nocturno (Res. 2646/2008).
     disparadores: { ...(d.disparadores ?? {}), ...((d.turnos ?? "").split(",").some((t) => TURNOS_NOCTURNOS.includes(t)) ? { trabajoNocturno: true } : {}) }, estadoActual: d.estadoActual ?? {}, responsableSst: d.responsableSst ?? {},

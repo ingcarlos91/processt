@@ -1,4 +1,5 @@
 "use client";
+import { Ayuda } from "@/components/app/ayuda";
 import type { Entidades } from "@/lib/entidades";
 import { useMemo, useState, useTransition } from "react";
 import { toast } from "sonner";
@@ -13,7 +14,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogBody, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { PanelFormulario, SeccionFormulario, SeccionesFormulario } from "@/components/app/formulario-largo";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Section, Stat, NormaRef } from "@/components/app/ui";
 import { Selector } from "@/components/app/selector";
@@ -28,7 +30,7 @@ import { cn } from "@/lib/utils";
 
 type Examen = { id: string; tipo: string; fecha: string; ips: string; concepto: string; restricciones: string; comunicadoTrabajador: string; proximo: string };
 type Entrega = { id: string; fecha: string; elemento: string; cantidad: number; tipo: string; capacitado: boolean; proximaReposicion: string };
-type T = { id: string; nombres: string; tipoDoc: string; documento: string; cargoId: string; cargo: string; vinculacion: string; fechaIngreso: string; fechaRetiro: string; activo: boolean; sexo: string; fechaNacimiento: string; escolaridad: string; telefono: string; correo: string; eps: string; afp: string; examenes: Examen[]; entregas: Entrega[]; capacitaciones: number };
+type T = { id: string; nombres: string; tipoDoc: string; documento: string; cargoId: string; cargo: string; vinculacion: string; fechaIngreso: string; fechaRetiro: string; activo: boolean; sexo: string; fechaNacimiento: string; escolaridad: string; telefono: string; correo: string; eps: string; afp: string; conduce: boolean; modalidad: string; turnoNocturno: boolean; altoRiesgoPension: boolean; manipulaAlimentos: boolean; examenes: Examen[]; entregas: Entrega[]; capacitaciones: number };
 type Cap = { id: string; fecha: string; tema: string; horas: number; facilitador: string; modalidad: string; actividadId: string; actividad: string; asistentes: string[] };
 type Res = { error?: string } | { ok: true };
 
@@ -39,7 +41,7 @@ const ESCOLARIDAD = ["Primaria", "Bachillerato", "Técnico", "Tecnólogo", "Prof
 const hoy = () => new Date().toISOString().slice(0, 10);
 const enAnios = (f: string, n: number) => { const d = new Date(f + "T12:00:00Z"); d.setUTCFullYear(d.getUTCFullYear() + n); return d.toISOString().slice(0, 10); };
 const fecha = (f: string) => (f ? new Date(f + "T12:00:00Z").toLocaleDateString("es-CO", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" }) : "—");
-const vacioT = (): Omit<T, "id" | "examenes" | "entregas" | "capacitaciones" | "cargo" | "activo" | "fechaRetiro"> & { id?: string } => ({ nombres: "", tipoDoc: "CC", documento: "", cargoId: "", vinculacion: "planta", fechaIngreso: "", sexo: "", fechaNacimiento: "", escolaridad: "", telefono: "", correo: "", eps: "", afp: "" });
+const vacioT = (): Omit<T, "id" | "examenes" | "entregas" | "capacitaciones" | "cargo" | "activo" | "fechaRetiro"> & { id?: string } => ({ nombres: "", tipoDoc: "CC", documento: "", cargoId: "", vinculacion: "planta", fechaIngreso: "", sexo: "", fechaNacimiento: "", escolaridad: "", telefono: "", correo: "", eps: "", afp: "", conduce: false, modalidad: "presencial", turnoNocturno: false, altoRiesgoPension: false, manipulaAlimentos: false });
 
 export function TrabajadoresEditor({ empresaId, trabajadores, cargos, sugeridos, catalogoEpp, catalogoCapacitaciones, actividades, capacitaciones, entidades }: {
   empresaId: string; trabajadores: T[]; cargos: { id: string; nombre: string; nPersonas: number }[]; sugeridos: Record<string, { epp: string[]; capacitaciones: string[] }>;
@@ -117,7 +119,7 @@ export function TrabajadoresEditor({ empresaId, trabajadores, cargos, sugeridos,
                     <TableRow key={t.id} className={cn("cursor-pointer", !t.activo && "opacity-50")} onClick={() => setFicha(t.id)}>
                       <TableCell className="pl-6"><div className="font-medium">{t.nombres}</div><div className="text-xs text-muted-foreground">{t.documento ? `${abrevDoc(t.tipoDoc)} ${t.documento}` : "Sin documento"}{!t.activo && " · Retirado"}</div></TableCell>
                       <TableCell>{t.cargo || <span className="text-xs text-amber-700">Sin cargo</span>}</TableCell>
-                      <TableCell>{VINC[t.vinculacion]}</TableCell>
+                      <TableCell>{VINC[t.vinculacion]}<div className="mt-0.5 flex flex-wrap gap-1">{t.conduce && <Badge variant="outline" className="text-[10px]">Conduce</Badge>}{t.modalidad !== "presencial" && <Badge variant="outline" className="text-[10px]">{t.modalidad === "trabajo_en_casa" ? "Trabajo en casa" : t.modalidad === "remoto" ? "Remoto" : "Teletrabajo"}</Badge>}{t.turnoNocturno && <Badge variant="outline" className="text-[10px]">Nocturno</Badge>}{t.manipulaAlimentos && <Badge variant="outline" className="text-[10px]">Alimentos</Badge>}{t.altoRiesgoPension && <Badge variant="outline" className="text-[10px]">Alto riesgo</Badge>}</div></TableCell>
                       <TableCell className="text-xs">{fecha(t.fechaIngreso)}</TableCell>
                       <TableCell>{x ? <Tip texto={`${TIPO_EX[x.tipo]} del ${fecha(x.fecha)}${x.proximo ? `; próximo: ${fecha(x.proximo)}` : ""}`}><Badge variant="outline" className={cn(CONCEPTO[x.concepto].c, vencido(x.proximo) && "border-red-400")}>{CONCEPTO[x.concepto].t}{vencido(x.proximo) ? " · vencido" : ""}</Badge></Tip> : <Badge variant="outline" className="text-red-700">Sin examen</Badge>}</TableCell>
                       <TableCell className="text-xs">{t.entregas.length ? `${t.entregas.length} entregas` : "—"}</TableCell>
@@ -267,27 +269,44 @@ export function TrabajadoresEditor({ empresaId, trabajadores, cargos, sugeridos,
       </Sheet>
 
       {/* ───── Formulario del trabajador ───── */}
-      <Dialog open={!!form} onOpenChange={(o) => !o && setForm(null)}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
-          <DialogHeader><DialogTitle>{form?.id ? "Editar trabajador" : "Agregar trabajador"}</DialogTitle><DialogDescription>Datos mínimos (Ley 1581/2012). Sexo, nacimiento y escolaridad alimentan el perfil sociodemográfico (FOR-01).</DialogDescription></DialogHeader>
-          {form && (
-            <div className="grid gap-4 sm:grid-cols-2">
+      <PanelFormulario open={!!form} onOpenChange={(o) => !o && setForm(null)}
+        titulo={form?.id ? "Editar trabajador" : "Agregar trabajador"}
+        descripcion="Datos mínimos (Ley 1581/2012). Sexo, nacimiento y escolaridad alimentan el perfil sociodemográfico (FOR-01)."
+        pie={<><Button variant="outline" onClick={() => setForm(null)}>Cancelar</Button><Button disabled={pend || !form?.nombres.trim()} tooltip={!form?.nombres.trim() ? "Escriba el nombre del trabajador" : undefined} onClick={() => form && run(() => A.guardarTrabajador(empresaId, form), form.id ? "Trabajador actualizado" : "Trabajador agregado", () => setForm(null))}>{pend && <Spinner />} Guardar</Button></>}>
+        {form && (
+          <>
+            <SeccionFormulario titulo="Identificación" descripcion="Nombre y documento tal como aparecen en la afiliación a la ARL." columnas={2}>
               <Field className="sm:col-span-2"><FieldLabel htmlFor="t-n">Nombre completo</FieldLabel><Input id="t-n" placeholder="Nombres y apellidos" value={form.nombres} onChange={(e) => setForm({ ...form, nombres: e.target.value })} /></Field>
               <Field><FieldLabel>Documento</FieldLabel><CampoDocumento tipo={form.tipoDoc} numero={form.documento} onTipo={(v) => setForm({ ...form, tipoDoc: v })} onNumero={(v) => setForm({ ...form, documento: v })} /></Field>
-              <Field><FieldLabel>Cargo</FieldLabel><Selector value={form.cargoId} onChange={(v) => setForm({ ...form, cargoId: v })} opciones={cargos.map((c) => ({ valor: c.id, etiqueta: c.nombre }))} /></Field>
-              <Field><FieldLabel>Vinculación</FieldLabel><Selector value={form.vinculacion} onChange={(v) => setForm({ ...form, vinculacion: v })} opciones={Object.entries(VINC).map(([k, v]) => ({ valor: k, etiqueta: v }))} /></Field>
-              <Field><FieldLabel htmlFor="t-i">Fecha de ingreso</FieldLabel><Input id="t-i" type="date" value={form.fechaIngreso} onChange={(e) => setForm({ ...form, fechaIngreso: e.target.value })} /></Field>
               <Field><FieldLabel>Sexo</FieldLabel><Selector value={form.sexo} onChange={(v) => setForm({ ...form, sexo: v })} opciones={[{ valor: "F", etiqueta: "Mujer" }, { valor: "M", etiqueta: "Hombre" }, { valor: "O", etiqueta: "Otro / prefiere no decir" }]} /></Field>
               <Field><FieldLabel htmlFor="t-fn">Fecha de nacimiento</FieldLabel><Input id="t-fn" type="date" value={form.fechaNacimiento} onChange={(e) => setForm({ ...form, fechaNacimiento: e.target.value })} /></Field>
               <Field><FieldLabel>Escolaridad</FieldLabel><Selector value={form.escolaridad} onChange={(v) => setForm({ ...form, escolaridad: v })} opciones={(entidades.escolaridad.length ? entidades.escolaridad : ESCOLARIDAD).map((x) => ({ valor: x, etiqueta: x }))} /></Field>
-              <Field><FieldLabel htmlFor="t-t">Teléfono</FieldLabel><Input id="t-t" placeholder="Ej.: 300 123 4567" value={form.telefono} onChange={(e) => setForm({ ...form, telefono: e.target.value })} /></Field>
+            </SeccionFormulario>
+
+            <SeccionFormulario titulo="Vinculación" descripcion="El cargo trae los EPP, exámenes y capacitaciones de la matriz de peligros." columnas={2}>
+              <Field className="sm:col-span-2"><FieldLabel>Cargo</FieldLabel><Selector value={form.cargoId} onChange={(v) => setForm({ ...form, cargoId: v })} opciones={cargos.map((c) => ({ valor: c.id, etiqueta: c.nombre }))} /></Field>
+              <Field><FieldLabel>Vinculación</FieldLabel><Selector value={form.vinculacion} onChange={(v) => setForm({ ...form, vinculacion: v })} opciones={Object.entries(VINC).map(([k, v]) => ({ valor: k, etiqueta: v }))} /></Field>
+              <Field><FieldLabel htmlFor="t-i">Fecha de ingreso</FieldLabel><Input id="t-i" type="date" value={form.fechaIngreso} onChange={(e) => setForm({ ...form, fechaIngreso: e.target.value })} /></Field>
+            </SeccionFormulario>
+
+            <SeccionFormulario titulo="Contacto y seguridad social" descripcion="EPS y fondo de pensiones se eligen de Biblioteca → Entidades; también puede escribir uno nuevo." columnas={2}>
+              <Field className="sm:col-span-2"><FieldLabel htmlFor="t-t">Teléfono</FieldLabel><Input id="t-t" className="sm:max-w-xs" placeholder="Ej.: 300 123 4567" value={form.telefono} onChange={(e) => setForm({ ...form, telefono: e.target.value })} /></Field>
               <Field><FieldLabel htmlFor="t-e">EPS</FieldLabel><Combo id="t-e" placeholder="Seleccione o escriba la EPS" value={form.eps} onChange={(v) => setForm({ ...form, eps: v })} grupos={[{ titulo: "EPS (Biblioteca → Entidades)", opciones: entidades.eps.map((x) => ({ valor: x })) }]} /></Field>
               <Field><FieldLabel htmlFor="t-a">Fondo de pensiones</FieldLabel><Combo id="t-a" placeholder="Seleccione o escriba el fondo" value={form.afp} onChange={(v) => setForm({ ...form, afp: v })} grupos={[{ titulo: "Fondos de pensiones (Biblioteca → Entidades)", opciones: entidades.afp.map((x) => ({ valor: x })) }]} /></Field>
-            </div>
-          )}
-          <DialogFooter><Button variant="outline" onClick={() => setForm(null)}>Cancelar</Button><Button disabled={pend || !form?.nombres.trim()} onClick={() => form && run(() => A.guardarTrabajador(empresaId, form), form.id ? "Trabajador actualizado" : "Trabajador agregado", () => setForm(null))}>{pend && <Spinner />} Guardar</Button></DialogFooter>
-        </DialogContent>
-      </Dialog>
+            </SeccionFormulario>
+
+            <SeccionFormulario titulo="Condiciones que activan normas" ayuda={<Ayuda k="condicionesTrabajador" />} descripcion="Según lo que marque, el sistema exige documentos adicionales (PESV, teletrabajo, trabajo nocturno, alimentos, alto riesgo).">
+              <Field className="sm:max-w-md"><FieldLabel>Modalidad de trabajo</FieldLabel><Selector value={form.modalidad} onChange={(v) => setForm({ ...form, modalidad: v })} opciones={[{ valor: "presencial", etiqueta: "Presencial" }, { valor: "teletrabajo", etiqueta: "Teletrabajo (Ley 1221/2008)" }, { valor: "remoto", etiqueta: "Trabajo remoto (Ley 2121/2021)" }, { valor: "trabajo_en_casa", etiqueta: "Trabajo en casa temporal (Ley 2088/2021)" }]} /></Field>
+              <div className="grid gap-x-6 gap-y-2.5 text-sm sm:grid-cols-2">
+                <label className="flex cursor-pointer items-start gap-2"><Checkbox className="mt-0.5" checked={form.conduce} onCheckedChange={(v) => setForm({ ...form, conduce: !!v })} /><span>Conduce vehículos para la empresa <span className="text-muted-foreground">(PESV desde 2 conductores)</span></span></label>
+                <label className="flex cursor-pointer items-start gap-2"><Checkbox className="mt-0.5" checked={form.turnoNocturno} onCheckedChange={(v) => setForm({ ...form, turnoNocturno: !!v })} /><span>Trabaja de noche o por turnos <span className="text-muted-foreground">(7:00 p. m. a 6:00 a. m.)</span></span></label>
+                <label className="flex cursor-pointer items-start gap-2"><Checkbox className="mt-0.5" checked={form.manipulaAlimentos} onCheckedChange={(v) => setForm({ ...form, manipulaAlimentos: !!v })} /><span>Manipula alimentos <span className="text-muted-foreground">(certificado médico anual, Res. 2674/2013)</span></span></label>
+                <label className="flex cursor-pointer items-start gap-2"><Checkbox className="mt-0.5" checked={form.altoRiesgoPension} onCheckedChange={(v) => setForm({ ...form, altoRiesgoPension: !!v })} /><span>Actividad de alto riesgo pensional <span className="text-muted-foreground">(Decreto 2090/2003 art. 2)</span></span></label>
+              </div>
+            </SeccionFormulario>
+          </>
+        )}
+      </PanelFormulario>
 
       {/* ───── Importar ───── */}
       <Dialog open={importar !== null} onOpenChange={(o) => !o && setImportar(null)}>
@@ -302,18 +321,24 @@ export function TrabajadoresEditor({ empresaId, trabajadores, cargos, sugeridos,
 
       {/* ───── Examen ───── */}
       <Dialog open={!!examen} onOpenChange={(o) => !o && setExamen(null)}>
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="sm:max-w-xl">
           <DialogHeader><DialogTitle>Examen médico ocupacional — {examen && nombre(examen.trabajadorId)}</DialogTitle><DialogDescription>Registre solo el concepto y las recomendaciones; nunca el diagnóstico.</DialogDescription></DialogHeader>
           {examen && (
-            <div className="grid gap-4 sm:grid-cols-2">
-              <Field><FieldLabel>Tipo</FieldLabel><Selector value={examen.tipo} onChange={(v) => setExamen({ ...examen, tipo: v })} opciones={Object.entries(TIPO_EX).map(([k, v]) => ({ valor: k, etiqueta: v }))} /></Field>
-              <Field><FieldLabel htmlFor="x-f">Fecha</FieldLabel><Input id="x-f" type="date" value={examen.fecha} onChange={(e) => setExamen({ ...examen, fecha: e.target.value, proximo: examen.tipo === "retiro" ? "" : enAnios(e.target.value, 1) })} /></Field>
-              <Field><FieldLabel>Concepto de aptitud</FieldLabel><Selector value={examen.concepto} onChange={(v) => setExamen({ ...examen, concepto: v })} opciones={Object.entries(CONCEPTO).map(([k, v]) => ({ valor: k, etiqueta: v.t }))} /></Field>
-              <Field><FieldLabel htmlFor="x-i">IPS</FieldLabel><Input id="x-i" placeholder="Ej.: IPS Salud Ocupacional" value={examen.ips} onChange={(e) => setExamen({ ...examen, ips: e.target.value })} /></Field>
-              <Field className="sm:col-span-2"><FieldLabel htmlFor="x-r">Restricciones y recomendaciones</FieldLabel><Textarea id="x-r" rows={2} value={examen.restricciones} placeholder="Ej: Evitar levantar más de 12 kg durante 3 meses" onChange={(e) => setExamen({ ...examen, restricciones: e.target.value })} /></Field>
-              <Field><FieldLabel htmlFor="x-c">Comunicado al trabajador</FieldLabel><Input id="x-c" type="date" value={examen.comunicadoTrabajador} onChange={(e) => setExamen({ ...examen, comunicadoTrabajador: e.target.value })} /></Field>
-              <Field><FieldLabel htmlFor="x-p">Próximo examen</FieldLabel><Input id="x-p" type="date" value={examen.proximo} onChange={(e) => setExamen({ ...examen, proximo: e.target.value })} /><FieldDescription>Según la periodicidad del profesiograma.</FieldDescription></Field>
-            </div>
+            <DialogBody>
+              <SeccionesFormulario>
+                <SeccionFormulario titulo="Examen" descripcion="Tipo, fecha e IPS que lo practicó (Res. 1843/2025)." columnas={2}>
+                  <Field><FieldLabel>Tipo</FieldLabel><Selector value={examen.tipo} onChange={(v) => setExamen({ ...examen, tipo: v })} opciones={Object.entries(TIPO_EX).map(([k, v]) => ({ valor: k, etiqueta: v }))} /></Field>
+                  <Field><FieldLabel htmlFor="x-f">Fecha</FieldLabel><Input id="x-f" type="date" value={examen.fecha} onChange={(e) => setExamen({ ...examen, fecha: e.target.value, proximo: examen.tipo === "retiro" ? "" : enAnios(e.target.value, 1) })} /></Field>
+                  <Field className="sm:col-span-2"><FieldLabel htmlFor="x-i">IPS</FieldLabel><Input id="x-i" placeholder="Ej.: IPS Salud Ocupacional" value={examen.ips} onChange={(e) => setExamen({ ...examen, ips: e.target.value })} /></Field>
+                </SeccionFormulario>
+                <SeccionFormulario titulo="Concepto y seguimiento" descripcion="El concepto de aptitud es el único dato de salud que se guarda (Ley 1581/2012)." columnas={2}>
+                  <Field className="sm:col-span-2"><FieldLabel>Concepto de aptitud</FieldLabel><Selector value={examen.concepto} onChange={(v) => setExamen({ ...examen, concepto: v })} opciones={Object.entries(CONCEPTO).map(([k, v]) => ({ valor: k, etiqueta: v.t }))} /></Field>
+                  <Field className="sm:col-span-2"><FieldLabel htmlFor="x-r">Restricciones y recomendaciones</FieldLabel><Textarea id="x-r" rows={3} value={examen.restricciones} placeholder="Ej: Evitar levantar más de 12 kg durante 3 meses" onChange={(e) => setExamen({ ...examen, restricciones: e.target.value })} /></Field>
+                  <Field><FieldLabel htmlFor="x-c">Comunicado al trabajador</FieldLabel><Input id="x-c" type="date" value={examen.comunicadoTrabajador} onChange={(e) => setExamen({ ...examen, comunicadoTrabajador: e.target.value })} /></Field>
+                  <Field><FieldLabel htmlFor="x-p">Próximo examen</FieldLabel><Input id="x-p" type="date" value={examen.proximo} onChange={(e) => setExamen({ ...examen, proximo: e.target.value })} /><FieldDescription>Según la periodicidad del profesiograma.</FieldDescription></Field>
+                </SeccionFormulario>
+              </SeccionesFormulario>
+            </DialogBody>
           )}
           <DialogFooter><Button variant="outline" onClick={() => setExamen(null)}>Cancelar</Button><Button disabled={pend} onClick={() => examen && run(() => A.guardarExamen(empresaId, examen), "Examen guardado", () => setExamen(null))}>{pend && <Spinner />} Guardar</Button></DialogFooter>
         </DialogContent>
@@ -321,55 +346,64 @@ export function TrabajadoresEditor({ empresaId, trabajadores, cargos, sugeridos,
 
       {/* ───── Entrega de EPP ───── */}
       <Dialog open={!!entrega} onOpenChange={(o) => !o && setEntrega(null)}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
+        <DialogContent className="sm:max-w-2xl">
           <DialogHeader><DialogTitle>Registrar entrega de EPP</DialogTitle><DialogDescription>Para uno o varios trabajadores a la vez. Para un solo trabajador se precargan los EPP de su cargo según la matriz.</DialogDescription></DialogHeader>
           {entrega && (
-            <div className="space-y-4">
-              <Field><FieldLabel>Trabajadores ({entrega.trabajadorIds.length})</FieldLabel>
-                <div className="max-h-40 space-y-1 overflow-y-auto rounded-lg border p-2">
-                  {activos.map((t) => <label key={t.id} className="flex items-center gap-2 text-sm"><Checkbox checked={entrega.trabajadorIds.includes(t.id)} onCheckedChange={(v) => setEntrega({ ...entrega, trabajadorIds: v ? [...entrega.trabajadorIds, t.id] : entrega.trabajadorIds.filter((x) => x !== t.id) })} />{t.nombres} <span className="text-xs text-muted-foreground">{t.cargo}</span></label>)}
-                </div>
-              </Field>
-              <Field><FieldLabel>Elementos</FieldLabel>
-                <div className="flex flex-wrap gap-1.5">{entrega.elementos.map((x) => <Badge key={x} variant="secondary" className="gap-1">{x}<button type="button" aria-label={`Quitar ${x}`} onClick={() => setEntrega({ ...entrega, elementos: entrega.elementos.filter((y) => y !== x) })}>×</button></Badge>)}</div>
-                <Combo value="" placeholder="Agregar elemento…" onChange={(v) => v && !entrega.elementos.includes(v) && setEntrega({ ...entrega, elementos: [...entrega.elementos, v] })} grupos={[{ titulo: "Catálogo de EPP", opciones: catalogoEpp.map((x) => ({ valor: x })) }]} />
-              </Field>
-              <div className="grid gap-4 sm:grid-cols-4">
-                <Field><FieldLabel htmlFor="e-f">Fecha</FieldLabel><Input id="e-f" type="date" value={entrega.fecha} onChange={(e) => setEntrega({ ...entrega, fecha: e.target.value })} /></Field>
-                <Field><FieldLabel htmlFor="e-c">Cantidad</FieldLabel><Input id="e-c" placeholder="Ej.: 2" type="number" min={1} value={entrega.cantidad} onChange={(e) => setEntrega({ ...entrega, cantidad: Number(e.target.value) })} /></Field>
-                <Field><FieldLabel>Tipo</FieldLabel><Selector value={entrega.tipo} onChange={(v) => setEntrega({ ...entrega, tipo: v })} opciones={[{ valor: "dotacion", etiqueta: "Dotación" }, { valor: "reposicion", etiqueta: "Reposición" }]} /></Field>
-                <Field><FieldLabel htmlFor="e-r">Próxima reposición</FieldLabel><Input id="e-r" type="date" value={entrega.proximaReposicion} onChange={(e) => setEntrega({ ...entrega, proximaReposicion: e.target.value })} /></Field>
-              </div>
-              <label className="flex items-center gap-2 text-sm"><Checkbox checked={entrega.capacitado} onCheckedChange={(v) => setEntrega({ ...entrega, capacitado: !!v })} /> Se capacitó en el uso y mantenimiento</label>
-            </div>
+            <DialogBody>
+              <SeccionesFormulario>
+                <SeccionFormulario titulo={`Trabajadores (${entrega.trabajadorIds.length})`} descripcion="Marque a quiénes se les entrega. Se crea un registro por trabajador y elemento."
+                  acciones={<><Button type="button" size="xs" variant="ghost" onClick={() => setEntrega({ ...entrega, trabajadorIds: activos.map((t) => t.id) })}>Todos</Button><Button type="button" size="xs" variant="ghost" onClick={() => setEntrega({ ...entrega, trabajadorIds: [] })}>Ninguno</Button></>}>
+                  <div className="grid max-h-44 gap-x-6 gap-y-1.5 overflow-y-auto rounded-lg border p-3 sm:grid-cols-2">
+                    {activos.map((t) => <label key={t.id} className="flex cursor-pointer items-center gap-2 text-sm"><Checkbox checked={entrega.trabajadorIds.includes(t.id)} onCheckedChange={(v) => setEntrega({ ...entrega, trabajadorIds: v ? [...entrega.trabajadorIds, t.id] : entrega.trabajadorIds.filter((x) => x !== t.id) })} /><span className="truncate">{t.nombres} <span className="text-xs text-muted-foreground">{t.cargo}</span></span></label>)}
+                  </div>
+                </SeccionFormulario>
+                <SeccionFormulario titulo={`Elementos (${entrega.elementos.length})`} descripcion="Del catálogo de EPP (Biblioteca); también puede escribir uno nuevo.">
+                  <Field>
+                    {entrega.elementos.length > 0 && <div className="flex flex-wrap gap-2">{entrega.elementos.map((x) => <Badge key={x} variant="secondary" className="gap-1 pr-1 font-normal">{x}<Button type="button" size="icon-xs" variant="ghost" className="size-4" aria-label={`Quitar ${x}`} onClick={() => setEntrega({ ...entrega, elementos: entrega.elementos.filter((y) => y !== x) })}>×</Button></Badge>)}</div>}
+                    <Combo value="" placeholder="Agregar elemento…" onChange={(v) => v && !entrega.elementos.includes(v) && setEntrega({ ...entrega, elementos: [...entrega.elementos, v] })} grupos={[{ titulo: "Catálogo de EPP", opciones: catalogoEpp.map((x) => ({ valor: x })) }]} />
+                  </Field>
+                </SeccionFormulario>
+                <SeccionFormulario titulo="Entrega" descripcion="Si indica la próxima reposición, el planeador la avisa." contenidoClassName="sm:grid-cols-4">
+                  <Field><FieldLabel htmlFor="e-f">Fecha</FieldLabel><Input id="e-f" type="date" value={entrega.fecha} onChange={(e) => setEntrega({ ...entrega, fecha: e.target.value })} /></Field>
+                  <Field><FieldLabel htmlFor="e-c">Cantidad</FieldLabel><Input id="e-c" placeholder="Ej.: 2" type="number" min={1} value={entrega.cantidad} onChange={(e) => setEntrega({ ...entrega, cantidad: Number(e.target.value) })} /></Field>
+                  <Field><FieldLabel>Tipo</FieldLabel><Selector value={entrega.tipo} onChange={(v) => setEntrega({ ...entrega, tipo: v })} opciones={[{ valor: "dotacion", etiqueta: "Dotación" }, { valor: "reposicion", etiqueta: "Reposición" }]} /></Field>
+                  <Field><FieldLabel htmlFor="e-r">Próxima reposición</FieldLabel><Input id="e-r" type="date" value={entrega.proximaReposicion} onChange={(e) => setEntrega({ ...entrega, proximaReposicion: e.target.value })} /></Field>
+                  <label className="flex cursor-pointer items-center gap-2 text-sm sm:col-span-4"><Checkbox checked={entrega.capacitado} onCheckedChange={(v) => setEntrega({ ...entrega, capacitado: !!v })} /> Se capacitó en el uso y mantenimiento</label>
+                </SeccionFormulario>
+              </SeccionesFormulario>
+            </DialogBody>
           )}
-          <DialogFooter><Button variant="outline" onClick={() => setEntrega(null)}>Cancelar</Button><Button disabled={pend || !entrega?.trabajadorIds.length || !entrega?.elementos.length} onClick={() => entrega && start(async () => { const r = await A.guardarEntregas(empresaId, entrega); if ("error" in r) toast.error(r.error); else { toast.success(`${r.n} entrega(s) registradas`); setEntrega(null); } })}>{pend && <Spinner />} Registrar</Button></DialogFooter>
+          <DialogFooter><Button variant="outline" onClick={() => setEntrega(null)}>Cancelar</Button><Button disabled={pend || !entrega?.trabajadorIds.length || !entrega?.elementos.length} tooltip={entrega && (!entrega.trabajadorIds.length || !entrega.elementos.length) ? "Marque al menos un trabajador y un elemento" : undefined} onClick={() => entrega && start(async () => { const r = await A.guardarEntregas(empresaId, entrega); if ("error" in r) toast.error(r.error); else { toast.success(`${r.n} entrega(s) registradas`); setEntrega(null); } })}>{pend && <Spinner />} Registrar</Button></DialogFooter>
         </DialogContent>
       </Dialog>
 
       {/* ───── Capacitación ───── */}
       <Dialog open={!!cap} onOpenChange={(o) => !o && setCap(null)}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
+        <DialogContent className="sm:max-w-2xl">
           <DialogHeader><DialogTitle>{cap?.id ? "Editar capacitación" : "Registrar capacitación"}</DialogTitle><DialogDescription>Con la lista de asistencia. Suba las evidencias (lista firmada, fotos) en la actividad del plan o en Evidencias.</DialogDescription></DialogHeader>
           {cap && (
-            <div className="space-y-4">
-              <Field><FieldLabel>Tema</FieldLabel><Combo value={cap.tema} placeholder="Seleccione o escriba el tema" onChange={(v) => setCap({ ...cap, tema: v })} grupos={[{ titulo: "Catálogo de capacitaciones", opciones: catalogoCapacitaciones.map((x) => ({ valor: x })) }]} /></Field>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <Field><FieldLabel htmlFor="c-f">Fecha</FieldLabel><Input id="c-f" type="date" value={cap.fecha} onChange={(e) => setCap({ ...cap, fecha: e.target.value })} /></Field>
-                <Field><FieldLabel htmlFor="c-h">Horas</FieldLabel><Input id="c-h" placeholder="Ej.: 2" type="number" min={0.5} step={0.5} value={cap.horas} onChange={(e) => setCap({ ...cap, horas: Number(e.target.value) })} /></Field>
-                <Field><FieldLabel>Modalidad</FieldLabel><Selector value={cap.modalidad} onChange={(v) => setCap({ ...cap, modalidad: v })} opciones={[{ valor: "presencial", etiqueta: "Presencial" }, { valor: "virtual", etiqueta: "Virtual" }]} /></Field>
-                <Field><FieldLabel htmlFor="c-fa">Facilitador</FieldLabel><Input id="c-fa" placeholder="Ej.: Instructor de la ARL" value={cap.facilitador} onChange={(e) => setCap({ ...cap, facilitador: e.target.value })} /></Field>
-              </div>
-              <Field><FieldLabel>Actividad del plan anual (opcional)</FieldLabel><Selector value={cap.actividadId} onChange={(v) => setCap({ ...cap, actividadId: v })} placeholder="Sin ligar a una actividad" opciones={[{ valor: "", etiqueta: "Sin ligar a una actividad" }, ...actividades.filter((a) => a.id === cap.actividadId || a.anio === Number(cap.fecha.slice(0, 4))).map((a) => ({ valor: a.id, etiqueta: `${a.periodo} · ${a.nombre}` }))]} /><FieldDescription>Al guardar, la actividad queda ejecutada.</FieldDescription></Field>
-              <Field>
-                <div className="flex items-center gap-2"><FieldLabel className="flex-1">Asistentes ({cap.asistentes.length} de {activos.length})</FieldLabel><Button type="button" size="xs" variant="ghost" onClick={() => setCap({ ...cap, asistentes: activos.map((t) => t.id) })}>Todos</Button><Button type="button" size="xs" variant="ghost" onClick={() => setCap({ ...cap, asistentes: [] })}>Ninguno</Button></div>
-                <div className="max-h-48 space-y-1 overflow-y-auto rounded-lg border p-2">
-                  {activos.map((t) => <label key={t.id} className="flex items-center gap-2 text-sm"><Checkbox checked={cap.asistentes.includes(t.id)} onCheckedChange={(v) => setCap({ ...cap, asistentes: v ? [...cap.asistentes, t.id] : cap.asistentes.filter((x) => x !== t.id) })} />{t.nombres} <span className="text-xs text-muted-foreground">{t.cargo}</span></label>)}
-                </div>
-              </Field>
-            </div>
+            <DialogBody>
+              <SeccionesFormulario>
+                <SeccionFormulario titulo="Sesión" descripcion="Tema del catálogo de capacitaciones (o uno propio), fecha, duración y quién la dictó." columnas={2}>
+                  <Field className="sm:col-span-2"><FieldLabel>Tema</FieldLabel><Combo value={cap.tema} placeholder="Seleccione o escriba el tema" onChange={(v) => setCap({ ...cap, tema: v })} grupos={[{ titulo: "Catálogo de capacitaciones", opciones: catalogoCapacitaciones.map((x) => ({ valor: x })) }]} /></Field>
+                  <Field><FieldLabel htmlFor="c-f">Fecha</FieldLabel><Input id="c-f" type="date" value={cap.fecha} onChange={(e) => setCap({ ...cap, fecha: e.target.value })} /></Field>
+                  <Field><FieldLabel htmlFor="c-h">Horas</FieldLabel><Input id="c-h" placeholder="Ej.: 2" type="number" min={0.5} step={0.5} value={cap.horas} onChange={(e) => setCap({ ...cap, horas: Number(e.target.value) })} /></Field>
+                  <Field><FieldLabel>Modalidad</FieldLabel><Selector value={cap.modalidad} onChange={(v) => setCap({ ...cap, modalidad: v })} opciones={[{ valor: "presencial", etiqueta: "Presencial" }, { valor: "virtual", etiqueta: "Virtual" }]} /></Field>
+                  <Field><FieldLabel htmlFor="c-fa">Facilitador</FieldLabel><Input id="c-fa" placeholder="Ej.: Instructor de la ARL" value={cap.facilitador} onChange={(e) => setCap({ ...cap, facilitador: e.target.value })} /></Field>
+                </SeccionFormulario>
+                <SeccionFormulario titulo="Plan anual" descripcion="Opcional. Al guardar, la actividad ligada queda ejecutada.">
+                  <Field><FieldLabel>Actividad del plan anual</FieldLabel><Selector value={cap.actividadId} onChange={(v) => setCap({ ...cap, actividadId: v })} placeholder="Sin ligar a una actividad" opciones={[{ valor: "", etiqueta: "Sin ligar a una actividad" }, ...actividades.filter((a) => a.id === cap.actividadId || a.anio === Number(cap.fecha.slice(0, 4))).map((a) => ({ valor: a.id, etiqueta: `${a.periodo} · ${a.nombre}` }))]} /></Field>
+                </SeccionFormulario>
+                <SeccionFormulario titulo={`Asistentes (${cap.asistentes.length} de ${activos.length})`} descripcion="Cada asistente queda con la capacitación en su ficha."
+                  acciones={<><Button type="button" size="xs" variant="ghost" onClick={() => setCap({ ...cap, asistentes: activos.map((t) => t.id) })}>Todos</Button><Button type="button" size="xs" variant="ghost" onClick={() => setCap({ ...cap, asistentes: [] })}>Ninguno</Button></>}>
+                  <div className="grid max-h-52 gap-x-6 gap-y-1.5 overflow-y-auto rounded-lg border p-3 sm:grid-cols-2">
+                    {activos.map((t) => <label key={t.id} className="flex cursor-pointer items-center gap-2 text-sm"><Checkbox checked={cap.asistentes.includes(t.id)} onCheckedChange={(v) => setCap({ ...cap, asistentes: v ? [...cap.asistentes, t.id] : cap.asistentes.filter((x) => x !== t.id) })} /><span className="truncate">{t.nombres} <span className="text-xs text-muted-foreground">{t.cargo}</span></span></label>)}
+                  </div>
+                </SeccionFormulario>
+              </SeccionesFormulario>
+            </DialogBody>
           )}
-          <DialogFooter><Button variant="outline" onClick={() => setCap(null)}>Cancelar</Button><Button disabled={pend || !cap?.tema.trim()} onClick={() => cap && run(() => A.guardarCapacitacion(empresaId, cap), "Capacitación guardada", () => setCap(null))}>{pend && <Spinner />} Guardar</Button></DialogFooter>
+          <DialogFooter><Button variant="outline" onClick={() => setCap(null)}>Cancelar</Button><Button disabled={pend || !cap?.tema.trim()} tooltip={!cap?.tema.trim() ? "Indique el tema" : undefined} onClick={() => cap && run(() => A.guardarCapacitacion(empresaId, cap), "Capacitación guardada", () => setCap(null))}>{pend && <Spinner />} Guardar</Button></DialogFooter>
         </DialogContent>
       </Dialog>
     </Tabs>

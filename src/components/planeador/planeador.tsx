@@ -139,13 +139,13 @@ export function Planeador({ fechas, empresas, empresaId, icsHref }: { fechas: Fe
 function Fila({ f, global, pend, onHecho, onEditar, onEliminar }: { f: Fecha; global: boolean; pend: boolean; onHecho: (h: boolean) => void; onEditar: () => void; onEliminar: () => void }) {
   const d = new Date(f.fecha);
   return (
-    <li className={cn("flex items-start gap-3 px-4 py-3", f.estado === "hecho" && "opacity-60")}>
+    <li className={cn("flex flex-wrap items-start gap-x-3 gap-y-2 px-4 py-3 sm:flex-nowrap", f.estado === "hecho" && "opacity-60")}>
       <div className="w-12 shrink-0 text-center">
         {f.mesCompleto ? <div className="pt-1 text-[11px] leading-tight text-muted-foreground">en el<br />mes</div> : <><div className="text-lg font-semibold leading-none">{d.getUTCDate()}</div><div className="text-[11px] uppercase text-muted-foreground">{DIAS[(d.getUTCDay() + 6) % 7]}</div></>}
       </div>
       <span className={cn("mt-1.5 size-2.5 shrink-0 rounded-full", CATEGORIAS[f.categoria].color)} />
-      <div className="min-w-0 flex-1">
-        <div className={cn("text-sm font-medium", f.estado === "hecho" && "line-through")}>{f.titulo}</div>
+      <div className="min-w-0 flex-1 basis-[calc(100%-5.5rem)] sm:basis-auto">
+        <div className={cn("text-sm font-medium text-pretty", f.estado === "hecho" && "line-through")}>{f.titulo}</div>
         <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
           {global && <span className="font-medium text-foreground/70">{f.empresa}</span>}
           <span>{CATEGORIAS[f.categoria].t}</span>
@@ -153,7 +153,7 @@ function Fila({ f, global, pend, onHecho, onEditar, onEliminar }: { f: Fecha; gl
         </div>
         {f.detalle && <p className="mt-1 text-xs text-muted-foreground">{f.detalle}</p>}
       </div>
-      <div className="flex shrink-0 items-center gap-2">
+      <div className="ml-auto flex shrink-0 items-center gap-2 pl-15 sm:pl-0">
       <Badge variant="outline" className={cn("shrink-0", ESTADO[f.estado].c)}>{ESTADO[f.estado].t}</Badge>
       <div className="flex items-center gap-0.5">
         {f.recordatorioId ? (

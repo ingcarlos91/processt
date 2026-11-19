@@ -5,7 +5,7 @@ tipo: DOC
 nivelMin: 7
 carpeta: 1. Recursos
 estandares: ["1.1.3"]
-normas: ["DEC-1072-2015","RES-0312-2019"]
+normas: ["DEC-1072-2015","RES-0312-2019","DL-1295-1994"]
 ---
 ## Objetivo
 
@@ -14,7 +14,7 @@ Definir y asignar los recursos financieros, técnicos, humanos y de otra índole
 ## Recursos humanos
 
 - Responsable del SG-SST: {{default responsable.nombre "Por designar"}}.
-- {{#if comites.copasst.esVigia}}Vigía de SST{{else}}Integrantes del COPASST{{/if}}, con el tiempo de cuatro (4) horas semanales dentro de la jornada para el cumplimiento de sus funciones (Resolución 2013 de 1986, art. 7).
+- {{#if comites.copasst.esVigia}}Vigía de SST{{else}}Integrantes del COPASST{{/if}}, con el tiempo de cuatro (4) horas semanales dentro de la jornada para el cumplimiento de sus funciones (Decreto Ley 1295 de 1994, art. 63 literal b).
 - Comité de Convivencia Laboral y brigada de emergencias.
 - Asesoría de la ARL {{default empresa.arl "______"}}.
 

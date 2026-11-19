@@ -53,7 +53,7 @@ export function EventosLista({ empresaId, anio, anios, eventos, cargos, acciones
   return (
     <>
       <div className="flex flex-wrap items-center gap-2">
-        <p className="max-w-3xl text-sm text-muted-foreground">Registro, reporte e investigación de cada evento, con sus acciones. Alimenta los indicadores, el registro estadístico (FOR-08), las acciones correctivas (FOR-06) y la revisión por la dirección (ACT-06).</p>
+        <p className="max-w-3xl text-sm text-muted-foreground text-pretty">Registro, reporte e investigación de cada evento con sus acciones. Alimenta los indicadores, el registro estadístico (FOR-08) y las acciones correctivas (FOR-06).</p>
         <div className="flex-1" />
         <Selector className="w-28" value={String(anio)} onChange={(v) => router.push(`?anio=${v}`)} opciones={anios.map((y) => ({ valor: String(y), etiqueta: String(y) }))} />
         <Button onClick={() => setAbierto(true)}><Plus /> Registrar evento</Button>

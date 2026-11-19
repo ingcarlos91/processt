@@ -23,4 +23,4 @@ normas: ["RES-1843-2025","RES-0312-2019"]
 
 ## Instrucciones
 
-Registrar únicamente el concepto de aptitud y las recomendaciones emitidas por la IPS; nunca diagnósticos. Verificar mensualmente el cumplimiento de las recomendaciones (Resolución 0312 de 2019, estándar 3.1.6).
+Registrar únicamente el concepto de aptitud (apto, apto con recomendaciones, apto con restricciones o aplazado) y las recomendaciones emitidas por el prestador; nunca diagnósticos. El concepto se comunica por escrito a cada trabajador y se conserva la evidencia de la entrega (Resolución 1843 de 2025, art. 5 literal i): anotar la fecha en la columna "Comunicado al trabajador". La columna "Comunicado al jefe" se diligencia a mano cuando se informe al jefe inmediato lo necesario para aplicar las recomendaciones. Cuando el concepto incluya restricciones, la empresa adapta las condiciones del puesto o reubica al trabajador en máximo veinte (20) días hábiles (art. 5 literal f) y anota la acción en "Acciones implementadas". Verificar mensualmente el cumplimiento de las recomendaciones (Resolución 0312 de 2019, estándar 3.1.6).

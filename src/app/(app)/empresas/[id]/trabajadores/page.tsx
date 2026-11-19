@@ -33,7 +33,7 @@ export default async function Trabajadores({ params }: PageProps<"/empresas/[id]
       trabajadores={ts.map((t) => ({
         id: t.id, nombres: t.nombres, tipoDoc: t.tipoDoc, documento: t.documento ?? "", cargoId: t.cargoId ?? "", cargo: t.cargo?.nombre ?? "", vinculacion: t.vinculacion,
         fechaIngreso: iso(t.fechaIngreso), fechaRetiro: iso(t.fechaRetiro), activo: t.activo, sexo: t.sexo ?? "", fechaNacimiento: iso(t.fechaNacimiento), escolaridad: t.escolaridad ?? "",
-        telefono: t.telefono ?? "", correo: t.correo ?? "", eps: t.eps ?? "", afp: t.afp ?? "",
+        telefono: t.telefono ?? "", correo: t.correo ?? "", eps: t.eps ?? "", afp: t.afp ?? "", conduce: t.conduce, modalidad: t.modalidad, turnoNocturno: t.turnoNocturno, altoRiesgoPension: t.altoRiesgoPension, manipulaAlimentos: t.manipulaAlimentos,
         examenes: t.examenes.map((x) => ({ id: x.id, tipo: x.tipo, fecha: iso(x.fecha), ips: x.ips ?? "", concepto: x.concepto, restricciones: x.restricciones ?? "", comunicadoTrabajador: iso(x.comunicadoTrabajador), proximo: iso(x.proximo) })),
         entregas: t.entregasEpp.map((x) => ({ id: x.id, fecha: iso(x.fecha), elemento: x.elemento, cantidad: x.cantidad, tipo: x.tipo, capacitado: x.capacitado, proximaReposicion: iso(x.proximaReposicion) })),
         capacitaciones: t.asistencias.length,

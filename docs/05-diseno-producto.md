@@ -15,7 +15,7 @@ Nombre de trabajo: **processt** (carpeta del proyecto). Decidir nombre comercial
 ### M1. Empresas (intake)
 Wizard de alta de cliente en pasos cortos:
 1. Identificación: razón social, NIT, dirección, ciudad, representante legal, correo, teléfono, logo.
-2. Actividad: código CIIU (búsqueda), descripción, **clase de riesgo** (sugerida por Decreto 1607, editable), ARL, EPS mayoritaria, caja.
+2. Actividad: código CIIU (búsqueda), descripción, **clase de riesgo** (sugerida por Decreto 768/2022, editable), ARL, EPS mayoritaria, caja.
 3. Personas: n.º trabajadores por tipo (planta, contratistas, aprendices, en misión), turnos, horario. Lista de **cargos** (con cantidad por cargo) y **sedes/centros de trabajo**.
 4. Procesos: lista de procesos/áreas (plantilla por sector: "oficina administrativa", "bodega", "cocina", "obra"...).
 5. Peligros disparadores (checklist sí/no): trabajo en alturas, espacios confinados, químicos, vehículos (cuántos), electricidad, manipulación de alimentos, ruido, radiaciones, cargas, atención al público, etc.
@@ -29,7 +29,7 @@ Tabla de reglas: `condición → ítems/documentos/normas`. Ejemplos:
 - `trabajadores ≤ 10 ∧ riesgo ∈ {I,II,III}` → nivel 7.
 - `trabajadores ≥ 10` → Reglamento de Higiene, COPASST (en vez de Vigía), CCL.
 - `alturas = sí` → PRG-08, procedimiento, permiso, Res. 4272 en matriz legal, ítem 4.2.3 reforzado.
-- `vehículos ≥ 10` → PESV.
+- `vehículos > 10` (11 o más) `∨ conductores ≥ 2` → PESV (nivel según Res. 40595/2022).
 - `químicos = sí` → MTZ-03, SGA.
 - `trabajadores > 50 ∨ CCL recomienda` → batería psicosocial.
 Las reglas se guardan en datos con fecha de vigencia y referencia normativa.

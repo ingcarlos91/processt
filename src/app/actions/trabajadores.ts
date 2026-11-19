@@ -1,5 +1,6 @@
 "use server";
 import { revalidatePath } from "next/cache";
+import { recalcularEmpresa } from "@/lib/empresa";
 import { db } from "@/lib/db";
 import { requiereUsuario } from "@/lib/auth/sesion";
 import { actualizarDocumentos } from "@/lib/generador/documentos";
@@ -7,6 +8,8 @@ import { actualizarDocumentos } from "@/lib/generador/documentos";
 const DOCS = ["FOR-02", "MTZ-04", "PRG-01", "FOR-01"];
 const dia = (s?: string | null) => (s && /^\d{4}-\d{2}-\d{2}$/.test(s) ? new Date(s + "T12:00:00Z") : null);
 async function listo(empresaId: string) {
+  // Las marcas por trabajador (conduce, teletrabajo, turno nocturno, alto riesgo, sexo) alimentan las reglas.
+  await recalcularEmpresa(empresaId).catch(() => null);
   await actualizarDocumentos(empresaId, DOCS);
   revalidatePath(`/empresas/${empresaId}`, "layout");
   revalidatePath("/planeador");
@@ -20,6 +23,7 @@ async function delaEmpresa(empresaId: string, trabajadorId: string) {
 export type DatosTrabajador = {
   id?: string; nombres: string; tipoDoc?: string; documento?: string; cargoId?: string; vinculacion?: string; fechaIngreso?: string;
   sexo?: string; fechaNacimiento?: string; escolaridad?: string; telefono?: string; correo?: string; eps?: string; afp?: string;
+  conduce?: boolean; modalidad?: string; turnoNocturno?: boolean; altoRiesgoPension?: boolean; manipulaAlimentos?: boolean;
 };
 
 export async function guardarTrabajador(empresaId: string, d: DatosTrabajador) {
@@ -33,6 +37,7 @@ export async function guardarTrabajador(empresaId: string, d: DatosTrabajador) {
   const data = {
     nombres: d.nombres.trim(), tipoDoc: d.tipoDoc || "CC", documento, cargoId: d.cargoId || null, vinculacion: d.vinculacion || "planta",
     fechaIngreso: dia(d.fechaIngreso), sexo: d.sexo || null, fechaNacimiento: dia(d.fechaNacimiento), escolaridad: d.escolaridad || null,
+    conduce: !!d.conduce, modalidad: d.modalidad || "presencial", turnoNocturno: !!d.turnoNocturno, altoRiesgoPension: !!d.altoRiesgoPension, manipulaAlimentos: !!d.manipulaAlimentos,
     telefono: d.telefono || null, correo: d.correo || null, eps: d.eps || null, afp: d.afp || null,
   };
   if (d.id) { await delaEmpresa(empresaId, d.id); await db.trabajador.update({ where: { id: d.id }, data }); }

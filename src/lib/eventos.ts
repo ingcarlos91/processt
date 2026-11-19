@@ -43,19 +43,19 @@ export function plazos(e: EvPlazos, hoy = new Date()): Plazo[] {
   const out: Plazo[] = [];
   if (t?.reporta) {
     const vence = sumarHabiles(e.fecha, 2);
-    out.push({ clave: "furat", t: e.tipo === "EL" ? "Reporte FUREL a la ARL y la EPS" : "Reporte FURAT a la ARL y la EPS", vence, hecho: e.fechaReporte ?? (e.reportadoArl ? e.fecha : null), estado: estado(vence, e.fechaReporte ?? (e.reportadoArl ? e.fecha : null), hoy), normaRef: "Decreto Ley 1295/1994 art. 62", porque: "El empleador reporta el accidente de trabajo o la enfermedad laboral dentro de los dos días hábiles siguientes. Para enfermedad laboral el plazo cuenta desde el diagnóstico." });
+    out.push({ clave: "furat", t: e.tipo === "EL" ? "Reporte FUREL a la ARL y la EPS" : "Reporte FURAT a la ARL y la EPS", vence, hecho: e.fechaReporte ?? (e.reportadoArl ? e.fecha : null), estado: estado(vence, e.fechaReporte ?? (e.reportadoArl ? e.fecha : null), hoy), normaRef: "Decreto Ley 1295/1994 art. 62; Res. 156/2005 art. 3 (mod. Res. 2851/2015)", porque: "El empleador reporta el accidente de trabajo o la enfermedad laboral dentro de los dos días hábiles siguientes. Para enfermedad laboral el plazo cuenta desde el diagnóstico." });
   }
-  if (e.tipo === "AT" && (e.gravedad === "grave" || e.gravedad === "mortal")) {
+  if ((e.tipo === "AT" && (e.gravedad === "grave" || e.gravedad === "mortal")) || e.tipo === "EL") {
     const vence = sumarHabiles(e.fecha, 2);
-    out.push({ clave: "ministerio", t: "Reporte a la Dirección Territorial del Ministerio del Trabajo", vence, hecho: e.reporteMinisterio, estado: estado(vence, e.reporteMinisterio, hoy), normaRef: "Decreto 1072/2015", porque: "Los accidentes graves y mortales se reportan también a la Dirección Territorial del Ministerio del Trabajo, como lo establece el procedimiento PRC-08." });
+    out.push({ clave: "ministerio", t: "Reporte a la Dirección Territorial del Ministerio del Trabajo", vence, hecho: e.reporteMinisterio, estado: estado(vence, e.reporteMinisterio, hoy), normaRef: "Decreto 1072/2015 art. 2.2.4.1.7 (Decreto 472/2015 art. 14); Res. 156/2005 art. 3 (mod. Res. 2851/2015)", porque: "Los accidentes graves y mortales y las enfermedades laborales diagnosticadas se reportan también a la Dirección Territorial del Ministerio del Trabajo dentro de los 2 días hábiles (Decreto 1072/2015 art. 2.2.4.1.7), como lo establece el procedimiento PRC-08." });
   }
   if (t?.investiga && e.invEstado !== "no_aplica") {
     const vence = sumarDias(e.fecha, 15);
-    out.push({ clave: "investigacion", t: "Investigación del evento", vence, hecho: e.invEstado === "cerrada" ? e.invCierre : null, estado: estado(vence, e.invEstado === "cerrada" ? e.invCierre : null, hoy), normaRef: "Res. 1401/2007", porque: "Todo incidente y accidente de trabajo se investiga dentro de los quince días siguientes a su ocurrencia, con el equipo investigador definido." });
+    out.push({ clave: "investigacion", t: "Investigación del evento", vence, hecho: e.invEstado === "cerrada" ? e.invCierre : null, estado: estado(vence, e.invEstado === "cerrada" ? e.invCierre : null, hoy), normaRef: "Res. 1401/2007 art. 4 num. 2; Decreto 1072/2015 art. 2.2.4.6.32", porque: "Todo incidente y accidente de trabajo se investiga dentro de los quince días siguientes a su ocurrencia, con el equipo investigador definido." });
   }
   if (e.tipo === "AT" && (e.gravedad === "grave" || e.gravedad === "mortal")) {
     const vence = sumarDias(e.fecha, 15);
-    out.push({ clave: "remision", t: "Remisión del informe de investigación a la ARL", vence, hecho: e.invRemitidaArl, estado: estado(vence, e.invRemitidaArl, hoy), normaRef: "Res. 1401/2007", porque: "La investigación de un accidente grave o mortal se remite a la ARL dentro de los quince días siguientes al evento." });
+    out.push({ clave: "remision", t: "Remisión del informe de investigación a la ARL", vence, hecho: e.invRemitidaArl, estado: estado(vence, e.invRemitidaArl, hoy), normaRef: "Res. 1401/2007 art. 14", porque: "La investigación de un accidente grave o mortal se remite a la ARL dentro de los quince días siguientes al evento." });
   }
   return out;
 }
@@ -69,5 +69,50 @@ export const COLOR_PLAZO: Record<Plazo["estado"], { t: string; v: "default" | "s
 };
 
 export type Analisis = { porques?: string[]; actos?: string[]; condiciones?: string[]; personales?: string[]; trabajo?: string[]; conclusion?: string };
-export type Integrante = { nombre: string; cargo?: string; rol: string };
-export const ROLES_EQUIPO: Record<string, string> = { jefe: "Jefe inmediato o supervisor", copasst: "Representante del COPASST o Vigía", responsable: "Responsable del SG-SST", profesional: "Profesional con licencia en SST", otro: "Otro" };
+/** Integrante del equipo investigador: nombre, cargo e identificación (Res. 1401/2007 arts. 7 y 13). */
+export type Integrante = { nombre: string; cargo?: string; documento?: string; rol: string };
+export const ROLES_EQUIPO: Record<string, string> = {
+  jefe: "Jefe inmediato o supervisor",
+  copasst: "Representante del COPASST o Vigía",
+  responsable: "Responsable del SG-SST",
+  profesional: "Profesional con licencia en SST",
+  diseno: "Personal de diseño de normas, procesos o mantenimiento",
+  experto: "Experto interno o externo de apoyo",
+  otro: "Otro",
+};
+/** Etiqueta de rol en minúscula inicial, conservando siglas (SST, COPASST). */
+export const rolMin = (r: string) => { const t = ROLES_EQUIPO[r] ?? r; return t.charAt(0).toLowerCase() + t.slice(1); };
+/** Roles mínimos del equipo según la gravedad (Res. 1401/2007 art. 7). */
+export function rolesExigidos(tipo: string, gravedad: string): string[] {
+  const base = ["jefe", "copasst", "responsable"];
+  return tipo === "AT" && (gravedad === "grave" || gravedad === "mortal") ? [...base, "profesional", "diseno"] : base;
+}
+
+// Variables del FURAT (Res. 156/2005, anexo técnico) que el informe de investigación retoma (Res. 1401/2007 art. 9).
+export const TIPO_ACCIDENTE: Record<string, string> = { propio_trabajo: "Propio del trabajo", transito: "De tránsito", violencia: "Violencia", deportivo_recreativo: "Deportivo, recreativo o cultural" };
+export const TURNOS = ["Diurno", "Nocturno", "Mixto", "Rotativo", "Horas extra"];
+
+type EvCierre = {
+  tipo: string; gravedad: string; descripcion: string | null; equipo: unknown; analisis: unknown;
+  acciones: { responsable: string | null; fechaLimite: Date | null }[];
+};
+/**
+ * Qué le falta a la investigación para poder cerrarse, con el artículo de la Res. 1401/2007 que lo exige.
+ * Se usa en el servidor (cerrarInvestigacion) y como lista de chequeo en la interfaz.
+ */
+export function faltasParaCerrar(ev: EvCierre): string[] {
+  const eq = (Array.isArray(ev.equipo) ? ev.equipo : []) as Integrante[];
+  const a = (ev.analisis ?? {}) as Analisis;
+  const f: string[] = [];
+  if (!ev.descripcion?.trim()) f.push("la descripción del evento: relato completo de qué, cuándo, dónde, cómo y por qué (art. 10)");
+  const roles = new Set(eq.filter((x) => x.nombre?.trim()).map((x) => x.rol));
+  const sinRol = rolesExigidos(ev.tipo, ev.gravedad).filter((r) => !roles.has(r)).map(rolMin);
+  if (sinRol.length) f.push(`en el equipo investigador: ${sinRol.join(", ")} (art. 7${ev.tipo === "AT" && ev.gravedad !== "leve" ? ", accidente " + ev.gravedad : ""})`);
+  const sinDoc = eq.filter((x) => x.nombre?.trim() && !x.documento?.trim());
+  if (sinDoc.length) f.push(`el documento de identidad de ${sinDoc.map((x) => x.nombre.trim()).join(", ")} (art. 13: identificación de los investigadores)`);
+  if (!(a.actos?.length || a.condiciones?.length)) f.push("las causas inmediatas: actos o condiciones subestándar (art. 11)");
+  if (!(a.personales?.length || a.trabajo?.length)) f.push("las causas básicas: factores personales o del trabajo (art. 11)");
+  if (!ev.acciones.length) f.push("al menos una medida de intervención (art. 12)");
+  else if (ev.acciones.some((x) => !x.responsable?.trim() || !x.fechaLimite)) f.push("responsable y fecha de ejecución en todas las medidas (art. 12)");
+  return f;
+}

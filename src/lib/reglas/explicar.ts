@@ -16,12 +16,17 @@ export function explicarCondicion(c: Condicion | null | undefined, ctx: Contexto
   if (c.claseRiesgoIn) partes.push(`su clase de riesgo es ${R[ctx.claseRiesgo]} (la regla aplica a clase ${c.claseRiesgoIn.map((x) => R[x]).join(", ")})`);
   if (c.disparador) partes.push(ctx.origenDisparadores?.[c.disparador] ?? `en el cuestionario se marcó “${etiquetaDisparador(c.disparador)}”`);
   if (c.disparadorAlguno) partes.push(`se marcó alguno de: ${c.disparadorAlguno.map(etiquetaDisparador).join(", ")}`);
-  if (c.vehiculosMin != null) partes.push(`tiene ${ctx.vehiculos} vehículos o conductores (la regla aplica desde ${c.vehiculosMin})`);
+  if (c.vehiculosMin != null) partes.push(`tiene ${ctx.vehiculos} vehículos (la regla aplica con más de ${c.vehiculosMin - 1})`);
+  if (c.conductoresMin != null) partes.push(`contrata o administra ${ctx.conductores ?? 0} conductores (la regla aplica desde ${c.conductoresMin})`);
+  if (c.contratistasMin != null) partes.push(`tiene ${ctx.contratistas ?? 0} contratistas por prestación de servicios`);
   if (c.aprendicesMin != null) partes.push(`tiene ${ctx.aprendices} aprendices o practicantes`);
+  if (c.mujeresMin != null) partes.push(`tiene ${ctx.mujeres ?? 0} trabajadoras registradas (la regla aplica con más de ${c.mujeresMin - 1})`);
+  if (c.sedesMin != null) partes.push(`tiene ${ctx.sedes ?? 1} sedes o centros de trabajo`);
+  if (c.esTransporte != null) partes.push(c.esTransporte ? "es una empresa de transporte terrestre automotor" : "no es una empresa de transporte");
   if (c.esUpa != null) partes.push(c.esUpa ? "es una unidad de producción agropecuaria" : "no es una unidad de producción agropecuaria");
   if (c.nivelMin != null) partes.push(`le aplican ${ctx.nivel} estándares (la regla exige nivel ${c.nivelMin} o más)`);
-  if (c.todos) partes.push(c.todos.map((x) => explicarCondicion(x, ctx)).join(" y "));
-  if (c.alguno) partes.push(c.alguno.map((x) => explicarCondicion(x, ctx)).join(" o "));
+  if (c.todos) partes.push(c.todos.map((x) => explicarCondicion(x, ctx).replace(/^Porque /, "").replace(/\.$/, "")).join(" y "));
+  if (c.alguno) partes.push(c.alguno.map((x) => explicarCondicion(x, ctx).replace(/^Porque /, "").replace(/\.$/, "")).join(", o "));
   if (!partes.length) return "Aplica según las condiciones de la empresa.";
   const s = partes.join("; ");
   return "Porque " + s + ".";
@@ -41,7 +46,7 @@ export function explicarNivel(nivel: number, t: number, clase: number) {
 }
 
 export function explicarClaseRiesgo(e: { ciiu: string | null; descripcionActividad: string | null; claseRiesgo: number; claseRiesgoJustificacion: string | null }, sugerida?: number | null) {
-  const base = `La clase de riesgo (I a V) la asigna la ARL según la actividad económica, con la tabla del Decreto 1607/2002 (actualizada por el Decreto 768/2022).`;
+  const base = `La clase de riesgo (I a V) la asigna la ARL según la actividad económica, con la tabla del Decreto 768/2022 (CIIU Rev. 4 A.C., que derogó el Decreto 1607/2002).`;
   const act = e.ciiu ? ` La actividad registrada es CIIU ${e.ciiu} (${e.descripcionActividad ?? ""}).` : "";
   const sug = sugerida ? ` Para ese código el sistema sugiere clase ${R[sugerida]}.` : "";
   const dif = sugerida && sugerida !== e.claseRiesgo ? ` Se registró clase ${R[e.claseRiesgo]} en vez de la sugerida${e.claseRiesgoJustificacion ? `: “${e.claseRiesgoJustificacion}”` : " (sin justificación)"}.` : "";

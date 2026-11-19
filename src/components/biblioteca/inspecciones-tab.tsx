@@ -8,9 +8,9 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Spinner } from "@/components/ui/spinner";
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Section } from "@/components/app/ui";
 import { Confirmar } from "@/components/app/confirmar";
+import { PanelFormulario, SeccionFormulario } from "@/components/app/formulario-largo";
 import * as A from "@/app/actions/biblioteca";
 
 type L = { id?: string; nombre: string; descripcion: string; frecuenciaDias: number; items: string };
@@ -33,22 +33,27 @@ export function InspeccionesTab({ listas }: { listas: { id: string; nombre: stri
           <Confirmar trigger={<Button size="icon-sm" variant="ghost" aria-label="Eliminar lista" />} titulo={`Eliminar «${l.nombre}»`} descripcion="Las inspecciones ya realizadas se conservan." accion="Eliminar" destructivo onConfirm={() => start(async () => { await A.eliminarCatalogoItem(l.id); toast.success("Lista eliminada"); })}><Trash2 /></Confirmar>
         </div>
       ))}
-      <Dialog open={!!f} onOpenChange={(o) => !o && setF(null)}>
-        <DialogContent className="sm:max-w-2xl">
-          <DialogHeader><DialogTitle>{f?.id ? "Editar lista" : "Nueva lista de chequeo"}</DialogTitle><DialogDescription>Un ítem por línea, redactado como lo que debe cumplirse.</DialogDescription></DialogHeader>
-          {f && (
-            <div className="space-y-4">
-              <div className="grid gap-4 sm:grid-cols-[1fr_10rem]">
-                <Field><FieldLabel htmlFor="l-n">Nombre</FieldLabel><Input id="l-n" placeholder="Ej.: Inspección de extintores" value={f.nombre} onChange={(e) => setF({ ...f, nombre: e.target.value })} /></Field>
-                <Field><FieldLabel htmlFor="l-f">Frecuencia (días)</FieldLabel><Input id="l-f" placeholder="Ej.: 30" type="number" min={0} value={f.frecuenciaDias} onChange={(e) => setF({ ...f, frecuenciaDias: Number(e.target.value) })} /></Field>
-              </div>
-              <Field><FieldLabel htmlFor="l-d">Descripción</FieldLabel><Input id="l-d" placeholder="Ej.: Estado, carga y señalización de los extintores" value={f.descripcion} onChange={(e) => setF({ ...f, descripcion: e.target.value })} /></Field>
-              <Field><FieldLabel htmlFor="l-i">Ítems</FieldLabel><Textarea id="l-i" rows={10} placeholder={"Un ítem por línea. Ej.:\n¿El extintor tiene la carga vigente?\n¿Está señalizado y sin obstáculos?"} value={f.items} onChange={(e) => setF({ ...f, items: e.target.value })} /><FieldDescription>{f.items.split("\n").filter((x) => x.trim()).length} ítems.</FieldDescription></Field>
-            </div>
-          )}
-          <DialogFooter><Button variant="outline" onClick={() => setF(null)}>Cancelar</Button><Button disabled={pend || !f?.nombre.trim()} onClick={guardar}>{pend && <Spinner />} Guardar</Button></DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <PanelFormulario open={!!f} onOpenChange={(o) => !o && setF(null)}
+        titulo={f?.id ? `Editar «${f.nombre}»` : "Nueva lista de chequeo"}
+        descripcion="Cada ítem se redacta como lo que debe cumplirse; al inspeccionar se califica Cumple, No cumple o N. A."
+        pie={<><Button variant="outline" onClick={() => setF(null)}>Cancelar</Button><Button disabled={pend || !f?.nombre.trim()} onClick={guardar} tooltip={!f?.nombre.trim() ? "Escriba el nombre de la lista" : undefined}>{pend && <Spinner />} Guardar</Button></>}>
+        {f && (
+          <>
+            <SeccionFormulario titulo="Identificación" descripcion="La frecuencia define cuándo el planeador avisa la próxima inspección (Res. 0312/2019 estándar 4.2.4)." columnas={2}>
+              <Field><FieldLabel htmlFor="l-n">Nombre</FieldLabel><Input id="l-n" placeholder="Ej.: Inspección de extintores" value={f.nombre} onChange={(e) => setF({ ...f, nombre: e.target.value })} /></Field>
+              <Field><FieldLabel htmlFor="l-f">Frecuencia (días)</FieldLabel><Input id="l-f" placeholder="Ej.: 30" type="number" min={0} value={f.frecuenciaDias} onChange={(e) => setF({ ...f, frecuenciaDias: Number(e.target.value) })} /><FieldDescription>0 = sin aviso automático.</FieldDescription></Field>
+              <Field className="sm:col-span-2"><FieldLabel htmlFor="l-d">Descripción</FieldLabel><Input id="l-d" placeholder="Ej.: Estado, carga y señalización de los extintores" value={f.descripcion} onChange={(e) => setF({ ...f, descripcion: e.target.value })} /></Field>
+            </SeccionFormulario>
+            <SeccionFormulario titulo="Ítems de la lista" descripcion="Un ítem por línea. El orden es el que verá quien inspecciona.">
+              <Field>
+                <FieldLabel htmlFor="l-i">Ítems</FieldLabel>
+                <Textarea id="l-i" rows={14} placeholder={"Un ítem por línea. Ej.:\n¿El extintor tiene la carga vigente?\n¿Está señalizado y sin obstáculos?"} value={f.items} onChange={(e) => setF({ ...f, items: e.target.value })} />
+                <FieldDescription>{f.items.split("\n").filter((x) => x.trim()).length} ítems.</FieldDescription>
+              </Field>
+            </SeccionFormulario>
+          </>
+        )}
+      </PanelFormulario>
     </Section>
   );
 }

@@ -9,14 +9,15 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Spinner } from "@/components/ui/spinner";
 import { Checkbox } from "@/components/ui/checkbox";
-import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Section, NormaRef } from "@/components/app/ui";
 import { Confirmar } from "@/components/app/confirmar";
+import { Selector } from "@/components/app/selector";
+import { PanelFormulario, SeccionFormulario } from "@/components/app/formulario-largo";
 import { JERARQUIA } from "@/lib/eventos";
 import type { CatalogoAccidentes, FormaEvento, ItemSimple, Medida } from "@/lib/catalogo-accidentes";
 import * as A from "@/app/actions/biblioteca";
@@ -113,13 +114,14 @@ const aBorrador = (f?: FormaEvento): Borrador => ({
   medidas: f?.medidas ?? [], lesiones: f?.lesiones ?? [], agentes: f?.agentes ?? [], partes: f?.partes ?? [], leccion: f?.leccion ?? "",
 });
 
-function Multi({ opciones, valor, onChange }: { opciones: string[]; valor: string[]; onChange: (v: string[]) => void }) {
+/** Chips seleccionables de un catálogo (varias opciones a la vez). */
+function Chips({ etiqueta, opciones, valor, onChange }: { etiqueta: string; opciones: string[]; valor: string[]; onChange: (v: string[]) => void }) {
   return (
-    <div className="flex flex-wrap gap-1.5">
-      {opciones.map((o) => {
-        const on = valor.includes(o);
-        return <Button key={o} type="button" size="xs" variant={on ? "default" : "outline"} className="font-normal" onClick={() => onChange(on ? valor.filter((x) => x !== o) : [...valor, o])}>{o}</Button>;
-      })}
+    <div className="space-y-2">
+      <div className="flex items-baseline gap-2 text-sm"><span className="font-medium">{etiqueta}</span><span className="text-xs text-muted-foreground">{valor.length ? `${valor.length} seleccionadas` : "Ninguna"}</span></div>
+      <ToggleGroup multiple variant="outline" size="sm" value={valor} onValueChange={(v) => onChange(v as string[])} className="w-full flex-wrap gap-2">
+        {opciones.map((o) => <ToggleGroupItem key={o} value={o} className="h-7 cursor-pointer rounded-full px-3 text-xs font-normal aria-pressed:border-primary aria-pressed:bg-primary aria-pressed:text-primary-foreground">{o}</ToggleGroupItem>)}
+      </ToggleGroup>
     </div>
   );
 }
@@ -136,7 +138,7 @@ function Formas({ cat }: { cat: CatalogoAccidentes }) {
     },
   }), "Forma del evento guardada", () => setB(null));
   return (
-    <Section title="Formas del evento" description="Cómo ocurrió el evento. Cada forma trae causas típicas, medidas típicas y la lección aprendida que se proponen al investigar, además de las lesiones, agentes y partes del cuerpo que se muestran primero." contentClassName="px-0"
+    <Section title="Formas del evento" description="Cómo ocurrió el evento. Cada forma trae las causas, medidas y lección aprendida que se proponen al investigar." contentClassName="px-0"
       actions={<Button size="sm" onClick={() => setB(aBorrador())}><Plus /> Nueva forma</Button>}>
       <Table className="[&_td]:align-top [&_td]:whitespace-normal">
         <TableHeader><TableRow><TableHead className="pl-6">Forma</TableHead><TableHead>Clasificación GTC 45</TableHead><TableHead>Causas típicas</TableHead><TableHead>Medidas típicas</TableHead><TableHead className="pr-6 w-24" /></TableRow></TableHeader>
@@ -158,53 +160,70 @@ function Formas({ cat }: { cat: CatalogoAccidentes }) {
         </TableBody>
       </Table>
 
-      <Dialog open={!!b} onOpenChange={(o) => !o && setB(null)}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-3xl">
-          <DialogHeader><DialogTitle>{b?.id ? `Editar «${b.nombre}»` : "Nueva forma del evento"}</DialogTitle><DialogDescription>Todo es una guía: en la investigación aparece como sugerencia y la consultora decide qué usar.</DialogDescription></DialogHeader>
-          {b && (
-            <div className="space-y-5">
-              <div className="grid gap-4 sm:grid-cols-2">
-                <Field><FieldLabel htmlFor="f-n">Nombre</FieldLabel><Input id="f-n" placeholder="Ej.: Corte con herramienta manual" value={b.nombre} onChange={(e) => setB({ ...b, nombre: e.target.value })} /></Field>
-                <Field><FieldLabel htmlFor="f-d">Descripción</FieldLabel><Input id="f-d" placeholder="Ej.: Contacto con el filo de cuchillos o bisturís" value={b.descripcion} onChange={(e) => setB({ ...b, descripcion: e.target.value })} /></Field>
-              </div>
+      <PanelFormulario open={!!b} onOpenChange={(o) => !o && setB(null)}
+        titulo={b?.id ? `Editar «${b.nombre}»` : "Nueva forma del evento"}
+        descripcion="Todo es una guía: en la investigación aparece como sugerencia y la consultora decide qué usar."
+        pie={<>
+          <Button variant="outline" onClick={() => setB(null)}>Cancelar</Button>
+          <Button disabled={pend || !b?.nombre.trim()} onClick={guardar} tooltip={!b?.nombre.trim() ? "Escriba el nombre de la forma del evento" : undefined}>{pend && <Spinner />} Guardar</Button>
+        </>}>
+        {b && (
+          <>
+            <SeccionFormulario titulo="Identificación" descripcion="Cómo se nombra la forma del evento en el formulario y en el informe FOR-07." columnas={2}>
+              <Field><FieldLabel htmlFor="f-n">Nombre</FieldLabel><Input id="f-n" placeholder="Ej.: Corte con herramienta manual" value={b.nombre} onChange={(e) => setB({ ...b, nombre: e.target.value })} /></Field>
+              <Field><FieldLabel htmlFor="f-d">Descripción</FieldLabel><Input id="f-d" placeholder="Ej.: Contacto con el filo de cuchillos o bisturís" value={b.descripcion} onChange={(e) => setB({ ...b, descripcion: e.target.value })} /></Field>
+            </SeccionFormulario>
+
+            <SeccionFormulario titulo="Clasificación y palabras clave" descripcion="Sin IA, el sistema busca el peligro relacionado en la matriz solo dentro de estas clasificaciones y con estas palabras.">
               <Field>
                 <FieldLabel>Clasificaciones de peligro (GTC 45) relacionadas</FieldLabel>
-                <div className="flex flex-wrap gap-3">{CLASIF.map((c) => <label key={c} className="flex items-center gap-1.5 text-sm"><Checkbox checked={b.clasificaciones.includes(c)} onCheckedChange={(v) => setB({ ...b, clasificaciones: v ? [...b.clasificaciones, c] : b.clasificaciones.filter((x) => x !== c) })} />{ETQ[c] ?? c}</label>)}</div>
-                <FieldDescription>Sin IA, el sistema busca el peligro relacionado solo dentro de estas clasificaciones.</FieldDescription>
-              </Field>
-              <Field><FieldLabel htmlFor="f-k">Palabras clave del peligro</FieldLabel><Input id="f-k" value={b.claves} placeholder="cort, cuchill, herramient" onChange={(e) => setB({ ...b, claves: e.target.value })} /><FieldDescription>Separadas por comas. Basta el comienzo de la palabra: “cort” encuentra corte, cortante, cortopunzante.</FieldDescription></Field>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <Field><FieldLabel htmlFor="f-a">Causas inmediatas: actos subestándar</FieldLabel><Textarea id="f-a" rows={3} placeholder="Ej.: No usar guantes anticorte" value={b.actos} onChange={(e) => setB({ ...b, actos: e.target.value })} /><FieldDescription>Una por línea.</FieldDescription></Field>
-                <Field><FieldLabel htmlFor="f-c">Causas inmediatas: condiciones subestándar</FieldLabel><Textarea id="f-c" rows={3} placeholder="Ej.: Herramienta con el mango en mal estado" value={b.condiciones} onChange={(e) => setB({ ...b, condiciones: e.target.value })} /><FieldDescription>Una por línea.</FieldDescription></Field>
-                <Field><FieldLabel htmlFor="f-p">Causas básicas: factores personales</FieldLabel><Textarea id="f-p" rows={3} placeholder="Una por línea. Ej.: Falta de entrenamiento en la tarea" value={b.personales} onChange={(e) => setB({ ...b, personales: e.target.value })} /></Field>
-                <Field><FieldLabel htmlFor="f-t">Causas básicas: factores del trabajo</FieldLabel><Textarea id="f-t" rows={3} placeholder="Una por línea. Ej.: No existe procedimiento de trabajo seguro" value={b.trabajo} onChange={(e) => setB({ ...b, trabajo: e.target.value })} /></Field>
-              </div>
-              <Field>
-                <FieldLabel>Medidas típicas (jerarquía de controles)</FieldLabel>
-                <div className="space-y-1.5">
-                  {b.medidas.map((m, i) => (
-                    <div key={i} className="grid grid-cols-[1fr_12rem_9rem_auto] gap-1.5">
-                      <Input value={m.descripcion} placeholder="Ej.: Suministrar guantes anticorte" onChange={(e) => setB({ ...b, medidas: b.medidas.map((x, j) => (j === i ? { ...x, descripcion: e.target.value } : x)) })} />
-                      <NativeSelect className="w-full" value={m.jerarquia} onChange={(e) => setB({ ...b, medidas: b.medidas.map((x, j) => (j === i ? { ...x, jerarquia: e.target.value as Medida["jerarquia"] } : x)) })}>{Object.entries(JERARQUIA).map(([k, v]) => <NativeSelectOption key={k} value={k}>{v}</NativeSelectOption>)}</NativeSelect>
-                      <NativeSelect className="w-full" value={m.tipo} onChange={(e) => setB({ ...b, medidas: b.medidas.map((x, j) => (j === i ? { ...x, tipo: e.target.value as Medida["tipo"] } : x)) })}><NativeSelectOption value="correctiva">Correctiva</NativeSelectOption><NativeSelectOption value="preventiva">Preventiva</NativeSelectOption><NativeSelectOption value="mejora">Mejora</NativeSelectOption></NativeSelect>
-                      <Button size="icon-sm" variant="ghost" aria-label="Quitar medida" onClick={() => setB({ ...b, medidas: b.medidas.filter((_, j) => j !== i) })}><X /></Button>
-                    </div>
-                  ))}
-                  <Button size="xs" variant="ghost" onClick={() => setB({ ...b, medidas: [...b.medidas, { descripcion: "", jerarquia: "ingenieria", tipo: "correctiva" }] })}><Plus /> Agregar medida</Button>
+                <div className="grid grid-cols-2 gap-x-6 gap-y-2 sm:grid-cols-3 md:grid-cols-4">
+                  {CLASIF.map((c) => <label key={c} className="flex cursor-pointer items-center gap-2 text-sm"><Checkbox checked={b.clasificaciones.includes(c)} onCheckedChange={(v) => setB({ ...b, clasificaciones: v ? [...b.clasificaciones, c] : b.clasificaciones.filter((x) => x !== c) })} />{ETQ[c] ?? c}</label>)}
                 </div>
               </Field>
-              <Field><FieldLabel>Lesiones típicas (se muestran primero)</FieldLabel><Multi opciones={cat.lesiones.map((l) => l.nombre)} valor={b.lesiones} onChange={(v) => setB({ ...b, lesiones: v })} /></Field>
-              <Field><FieldLabel>Agentes típicos</FieldLabel><Multi opciones={cat.agentes.map((l) => l.nombre)} valor={b.agentes} onChange={(v) => setB({ ...b, agentes: v })} /></Field>
-              <Field><FieldLabel>Partes del cuerpo típicas</FieldLabel><Multi opciones={cat.partes.map((l) => l.nombre)} valor={b.partes} onChange={(v) => setB({ ...b, partes: v })} /></Field>
-              <Field><FieldLabel htmlFor="f-l">Lección aprendida sugerida</FieldLabel><Textarea id="f-l" rows={2} placeholder="Describa la lección que se propondrá al investigar eventos de este tipo" value={b.leccion} onChange={(e) => setB({ ...b, leccion: e.target.value })} /></Field>
-            </div>
-          )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setB(null)}>Cancelar</Button>
-            <Button disabled={pend || !b?.nombre.trim()} onClick={guardar}>{pend && <Spinner />} Guardar</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+              <Field>
+                <FieldLabel htmlFor="f-k">Palabras clave del peligro</FieldLabel>
+                <Input id="f-k" value={b.claves} placeholder="cort, cuchill, herramient" onChange={(e) => setB({ ...b, claves: e.target.value })} />
+                <FieldDescription>Separadas por comas. Basta el comienzo de la palabra: “cort” encuentra corte, cortante, cortopunzante.</FieldDescription>
+              </Field>
+            </SeccionFormulario>
+
+            <SeccionFormulario titulo="Causas" descripcion="Se proponen al investigar (metodología de causas inmediatas y básicas). Una causa por línea." columnas={2}>
+              <Field><FieldLabel htmlFor="f-a">Causas inmediatas: actos subestándar</FieldLabel><Textarea id="f-a" rows={4} placeholder="Ej.: No usar guantes anticorte" value={b.actos} onChange={(e) => setB({ ...b, actos: e.target.value })} /></Field>
+              <Field><FieldLabel htmlFor="f-c">Causas inmediatas: condiciones subestándar</FieldLabel><Textarea id="f-c" rows={4} placeholder="Ej.: Herramienta con el mango en mal estado" value={b.condiciones} onChange={(e) => setB({ ...b, condiciones: e.target.value })} /></Field>
+              <Field><FieldLabel htmlFor="f-p">Causas básicas: factores personales</FieldLabel><Textarea id="f-p" rows={4} placeholder="Ej.: Falta de entrenamiento en la tarea" value={b.personales} onChange={(e) => setB({ ...b, personales: e.target.value })} /></Field>
+              <Field><FieldLabel htmlFor="f-t">Causas básicas: factores del trabajo</FieldLabel><Textarea id="f-t" rows={4} placeholder="Ej.: No existe procedimiento de trabajo seguro" value={b.trabajo} onChange={(e) => setB({ ...b, trabajo: e.target.value })} /></Field>
+            </SeccionFormulario>
+
+            <SeccionFormulario titulo="Medidas típicas" descripcion="Según la jerarquía de controles. Se ofrecen como plan de acción al cerrar la investigación."
+              acciones={<Button size="sm" variant="outline" onClick={() => setB({ ...b, medidas: [...b.medidas, { descripcion: "", jerarquia: "ingenieria", tipo: "correctiva" }] })}><Plus /> Agregar medida</Button>}>
+              {b.medidas.length === 0 ? <p className="text-sm text-muted-foreground">Sin medidas. Agregue al menos una para que la investigación las proponga.</p> : (
+                <div className="space-y-2">
+                  <div className="hidden gap-2 px-0.5 text-xs font-medium text-muted-foreground sm:grid sm:grid-cols-[1fr_11rem_9rem_2rem]"><span>Medida</span><span>Jerarquía</span><span>Tipo</span><span /></div>
+                  {b.medidas.map((m, i) => (
+                    <div key={i} className="grid grid-cols-[1fr_1fr_2rem] items-center gap-2 sm:grid-cols-[1fr_11rem_9rem_2rem]">
+                      <Input className="col-span-2 sm:col-span-1" value={m.descripcion} placeholder="Ej.: Suministrar guantes anticorte" onChange={(e) => setB({ ...b, medidas: b.medidas.map((x, j) => (j === i ? { ...x, descripcion: e.target.value } : x)) })} />
+                      <Button className="sm:order-last" size="icon-sm" variant="ghost" aria-label="Quitar medida" onClick={() => setB({ ...b, medidas: b.medidas.filter((_, j) => j !== i) })}><X /></Button>
+                      <Selector value={m.jerarquia} onChange={(v) => setB({ ...b, medidas: b.medidas.map((x, j) => (j === i ? { ...x, jerarquia: v as Medida["jerarquia"] } : x)) })} opciones={Object.entries(JERARQUIA).map(([k, v]) => ({ valor: k, etiqueta: v }))} />
+                      <Selector value={m.tipo} onChange={(v) => setB({ ...b, medidas: b.medidas.map((x, j) => (j === i ? { ...x, tipo: v as Medida["tipo"] } : x)) })} opciones={[{ valor: "correctiva", etiqueta: "Correctiva" }, { valor: "preventiva", etiqueta: "Preventiva" }, { valor: "mejora", etiqueta: "Mejora" }]} />
+                    </div>
+                  ))}
+                </div>
+              )}
+            </SeccionFormulario>
+
+            <SeccionFormulario titulo="Lesiones, agentes y partes del cuerpo típicas" descripcion="Se muestran primero en el formulario de eventos. Los catálogos se editan en las otras pestañas." contenidoClassName="gap-5">
+              <Chips etiqueta="Lesiones" opciones={cat.lesiones.map((l) => l.nombre)} valor={b.lesiones} onChange={(v) => setB({ ...b, lesiones: v })} />
+              <Chips etiqueta="Agentes" opciones={cat.agentes.map((l) => l.nombre)} valor={b.agentes} onChange={(v) => setB({ ...b, agentes: v })} />
+              <Chips etiqueta="Partes del cuerpo" opciones={cat.partes.map((l) => l.nombre)} valor={b.partes} onChange={(v) => setB({ ...b, partes: v })} />
+            </SeccionFormulario>
+
+            <SeccionFormulario titulo="Lección aprendida" descripcion="Texto que se propone en el informe para divulgar a los trabajadores.">
+              <Field><FieldLabel htmlFor="f-l">Lección aprendida sugerida</FieldLabel><Textarea id="f-l" rows={3} placeholder="Describa la lección que se propondrá al investigar eventos de este tipo" value={b.leccion} onChange={(e) => setB({ ...b, leccion: e.target.value })} /></Field>
+            </SeccionFormulario>
+          </>
+        )}
+      </PanelFormulario>
     </Section>
   );
 }

@@ -23,23 +23,28 @@ export function SiteHeader({ empresas }: { empresas: { id: string; razonSocial: 
   });
   return (
     <header className="sticky top-0 z-10 flex h-12 shrink-0 items-center gap-2 border-b bg-background/95 backdrop-blur print:hidden">
-      <div className="flex items-center gap-2 px-4">
-        <SidebarTrigger className="-ml-1" />
-        <Separator orientation="vertical" className="mr-2 data-vertical:h-4 data-vertical:self-auto" />
-        <Breadcrumb>
-          <BreadcrumbList>
-            {migas.map((m, i) => (
-              <Fragment key={m.href}>
-                {i > 0 && <BreadcrumbSeparator className="hidden md:block" />}
-                <BreadcrumbItem className={i < migas.length - 1 ? "hidden md:block" : ""}>
-                  {i === migas.length - 1 ? <BreadcrumbPage>{m.label}</BreadcrumbPage> : <BreadcrumbLink render={<Link href={m.href} />}>{m.label}</BreadcrumbLink>}
-                </BreadcrumbItem>
-              </Fragment>
-            ))}
+      <div className="flex min-w-0 flex-1 items-center gap-2 px-3 md:px-4">
+        <SidebarTrigger className="-ml-1 shrink-0" />
+        <Separator orientation="vertical" className="mr-1 shrink-0 data-vertical:h-4 data-vertical:self-auto md:mr-2" />
+        <Breadcrumb className="min-w-0 flex-1">
+          <BreadcrumbList className="flex-nowrap">
+            {migas.map((m, i) => {
+              const ultima = i === migas.length - 1;
+              return (
+                <Fragment key={m.href}>
+                  {i > 0 && <BreadcrumbSeparator className="hidden shrink-0 md:block" />}
+                  <BreadcrumbItem className={ultima ? "min-w-0" : "hidden min-w-0 shrink md:inline-flex"}>
+                    {ultima
+                      ? <BreadcrumbPage className="truncate font-medium" title={m.label}>{m.label}</BreadcrumbPage>
+                      : <BreadcrumbLink className="max-w-48 truncate lg:max-w-72" title={m.label} render={<Link href={m.href} />}>{m.label}</BreadcrumbLink>}
+                  </BreadcrumbItem>
+                </Fragment>
+              );
+            })}
           </BreadcrumbList>
         </Breadcrumb>
       </div>
-      <div className="ml-auto px-4"><ManualAyuda /></div>
+      <div className="shrink-0 px-3 md:px-4"><ManualAyuda /></div>
     </header>
   );
 }

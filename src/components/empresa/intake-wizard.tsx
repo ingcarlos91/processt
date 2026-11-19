@@ -1,4 +1,5 @@
 "use client";
+import { Selector } from "@/components/app/selector";
 import { Combo } from "@/components/app/combo";
 import type { Entidades } from "@/lib/entidades";
 import { CampoDocumento } from "@/components/app/campo-documento";
@@ -93,7 +94,7 @@ function Opcion({ id, checked, onChange, children, extra }: { id: string; checke
 }
 
 
-export type Profesional = { nombre: string; tipoDoc?: string; cedula: string; cargo: string; perfil: string; licencia: string; licenciaFecha: string; curso50h: boolean; curso50hFecha: string };
+export type Profesional = { nombre: string; tipoDoc?: string; cedula: string; cargo: string; perfil: string; licencia: string; licenciaFecha: string; curso50h: boolean; curso50hFecha: string; curso20hFecha?: string; rol?: string; experienciaAnios?: string };
 
 export function IntakeWizard({ sectores, cargosTipo, ciius, inicial, empresaId, profesional, tieneLogo, entidades }: { sectores: Sector[]; cargosTipo: CargoTipo[]; ciius: Ciiu[]; inicial?: IntakeData; empresaId?: string; profesional: Profesional; tieneLogo?: boolean; entidades?: Entidades }) {
   const router = useRouter();
@@ -115,7 +116,7 @@ export function IntakeWizard({ sectores, cargosTipo, ciius, inicial, empresaId, 
   const [paso, setPaso] = useState(0);
   const [pend, start] = useTransition();
   const [d, setD] = useState<IntakeData>(inicial ?? {
-    razonSocial: "", nit: "", claseRiesgo: 1, nTrabajadoresPlanta: 1, nContratistas: 0, nAprendices: 0, nEnMision: 0, nVehiculos: 0,
+    razonSocial: "", nit: "", claseRiesgo: 1, nTrabajadoresPlanta: 1, nContratistas: 0, nAprendices: 0, nEnMision: 0, nVehiculos: 0, nConductores: 0,
     sedes: [{ nombre: "Sede principal" }], cargos: [{ nombre: "", nPersonas: 1 }], disparadores: {}, estadoActual: {}, responsableSst: { ...profesional },
   });
   const set = <K extends keyof IntakeData>(k: K, v: IntakeData[K]) => setD((x) => ({ ...x, [k]: v }));
@@ -221,7 +222,7 @@ export function IntakeWizard({ sectores, cargosTipo, ciius, inicial, empresaId, 
 
           {paso === 1 && (
             <FieldGroup className="grid md:grid-cols-2 gap-4">
-              <Campo id="busq" ayuda="busquedaCiiu" label="Buscar actividad económica" className="md:col-span-2" desc="Escriba el código CIIU o una palabra. La clase de riesgo se sugiere según el Decreto 1607/2002 (actualizado por el Decreto 768/2022); confírmela con el certificado de la ARL.">
+              <Campo id="busq" ayuda="busquedaCiiu" label="Buscar actividad económica" className="md:col-span-2" desc="Escriba el código CIIU o una palabra. La clase de riesgo se sugiere según la tabla del Decreto 768/2022 (CIIU Rev. 4 A.C.); confírmela con el certificado de la ARL.">
                 <Input id="busq" placeholder="Ej: 5611 o restaurante" value={busq} onChange={(e) => setBusq(e.target.value)} />
                 {filtro.length > 0 && (
                   <Card size="sm" className="py-1 gap-0">
@@ -258,11 +259,12 @@ export function IntakeWizard({ sectores, cargosTipo, ciius, inicial, empresaId, 
           {paso === 2 && (
             <div className="space-y-6">
               <FieldGroup className="grid md:grid-cols-5 gap-4">
-                <Campo id="np" ayuda="planta" label="Planta *"><Input id="np" placeholder="Ej.: 12" type="number" min={0} value={d.nTrabajadoresPlanta} onChange={(e) => set("nTrabajadoresPlanta", Number(e.target.value))} /></Campo>
+                <Campo id="np" ayuda="planta" label="Planta *" desc="10 o más: COPASST y reglamento; 11 a 50: 21 estándares; más de 50: 60"><Input id="np" placeholder="Ej.: 12" type="number" min={0} value={d.nTrabajadoresPlanta} onChange={(e) => set("nTrabajadoresPlanta", Number(e.target.value))} /></Campo>
                 <Campo id="nm" ayuda="enMision" label="En misión"><Input id="nm" placeholder="Ej.: 0" type="number" min={0} value={d.nEnMision} onChange={(e) => set("nEnMision", Number(e.target.value))} /></Campo>
-                <Campo id="nc" ayuda="contratistas" label="Contratistas"><Input id="nc" placeholder="Ej.: 2" type="number" min={0} value={d.nContratistas} onChange={(e) => set("nContratistas", Number(e.target.value))} /></Campo>
-                <Campo id="na" ayuda="aprendices" label="Aprendices"><Input id="na" placeholder="Ej.: 1" type="number" min={0} value={d.nAprendices} onChange={(e) => set("nAprendices", Number(e.target.value))} /></Campo>
-                <Campo id="nv" ayuda="vehiculos" label="Vehículos" desc="10 o más: PESV"><Input id="nv" placeholder="Ej.: 3" type="number" min={0} value={d.nVehiculos} onChange={(e) => set("nVehiculos", Number(e.target.value))} /></Campo>
+                <Campo id="nc" ayuda="contratistas" label="Contratistas" desc="1 o más: afiliación a ARL por el contratante"><Input id="nc" placeholder="Ej.: 2" type="number" min={0} value={d.nContratistas} onChange={(e) => set("nContratistas", Number(e.target.value))} /></Campo>
+                <Campo id="na" ayuda="aprendices" label="Aprendices" desc="1 o más: ARL desde la fase lectiva; 15 o más trabajadores: cuota SENA"><Input id="na" placeholder="Ej.: 1" type="number" min={0} value={d.nAprendices} onChange={(e) => set("nAprendices", Number(e.target.value))} /></Campo>
+                <Campo id="nv" ayuda="vehiculos" label="Vehículos" desc="Más de 10: PESV"><Input id="nv" placeholder="Ej.: 3" type="number" min={0} value={d.nVehiculos} onChange={(e) => set("nVehiculos", Number(e.target.value))} /></Campo>
+                <Campo id="ncd" ayuda="conductores" label="Conductores" desc="2 o más: PESV"><Input id="ncd" placeholder="Ej.: 0" type="number" min={0} value={d.nConductores ?? 0} onChange={(e) => set("nConductores", Number(e.target.value))} /></Campo>
                 <Campo id="hor-dias" ayuda="horario" label="Días de trabajo" className="md:col-span-2">
                   <NativeSelect id="hor-dias" className="w-full" value={hor.dias} onChange={(e) => setHor({ ...hor, dias: e.target.value })}>
                     {DIAS.map((x) => <NativeSelectOption key={x.valor} value={x.valor}>{x.etiqueta}</NativeSelectOption>)}
@@ -364,7 +366,12 @@ export function IntakeWizard({ sectores, cargosTipo, ciius, inicial, empresaId, 
               <Campo id="rl2" ayuda="licencia" label="Licencia en SST (resolución)"><Input id="rl2" placeholder="Número de la resolución que otorgó la licencia" value={d.responsableSst.licencia ?? ""} onChange={(e) => setR("licencia", e.target.value)} /></Campo>
               <Campo id="rlf" ayuda="licenciaFecha" label="Fecha de la licencia"><Input id="rlf" type="date" value={d.responsableSst.licenciaFecha ?? ""} onChange={(e) => setR("licenciaFecha", e.target.value)} /></Campo>
               <Opcion id="c50" checked={!!d.responsableSst.curso50h} onChange={(v) => setR("curso50h", v)} extra={<><NormaRef>Decreto 1072 art. 2.2.4.6.35</NormaRef><Ayuda k="curso50h" /></>}>Tiene el curso virtual de 50 horas</Opcion>
-              <Campo id="c50f" ayuda="curso50h" label="Fecha del curso de 50 horas"><Input id="c50f" type="date" value={d.responsableSst.curso50hFecha ?? ""} onChange={(e) => setR("curso50hFecha", e.target.value)} /></Campo>
+              <Campo id="c50f" ayuda="curso50h" label="Fecha del curso de 50 horas" desc="Se actualiza cada 3 años con el curso de 20 horas"><Input id="c50f" type="date" value={d.responsableSst.curso50hFecha ?? ""} onChange={(e) => setR("curso50hFecha", e.target.value)} /></Campo>
+              <Campo id="c20f" ayuda="curso20h" label="Fecha del último curso de 20 horas"><Input id="c20f" type="date" value={d.responsableSst.curso20hFecha ?? ""} onChange={(e) => setR("curso20hFecha", e.target.value)} /></Campo>
+              <Campo id="rrol" ayuda="rolResponsable" label="Rol frente al SG-SST" desc="Quien diseña necesita licencia; quien solo ejecuta en empresas de 10 o menos trabajadores (riesgo I-III) no (Res. 4927/2016 art. 14)">
+                <Selector id="rrol" value={d.responsableSst.rol ?? "disenador"} onChange={(v) => setR("rol", v)} opciones={[{ valor: "disenador", etiqueta: "Diseña y firma el SG-SST" }, { valor: "ejecutor", etiqueta: "Solo administra y ejecuta (diseña la consultora)" }]} />
+              </Campo>
+              <Campo id="rexp" ayuda="experienciaSst" label="Años de experiencia certificada en SST" desc="Técnico: mínimo 1 año (7 estándares); tecnólogo: mínimo 2 años (21 estándares)"><Input id="rexp" type="number" min={0} placeholder="Ej.: 3" value={d.responsableSst.experienciaAnios ?? ""} onChange={(e) => setR("experienciaAnios", e.target.value === "" ? "" : String(Number(e.target.value)))} /></Campo>
             </FieldGroup>
           )}
         </CardContent>

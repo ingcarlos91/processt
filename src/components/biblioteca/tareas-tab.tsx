@@ -47,7 +47,7 @@ export function TareasTab({ tareas, peligros, zonas, empresaId }: { tareas: T[];
 
       <Section title={`Tareas tipo (${lista.length})`} actions={<InputGroup className="w-72"><InputGroupAddon><Search /></InputGroupAddon><InputGroupInput placeholder="Buscar tarea…" value={q} onChange={(e) => setQ(e.target.value)} /></InputGroup>} contentClassName="px-0">
         <Table className="[&_td]:whitespace-normal [&_td]:align-top">
-          <TableHeader><TableRow><TableHead className="pl-6 w-8" /><TableHead>Tarea</TableHead><TableHead>Actividad</TableHead><TableHead>Peligros</TableHead><TableHead>Usos</TableHead><TableHead className="pr-6">Validada</TableHead></TableRow></TableHeader>
+          <TableHeader><TableRow><TableHead className="pl-6 w-8" /><TableHead>Tarea</TableHead><TableHead>Actividad</TableHead><TableHead>Peligros</TableHead><TableHead>Usos</TableHead><TableHead className="pr-6"><span className="flex items-center gap-1">Validada <Ayuda k="validado" /></span></TableHead></TableRow></TableHeader>
           <TableBody>
             {lista.map((t) => (
               <Fragment key={t.id}>

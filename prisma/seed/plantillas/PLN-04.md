@@ -5,11 +5,11 @@ tipo: PLN
 nivelMin: 7
 carpeta: 5. Gestión de amenazas
 estandares: ["5.1.1","5.1.2"]
-normas: ["DEC-1072-2015","DEC-2157-2017","RES-0312-2019"]
+normas: ["DEC-1072-2015","RES-0312-2019"]
 ---
 ## Objetivo
 
-Establecer las medidas para prevenir, prepararse y responder ante situaciones de emergencia que puedan afectar a los trabajadores, contratistas, visitantes, bienes y el entorno de **{{empresa.razonSocial}}**, en todos sus centros de trabajo y turnos (Decreto 1072 de 2015, art. 2.2.4.6.25; Decreto 2157 de 2017).
+Establecer las medidas para prevenir, prepararse y responder ante situaciones de emergencia que puedan afectar a los trabajadores, contratistas, visitantes, bienes y el entorno de **{{empresa.razonSocial}}**, en todos sus centros de trabajo y turnos (Decreto 1072 de 2015, art. 2.2.4.6.25, numerales 1 a 13; Resolución 0312 de 2019, estándares 5.1.1 y 5.1.2).
 
 ## Información general
 
@@ -92,7 +92,7 @@ Redes de apoyo externas: Bomberos (119), Policía (123), Cruz Roja (132), Defens
 
 ## Brigada, capacitación y simulacros
 
-- La brigada se conforma, capacita y dota según el ACT-05.{{#if integrantes.brigada.hayMiembros}} Integrantes actuales: {{#each integrantes.brigada.miembros}}{{nombre}} ({{rolTexto}}){{#unless @last}}, {{/unless}}{{/each}}.{{/if}}
+- La brigada se conforma, capacita y dota según el ACT-05 (art. 2.2.4.6.25 numeral 11).{{#if integrantes.brigada.hayMiembros}} Integrantes actuales: {{#each integrantes.brigada.miembros}}{{nombre}} ({{rolTexto}}){{#unless @last}}, {{/unless}}{{/each}}.{{/if}}
 - Todos los trabajadores son informados, capacitados y entrenados en el plan de emergencias.
 - Se realiza como mínimo **un (1) simulacro al año** con la participación de todos los trabajadores (art. 2.2.4.6.25 numeral 10), y se documenta en el formato FOR-05.
 - Los equipos de emergencia (extintores, botiquín, alarma, señalización) se inspeccionan periódicamente.
@@ -103,7 +103,18 @@ Se anexan los planos de cada sede con rutas de evacuación, salidas, ubicación 
 
 ## Ayuda mutua y continuidad
 
-La empresa se articula con los planes de emergencia del edificio o la zona y con el Sistema Nacional de Gestión del Riesgo de Desastres (Ley 1523 de 2012).
+La empresa se articula con los planes de emergencia del edificio o la zona y con el Sistema Nacional de Gestión del Riesgo de Desastres (Ley 1523 de 2012), y desarrolla programas o planes de ayuda mutua con las empresas vecinas cuando es posible (art. 2.2.4.6.25 numeral 12).
+
+{{#if (or dis.actividadIndustrial dis.almacenamientoCarga dis.aglomeracionesPublico dis.serviciosPublicos dis.obraCivilMayor)}}
+## Plan de Gestión del Riesgo de Desastres (Decreto 2157/2017)
+
+Por {{#if dis.actividadIndustrial}}desarrollar actividades industriales{{/if}}{{#if dis.almacenamientoCarga}}{{#if dis.actividadIndustrial}}, {{/if}}transportar o almacenar carga{{/if}}{{#if dis.aglomeracionesPublico}}{{#if (or dis.actividadIndustrial dis.almacenamientoCarga)}}, {{/if}}administrar espacios con aglomeraciones de público{{/if}}{{#if dis.serviciosPublicos}}{{#if (or dis.actividadIndustrial dis.almacenamientoCarga dis.aglomeracionesPublico)}}, {{/if}}prestar servicios públicos{{/if}}{{#if dis.obraCivilMayor}}{{#if (or dis.actividadIndustrial dis.almacenamientoCarga dis.aglomeracionesPublico dis.serviciosPublicos)}}, {{/if}}ejecutar obras civiles mayores{{/if}}, **{{empresa.razonSocial}}** está obligada a formular e implementar el Plan de Gestión del Riesgo de Desastres de las Entidades Públicas y Privadas (PGRDEPP) del Decreto 2157 de 2017 (Decreto 1081 de 2015, art. 2.3.1.5.1.2.2), que complementa y no reemplaza este plan de emergencias:
+
+1. **Conocimiento del riesgo:** identificación y análisis de los escenarios de riesgo que la actividad genera para la empresa, su entorno y terceros.
+2. **Reducción del riesgo:** medidas de intervención correctiva y prospectiva, y protección financiera.
+3. **Manejo del desastre:** plan de emergencia y contingencia (el presente documento y sus PON), con el plan de inversiones correspondiente.
+4. **Revisión y actualización anual**, o cuando cambien las condiciones, y entrega al consejo territorial de gestión del riesgo de desastres cuando la autoridad lo requiera.
+{{/if}}
 
 ## Aprobación
 

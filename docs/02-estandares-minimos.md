@@ -11,7 +11,7 @@
 
 Regla de entrada del software: `n_trabajadores` + `clase_riesgo` → `nivel ∈ {7, 21, 60}` → lista de ítems aplicables → lista de documentos a generar.
 
-> Nota: para contar trabajadores, el art. 30 cuenta a **todas las personas que trabajan en las instalaciones**: dependientes, contratistas, estudiantes, trabajadores en misión. La clase de riesgo la asigna la ARL según el CIIU (Decreto 1607/2002); si hay varios centros de trabajo puede haber varias clases: se toma la más alta.
+> Nota: para contar trabajadores, el art. 30 cuenta a **todas las personas que trabajan en las instalaciones**: dependientes, contratistas, estudiantes, trabajadores en misión. La clase de riesgo la asigna la ARL según el CIIU (Decreto 768/2022 (que derogó el Decreto 1607/2002)); si hay varios centros de trabajo puede haber varias clases: se toma la más alta.
 
 ## 2. Tabla de Valores (art. 27) — 60 ítems, 100 puntos
 

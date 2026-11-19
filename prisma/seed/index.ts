@@ -1,5 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 import { sincronizarPlantillas } from "./sincronizar-plantillas";
+import { modulosBiblioteca } from "./biblioteca/modulos";
+import { deduplicarPeligros } from "./biblioteca/deduplicar";
 import { estandares } from "./estandares";
 import { normas } from "./normas";
 import { reglas } from "./reglas";
@@ -48,6 +50,8 @@ async function main() {
   console.log(`Plantillas: ${pl.total} (${pl.actualizadas} actualizadas, ${pl.respetadas} editadas por la consultora sin tocar)`);
 
   await sembrarBiblioteca();
+  const fus = await deduplicarPeligros(db);
+  if (fus) console.log(`Peligros duplicados fusionados: ${fus}`);
 
   // Consultora por defecto
   if ((await db.consultora.count()) === 0) {
@@ -57,24 +61,38 @@ async function main() {
 }
 
 /** Siembra aditiva: crea lo que falta (por nombre) y nunca modifica ni borra lo existente. */
+// Descripciones antiguas de peligros de la semilla que cambiaron de texto (para actualizarlos en vez de duplicarlos).
+const RENOMBRADOS: Record<string, string[]> = {
+  alturas: ["Trabajo en alturas a 1,5 m o más sobre un nivel inferior (escaleras, andamios, techos, plataformas)"],
+  escaleras_portatiles: ["Uso de escaleras portátiles para alcanzar productos o hacer tareas menores a 1,5 m"],
+  psico_jornada_turnos: ["Jornadas extensas, trabajo por turnos o nocturno"],
+};
+
 async function sembrarBiblioteca() {
   const conteo = { peligros: 0, zonas: 0, tareas: 0, sectores: 0, procesos: 0, cargos: 0, catalogo: 0 };
-  const todosPeligros = { ...peligros, ...peligrosAmpliacion };
+  const todosPeligros = { ...peligros, ...peligrosAmpliacion, ...(Object.assign({}, ...modulosBiblioteca.map((m) => m.peligros ?? {})) as typeof peligros) };
   const pid: Record<string, string> = {};
   for (const [k, p] of Object.entries(todosPeligros)) {
-    const prev = await db.peligroCatalogo.findFirst({ where: { descripcion: p.descripcion, empresaId: null } });
-    if (prev) { pid[k] = prev.id; continue; }
-    const r = await db.peligroCatalogo.create({ data: {
+    const prev = await db.peligroCatalogo.findFirst({ where: { empresaId: null, OR: [{ claveSemilla: k }, { descripcion: p.descripcion }, ...(RENOMBRADOS[k] ? [{ descripcion: { in: RENOMBRADOS[k] } }] : [])] } });
+    const data = {
+      claveSemilla: k,
       clasificacion: p.clasificacion, subclasificacion: p.sub, descripcion: p.descripcion, efectosPosibles: p.efectos,
       ndDefault: p.nd, neDefault: p.ne, ncDefault: p.nc, controlesFuente: p.fuente, controlesMedio: p.medio, controlesIndividuo: p.individuo,
       medidaEliminacion: p.eliminacion, medidaSustitucion: p.sustitucion, medidaIngenieria: p.ingenieria, medidaAdministrativa: p.administrativa, medidaEpp: p.epp,
       eppSugerido: p.eppLista ?? [], examenesSugeridos: p.examenes ?? [], capacitacionesSugeridas: p.capacitaciones ?? [], normas: p.normas ?? [],
       pveAsociado: p.pve, requisitoLegalEspecifico: p.requisitoLegal ?? false,
-    } });
+    };
+    if (prev) {
+      // Se actualiza con la semilla mientras la consultora no lo haya validado (lo validado es suyo y no se toca).
+      if (!prev.validado) await db.peligroCatalogo.update({ where: { id: prev.id }, data });
+      else if (!prev.claveSemilla) await db.peligroCatalogo.update({ where: { id: prev.id }, data: { claveSemilla: k } });
+      pid[k] = prev.id; continue;
+    }
+    const r = await db.peligroCatalogo.create({ data });
     pid[k] = r.id; conteo.peligros++;
   }
 
-  const todasZonas = { ...zonas, ...zonasAmp };
+  const todasZonas = { ...zonas, ...zonasAmp, ...(Object.assign({}, ...modulosBiblioteca.map((m) => m.zonas ?? {})) as typeof zonas) };
   const zid: Record<string, string> = {};
   for (const [k, z] of Object.entries(todasZonas)) {
     let zt = await db.zonaTipo.findUnique({ where: { nombre: z.nombre } });
@@ -83,16 +101,17 @@ async function sembrarBiblioteca() {
     for (const p of z.peligros) await db.zonaTipoPeligro.upsert({ where: { zonaTipoId_peligroId: { zonaTipoId: zt.id, peligroId: req(pid, p) } }, update: {}, create: { zonaTipoId: zt.id, peligroId: req(pid, p) } });
   }
 
-  const zonasDeTarea: Record<string, string[]> = { ...zonasTarea, ...Object.fromEntries(Object.entries(tareasAmp).map(([k, t]) => [k, t.zonas])) };
-  const todasTareas = { ...tareas, ...tareasAmp };
+  const tareasModulos = Object.assign({}, ...modulosBiblioteca.map((m) => m.tareas ?? {})) as typeof tareasAmp;
+  const zonasDeTarea: Record<string, string[]> = { ...zonasTarea, ...Object.fromEntries(Object.entries({ ...tareasAmp, ...tareasModulos }).map(([k, t]) => [k, t.zonas])) };
+  const todasTareas = { ...tareas, ...tareasAmp, ...tareasModulos };
   const tid: Record<string, string> = {};
   for (const [k, t] of Object.entries(todasTareas)) {
     let tt = await db.tareaTipo.findFirst({ where: { nombre: t.nombre, empresaId: null } });
     if (!tt) {
       tt = await db.tareaTipo.create({ data: { nombre: t.nombre, actividad: t.actividad, rutinaria: t.rutinaria ?? true, altoRiesgo: t.altoRiesgo, zonasPreferidas: (zonasDeTarea[k] ?? []).map((z) => todasZonas[z].nombre) } });
       conteo.tareas++;
-    } else if (!tt.zonasPreferidas.length && zonasDeTarea[k]) {
-      await db.tareaTipo.update({ where: { id: tt.id }, data: { zonasPreferidas: zonasDeTarea[k].map((z) => todasZonas[z].nombre) } });
+    } else if (!tt.validado) {
+      await db.tareaTipo.update({ where: { id: tt.id }, data: { actividad: t.actividad, rutinaria: t.rutinaria ?? true, altoRiesgo: t.altoRiesgo, zonasPreferidas: (zonasDeTarea[k] ?? []).map((z) => todasZonas[z].nombre) } });
     }
     tid[k] = tt.id;
     for (const x of t.peligros) {
@@ -101,8 +120,8 @@ async function sembrarBiblioteca() {
     }
   }
 
-  const todosCargos = { ...cargos, ...cargosAmp };
-  for (const s of [...sectores, ...sectoresAmp]) {
+  const todosCargos = { ...cargos, ...cargosAmp, ...(Object.assign({}, ...modulosBiblioteca.map((m) => m.cargos ?? {})) as typeof cargos) };
+  for (const s of [...sectores, ...sectoresAmp, ...modulosBiblioteca.flatMap((m) => m.sectores ?? [])]) {
     let sector = await db.sectorTipo.findFirst({ where: { nombre: s.nombre } });
     if (!sector) { sector = await db.sectorTipo.create({ data: { nombre: s.nombre, ciius: s.ciius, descripcion: s.descripcion } }); conteo.sectores++; }
     for (const z of s.zonas) await db.sectorZonaTipo.upsert({ where: { sectorTipoId_zonaTipoId: { sectorTipoId: sector.id, zonaTipoId: req(zid, z) } }, update: {}, create: { sectorTipoId: sector.id, zonaTipoId: req(zid, z) } });
@@ -124,7 +143,7 @@ async function sembrarBiblioteca() {
   // Catálogos (exámenes, EPP, capacitaciones) + cualquier texto usado en peligros que aún no esté en el catálogo
   const items: { tipo: string; nombre: string; descripcion: string; detalle: Record<string, unknown>; normas: string[] }[] = itemsCatalogo();
   const todos = await db.peligroCatalogo.findMany({ where: { empresaId: null }, select: { eppSugerido: true, examenesSugeridos: true, capacitacionesSugeridas: true } });
-  const extra = (tipo: string, xs: string[]) => xs.filter((n) => !items.some((i) => i.tipo === tipo && i.nombre === n)).map((nombre) => ({ tipo, nombre, descripcion: "", detalle: {}, normas: [] as string[] }));
+  const extra = (tipo: string, xs: string[]) => xs.filter((n) => !/^no aplica/i.test(n) && !items.some((i) => i.tipo === tipo && i.nombre === n)).map((nombre) => ({ tipo, nombre, descripcion: "", detalle: {}, normas: [] as string[] }));
   items.push(...extra("EXAMEN", [...new Set(todos.flatMap((p) => p.examenesSugeridos))]), ...extra("EPP", [...new Set(todos.flatMap((p) => p.eppSugerido))]), ...extra("CAPACITACION", [...new Set(todos.flatMap((p) => p.capacitacionesSugeridas))]));
   for (const it of items) {
     const prev = await db.catalogoItem.findFirst({ where: { tipo: it.tipo, nombre: it.nombre, empresaId: null } });

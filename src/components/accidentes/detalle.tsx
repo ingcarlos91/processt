@@ -23,7 +23,7 @@ import { BotonDescarga } from "@/components/app/boton-descarga";
 import { SubirArchivo, ListaArchivos, type ArchivoUI } from "@/components/app/adjuntos";
 import { EventoForm, type CargoOpcion } from "@/components/accidentes/evento-form";
 import { Semaforo } from "@/components/accidentes/lista";
-import { TIPOS_EVENTO, GRAVEDAD, JERARQUIA, ROLES_EQUIPO, type Analisis, type Integrante } from "@/lib/eventos";
+import { TIPOS_EVENTO, GRAVEDAD, JERARQUIA, ROLES_EQUIPO, rolesExigidos, rolMin, faltasParaCerrar, type Analisis, type Integrante } from "@/lib/eventos";
 import type { PlazoUI } from "@/lib/eventos-ui";
 import * as A from "@/app/actions/eventos";
 import type { SugerenciaInvestigacion } from "@/lib/ia/investigacion";
@@ -34,7 +34,7 @@ type Accion = { id: string; hallazgo: string; causa: string; tipo: string; jerar
 type Ev = {
   id: string; tipo: string; gravedad: string; datos: A.DatosEvento;
   reporte: { fechaReporte: string; furatNumero: string; reporteMinisterio: string; invRemitidaArl: string };
-  inv: { estado: string; inicio: string; cierre: string; equipo: Integrante[]; analisis: Analisis; lecciones: string; peligroId: string };
+  inv: { estado: string; inicio: string; cierre: string; lugar: string; fechas: string; equipo: Integrante[]; analisis: Analisis; lecciones: string; peligroId: string };
   acciones: Accion[]; archivos: ArchivoUI[]; plazos: PlazoUI[];
 };
 type Res = { error?: string } | { ok: true };
@@ -77,8 +77,8 @@ function ListaTexto({ items, onChange, placeholder, numerada, sugeridos }: { ite
   );
 }
 
-export function EventoDetalle({ empresaId, ev, cargos, peligros, peligrosEnMatriz, equipoSugerido, responsable, iaActiva, cat, lugares, personas, avisoMatriz }: {
-  empresaId: string; ev: Ev; cargos: CargoOpcion[]; peligros: OpcionBuscador[]; peligrosEnMatriz: string[]; equipoSugerido: Integrante[]; responsable: string; iaActiva: boolean; cat: CatalogoAccidentes; lugares: string[]; personas: string[]; avisoMatriz: "obligatorio" | "recomendado" | null;
+export function EventoDetalle({ empresaId, ev, cargos, peligros, peligrosEnMatriz, equipoSugerido, responsable, iaActiva, cat, lugares, personas, avisoMatriz, direccionEmpresa }: {
+  empresaId: string; ev: Ev; cargos: CargoOpcion[]; peligros: OpcionBuscador[]; peligrosEnMatriz: string[]; equipoSugerido: Integrante[]; responsable: string; iaActiva: boolean; cat: CatalogoAccidentes; lugares: string[]; personas: string[]; avisoMatriz: "obligatorio" | "recomendado" | null; direccionEmpresa: string;
 }) {
   const router = useRouter();
   const [pend, start] = useTransition();
@@ -88,6 +88,7 @@ export function EventoDetalle({ empresaId, ev, cargos, peligros, peligrosEnMatri
   });
   const t = TIPOS_EVENTO[ev.tipo];
   const grave = ev.tipo === "AT" && ev.gravedad !== "leve";
+  const mortal = ev.tipo === "AT" && ev.gravedad === "mortal";
   const cerrada = ev.inv.estado === "cerrada";
 
   // 1. Registro
@@ -100,6 +101,7 @@ export function EventoDetalle({ empresaId, ev, cargos, peligros, peligrosEnMatri
   const [an, setAn] = useState<Analisis>(ev.inv.analisis);
   const [lecciones, setLecciones] = useState(ev.inv.lecciones);
   const [peligroId, setPeligroId] = useState(ev.inv.peligroId);
+  const [invDatos, setInvDatos] = useState({ inicio: ev.inv.inicio, lugar: ev.inv.lugar, fechas: ev.inv.fechas });
   const [sug, setSug] = useState<{ fuente: string; s: SugerenciaInvestigacion } | null>(null);
   const [sugiriendo, startSug] = useTransition();
   // 4. Acciones
@@ -107,7 +109,11 @@ export function EventoDetalle({ empresaId, ev, cargos, peligros, peligrosEnMatri
   const vacia = () => ({ id: "", hallazgo: "", causa: "", tipo: "correctiva", jerarquia: "administrativo", descripcion: "", responsable, fechaLimite: en30() });
   const [acc, setAcc] = useState<ReturnType<typeof vacia> | null>(null);
 
-  const guardarInv = (msg = "Investigación guardada") => run(() => A.guardarInvestigacion(empresaId, ev.id, { equipo, analisis: an, lecciones, peligroId: peligroId || null }), msg);
+  const datosInv = (): A.DatosInvestigacion => ({ equipo, analisis: an, lecciones, peligroId: peligroId || null, invInicio: invDatos.inicio || undefined, invLugar: invDatos.lugar, invFechas: invDatos.fechas });
+  const guardarInv = (msg = "Investigación guardada") => run(() => A.guardarInvestigacion(empresaId, ev.id, datosInv()), msg);
+  // Lista de chequeo del cierre con lo que exige la Res. 1401/2007 (misma regla que aplica el servidor).
+  const faltas = faltasParaCerrar({ tipo: ev.tipo, gravedad: ev.gravedad, descripcion: datos.descripcion ?? null, equipo, analisis: an, acciones: ev.acciones.map((a) => ({ responsable: a.responsable, fechaLimite: a.fechaLimite ? new Date(a.fechaLimite) : null })) });
+  const rolesFaltantes = rolesExigidos(ev.tipo, ev.gravedad).filter((r) => !equipo.some((x) => x.rol === r && x.nombre.trim()));
   const sugerir = () => startSug(async () => {
     try {
       const r = await A.sugerirAnalisis(empresaId, ev.id);
@@ -148,7 +154,7 @@ export function EventoDetalle({ empresaId, ev, cargos, peligros, peligrosEnMatri
         </Alert>
       )}
 
-      <Paso n={1} titulo="Registro del evento" descripcion="Los datos que pide el FURAT y la investigación. Sin diagnósticos médicos (dato sensible)." normas={["Ley 1581/2012"]}
+      <Paso n={1} titulo="Registro del evento" descripcion="Los datos del FURAT (Res. 156/2005) que el informe de investigación debe retomar: identificación del trabajador, información del evento y descripción. Sin diagnósticos médicos (dato sensible)." normas={["Res. 1401/2007 arts. 9 y 10", "Ley 1581/2012"]}
         accion={cambioDatos && <Button size="sm" disabled={pend} onClick={() => run(() => A.actualizarEvento(empresaId, ev.id, datos), "Registro actualizado")}><Save /> Guardar registro</Button>}>
         <EventoForm d={datos} set={setDatos} cargos={cargos} cat={cat} lugares={lugares} />
         {cambioDatos && <div className="flex justify-end gap-2"><Button variant="ghost" onClick={() => setDatos(ev.datos)}>Descartar</Button><Button disabled={pend} onClick={() => run(() => A.actualizarEvento(empresaId, ev.id, datos), "Registro actualizado")}>{pend ? <Spinner /> : <Save />} Guardar registro</Button></div>}
@@ -171,12 +177,23 @@ export function EventoDetalle({ empresaId, ev, cargos, peligros, peligrosEnMatri
       {t.investiga && (
         <Paso n={(t.reporta || grave) ? 3 : 2} titulo="Investigación"
           estado={<Badge variant={cerrada ? "default" : "outline"}>{cerrada ? `Cerrada el ${fechaLarga(ev.inv.cierre)}` : ev.inv.estado === "en_curso" ? "En curso" : "Sin iniciar"}</Badge>}
-          descripcion="Dentro de los quince días siguientes al evento, con el equipo investigador. Identifique causas inmediatas y básicas y defina medidas." normas={["Res. 1401/2007", "Decreto 1072/2015 art. 2.2.4.6.32"]}
+          descripcion="Dentro de los quince días siguientes al evento (art. 4 num. 2), con el equipo investigador (art. 7). Identifique causas inmediatas y básicas (art. 11) y defina medidas con responsable y fecha (art. 12)." normas={["Res. 1401/2007", "Decreto 1072/2015 art. 2.2.4.6.32"]}
           accion={<Button size="sm" variant="outline" disabled={sugiriendo || cerrada} onClick={sugerir} tooltip={iaActiva ? "La IA analiza el relato y la matriz de peligros del cargo y propone causas y medidas; usted decide qué usar" : "Propone causas típicas según la forma del evento y medidas tomadas de la matriz de peligros del cargo"}>{sugiriendo ? <Spinner /> : <Sparkles />} {iaActiva ? "Sugerir con IA" : "Sugerir causas y medidas"}</Button>}>
           {sug && <Alert><Wand2 /><AlertTitle>Sugerencias {sug.fuente === "ia" ? "de la IA" : "de la biblioteca"}</AlertTitle><AlertDescription>Aparecen como botones morados debajo de cada lista y como medidas propuestas en el paso de acciones. Nada se guarda hasta que usted lo agregue y pulse Guardar.</AlertDescription></Alert>}
 
+          {mortal && (
+            <Alert variant="destructive">
+              <AlertTitle>Accidente mortal: la investigación se hace en el formato de la ARL</AlertTitle>
+              <AlertDescription className="flex flex-wrap items-center gap-2">
+                La Res. 1401/2007 (art. 4 num. 3) obliga a usar el formato que suministre la ARL. Registre aquí la misma información para el seguimiento y suba el formato de la ARL diligenciado como soporte.
+                <NormaRef>Res. 1401/2007 art. 4 num. 3</NormaRef>
+                <SubirArchivo empresaId={empresaId} ctx={{ tipo: "EVIDENCIA", eventoId: ev.id, estandarCodigo: "3.2.2" }} titulo="Subir formato de investigación de la ARL" trigger={<Button size="sm" variant="outline"><Upload /> Subir formato de la ARL</Button>} descripcionInicial="Formato de investigación de la ARL (accidente mortal)" ayuda="El formato de investigación de accidente mortal que suministra la ARL, diligenciado y firmado. Soporte del estándar 3.2.2." />
+              </AlertDescription>
+            </Alert>
+          )}
+
           <div className="space-y-2">
-            <div className="flex items-center gap-2 text-sm font-medium"><Users className="size-4" /> Equipo investigador <Ayuda k="evEquipo" /></div>
+            <div className="flex flex-wrap items-center gap-2 text-sm font-medium"><Users className="size-4" /> Equipo investigador <Ayuda k="evEquipo" /><span className="text-xs font-normal text-muted-foreground">Nombre, cargo, documento y rol de cada investigador (arts. 7 y 13). Mínimo: {rolesExigidos(ev.tipo, ev.gravedad).map(rolMin).join(", ")}.</span></div>
             {equipo.length === 0 ? (
               <div className="flex flex-wrap items-center gap-2 rounded-lg border border-dashed p-3 text-sm text-muted-foreground">
                 Aún no hay equipo.
@@ -186,18 +203,28 @@ export function EventoDetalle({ empresaId, ev, cargos, peligros, peligrosEnMatri
             ) : (
               <div className="space-y-1.5">
                 {equipo.map((m, i) => (
-                  <div key={i} className="grid grid-cols-[1fr_1fr_14rem_auto] items-center gap-1.5">
-                    <Input value={m.nombre} placeholder="Nombre" disabled={cerrada} onChange={(e) => setEquipo(equipo.map((x, j) => (j === i ? { ...x, nombre: e.target.value } : x)))} />
-                    <Input value={m.cargo ?? ""} placeholder="Cargo" disabled={cerrada} onChange={(e) => setEquipo(equipo.map((x, j) => (j === i ? { ...x, cargo: e.target.value } : x)))} />
+                  <div key={i} className="grid grid-cols-[1fr_1fr_9rem_16rem_auto] items-center gap-1.5">
+                    <Input value={m.nombre} placeholder="Ej.: Carlos Pérez" disabled={cerrada} onChange={(e) => setEquipo(equipo.map((x, j) => (j === i ? { ...x, nombre: e.target.value } : x)))} />
+                    <Input value={m.cargo ?? ""} placeholder="Ej.: Supervisor de planta" disabled={cerrada} onChange={(e) => setEquipo(equipo.map((x, j) => (j === i ? { ...x, cargo: e.target.value } : x)))} />
+                    <Input value={m.documento ?? ""} placeholder="Ej.: C.C. 79.000.000" disabled={cerrada} onChange={(e) => setEquipo(equipo.map((x, j) => (j === i ? { ...x, documento: e.target.value } : x)))} />
                     <Selector value={m.rol} disabled={cerrada} onChange={(v) => setEquipo(equipo.map((x, j) => (j === i ? { ...x, rol: v } : x)))} opciones={Object.entries(ROLES_EQUIPO).map(([k, r]) => ({ valor: k, etiqueta: r }))} />
                     <Button size="icon-sm" variant="ghost" aria-label="Quitar del equipo" disabled={cerrada} onClick={() => setEquipo(equipo.filter((_, j) => j !== i))}><X /></Button>
                   </div>
                 ))}
-                {!cerrada && <Button size="xs" variant="ghost" onClick={() => setEquipo([...equipo, { nombre: "", cargo: "", rol: "otro" }])}><Plus /> Agregar integrante</Button>}
-                {grave && !equipo.some((x) => x.rol === "profesional") && <p className="text-xs text-amber-700">Accidente {GRAVEDAD[ev.gravedad].t.toLowerCase()}: incluya un profesional con licencia en SST (Res. 1401/2007).</p>}
+                {!cerrada && <Button size="xs" variant="ghost" onClick={() => setEquipo([...equipo, { nombre: "", cargo: "", documento: "", rol: rolesFaltantes[0] ?? "otro" }])}><Plus /> Agregar integrante</Button>}
+                {rolesFaltantes.length > 0 && <p className="text-xs text-amber-700">Falta en el equipo: {rolesFaltantes.map(rolMin).join(", ")} (Res. 1401/2007 art. 7{grave ? `, accidente ${GRAVEDAD[ev.gravedad].t.toLowerCase()}` : ""}).</p>}
               </div>
             )}
           </div>
+
+          <fieldset disabled={cerrada} className="space-y-2">
+            <div className="flex flex-wrap items-center gap-2 text-sm font-medium">Datos de la investigación <Ayuda k="evDatosInvestigacion" /><span className="text-xs font-normal text-muted-foreground">Lugar, dirección, fechas y horas en que se investigó (art. 13).</span></div>
+            <div className="grid gap-4 sm:grid-cols-3">
+              <Field><FieldLabel htmlFor="i-fi">Fecha de inicio</FieldLabel><Input id="i-fi" type="date" value={invDatos.inicio} onChange={(e) => setInvDatos({ ...invDatos, inicio: e.target.value })} /></Field>
+              <Field className="sm:col-span-2"><FieldLabel htmlFor="i-lu">Lugar y dirección de la investigación</FieldLabel><Combo id="i-lu" value={invDatos.lugar} onChange={(v) => setInvDatos({ ...invDatos, lugar: v })} placeholder={direccionEmpresa ? `Ej.: ${direccionEmpresa}` : "Ej.: Planta principal, Calle 13 # 68-45, Bogotá"} grupos={[{ titulo: "Sedes y zonas de la empresa", opciones: [...new Set([direccionEmpresa, ...lugares].filter(Boolean))].map((l) => ({ valor: l })) }]} /></Field>
+              <Field className="sm:col-span-3"><FieldLabel htmlFor="i-fe">Fechas y horas de las sesiones</FieldLabel><Input id="i-fe" value={invDatos.fechas} placeholder="Ej.: 17/11/2026 8:00 visita al sitio y entrevistas; 19/11/2026 14:00 análisis de causas con el equipo" onChange={(e) => setInvDatos({ ...invDatos, fechas: e.target.value })} /></Field>
+            </div>
+          </fieldset>
 
           <fieldset disabled={cerrada} className="grid gap-5 lg:grid-cols-2">
             <div className="space-y-2 lg:col-span-2">
@@ -229,23 +256,29 @@ export function EventoDetalle({ empresaId, ev, cargos, peligros, peligrosEnMatri
               <Buscador opciones={peligros} value={peligroId} onSelect={setPeligroId} placeholder="Buscar peligro…" textoBoton={peligros.find((p) => p.valor === peligroId)?.etiqueta ?? "Seleccionar peligro"} className="w-full justify-start" ancho="w-[34rem]" />
               {peligroId && (peligroNoEnMatriz
                 ? <div className="flex flex-wrap items-center gap-2 text-xs text-amber-700">Este peligro no está en la matriz del cargo.
-                    <Button size="xs" variant="outline" disabled={pend || !datos.cargoId} onClick={() => start(async () => { await A.guardarInvestigacion(empresaId, ev.id, { equipo, analisis: an, lecciones, peligroId }); const r = await A.agregarPeligroDelEvento(empresaId, ev.id); if ("error" in r && r.error) toast.error(r.error); else { toast.success("Peligro agregado a la matriz como sugerido; valórelo en Cargos y matriz"); router.refresh(); } })}><ShieldPlus /> Agregar a la matriz</Button></div>
+                    <Button size="xs" variant="outline" disabled={pend || !datos.cargoId} onClick={() => start(async () => { await A.guardarInvestigacion(empresaId, ev.id, datosInv()); const r = await A.agregarPeligroDelEvento(empresaId, ev.id); if ("error" in r && r.error) toast.error(r.error); else { toast.success("Peligro agregado a la matriz como sugerido; valórelo en Cargos y matriz"); router.refresh(); } })}><ShieldPlus /> Agregar a la matriz</Button></div>
                 : <p className="text-xs text-muted-foreground">Ya está en la matriz del cargo: revise su valoración y sus controles en <Link className="underline" href={`/empresas/${empresaId}/matriz`}>Cargos y matriz</Link>.</p>)}
             </div>
             <Field><FieldLabel htmlFor="i-l" className="flex items-center gap-1">Lecciones aprendidas <Ayuda k="evLecciones" /></FieldLabel><Textarea id="i-l" rows={3} placeholder="Describa qué aprendió la empresa y cómo evitará que se repita" disabled={cerrada} value={lecciones} onChange={(e) => setLecciones(e.target.value)} /></Field>
           </div>
 
+          {!cerrada && faltas.length > 0 && (
+            <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+              <div className="font-medium">Para cerrar la investigación falta (Res. 1401/2007):</div>
+              <ul className="mt-1 list-disc space-y-0.5 pl-4">{faltas.map((f) => <li key={f}>{f}</li>)}</ul>
+            </div>
+          )}
           <div className="flex flex-wrap items-center gap-2 border-t pt-4">
             {!cerrada && <Button disabled={pend} onClick={() => guardarInv()}>{pend ? <Spinner /> : <Save />} Guardar investigación</Button>}
-            {!cerrada && <Pedir trigger={<Button variant="outline"><Lock /> Cerrar investigación</Button>} titulo="Cerrar investigación" descripcion="Se verifica que haya equipo, causas inmediatas y básicas, y al menos una medida. Elija la fecha de cierre." label="Fecha de cierre" tipo="date" inicial={hoy()} accion="Cerrar"
-              onConfirm={(f) => start(async () => { await A.guardarInvestigacion(empresaId, ev.id, { equipo, analisis: an, lecciones, peligroId: peligroId || null }); const r = await A.cerrarInvestigacion(empresaId, ev.id, f); if ("error" in r && r.error) toast.error(r.error); else { toast.success("Investigación cerrada. Descargue el informe FOR-07 para firmarlo."); router.refresh(); } })} />}
+            {!cerrada && <Pedir trigger={<Button variant="outline"><Lock /> Cerrar investigación</Button>} titulo="Cerrar investigación" descripcion="Se verifica lo que exige la Res. 1401/2007: descripción (art. 10), equipo completo e identificado (arts. 7 y 13), causas inmediatas y básicas (art. 11) y medidas con responsable y fecha (art. 12). Elija la fecha de cierre del informe." label="Fecha de cierre" tipo="date" inicial={hoy()} accion="Cerrar"
+              onConfirm={(f) => start(async () => { await A.guardarInvestigacion(empresaId, ev.id, datosInv()); const r = await A.cerrarInvestigacion(empresaId, ev.id, f); if ("error" in r && r.error) toast.error(r.error); else { toast.success("Investigación cerrada. Descargue el informe FOR-07 para firmarlo."); router.refresh(); } })} />}
             {cerrada && <Button variant="outline" disabled={pend} onClick={() => run(() => A.reabrirInvestigacion(empresaId, ev.id), "Investigación reabierta")}><LockOpen /> Reabrir</Button>}
           </div>
         </Paso>
       )}
 
       {t.investiga && (
-        <Paso n={(t.reporta || grave) ? 4 : 3} titulo="Medidas de control y acciones" descripcion="Cada medida con responsable y fecha, según la jerarquía de controles. Se registran en FOR-06 y se pueden llevar al plan anual." normas={["Decreto 1072/2015 arts. 2.2.4.6.24 y 2.2.4.6.33"]}
+        <Paso n={(t.reporta || grave) ? 4 : 3} titulo="Medidas de intervención y acciones" descripcion="Cada medida con responsable y fecha de ejecución, dirigida a la fuente, el medio o el trabajador y ligada a una causa básica (art. 12), según la jerarquía de controles. Se registran en FOR-06 y se pueden llevar al plan anual." normas={["Res. 1401/2007 art. 12", "Decreto 1072/2015 arts. 2.2.4.6.24 y 2.2.4.6.33"]}
           accion={<Button size="sm" onClick={() => setAcc({ ...vacia(), hallazgo: datos.mecanismo ? `${datos.mecanismo} — ${datos.cargo ?? ""}` : "Hallazgo de la investigación" })}><Plus /> Agregar acción</Button>}>
           {sug && sug.s.acciones.length > 0 && (
             <div className="space-y-1.5 rounded-lg border border-violet-200 bg-violet-50/50 p-3">
@@ -294,7 +327,7 @@ export function EventoDetalle({ empresaId, ev, cargos, peligros, peligrosEnMatri
           <div className="flex flex-wrap items-end gap-2">
             <Field className="w-56"><FieldLabel htmlFor="r-a">Fecha de remisión del informe a la ARL</FieldLabel><Input id="r-a" type="date" value={rep.invRemitidaArl} onChange={(e) => setRep({ ...rep, invRemitidaArl: e.target.value })} /></Field>
             <Button variant="outline" disabled={pend} onClick={() => run(() => A.guardarReporte(empresaId, ev.id, rep), "Remisión guardada")}><Check /> Guardar</Button>
-            <span className="pb-2 text-xs text-muted-foreground">Accidente {GRAVEDAD[ev.gravedad].t.toLowerCase()}: dentro de los 15 días siguientes al evento.</span>
+            <span className="pb-2 text-xs text-muted-foreground">Accidente {GRAVEDAD[ev.gravedad].t.toLowerCase()}: el informe, firmado por el representante legal, se remite a la ARL dentro de los 15 días siguientes al evento (Res. 1401/2007 arts. 4 num. 9 y 14).</span>
           </div>
         )}
         <div className="flex flex-wrap gap-2">

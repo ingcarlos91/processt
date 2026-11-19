@@ -88,6 +88,7 @@ function ComboboxContent({
   className,
   side = "bottom",
   sideOffset = 6,
+  collisionPadding = 8,
   align = "start",
   alignOffset = 0,
   anchor,
@@ -95,13 +96,14 @@ function ComboboxContent({
 }: ComboboxPrimitive.Popup.Props &
   Pick<
     ComboboxPrimitive.Positioner.Props,
-    "side" | "align" | "sideOffset" | "alignOffset" | "anchor"
+    "side" | "align" | "sideOffset" | "alignOffset" | "anchor" | "collisionPadding"
   >) {
   return (
     <ComboboxPrimitive.Portal>
       <ComboboxPrimitive.Positioner
         side={side}
         sideOffset={sideOffset}
+        collisionPadding={collisionPadding}
         align={align}
         alignOffset={alignOffset}
         anchor={anchor}

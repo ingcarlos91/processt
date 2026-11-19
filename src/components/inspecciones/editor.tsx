@@ -11,7 +11,8 @@ import { Progress } from "@/components/ui/progress";
 import { Spinner } from "@/components/ui/spinner";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogBody, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { SeccionFormulario, SeccionesFormulario } from "@/components/app/formulario-largo";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Section, Stat, NormaRef } from "@/components/app/ui";
 import { Selector } from "@/components/app/selector";
@@ -49,7 +50,7 @@ export function InspeccionesEditor({ empresaId, inspecciones, listas, lugares, p
   return (
     <div className="space-y-5">
       <div className="flex flex-wrap items-center gap-2">
-        <p className="max-w-3xl text-sm text-muted-foreground">Inspecciones sistemáticas a instalaciones, equipos y EPP, con participación del COPASST o Vigía. Cada hallazgo puede convertirse en una acción correctiva (FOR-06) y el planeador avisa la próxima inspección. <NormaRef>Res. 0312/2019 estándar 4.2.4</NormaRef></p>
+        <p className="max-w-3xl text-sm text-muted-foreground text-pretty">Inspecciones a instalaciones, equipos y EPP con el COPASST o Vigía. Cada hallazgo puede volverse acción correctiva (FOR-06) y el planeador avisa la próxima. <NormaRef>Res. 0312/2019 estándar 4.2.4</NormaRef></p>
         <div className="flex-1" />
         <Selector className="w-72" value="" placeholder="Nueva inspección: elija la lista…" onChange={(v) => v && abrir(v)} opciones={listas.map((l) => ({ valor: l.nombre, etiqueta: l.nombre }))} />
       </div>
@@ -88,49 +89,55 @@ export function InspeccionesEditor({ empresaId, inspecciones, listas, lugares, p
 
       {/* ───── Nueva inspección ───── */}
       <Dialog open={!!nueva} onOpenChange={(o) => !o && setNueva(null)}>
-        <DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-3xl">
+        <DialogContent className="sm:max-w-3xl">
           <DialogHeader><DialogTitle>{nueva?.lista}</DialogTitle><DialogDescription>{lista?.descripcion} Califique cada ítem; en los que no cumplen puede crear la acción de una vez.</DialogDescription></DialogHeader>
           {nueva && (
-            <div className="space-y-5">
-              <div className="grid gap-4 sm:grid-cols-2">
-                <Field><FieldLabel htmlFor="i-f">Fecha</FieldLabel><Input id="i-f" type="date" value={nueva.fecha} onChange={(e) => setNueva({ ...nueva, fecha: e.target.value })} /></Field>
-                <Field><FieldLabel>Lugar</FieldLabel><Combo value={nueva.lugar} placeholder="Seleccione o escriba el lugar" onChange={(v) => setNueva({ ...nueva, lugar: v })} grupos={[{ titulo: "Sedes y zonas", opciones: lugares.map((x) => ({ valor: x })) }]} /></Field>
-                <Field><FieldLabel>Responsable</FieldLabel><Combo value={nueva.responsable} placeholder="Seleccione o escriba el responsable" onChange={(v) => setNueva({ ...nueva, responsable: v })} grupos={[{ titulo: "Personas", opciones: personas.map((x) => ({ valor: x })) }]} /></Field>
-                <Field><FieldLabel>Acompañó (COPASST / Vigía)</FieldLabel><Combo value={nueva.participantes} placeholder="Seleccione o escriba quién acompañó" onChange={(v) => setNueva({ ...nueva, participantes: v })} grupos={[{ titulo: "Personas", opciones: personas.map((x) => ({ valor: x })) }]} /></Field>
-              </div>
-              <div className="flex items-center gap-3 text-sm"><span className="text-muted-foreground">{calificados} de {nueva.items.length} calificados</span><Progress className="flex-1" value={(calificados / Math.max(1, nueva.items.length)) * 100} />
-                <Button size="xs" variant="ghost" onClick={() => setNueva({ ...nueva, items: nueva.items.map((i) => (i.resultado ? i : { ...i, resultado: "cumple" })) })}>Marcar pendientes como “cumple”</Button></div>
-              <ol className="space-y-2.5">
-                {nueva.items.map((it, i) => (
-                  <li key={i} className={cn("rounded-lg border p-3", it.resultado === "no_cumple" && "border-red-200 bg-red-50/40")}>
-                    <div className="flex flex-wrap items-start gap-3">
-                      <span className="mt-0.5 text-xs text-muted-foreground">{i + 1}.</span>
-                      <span className="min-w-0 flex-1 text-sm">{it.pregunta}</span>
-                      <div className="flex gap-1">
-                        {(Object.keys(RES) as (keyof typeof RES)[]).map((k) => { const R = RES[k]; const on = it.resultado === k; return (
-                          <button key={k} type="button" onClick={() => setItem(i, { resultado: k, accion: k === "no_cumple" ? it.accion ?? { descripcion: "", responsable: nueva.responsable, fechaLimite: en30() } : null })}
-                            className={cn("inline-flex h-8 items-center gap-1 rounded-md border px-2.5 text-xs font-medium transition-colors", on ? R.c : "bg-background hover:bg-muted")}><R.i className="size-3.5" />{R.t}</button>
-                        ); })}
-                      </div>
-                    </div>
-                    {it.resultado && it.resultado !== "cumple" && <Input className="mt-2" placeholder="Observación (qué se encontró)" value={it.observacion ?? ""} onChange={(e) => setItem(i, { observacion: e.target.value })} />}
-                    {it.resultado === "no_cumple" && it.accion && (
-                      <div className="mt-2 grid gap-2 sm:grid-cols-[1fr_12rem_9rem]">
-                        <Input className="sm:col-span-3" placeholder="Causa raíz: por qué ocurre (opcional; también se puede agregar después)" value={it.accion.causa ?? ""} onChange={(e) => setItem(i, { accion: { ...it.accion!, causa: e.target.value } })} />
-                        <Input placeholder="Acción correctiva (deje vacío para no crearla)" value={it.accion.descripcion} onChange={(e) => setItem(i, { accion: { ...it.accion!, descripcion: e.target.value } })} />
-                        <Input placeholder="Responsable" value={it.accion.responsable ?? ""} onChange={(e) => setItem(i, { accion: { ...it.accion!, responsable: e.target.value } })} />
-                        <Input type="date" value={it.accion.fechaLimite ?? ""} onChange={(e) => setItem(i, { accion: { ...it.accion!, fechaLimite: e.target.value } })} />
-                      </div>
-                    )}
-                  </li>
-                ))}
-              </ol>
-              <Field><FieldLabel htmlFor="i-o">Observaciones generales</FieldLabel><Textarea id="i-o" rows={2} placeholder="Describa lo más relevante que se encontró" value={nueva.observaciones} onChange={(e) => setNueva({ ...nueva, observaciones: e.target.value })} /></Field>
-            </div>
+            <DialogBody>
+              <SeccionesFormulario>
+                <SeccionFormulario titulo="Datos de la inspección" descripcion="Quién inspecciona, dónde y quién acompaña por el COPASST o Vigía." columnas={2}>
+                  <Field><FieldLabel htmlFor="i-f">Fecha</FieldLabel><Input id="i-f" type="date" value={nueva.fecha} onChange={(e) => setNueva({ ...nueva, fecha: e.target.value })} /></Field>
+                  <Field><FieldLabel>Lugar</FieldLabel><Combo value={nueva.lugar} placeholder="Seleccione o escriba el lugar" onChange={(v) => setNueva({ ...nueva, lugar: v })} grupos={[{ titulo: "Sedes y zonas", opciones: lugares.map((x) => ({ valor: x })) }]} /></Field>
+                  <Field><FieldLabel>Responsable</FieldLabel><Combo value={nueva.responsable} placeholder="Seleccione o escriba el responsable" onChange={(v) => setNueva({ ...nueva, responsable: v })} grupos={[{ titulo: "Personas", opciones: personas.map((x) => ({ valor: x })) }]} /></Field>
+                  <Field><FieldLabel>Acompañó (COPASST / Vigía)</FieldLabel><Combo value={nueva.participantes} placeholder="Seleccione o escriba quién acompañó" onChange={(v) => setNueva({ ...nueva, participantes: v })} grupos={[{ titulo: "Personas", opciones: personas.map((x) => ({ valor: x })) }]} /></Field>
+                </SeccionFormulario>
+                <SeccionFormulario titulo={`Ítems (${calificados} de ${nueva.items.length} calificados)`} descripcion="En los que no cumplen puede describir el hallazgo y crear la acción correctiva de una vez."
+                  acciones={<Button size="xs" variant="ghost" onClick={() => setNueva({ ...nueva, items: nueva.items.map((i) => (i.resultado ? i : { ...i, resultado: "cumple" })) })}>Marcar pendientes como “cumple”</Button>}>
+                  <Progress value={(calificados / Math.max(1, nueva.items.length)) * 100} />
+                  <ol className="space-y-2.5">
+                    {nueva.items.map((it, i) => (
+                      <li key={i} className={cn("rounded-lg border p-3", it.resultado === "no_cumple" && "border-red-200 bg-red-50/40")}>
+                        <div className="flex flex-wrap items-start gap-3">
+                          <span className="mt-0.5 text-xs text-muted-foreground">{i + 1}.</span>
+                          <span className="min-w-0 flex-1 text-sm">{it.pregunta}</span>
+                          <div className="flex gap-1">
+                            {(Object.keys(RES) as (keyof typeof RES)[]).map((k) => { const R = RES[k]; const on = it.resultado === k; return (
+                              <button key={k} type="button" onClick={() => setItem(i, { resultado: k, accion: k === "no_cumple" ? it.accion ?? { descripcion: "", responsable: nueva.responsable, fechaLimite: en30() } : null })}
+                                className={cn("inline-flex h-8 cursor-pointer items-center gap-1 rounded-md border px-2.5 text-xs font-medium transition-colors", on ? R.c : "bg-background hover:bg-muted")}><R.i className="size-3.5" />{R.t}</button>
+                            ); })}
+                          </div>
+                        </div>
+                        {it.resultado && it.resultado !== "cumple" && <Input className="mt-2" placeholder="Observación (qué se encontró)" value={it.observacion ?? ""} onChange={(e) => setItem(i, { observacion: e.target.value })} />}
+                        {it.resultado === "no_cumple" && it.accion && (
+                          <div className="mt-2 grid gap-2 sm:grid-cols-[1fr_12rem_9rem]">
+                            <Input className="sm:col-span-3" placeholder="Causa raíz: por qué ocurre (opcional; también se puede agregar después)" value={it.accion.causa ?? ""} onChange={(e) => setItem(i, { accion: { ...it.accion!, causa: e.target.value } })} />
+                            <Input placeholder="Acción correctiva (deje vacío para no crearla)" value={it.accion.descripcion} onChange={(e) => setItem(i, { accion: { ...it.accion!, descripcion: e.target.value } })} />
+                            <Input placeholder="Responsable" value={it.accion.responsable ?? ""} onChange={(e) => setItem(i, { accion: { ...it.accion!, responsable: e.target.value } })} />
+                            <Input type="date" value={it.accion.fechaLimite ?? ""} onChange={(e) => setItem(i, { accion: { ...it.accion!, fechaLimite: e.target.value } })} />
+                          </div>
+                        )}
+                      </li>
+                    ))}
+                  </ol>
+                </SeccionFormulario>
+                <SeccionFormulario titulo="Observaciones generales" descripcion="Lo más relevante de la visita; va al registro de la inspección.">
+                  <Field><FieldLabel htmlFor="i-o" className="sr-only">Observaciones generales</FieldLabel><Textarea id="i-o" rows={3} placeholder="Describa lo más relevante que se encontró" value={nueva.observaciones} onChange={(e) => setNueva({ ...nueva, observaciones: e.target.value })} /></Field>
+                </SeccionFormulario>
+              </SeccionesFormulario>
+            </DialogBody>
           )}
           <DialogFooter>
             <Button variant="outline" onClick={() => setNueva(null)}>Cancelar</Button>
-            <Button disabled={pend || calificados < (nueva?.items.length ?? 0)} onClick={() => nueva && start(async () => {
+            <Button disabled={pend || calificados < (nueva?.items.length ?? 0)} tooltip={nueva && calificados < nueva.items.length ? `Faltan ${nueva.items.length - calificados} ítems por calificar` : undefined} onClick={() => nueva && start(async () => {
               const r = await A.guardarInspeccion(empresaId, nueva);
               if ("error" in r) { toast.error(r.error); return; }
               toast.success(`Inspección guardada${r.acciones ? ` y ${r.acciones} acción(es) creadas en FOR-06` : ""}. Agregue fotos desde el detalle.`);
