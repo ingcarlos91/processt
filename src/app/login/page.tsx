@@ -17,7 +17,7 @@ export default async function Login({ searchParams }: PageProps<"/login">) {
       </div>
       <div className="relative hidden lg:flex items-center justify-center bg-sidebar p-12">
         <div className="max-w-md space-y-6 text-sidebar-foreground">
-          <Image src="/brand/icono.png" alt="" width={96} height={88} />
+          <Image src="/brand/icono.png" alt="" width={96} height={88} className="h-auto" />
           <h2 className="text-3xl font-semibold leading-tight">El SG-SST de cada cliente, generado y explicado según la norma.</h2>
           <p className="text-sidebar-foreground/70">Decreto 1072 de 2015 · Resolución 0312 de 2019 · GTC 45</p>
         </div>

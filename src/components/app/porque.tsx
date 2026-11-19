@@ -12,7 +12,7 @@ export function Porque({ titulo = "¿Por qué?", children, normas, pasos, classN
     <Popover>
       <PopoverTrigger
         aria-label="Ver por qué"
-        className={cn("inline-flex align-middle text-muted-foreground/60 hover:text-foreground transition-colors cursor-help", className)}
+        className={cn("inline-flex align-middle text-muted-foreground/60 hover:text-foreground transition-colors cursor-pointer", className)}
         onClick={(e) => e.stopPropagation()}
       >
         <Info className="size-3.5" />

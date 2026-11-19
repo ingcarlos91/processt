@@ -11,7 +11,7 @@ export function Ayuda({ k, ayuda, className }: { k?: string; ayuda?: A; classNam
   if (!a) return null;
   return (
     <Popover>
-      <PopoverTrigger aria-label={`Ayuda: ${a.titulo}`} className={cn("inline-flex align-middle text-muted-foreground/60 hover:text-foreground transition-colors cursor-help", className)} onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
+      <PopoverTrigger aria-label={`Ayuda: ${a.titulo}`} className={cn("inline-flex align-middle text-muted-foreground/60 hover:text-foreground transition-colors cursor-pointer", className)} onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
         <HelpCircle className="size-3.5" />
       </PopoverTrigger>
       <PopoverContent className="w-[26rem] text-sm max-h-[70vh] overflow-y-auto" align="start">

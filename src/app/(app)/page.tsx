@@ -35,7 +35,7 @@ export default async function Home() {
       {empresas.length === 0 ? (
         <Empty className="border bg-background">
           <EmptyHeader>
-            <EmptyMedia><Image src="/brand/icono.png" alt="" width={56} height={52} /></EmptyMedia>
+            <EmptyMedia><Image src="/brand/icono.png" alt="" width={56} height={52} className="h-auto" /></EmptyMedia>
             <EmptyTitle>Aún no hay empresas</EmptyTitle>
             <EmptyDescription>Cree la primera empresa y el sistema generará su SG-SST completo según la norma.</EmptyDescription>
           </EmptyHeader>

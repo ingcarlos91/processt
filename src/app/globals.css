@@ -164,3 +164,15 @@
 }
 .isotipo-girando { animation: isotipo-giro 1.2s cubic-bezier(0.65, 0, 0.35, 1) infinite; }
 @media (prefers-reduced-motion: reduce) { .isotipo-girando { animation-duration: 3s; animation-timing-function: linear; } }
+
+/* Manito en todo lo que se puede pulsar (Tailwind 4 deja el cursor por defecto en los botones) */
+@layer base {
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  [role="tab"], [role="menuitem"], [role="option"], [role="menuitemcheckbox"], [role="menuitemradio"], [role="switch"], [role="checkbox"], [role="combobox"],
+  a[href], select:not(:disabled), summary, label[for], input[type="checkbox"], input[type="radio"], input[type="file"] {
+    cursor: pointer;
+  }
+  button:disabled, [aria-disabled="true"], [data-disabled] { cursor: not-allowed; }
+}
+input[type="date"]::-webkit-calendar-picker-indicator { cursor: pointer; }

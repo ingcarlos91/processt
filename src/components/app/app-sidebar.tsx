@@ -33,7 +33,7 @@ export function AppSidebar({ empresas, consultora, usuario }: { empresas: { id: 
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" render={<Link href="/" />} className="data-[slot=sidebar-menu-button]:p-1.5">
-              <Image src="/brand/icono.png" alt="" width={28} height={26} className="shrink-0" />
+              <Image src="/brand/icono.png" alt="" width={28} height={26} className="h-auto shrink-0" />
               <Image src="/brand/logo-sm-blanco.png" alt="PROCESST" width={120} height={18} className="group-data-[collapsible=icon]:hidden" />
             </SidebarMenuButton>
           </SidebarMenuItem>
