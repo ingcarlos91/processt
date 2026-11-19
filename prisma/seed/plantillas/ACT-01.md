@@ -50,7 +50,7 @@ ______________________________________
 **{{empresa.representanteLegal}}** — Representante Legal — {{empresa.representanteDoc}}
 
 ______________________________________
-{{#with integrantes.copasst.miembros.[0]}}**{{nombre}}** — Vigía de SST, acepto la designación{{#if doc}} — {{doc}}{{/if}}{{else}}Vigía de SST — Acepto la designación{{/with}}
+{{#with integrantes.copasst.miembros.[0]}}**{{nombre}}** — Vigía de SST, acepto la designación{{#if doc}} — {{doc}}{{/if}}{{else}}**Vigía de SST** — Acepto la designación{{/with}}
 {{else}}
 ## Convocatoria a elecciones
 

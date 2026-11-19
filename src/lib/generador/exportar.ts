@@ -80,8 +80,10 @@ function bloqueFirmas(firmas: Firma[]) {
   return new DTable({ width: { size: 100, type: WidthType.PERCENTAGE }, borders: { top: SIN_BORDE, bottom: SIN_BORDE, left: SIN_BORDE, right: SIN_BORDE, insideHorizontal: SIN_BORDE, insideVertical: SIN_BORDE }, rows: filas });
 }
 
+/** Una firma es una línea "_____" seguida de un párrafo que empieza con el nombre en negrita (**Nombre**). */
 function esFirma(nodes: RootContent[], i: number) {
-  return nodes[i]?.type === "thematicBreak" && nodes[i + 1]?.type === "paragraph";
+  const sig = nodes[i + 1];
+  return nodes[i]?.type === "thematicBreak" && sig?.type === "paragraph" && sig.children[0]?.type === "strong";
 }
 
 function bloques(nodes: RootContent[], nivelLista = 0, ordenada = false): (Paragraph | DTable)[] {
