@@ -2,7 +2,7 @@
 import { useMemo, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Plus, Trash2, ChevronLeft, ChevronRight, Check, ImagePlus, UserCheck } from "lucide-react";
+import { Plus, Trash2, ChevronLeft, ChevronRight, Check, ImagePlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -87,9 +87,8 @@ function Opcion({ id, checked, onChange, children, extra }: { id: string; checke
   );
 }
 
-export type Profesional = { nombre: string; cedula: string; cargo: string; perfil: string; licencia: string; licenciaFecha: string; curso50h: boolean; curso50hFecha: string };
 
-export function IntakeWizard({ sectores, cargosTipo, ciius, inicial, empresaId, profesional, tieneLogo }: { sectores: Sector[]; cargosTipo: CargoTipo[]; ciius: Ciiu[]; inicial?: IntakeData; empresaId?: string; profesional: Profesional; tieneLogo?: boolean }) {
+export function IntakeWizard({ sectores, cargosTipo, ciius, inicial, empresaId, tieneLogo }: { sectores: Sector[]; cargosTipo: CargoTipo[]; ciius: Ciiu[]; inicial?: IntakeData; empresaId?: string; tieneLogo?: boolean }) {
   const router = useRouter();
   const [logo, setLogo] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(tieneLogo && empresaId ? `/api/empresas/${empresaId}/logo` : null);
@@ -110,7 +109,7 @@ export function IntakeWizard({ sectores, cargosTipo, ciius, inicial, empresaId, 
   const [pend, start] = useTransition();
   const [d, setD] = useState<IntakeData>(inicial ?? {
     razonSocial: "", nit: "", claseRiesgo: 1, nTrabajadoresPlanta: 1, nContratistas: 0, nAprendices: 0, nEnMision: 0, nVehiculos: 0,
-    sedes: [{ nombre: "Sede principal" }], cargos: [{ nombre: "", nPersonas: 1 }], disparadores: {}, estadoActual: {}, responsableSst: { ...profesional },
+    sedes: [{ nombre: "Sede principal" }], cargos: [{ nombre: "", nPersonas: 1 }], disparadores: {}, estadoActual: {}, responsableSst: {},
   });
   const set = <K extends keyof IntakeData>(k: K, v: IntakeData[K]) => setD((x) => ({ ...x, [k]: v }));
   const [hor, setHorState] = useState(() => parseHorario(d.horario));
@@ -335,9 +334,8 @@ export function IntakeWizard({ sectores, cargosTipo, ciius, inicial, empresaId, 
 
           {paso === 6 && (
             <FieldGroup className="grid md:grid-cols-2 gap-4">
-              <div className="md:col-span-2 flex flex-wrap items-center gap-2 rounded-lg border bg-muted/40 p-3 text-sm">
-                <span className="flex-1">Por defecto se usan los datos de la profesional configurados en “Mi consultora”{profesional.nombre ? `: ${profesional.nombre}` : ""}. Cámbielos solo si el responsable en esta empresa es otra persona.</span>
-                <Button variant="outline" size="sm" onClick={() => set("responsableSst", { ...profesional })}><UserCheck /> Usar mis datos</Button>
+              <div className="md:col-span-2 rounded-lg border bg-muted/40 p-3 text-sm">
+                Escriba los datos de la persona designada como responsable del SG-SST en esta empresa. Aparecen en la designación (DOC-03), las firmas de los documentos y el “Elaboró” de cada formato.
               </div>
               <Campo id="rn" ayuda="respNombre" label="Nombre"><Input id="rn" value={d.responsableSst.nombre ?? ""} onChange={(e) => setR("nombre", e.target.value)} /></Campo>
               <Campo id="rc" ayuda="respNombre" label="Cédula"><Input id="rc" value={d.responsableSst.cedula ?? ""} onChange={(e) => setR("cedula", e.target.value)} /></Campo>

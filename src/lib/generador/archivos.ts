@@ -7,9 +7,9 @@ export async function docxDocumento(empresaId: string, codigo: string) {
   const doc = await db.documento.findUnique({ where: { empresaId_codigo: { empresaId, codigo } }, include: { secciones: true, empresa: { include: { consultora: true } }, plantilla: true } });
   if (!doc) return null;
   const e = doc.empresa;
-  // Elaboró: el responsable del SG-SST de la empresa; si no tiene, la profesional de la consultora.
+  // Elaboró: el responsable del SG-SST registrado en la empresa.
   const r = (e.responsableSst ?? {}) as { nombre?: string; licencia?: string };
-  const quien = r.nombre?.trim() ? { nombre: r.nombre.trim(), licencia: r.licencia ?? "" } : { nombre: e.consultora.profesional ?? e.consultora.nombre, licencia: e.consultora.licenciaSst ?? "" };
+  const quien = { nombre: r.nombre?.trim() || "________________", licencia: r.licencia?.trim() ?? "" };
   const buf = await mdADocx(markdownDocumento(doc), {
     codigo: doc.codigo, nombre: doc.nombre, version: doc.version, fecha: doc.fechaEmision.toLocaleDateString("es-CO"),
     empresa: e.razonSocial, nit: e.digitoVerificacion ? `${e.nit}-${e.digitoVerificacion}` : e.nit,

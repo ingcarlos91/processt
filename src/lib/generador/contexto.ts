@@ -261,14 +261,13 @@ export async function construirContexto(empresaId: string) {
       trabajadores, contratistas: e.nContratistas, aprendices: e.nAprendices, vehiculos: e.nVehiculos, horario: e.horario ?? "", turnos: (e.turnos ?? "").split(",").map((t) => TURNOS.find((x) => x.valor === t)?.etiqueta ?? t).filter(Boolean).join("; "),
       nivel: rr.nivel, sector: e.sectorTipo?.nombre ?? "", logoUrl: e.logoUrl ?? "", tieneLogo: !!e.logoUrl,
     },
-    // Si la empresa no tiene responsable propio, se usan los datos de la profesional de la consultora.
+    // Responsable del SG-SST registrado en cada empresa. Si falta, quedan espacios para llenar a mano.
     responsable: (() => {
-      const propio = !!(resp.nombre as string)?.trim();
-      const r = propio ? resp : { nombre: consultora.profesional, cedula: consultora.cedula, cargo: consultora.cargo ?? "Asesor(a) externo(a) en SST", perfil: consultora.perfil, licencia: consultora.licenciaSst, licenciaFecha: consultora.licenciaFecha?.toISOString().slice(0, 10), curso50h: consultora.curso50h, curso50hFecha: consultora.curso50hFecha };
+      const r = resp;
       return {
-        nombre: (r.nombre as string) ?? "", cedula: (r.cedula as string) ?? "", cargo: (r.cargo as string) ?? "",
+        nombre: (r.nombre as string)?.trim() || "______________________", cedula: (r.cedula as string)?.trim() || "______________", cargo: (r.cargo as string) ?? "",
         perfilTexto: PERFIL_TEXTO[(r.perfil as string) ?? ""] ?? "", licencia: (r.licencia as string) ?? "", licenciaFecha: (r.licenciaFecha as string) ?? "",
-        curso50hFecha: r.curso50h ? ((r.curso50hFecha as string) || "Aprobado") : "", esConsultora: !propio,
+        curso50hFecha: r.curso50h ? ((r.curso50hFecha as string) || "Aprobado") : "", esConsultora: false,
       };
     })(),
     consultora: {

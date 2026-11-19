@@ -24,7 +24,9 @@ export default async function Documentos({ params }: PageProps<"/empresas/[id]/d
     db.plantilla.findMany({ where: { codigo: { in: rr.documentos.map((d) => d.codigo) } }, orderBy: { codigo: "asc" } }),
   ]);
   const carpetas = [...new Set(plantillas.map((p) => p.carpeta ?? "Otros"))].sort();
-  const emp = await db.empresa.findUniqueOrThrow({ where: { id }, select: { datosComplementarios: true, disparadores: true, comites: { select: { tipo: true, _count: { select: { miembros: true } } } } } });
+  const emp = await db.empresa.findUniqueOrThrow({ where: { id }, select: { datosComplementarios: true, disparadores: true, responsableSst: true, comites: { select: { tipo: true, _count: { select: { miembros: true } } } } } });
+  const resp = (emp.responsableSst ?? {}) as { nombre?: string; licencia?: string; cedula?: string };
+  const faltaResp = [!resp.nombre?.trim() && "nombre", !resp.cedula?.trim() && "cédula", !resp.licencia?.trim() && "licencia"].filter(Boolean) as string[];
   const falta = faltantes((emp.datosComplementarios ?? {}) as Complementarios, (emp.disparadores ?? {}) as Record<string, boolean>, rr.documentos.map((d) => d.codigo));
   const comitesSinIntegrantes = rr.comites.filter((c) => !emp.comites.some((x) => (x.tipo === c || (c === "COPASST" && x.tipo === "VIGIA")) && x._count.miembros > 0));
   const acciones = (
@@ -49,18 +51,20 @@ export default async function Documentos({ params }: PageProps<"/empresas/[id]/d
         <span className="text-sm text-muted-foreground">{docs.length} de {rr.documentos.length} documentos generados · se conservan las ediciones manuales al regenerar</span>
         <div className="flex-1" />{acciones}
       </div>
-      {(falta.length > 0 || comitesSinIntegrantes.length > 0) && (
+      {(falta.length > 0 || faltaResp.length > 0 || comitesSinIntegrantes.length > 0) && (
         <Alert>
           <ClipboardList />
           <AlertTitle>Para que los documentos salgan completos faltan algunos datos</AlertTitle>
           <AlertDescription>
             <ul className="list-disc pl-4 space-y-0.5">
+              {faltaResp.length > 0 && <li>Responsable del SG-SST: {faltaResp.join(", ")} <span className="text-muted-foreground">(DOC-03, firmas y “Elaboró” de todos los formatos)</span></li>}
               {falta.map((f) => <li key={f.k}>{f.etiqueta} <span className="text-muted-foreground">({f.documentos.join(", ")})</span></li>)}
               {comitesSinIntegrantes.map((c) => <li key={c}>Integrantes de {c === "COPASST" ? "COPASST o Vigía" : c === "CCL" ? "Comité de Convivencia" : "brigada"} <span className="text-muted-foreground">(se registran en Comités)</span></li>)}
             </ul>
             Mientras tanto, los documentos salen con espacios en blanco para llenar a mano.
           </AlertDescription>
           <AlertAction className="flex flex-col gap-1">
+            {faltaResp.length > 0 && <Link href={`/empresas/${id}/datos`} className={buttonVariants({ size: "sm", variant: "outline" })}>Responsable SG-SST</Link>}
             {falta.length > 0 && <Link href={`/empresas/${id}/datos#complementarios`} className={buttonVariants({ size: "sm" })}>Completar datos</Link>}
             {comitesSinIntegrantes.length > 0 && <Link href={`/empresas/${id}/comites`} className={buttonVariants({ size: "sm", variant: "outline" })}>Ir a Comités</Link>}
           </AlertAction>
