@@ -119,6 +119,29 @@ export const MANUAL: SeccionManual[] = [
     relacionadas: ["planeador", "documentos"],
   },
   {
+    id: "diagnostico", titulo: "Diagnóstico inicial", ruta: new RegExp(`^${E}/diagnostico(/[^/]+)?$`),
+    resumen: "Paso opcional antes de montar el SG-SST: evalúa el estado actual de la empresa frente a los estándares mínimos que le aplican, entrega un informe en PDF con el membrete de la consultora y su firma, y queda como línea base para medir el avance. Se activa al crear la empresa con «Empezar con diagnóstico».",
+    partes: [
+      { titulo: "Indicadores", que: "Puntaje con la tabla de valores de la Res. 0312/2019 y su valoración (crítico, moderadamente aceptable, aceptable), estándares evaluados y cumplimiento por ciclo Planear, Hacer, Verificar y Actuar." },
+      { titulo: "Lista de chequeo", que: "Los estándares agrupados por ciclo, con qué verificar y su peso.", botones: [
+        { nombre: "Cumple / No cumple / No aplica", hace: "Califica el estándar. «No aplica» exige justificación; la observación de cada brecha aparece en el informe." },
+        { nombre: "Pendientes → no cumple", hace: "Marca como «no cumple» lo que falte por evaluar." },
+        { nombre: "Filtros", hace: "Muestra todos, los sin evaluar o solo las brechas." },
+      ] },
+      { titulo: "Conclusiones y soportes", que: "Conclusiones de la consultora (van antes de la firma) y fotos o soportes de la visita (quedan en Evidencias)." },
+      { titulo: "Botones", que: "Acciones del diagnóstico.", botones: [
+        { nombre: "Guardar / Cerrar diagnóstico", hace: "Cerrar exige todos los estándares calificados y los «no aplica» justificados." },
+        { nombre: "Informe PDF", hace: "Informe membreteado por la consultora: datos, metodología, resultado con gráficas, cumplimiento por ciclo, brechas por peso, fortalezas, ruta de implementación en tres fases, conclusiones y firma de la profesional con su licencia." },
+        { nombre: "Iniciar el SG-SST con este diagnóstico", hace: "Arma la matriz por cargos, crea la evaluación inicial con estas respuestas (cerrada, con su plan de mejoramiento), genera el plan anual y todos los documentos. La empresa pasa a etapa activa." },
+        { nombre: "Iniciar sin diagnóstico", hace: "Monta el SG-SST sin usar el diagnóstico." },
+        { nombre: "Reabrir", hace: "Permite corregir un diagnóstico cerrado mientras no haya iniciado el SG-SST." },
+      ] },
+      { titulo: "Seguimiento", que: "En el Resumen y en el informe mensual se compara la línea base con la última autoevaluación, global y por ciclo." },
+    ],
+    normas: ["Res. 0312/2019 arts. 27 y 28", "Decreto 1072/2015 art. 2.2.4.6.16"],
+    relacionadas: ["evaluacion", "resumen"],
+  },
+  {
     id: "auditoria", titulo: "Auditoría interna", ruta: new RegExp(`^${E}/auditoria(/[^/]+)?$`),
     resumen: "Auditoría anual del SG-SST con los 13 aspectos del Decreto 1072/2015 art. 2.2.4.6.30, planificada con el COPASST o Vigía. Genera acciones (FOR-06), su informe en Word y PDF, alimenta la revisión por la dirección (ACT-06) y el planeador programa la siguiente.",
     partes: [

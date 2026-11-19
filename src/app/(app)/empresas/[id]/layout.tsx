@@ -8,7 +8,7 @@ import { Porque } from "@/components/app/porque";
 
 export default async function EmpresaLayout({ children, params }: LayoutProps<"/empresas/[id]">) {
   const { id } = await params;
-  const e = await db.empresa.findUnique({ where: { id }, select: { logoUrl: true, razonSocial: true, nit: true, digitoVerificacion: true, nivelEstandares: true, claseRiesgo: true, ciudad: true, nTrabajadoresPlanta: true, nEnMision: true } });
+  const e = await db.empresa.findUnique({ where: { id }, select: { etapa: true, _count: { select: { diagnosticos: true } }, logoUrl: true, razonSocial: true, nit: true, digitoVerificacion: true, nivelEstandares: true, claseRiesgo: true, ciudad: true, nTrabajadoresPlanta: true, nEnMision: true } });
   if (!e) notFound();
   const decisiones = await construirDecisiones(id);
   return (
@@ -26,7 +26,7 @@ export default async function EmpresaLayout({ children, params }: LayoutProps<"/
           <div className="flex-1" />
           <PanelDecisiones grupos={decisiones} empresa={e.razonSocial} />
         </div>
-        <EmpresaTabs id={id} />
+        <EmpresaTabs id={id} conDiagnostico={e.etapa === "diagnostico" || e._count.diagnosticos > 0} />
       </div>
       <div className="flex flex-1 flex-col gap-6 p-4 md:p-6">{children}</div>
     </div>

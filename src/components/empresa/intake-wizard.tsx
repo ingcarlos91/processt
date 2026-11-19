@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useMemo, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Plus, Trash2, ChevronLeft, ChevronRight, Check, ImagePlus, UserCheck } from "lucide-react";
+import { Plus, Trash2, ChevronLeft, ChevronRight, Check, ImagePlus, UserCheck, ClipboardList } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -21,6 +21,7 @@ import { Buscador } from "@/components/app/buscador";
 import { TURNOS, DIAS } from "@/lib/ayuda";
 import { Porque } from "@/components/app/porque";
 import { explicarNivel } from "@/lib/reglas/explicar";
+import { crearDiagnostico } from "@/app/actions/diagnostico";
 import { crearEmpresa, actualizarEmpresa, subirLogo, quitarLogo, type IntakeData } from "@/app/actions/empresas";
 import { DISPARADORES } from "@/lib/reglas/condicion";
 import { cn } from "@/lib/utils";
@@ -139,20 +140,23 @@ export function IntakeWizard({ sectores, cargosTipo, ciius, inicial, empresaId, 
     setBusq("");
   }
 
-  function guardar() {
+  function guardar(modo: "completo" | "diagnostico" = "completo") {
     start(async () => {
       if (empresaId) {
         const r = await actualizarEmpresa(empresaId, d);
         if (r?.ok) toast.success("Datos guardados. Se recalcularon el nivel, los comités y las normas.");
       } else {
-        const r = await crearEmpresa(d);
+        const r = await crearEmpresa(d, modo);
         if ("error" in r) return void toast.error(r.error);
         if (logo) {
           const fd = new FormData(); fd.append("logo", logo);
           const l = await subirLogo(r.id, fd);
           if ("error" in l) toast.error(l.error);
         }
-        router.push(`/empresas/${r.id}`);
+        if (modo === "diagnostico") {
+          const dg = await crearDiagnostico(r.id);
+          router.push(`/empresas/${r.id}/diagnostico/${dg.id}`);
+        } else router.push(`/empresas/${r.id}`);
       }
     });
   }
@@ -367,11 +371,14 @@ export function IntakeWizard({ sectores, cargosTipo, ciius, inicial, empresaId, 
         <CardFooter className="justify-between border-t">
           <Button variant="outline" disabled={paso === 0} onClick={() => setPaso(paso - 1)}><ChevronLeft /> Anterior</Button>
           <div className="flex gap-2">
-            {empresaId && <Button variant="outline" disabled={pend} onClick={guardar}>{pend ? <Spinner /> : <Check />} Guardar</Button>}
+            {empresaId && <Button variant="outline" disabled={pend} onClick={() => guardar()}>{pend ? <Spinner /> : <Check />} Guardar</Button>}
             {paso < PASOS.length - 1 ? (
               <Button onClick={() => setPaso(paso + 1)}>Siguiente <ChevronRight /></Button>
             ) : !empresaId ? (
-              <Button disabled={pend || !d.razonSocial || !d.nit} onClick={guardar}>{pend ? <><Spinner /> Creando y generando…</> : <><Check /> Crear empresa</>}</Button>
+              <>
+              <Button variant="outline" disabled={pend || !d.razonSocial || !d.nit} onClick={() => guardar("diagnostico")} tooltip="Primero evalúa el estado actual de la empresa y entrega el informe de diagnóstico; el SG-SST se monta después, desde el diagnóstico"><ClipboardList /> Empezar con diagnóstico</Button>
+              <Button disabled={pend || !d.razonSocial || !d.nit} onClick={() => guardar()} tooltip="Crea la empresa y arma de una vez la matriz por cargos; luego genere documentos y plan">{pend ? <><Spinner /> Creando y generando…</> : <><Check /> Crear SG-SST completo</>}</Button>
+              </>
             ) : null}
           </div>
         </CardFooter>

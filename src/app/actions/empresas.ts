@@ -36,22 +36,26 @@ function datosEmpresa(d: IntakeData) {
   };
 }
 
-export async function crearEmpresa(d: IntakeData) {
+/**
+ * Crea la empresa. Con modo "diagnostico" queda en etapa de diagnóstico: no se arma la matriz por cargos
+ * ni se generan documentos; se crea el diagnóstico inicial y se inicia el SG-SST después desde él.
+ */
+export async function crearEmpresa(d: IntakeData, modo: "completo" | "diagnostico" = "completo") {
   await requiereUsuario();
   if (!d.razonSocial?.trim() || !d.nit?.trim()) return { error: "Razón social y NIT son obligatorios." };
   const c = await consultoraActual();
   const sedes = d.sedes.filter((s) => s.nombre?.trim());
   const e = await db.empresa.create({
     data: {
-      consultoraId: c.id, ...datosEmpresa(d), fechaInicioSgsst: new Date(),
+      consultoraId: c.id, ...datosEmpresa(d), fechaInicioSgsst: modo === "diagnostico" ? null : new Date(), etapa: modo === "diagnostico" ? "diagnostico" : "activa",
       sedes: { create: (sedes.length ? sedes : [{ nombre: "Sede principal", direccion: d.direccion, ciudad: d.ciudad }]).map((s, i) => ({ ...s, principal: i === 0 })) },
     },
   });
-  await prepararEstructura(e.id, "aprobado");
+  if (modo === "completo") await prepararEstructura(e.id, "aprobado");
   for (const cg of d.cargos.filter((x) => x.nombre?.trim())) {
-    const cargo = await db.cargo.create({ data: { empresaId: e.id, nombre: cg.nombre.trim(), nPersonas: Math.max(1, n(cg.nPersonas)), descripcionFunciones: cg.funciones || null } });
     const tipoId = cg.cargoTipoId || (await sugerirCargoTipo(cg.nombre, e.sectorTipoId))?.id;
-    if (tipoId) await aplicarCargoTipo(e.id, cargo.id, tipoId, "aprobado");
+    const cargo = await db.cargo.create({ data: { empresaId: e.id, nombre: cg.nombre.trim(), nPersonas: Math.max(1, n(cg.nPersonas)), descripcionFunciones: cg.funciones || null, cargoTipoId: modo === "diagnostico" ? tipoId ?? null : undefined } });
+    if (modo === "completo" && tipoId) await aplicarCargoTipo(e.id, cargo.id, tipoId, "aprobado");
   }
   await recalcularEmpresa(e.id);
   revalidatePath("/", "layout");

@@ -1,12 +1,14 @@
 import Link from "next/link";
+import { comparativoDiagnostico } from "@/lib/diagnostico";
+import { BotonIniciarSgsst } from "@/components/diagnostico/acciones";
 import { BotonInformeGestion } from "@/components/empresa/informe-gestion";
 import { estadoDocumento } from "@/lib/estado-documento";
-import { AlertTriangle, Check, FileText, ListChecks, ShieldAlert, CalendarDays } from "lucide-react";
+import { AlertTriangle, Check, ClipboardList, FileText, ListChecks, ShieldAlert, CalendarDays } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { db } from "@/lib/db";
 import { recalcularEmpresa } from "@/lib/empresa";
 import { Section, Stat, NormaRef } from "@/components/app/ui";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Alert, AlertAction, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Item, ItemContent, ItemTitle } from "@/components/ui/item";
 import { buttonVariants } from "@/components/ui/button";
 import { MESES } from "@/lib/plan/generar";
@@ -50,6 +52,7 @@ export default async function Resumen({ params }: PageProps<"/empresas/[id]">) {
 
   // Plazos de reporte e investigación vencidos o por vencer (Decreto Ley 1295/1994; Res. 1401/2007).
   const eventosAbiertos = await db.evento.findMany({ where: { empresaId: id, OR: [{ invEstado: { in: ["pendiente", "en_curso"] } }, { reportadoArl: false, tipo: { in: ["AT", "EL"] } }] } });
+  const [etapa, comparativo] = await Promise.all([db.empresa.findUniqueOrThrow({ where: { id }, select: { etapa: true } }).then((x) => x.etapa), comparativoDiagnostico(id)]);
   const alertasEventos = eventosAbiertos.flatMap((ev) => plazos(ev).filter((p) => p.estado === "vencido" || p.estado === "por_vencer").map((p) => ({ ev, p })));
   return (
     <>
@@ -64,6 +67,28 @@ export default async function Resumen({ params }: PageProps<"/empresas/[id]">) {
           </AlertDescription>
         </Alert>
       )}
+      {etapa === "diagnostico" && (
+        <Alert>
+          <ClipboardList />
+          <AlertTitle>Empresa en etapa de diagnóstico</AlertTitle>
+          <AlertDescription>Aún no se ha montado el SG-SST. Haga o termine el diagnóstico, entregue el informe y luego inicie el sistema; también puede iniciarlo sin diagnóstico.</AlertDescription>
+          <AlertAction className="flex flex-wrap gap-2"><Link href={`/empresas/${id}/diagnostico`} className={buttonVariants({ size: "sm" })}>Ir al diagnóstico</Link><BotonIniciarSgsst empresaId={id} variant="outline" label="Iniciar sin diagnóstico" /></AlertAction>
+        </Alert>
+      )}
+      {comparativo?.actual && (
+        <Section title="Avance desde el diagnóstico" description={`Línea base del ${comparativo.fecha} frente a la autoevaluación del ${comparativo.actual.fecha}.`}>
+          <div className="grid gap-3 sm:grid-cols-5">
+            {[["Global", comparativo.base.puntaje, comparativo.actual.puntaje] as const, ...(["PLANEAR", "HACER", "VERIFICAR", "ACTUAR"] as const).map((k) => [k.charAt(0) + k.slice(1).toLowerCase(), comparativo.base.porCiclo[k]?.pct ?? null, comparativo.actual!.porCiclo[k]?.pct ?? null] as const)].map(([t, a, b]) => (
+              <div key={t} className="rounded-lg border p-3">
+                <div className="text-xs text-muted-foreground">{t}</div>
+                <div className="mt-1 flex items-baseline gap-2"><span className="text-sm text-muted-foreground">{a ?? "—"}%</span><span className="text-xs">→</span><span className="text-xl font-semibold">{b ?? "—"}%</span></div>
+                {a != null && b != null && <div className={b - a >= 0 ? "text-xs text-emerald-700" : "text-xs text-red-600"}>{b - a >= 0 ? "+" : ""}{Math.round(b - a)} puntos</div>}
+              </div>
+            ))}
+          </div>
+        </Section>
+      )}
+      {comparativo && !comparativo.actual && <p className="text-sm text-muted-foreground">Línea base del diagnóstico ({comparativo.fecha}): {comparativo.base.puntaje}% · {comparativo.base.valoracion}. El avance se mostrará al cerrar la próxima autoevaluación.</p>}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
         <Stat label="Estándares mínimos" value={rr.nivel} hint={<NormaRef>{rr.nivelNormaRef}</NormaRef>} porque={<>{explicarNivel(rr.nivel, rr.trabajadores, e.claseRiesgo)} {explicarConteo(e)}</>} normas={[rr.nivelNormaRef]} />
         <Stat label="Última evaluación" value={puntaje != null && ev?.valoracion ? `${puntaje}%` : "—"} hint={ev?.valoracion ?? "Sin evaluación cerrada"} tone={ev?.valoracion === "ACEPTABLE" ? "ok" : ev?.valoracion === "CRÍTICO" ? "bad" : ev?.valoracion ? "warn" : undefined} />

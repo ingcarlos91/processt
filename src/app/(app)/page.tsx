@@ -82,7 +82,7 @@ export default async function Home() {
               <TableBody>
                 {filas.map((e) => (
                   <TableRow key={e.id}>
-                    <TableCell className="pl-6"><Link href={`/empresas/${e.id}`} className="font-medium hover:underline">{e.nombre}</Link><div className="text-xs text-muted-foreground">NIT {e.nit}</div></TableCell>
+                    <TableCell className="pl-6"><Link href={`/empresas/${e.id}`} className="font-medium hover:underline">{e.nombre}</Link>{e.etapa === "diagnostico" && <Badge variant="outline" className="ml-2 border-violet-300 text-violet-700">En diagnóstico</Badge>}<div className="text-xs text-muted-foreground">NIT {e.nit}</div></TableCell>
                     <TableCell>{ROMANO[e.claseRiesgo]}</TableCell>
                     <TableCell>{e.trabajadores}</TableCell>
                     <TableCell><Badge variant="outline">{e.nivel}</Badge></TableCell>

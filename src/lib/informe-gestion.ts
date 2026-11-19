@@ -5,6 +5,7 @@ import { calcularMensuales, calcularAnuales } from "@/lib/indicadores";
 import { estadoDocumento } from "@/lib/estado-documento";
 import { fechasPlaneador } from "@/lib/planeador";
 import { docTexto } from "@/lib/documento-identidad";
+import { comparativoDiagnostico } from "@/lib/diagnostico";
 
 const MESES = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
 const c = (t: unknown) => String(t ?? "").replace(/\|/g, "/").replace(/\n/g, " ");
@@ -31,6 +32,7 @@ export async function informeGestion(empresaId: string, anio: number, mes: numbe
     },
   });
   const nombreMes = `${MESES[mes - 1]} de ${anio}`;
+  const comparativo = await comparativoDiagnostico(empresaId);
   const ev = e.evaluaciones[0];
   const puntaje = ev ? (ev.nivel === 60 ? ev.puntajeBruto : ev.puntajeAjustado) : null;
 
@@ -92,6 +94,7 @@ export async function informeGestion(empresaId: string, anio: number, mes: numbe
 | Indicador | Resultado |
 |---|---|
 | Estándares mínimos | ${puntaje != null ? `${puntaje} % — ${c(ev?.valoracion ?? "en curso")}` : "Sin autoevaluación"} |
+${comparativo ? `| Línea base (diagnóstico del ${comparativo.fecha}) | ${comparativo.base.puntaje} % — ${comparativo.base.valoracion}${comparativo.actual ? `; avance: ${comparativo.actual.puntaje - comparativo.base.puntaje >= 0 ? "+" : ""}${Math.round(comparativo.actual.puntaje - comparativo.base.puntaje)} puntos` : ""} |` : ""}
 | Plan anual: ejecutado a la fecha | ${hastaMes.length ? `${barra((ejecHasta / hastaMes.length) * 100)} (${ejecHasta} de ${hastaMes.length})` : "Sin actividades programadas"} |
 | Plan anual: avance del año | ${totalAnio ? `${barra((ejecAnio / totalAnio) * 100)} (${ejecAnio} de ${totalAnio})` : "—"} |
 | Actividades del mes ejecutadas | ${delMes.filter((a) => a.estado === "EJECUTADA").length} de ${delMes.length} |

@@ -1,4 +1,5 @@
 "use server";
+import { MAPA_ESTADO_ACTUAL } from "@/lib/diagnostico";
 import { actualizarDocumentosExistentes } from "@/lib/generador/documentos";
 import { requiereUsuario } from "@/lib/auth/sesion";
 import { revalidatePath } from "next/cache";
@@ -12,11 +13,6 @@ import { calificar } from "@/lib/evaluacion";
 const rv = (id: string) => revalidatePath(`/empresas/${id}`, "layout");
 
 // ───────── Evaluación de estándares mínimos (Res. 0312 arts. 27-28) ─────────
-const MAPA_ESTADO_ACTUAL: Record<string, string[]> = {
-  responsable: ["1.1.1"], afiliacion: ["1.1.4"], copasst: ["1.1.6"], convivencia: ["1.1.8"], capacitacion: ["1.2.1"], induccion: ["1.2.2"],
-  curso50h: ["1.2.3"], politica: ["2.1.1"], planAnual: ["2.4.1"], examenes: ["3.1.4"], reporteAT: ["3.2.1"], investigacion: ["3.2.2"],
-  matriz: ["4.1.2"], epp: ["4.2.6"], mantenimiento: ["4.2.5"], emergencias: ["5.1.1"], brigada: ["5.1.2"], revision: ["6.1.3"],
-};
 
 export async function crearEvaluacion(empresaId: string, tipo: "inicial" | "anual", anio: number) {
   await requiereUsuario();

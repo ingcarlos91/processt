@@ -11,7 +11,7 @@ export type FilaEmpresa = {
   docsAplicables: number; docsGenerados: number; docsFirmados: number; docsVolverFirmar: number;
   accidentesAnio: number; plazosVencidos: number; accionesVencidas: number; sugeridosMatriz: number; peligros: number; prioritarios: number;
   matrizSinVersion: boolean; matrizVencida: boolean; horasMes: number; contratoHorasMes: number | null;
-  prioridad: number; motivos: string[];
+  prioridad: number; motivos: string[]; etapa: string;
 };
 
 export async function tableroConsultora(hoy = new Date()) {
@@ -19,7 +19,7 @@ export async function tableroConsultora(hoy = new Date()) {
   const empresas = await db.empresa.findMany({
     orderBy: { razonSocial: "asc" },
     select: {
-      id: true, razonSocial: true, nit: true, claseRiesgo: true, nTrabajadoresPlanta: true, nEnMision: true, nivelEstandares: true, resultadoReglas: true,
+      id: true, etapa: true, razonSocial: true, nit: true, claseRiesgo: true, nTrabajadoresPlanta: true, nEnMision: true, nivelEstandares: true, resultadoReglas: true,
       evaluaciones: { orderBy: { fecha: "desc" }, take: 1, select: { fecha: true, nivel: true, puntajeBruto: true, puntajeAjustado: true, valoracion: true } },
       actividades: { select: { anio: true, mes: true, estado: true } },
       documentos: { select: { estado: true, version: true, secciones: { select: { requiereRevision: true } }, archivos: { where: { activo: true, tipo: "DOCUMENTO_FIRMADO" }, orderBy: { subidoEn: "desc" }, take: 1, select: { documentoVersion: true } } } },
@@ -52,7 +52,7 @@ export async function tableroConsultora(hoy = new Date()) {
       docsAplicables: aplicables, docsGenerados: e.documentos.length, docsFirmados: estados.filter((x) => x === "firmado").length, docsVolverFirmar: estados.filter((x) => x === "volver_a_firmar").length,
       accidentesAnio: e.eventos.filter((x) => x.tipo === "AT" && x.fecha.getUTCFullYear() === anio).length, plazosVencidos, accionesVencidas: e.acciones.length,
       sugeridosMatriz: e.peligros.filter((p) => p.estado === "sugerido").length, peligros: aprobados.length, prioritarios,
-      matrizSinVersion: !ultimaV, matrizVencida, horasMes: e.visitas.reduce((s, v) => s + v.horas, 0), contratoHorasMes: e.contratoHorasMes, prioridad: 0, motivos: [],
+      matrizSinVersion: !ultimaV, matrizVencida, horasMes: e.visitas.reduce((s, v) => s + v.horas, 0), contratoHorasMes: e.contratoHorasMes, prioridad: 0, motivos: [], etapa: e.etapa,
     };
     const m: [boolean, number, string][] = [
       [plazosVencidos > 0, 10, `${plazosVencidos} plazo(s) de accidentes`],
@@ -65,6 +65,7 @@ export async function tableroConsultora(hoy = new Date()) {
       [f.docsGenerados < aplicables, 2, `${aplicables - f.docsGenerados} documento(s) sin generar`],
       [f.sugeridosMatriz > 0, 1, `${f.sugeridosMatriz} peligro(s) sugerido(s) sin revisar`],
     ];
+    if (e.etapa === "diagnostico") { f.prioridad = 3; f.motivos = ["En diagnóstico: falta iniciar el SG-SST"]; return f; }
     for (const [ok, pts, txt] of m) if (ok) { f.prioridad += pts; f.motivos.push(txt); }
     return f;
   });

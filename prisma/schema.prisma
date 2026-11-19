@@ -129,6 +129,8 @@ model Empresa {
   contratoHorasMes Float?            @map("contrato_horas_mes") // horas de asesoría pactadas al mes
   contratoValorMes Int?              @map("contrato_valor_mes") // valor mensual del contrato (pesos)
   auditorias       Auditoria[]
+  diagnosticos     Diagnostico[]
+  etapa            String            @default("activa") // diagnostico | activa
 
   @@map("empresa")
 }
@@ -692,6 +694,8 @@ model Evidencia {
   inspeccion       Inspeccion?    @relation(fields: [inspeccionId], references: [id], onDelete: SetNull)
   auditoriaId      String?        @map("auditoria_id")
   auditoria        Auditoria?     @relation(fields: [auditoriaId], references: [id], onDelete: SetNull)
+  diagnosticoId    String?        @map("diagnostico_id")
+  diagnostico      Diagnostico?   @relation(fields: [diagnosticoId], references: [id], onDelete: SetNull)
   estandarCodigo   String?        @map("estandar_codigo")
   descripcion      String
   archivoUrl       String?        @map("archivo_url") // ruta relativa en uploads/
@@ -961,6 +965,28 @@ model Auditoria {
 
   @@index([empresaId, anio])
   @@map("auditoria")
+}
+
+// Diagnóstico inicial (opcional, antes de montar el SG-SST): estado actual frente a los estándares mínimos
+// (Res. 0312/2019; Decreto 1072/2015 art. 2.2.4.6.16). Queda como línea base para medir el avance.
+model Diagnostico {
+  id           String      @id @default(cuid())
+  empresaId    String      @map("empresa_id")
+  empresa      Empresa     @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  fecha        DateTime    @default(now())
+  nivel        Int
+  items        Json        @default("[]") // [{ codigo, ciclo, grupo, descripcion, puntaje, modo, actividad, estado, observacion }]
+  puntaje      Float?
+  valoracion   String?
+  porCiclo     Json?       @map("por_ciclo") // { P: { obtenido, maximo, pct }, ... }
+  conclusiones String?
+  estado       String      @default("borrador") // borrador | cerrado
+  cerradoEn    DateTime?   @map("cerrado_en")
+  evaluacionId String?     @map("evaluacion_id") // evaluación inicial creada al iniciar el SG-SST
+  creadoEn     DateTime    @default(now()) @map("creado_en")
+  archivos     Evidencia[]
+
+  @@map("diagnostico")
 }
 
 model TrabajadoresMes {

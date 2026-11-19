@@ -6,6 +6,10 @@ import { mdAHtml } from "./exportar";
 type Meta = {
   codigo: string; nombre: string; version: number; fecha: string; empresa: string; nit: string; elaboro: string; aprobo: string;
   horizontal?: boolean; logo?: { buf: Buffer; tipo: "png" | "jpg"; ancho: number; alto: number } | null;
+  /** HTML a insertar en lugar de párrafos con el marcador [[CLAVE]] (por ejemplo, gráficas SVG). */
+  insertar?: Record<string, string>;
+  /** Texto de la franja superior del encabezado (por defecto, el nombre del sistema de gestión). */
+  sistema?: string;
 };
 
 let navegador: Promise<Browser> | null = null;
@@ -58,13 +62,14 @@ const CSS = `
 `;
 
 export async function mdAPdf(md: string, meta: Meta) {
-  const cuerpo = firmas(await mdAHtml(md));
+  let cuerpo = firmas(await mdAHtml(md));
+  for (const [k, html] of Object.entries(meta.insertar ?? {})) cuerpo = cuerpo.replace(`<p>[[${k}]]</p>`, html);
   const html = `<!doctype html><html lang="es"><head><meta charset="utf-8"><style>${CSS}</style></head><body class="${meta.horizontal ? "horizontal" : ""}"><h1 class="titulo">${esc(meta.nombre)}</h1>${cuerpo}</body></html>`;
   const logo = meta.logo ? `<img src="data:image/${meta.logo.tipo === "jpg" ? "jpeg" : "png"};base64,${meta.logo.buf.toString("base64")}" style="max-height:34px;max-width:100px">` : `<b>${esc(meta.empresa)}</b>`;
   const header = `<div style="width:100%;padding:0 12mm;font-family:Arial;font-size:7.5pt;">
     <table style="width:100%;border-collapse:collapse;"><tr>
       <td rowspan="2" style="width:20%;border:1px solid #555;text-align:center;padding:2px;">${logo}</td>
-      <td style="width:55%;border:1px solid #555;text-align:center;font-weight:bold;padding:2px;">SISTEMA DE GESTIÓN DE LA SEGURIDAD Y SALUD EN EL TRABAJO</td>
+      <td style="width:55%;border:1px solid #555;text-align:center;font-weight:bold;padding:2px;">${esc(meta.sistema ?? "SISTEMA DE GESTIÓN DE LA SEGURIDAD Y SALUD EN EL TRABAJO")}</td>
       <td style="width:25%;border:1px solid #555;text-align:center;padding:2px;">Código: ${esc(meta.codigo)}</td></tr>
       <tr><td style="border:1px solid #555;text-align:center;font-weight:bold;padding:2px;">${esc(meta.nombre.toUpperCase())}</td>
       <td style="border:1px solid #555;text-align:center;padding:2px;">Versión: ${meta.version} · ${esc(meta.fecha)}</td></tr></table></div>`;
