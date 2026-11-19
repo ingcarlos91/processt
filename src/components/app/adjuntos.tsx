@@ -84,10 +84,10 @@ export function ListaArchivos({ empresaId, archivos, vacio = "Sin archivos.", co
               {!compacta && <ItemDescription className="text-[11px]">{fechaCorta(a.fecha)} · {a.nombreArchivo} · {tam(a.tamano)}{a.subidoPor ? ` · subió ${a.subidoPor}` : ""}</ItemDescription>}
             </ItemContent>
             <ItemActions className="gap-0">
-              <Button size="icon-xs" variant="ghost" aria-label="Ver" render={<a href={`/api/archivos/${a.id}`} target="_blank" rel="noreferrer" />}><Eye /></Button>
+              <Button size="icon-xs" variant="ghost" aria-label="Ver" nativeButton={false} render={<a href={`/api/archivos/${a.id}`} target="_blank" rel="noreferrer" />}><Eye /></Button>
               <BotonDescarga size="icon-xs" variant="ghost" aria-label="Descargar" href={`/api/archivos/${a.id}?descargar`}><Download /></BotonDescarga>
               {a.activo
-                ? <Pedir trigger={<Button size="icon-xs" variant="ghost" aria-label="Retirar" />} titulo="Retirar archivo" descripcion="El archivo no se borra: queda en el historial, porque la norma exige conservar los registros del SG-SST." label="Motivo (por ejemplo: subido por error, reemplazado)" accion="Retirar" onConfirm={(m) => start(async () => { await retirarArchivo(empresaId, a.id, m); toast.success("Archivo retirado (queda en el historial)"); })}><Archive /></Pedir>
+                ? <Pedir trigger={<Button size="icon-xs" variant="ghost" aria-label="Retirar" />} titulo="Retirar archivo" descripcion="El archivo no se borra: queda en el historial, porque la norma exige conservar los registros del SG-SST." label="Motivo (por ejemplo: subido por error, reemplazado)" placeholder="Ej.: Subido por error" accion="Retirar" onConfirm={(m) => start(async () => { await retirarArchivo(empresaId, a.id, m); toast.success("Archivo retirado (queda en el historial)"); })}><Archive /></Pedir>
                 : <Button size="icon-xs" variant="ghost" aria-label="Restaurar" onClick={() => start(async () => { await restaurarArchivo(empresaId, a.id); toast.success("Archivo restaurado"); })}><RotateCcw /></Button>}
             </ItemActions>
           </Item>

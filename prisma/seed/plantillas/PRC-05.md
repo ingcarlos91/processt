@@ -27,7 +27,7 @@ Evaluar el impacto sobre la seguridad y salud en el trabajo que puedan generar l
 
 ## Formato de evaluación del cambio
 
-| Campo | |
+| Campo | Información |
 |---|---|
 | Descripción del cambio | |
 | Tipo | ☐ Interno ☐ Externo |

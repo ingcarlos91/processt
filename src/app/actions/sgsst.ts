@@ -1,5 +1,5 @@
 "use server";
-import { MAPA_ESTADO_ACTUAL } from "@/lib/diagnostico";
+import { MAPA_ESTADO_ACTUAL, noAplicaInvalidos } from "@/lib/diagnostico";
 import { actualizarDocumentosExistentes } from "@/lib/generador/documentos";
 import { requiereUsuario } from "@/lib/auth/sesion";
 import { revalidatePath } from "next/cache";
@@ -39,6 +39,9 @@ export async function cerrarEvaluacion(empresaId: string, evaluacionId: string) 
   const ev = await db.evaluacion.findUniqueOrThrow({ where: { id: evaluacionId }, include: { items: { include: { estandar: true } } } });
   const faltaJust = ev.items.filter((i) => i.estado === "NO_APLICA" && !i.justificacion?.trim());
   if (faltaJust.length) return { error: `Los ítems marcados "No aplica" requieren justificación: ${faltaJust.map((i) => i.estandar.codigo).join(", ")}` };
+  const empR = await db.empresa.findUniqueOrThrow({ where: { id: empresaId }, select: { resultadoReglas: true } });
+  const invalidos = noAplicaInvalidos(ev.items.map((i) => ({ codigo: i.estandar.codigo, estado: i.estado })), ((empR.resultadoReglas as { comites?: string[] } | null)?.comites ?? []));
+  if (invalidos.length) return { error: `${invalidos.join(", ")} no puede ser «no aplica»: la norma exige ese comité a esta empresa.` };
   const cal = calificar(ev.items.map((i) => ({ codigo: i.estandar.codigo, puntaje: i.estandar.puntaje, estado: i.estado })), ev.nivel);
   await db.evaluacion.update({ where: { id: ev.id }, data: { puntajeBruto: cal.puntajeBruto, puntajeAjustado: cal.puntajeAjustado, valoracion: cal.valoracion, cerrada: true } });
   // Plan de mejoramiento: un renglón por ítem no cumplido (sin duplicar)
@@ -122,7 +125,7 @@ export async function guardarPlantilla(id: string, contenidoMd: string) {
   await requiereUsuario();
   const p = await db.plantilla.findUniqueOrThrow({ where: { id } });
   if (p.contenidoMd === contenidoMd) return;
-  await db.plantilla.update({ where: { id }, data: { contenidoMd, version: p.version + 1, vigenteDesde: new Date() } });
+  await db.plantilla.update({ where: { id }, data: { contenidoMd, version: p.version + 1, vigenteDesde: new Date(), editadaPorUsuario: true } });
   revalidatePath("/plantillas", "layout");
 }
 

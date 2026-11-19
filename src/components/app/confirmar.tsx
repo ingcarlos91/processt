@@ -23,7 +23,7 @@ export function Confirmar({ trigger, children, titulo, descripcion, accion = "Co
 }
 
 /** Diálogo que pide un texto. */
-export function Pedir({ trigger, children, titulo, descripcion, label, inicial = "", accion = "Guardar", onConfirm }: { trigger: ReactElement; children?: ReactNode; titulo: string; descripcion?: ReactNode; label: string; inicial?: string; accion?: string; onConfirm: (v: string) => void }) {
+export function Pedir({ trigger, children, titulo, descripcion, label, inicial = "", accion = "Guardar", tipo = "text", placeholder, onConfirm }: { trigger: ReactElement; children?: ReactNode; titulo: string; descripcion?: ReactNode; label: string; inicial?: string; accion?: string; tipo?: "text" | "date"; placeholder?: string; onConfirm: (v: string) => void }) {
   const [open, setOpen] = useState(false);
   const [v, setV] = useState(inicial);
   return (
@@ -31,7 +31,7 @@ export function Pedir({ trigger, children, titulo, descripcion, label, inicial =
       <DialogTrigger render={trigger}>{children}</DialogTrigger>
       <DialogContent>
         <DialogHeader><DialogTitle>{titulo}</DialogTitle>{descripcion && <DialogDescription>{descripcion}</DialogDescription>}</DialogHeader>
-        <Field><FieldLabel htmlFor="pedir">{label}</FieldLabel><Input id="pedir" value={v} onChange={(e) => setV(e.target.value)} /></Field>
+        <Field><FieldLabel htmlFor="pedir">{label}</FieldLabel><Input id="pedir" type={tipo} placeholder={tipo === "date" ? undefined : placeholder} className={tipo === "date" ? "w-48" : undefined} value={v} onChange={(e) => setV(e.target.value)} /></Field>
         <DialogFooter>
           <DialogClose render={<Button variant="outline" />}>Cancelar</DialogClose>
           <Button disabled={!v.trim()} onClick={() => { setOpen(false); onConfirm(v.trim()); }}>{accion}</Button>

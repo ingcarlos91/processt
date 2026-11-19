@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { valorar } from "@/lib/evaluacion";
 import { CICLOS, calcularDiagnostico, rutaImplementacion, type ItemDiag } from "@/lib/diagnostico";
 import { docTexto } from "@/lib/documento-identidad";
+import { leer } from "@/lib/almacen";
 
 const c = (t: unknown) => String(t ?? "").replace(/\|/g, "/").replace(/\n/g, " ");
 const fecha = (d: Date) => d.toLocaleDateString("es-CO", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
@@ -26,7 +27,7 @@ function graficaGlobal(pct: number, valoracion: string) {
 }
 
 export async function informeDiagnostico(diagnosticoId: string) {
-  const dg = await db.diagnostico.findUniqueOrThrow({ where: { id: diagnosticoId }, include: { empresa: { include: { consultora: true, sedes: true } } } });
+  const dg = await db.diagnostico.findUniqueOrThrow({ where: { id: diagnosticoId }, include: { empresa: { include: { consultora: true, sedes: true } }, archivos: { where: { activo: true }, orderBy: { subidoEn: "asc" } } } });
   const e = dg.empresa, co = e.consultora;
   const items = (dg.items ?? []) as ItemDiag[];
   const cal = calcularDiagnostico(items, dg.nivel);
@@ -35,12 +36,18 @@ export async function informeDiagnostico(diagnosticoId: string) {
   const brechas = items.filter((i) => i.estado === "no_cumple").sort((a, b) => b.puntaje - a.puntaje);
   const cumple = items.filter((i) => i.estado === "cumple");
   const obs = items.filter((i) => i.observacion.trim() && i.estado !== "no_aplica");
+  const noAplica = items.filter((i) => i.estado === "no_aplica");
   const ROMANO = ["", "I", "II", "III", "IV", "V"];
+  // Fotos de la visita (máximo 8), incrustadas en el PDF.
+  const fotos: { src: string; pie: string }[] = [];
+  for (const a of dg.archivos.filter((x) => x.archivoUrl && /^image\/(jpeg|png|webp)$/.test(x.mime ?? "")).slice(0, 8)) {
+    try { const buf = await leer(a.archivoUrl!); fotos.push({ src: `data:${a.mime};base64,${buf.toString("base64")}`, pie: a.descripcion }); } catch { /* archivo no disponible */ }
+  }
   const md = `## Datos de la empresa diagnosticada
 
-| Campo | |
+| Campo | Información |
 |---|---|
-| Empresa | ${c(e.razonSocial)} — NIT ${c(e.nit)} |
+| Empresa | ${c(e.razonSocial)} — NIT ${c(e.digitoVerificacion ? `${e.nit}-${e.digitoVerificacion}` : e.nit)} |
 | Actividad económica | ${c(e.descripcionActividad || e.ciiu || "—")} |
 | Clase de riesgo | ${ROMANO[e.claseRiesgo] ?? e.claseRiesgo} |
 | Trabajadores | ${e.nTrabajadoresPlanta + e.nEnMision} |
@@ -58,7 +65,7 @@ Se verificó cada estándar mediante revisión de documentos, entrevistas y obse
 
 [[GLOBAL]]
 
-| Resultado | |
+| Resultado | Valor |
 |---|---|
 | Estándares evaluados | ${cal.total} |
 | Cumplen | ${cumple.length} |
@@ -81,7 +88,7 @@ ${CICLOS.map((x) => `| ${x.t} | ${x.d} | ${cal.porCiclo[x.k]?.pct == null ? "N/A
 
 ${brechas.length ? `| Estándar | Qué falta | Peso | Qué se debe evidenciar |
 |---|---|---|---|
-${brechas.map((b) => `| ${b.codigo} | ${c(b.descripcion)}${b.observacion ? ` — ${c(b.observacion)}` : ""} | ${b.puntaje} | ${c(b.modo)} |`).join("\n")}` : "No se encontraron brechas."}
+${brechas.map((b) => `| ${b.codigo} | ${c(b.descripcion)} | ${b.puntaje} | ${c(b.modo)} |`).join("\n")}` : "No se encontraron brechas."}
 
 ${cumple.length ? `## Fortalezas
 
@@ -89,7 +96,17 @@ La empresa ya cumple ${cumple.length} estándar(es), entre ellos: ${cumple.slice
 ` : ""}
 ${obs.length ? `## Observaciones de la visita
 
-${obs.map((o) => `- **${o.codigo}:** ${c(o.observacion)}`).join("\n")}
+${obs.map((o) => `- **${o.codigo}** (${o.estado === "cumple" ? "cumple" : "no cumple"}): ${c(o.observacion)}`).join("\n")}
+` : ""}
+${noAplica.length ? `## Estándares que no aplican
+
+| Estándar | Justificación |
+|---|---|
+${noAplica.map((o) => `| ${o.codigo} ${c(o.descripcion)} | ${c(o.observacion || "Sin justificación")} |`).join("\n")}
+` : ""}
+${fotos.length ? `## Registro fotográfico
+
+[[FOTOS]]
 ` : ""}
 ## Ruta de implementación propuesta
 
@@ -118,7 +135,7 @@ ______________________________________
       empresa: co?.nombre || "PROCESST", nit: co?.nit || "", elaboro: co?.profesional || "", aprobo: co?.profesional || "",
       sistema: "PROCESST — CONSULTORÍA EN SEGURIDAD Y SALUD EN EL TRABAJO",
       logo: logo ? { buf: logo, tipo: "png" as const, ancho: 120, alto: 30 } : null,
-      insertar: { GLOBAL: graficaGlobal(cal.puntaje, cal.valoracion), CICLOS: graficaCiclos(cal.porCiclo) },
+      insertar: { GLOBAL: graficaGlobal(cal.puntaje, cal.valoracion), CICLOS: graficaCiclos(cal.porCiclo), FOTOS: `<div style="display:grid;grid-template-columns:1fr 1fr;gap:10pt;margin:6pt 0 12pt">${fotos.map((f) => `<figure style="margin:0;page-break-inside:avoid"><img src="${f.src}" style="width:100%;max-height:220px;object-fit:cover;border:1px solid #ccc;border-radius:4px"><figcaption style="font-size:8pt;color:#555;margin-top:2pt">${f.pie.replace(/</g, "&lt;")}</figcaption></figure>`).join("")}</div>` },
     },
   };
 }

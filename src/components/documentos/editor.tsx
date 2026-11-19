@@ -91,7 +91,7 @@ function Seccion({ s, empresaId, run, pend }: { s: Sec; empresaId: string; run: 
         {editando ? (
           <div className="space-y-2">
             {avanzado
-              ? <Textarea className="font-mono text-xs min-h-64" value={texto} onChange={(e) => { setTexto(e.target.value); setCambio(true); }} />
+              ? <Textarea className="font-mono text-xs min-h-64" placeholder="Escriba el contenido en Markdown; use “## ” para iniciar cada sección" value={texto} onChange={(e) => { setTexto(e.target.value); setCambio(true); }} />
               : <EditorVisual markdown={texto} onChange={(md) => { setTexto(md); setCambio(true); }} />}
             <div className="flex flex-wrap items-center gap-2">
               <Button size="sm" disabled={pend} onClick={guardar}><Save /> {cambio ? "Guardar cambios" : "Cerrar"}</Button>

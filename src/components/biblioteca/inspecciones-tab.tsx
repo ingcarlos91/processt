@@ -39,11 +39,11 @@ export function InspeccionesTab({ listas }: { listas: { id: string; nombre: stri
           {f && (
             <div className="space-y-4">
               <div className="grid gap-4 sm:grid-cols-[1fr_10rem]">
-                <Field><FieldLabel htmlFor="l-n">Nombre</FieldLabel><Input id="l-n" value={f.nombre} onChange={(e) => setF({ ...f, nombre: e.target.value })} /></Field>
-                <Field><FieldLabel htmlFor="l-f">Frecuencia (días)</FieldLabel><Input id="l-f" type="number" min={0} value={f.frecuenciaDias} onChange={(e) => setF({ ...f, frecuenciaDias: Number(e.target.value) })} /></Field>
+                <Field><FieldLabel htmlFor="l-n">Nombre</FieldLabel><Input id="l-n" placeholder="Ej.: Inspección de extintores" value={f.nombre} onChange={(e) => setF({ ...f, nombre: e.target.value })} /></Field>
+                <Field><FieldLabel htmlFor="l-f">Frecuencia (días)</FieldLabel><Input id="l-f" placeholder="Ej.: 30" type="number" min={0} value={f.frecuenciaDias} onChange={(e) => setF({ ...f, frecuenciaDias: Number(e.target.value) })} /></Field>
               </div>
-              <Field><FieldLabel htmlFor="l-d">Descripción</FieldLabel><Input id="l-d" value={f.descripcion} onChange={(e) => setF({ ...f, descripcion: e.target.value })} /></Field>
-              <Field><FieldLabel htmlFor="l-i">Ítems</FieldLabel><Textarea id="l-i" rows={10} value={f.items} onChange={(e) => setF({ ...f, items: e.target.value })} /><FieldDescription>{f.items.split("\n").filter((x) => x.trim()).length} ítems.</FieldDescription></Field>
+              <Field><FieldLabel htmlFor="l-d">Descripción</FieldLabel><Input id="l-d" placeholder="Ej.: Estado, carga y señalización de los extintores" value={f.descripcion} onChange={(e) => setF({ ...f, descripcion: e.target.value })} /></Field>
+              <Field><FieldLabel htmlFor="l-i">Ítems</FieldLabel><Textarea id="l-i" rows={10} placeholder={"Un ítem por línea. Ej.:\n¿El extintor tiene la carga vigente?\n¿Está señalizado y sin obstáculos?"} value={f.items} onChange={(e) => setF({ ...f, items: e.target.value })} /><FieldDescription>{f.items.split("\n").filter((x) => x.trim()).length} ítems.</FieldDescription></Field>
             </div>
           )}
           <DialogFooter><Button variant="outline" onClick={() => setF(null)}>Cancelar</Button><Button disabled={pend || !f?.nombre.trim()} onClick={guardar}>{pend && <Spinner />} Guardar</Button></DialogFooter>

@@ -1,6 +1,5 @@
 import { PrismaClient } from "@prisma/client";
-import { readFileSync, readdirSync } from "node:fs";
-import { join } from "node:path";
+import { sincronizarPlantillas } from "./sincronizar-plantillas";
 import { estandares } from "./estandares";
 import { normas } from "./normas";
 import { reglas } from "./reglas";
@@ -10,7 +9,6 @@ import { zonas, tareas, cargos, sectores, zonasTarea } from "./biblioteca/estruc
 import { peligrosAmpliacion } from "./biblioteca/peligros-ampliacion";
 import { zonasAmp, tareasAmp, cargosAmp, sectoresAmp } from "./biblioteca/estructura-ampliacion";
 import { itemsCatalogo } from "./biblioteca/catalogos";
-import { parsePlantilla } from "../../src/lib/generador/plantilla";
 
 const db = new PrismaClient();
 
@@ -46,22 +44,8 @@ async function main() {
   }
   console.log(`CIIU: ${ciiu.length}`);
 
-  // Plantillas
-  const dir = join(__dirname, "plantillas");
-  const archivos = readdirSync(dir).filter((f) => f.endsWith(".md") && !f.startsWith("_"));
-  for (const f of archivos) {
-    const { meta, cuerpo } = parsePlantilla(readFileSync(join(dir, f), "utf8"));
-    const data = {
-      nombre: meta.nombre, tipo: meta.tipo, nivelMin: meta.nivelMin, condicion: (meta.condicion ?? undefined) as object | undefined,
-      estandares: meta.estandares ?? [], normas: meta.normas ?? [], contenidoMd: cuerpo, carpeta: meta.carpeta, descripcion: meta.descripcion,
-    };
-    const prev = await db.plantilla.findUnique({ where: { codigo: meta.codigo } });
-    if (!prev) await db.plantilla.create({ data: { codigo: meta.codigo, ...data } });
-    else if (prev.contenidoMd !== cuerpo || prev.nombre !== meta.nombre)
-      await db.plantilla.update({ where: { codigo: meta.codigo }, data: { ...data, version: prev.version + 1, vigenteDesde: new Date() } });
-    else await db.plantilla.update({ where: { codigo: meta.codigo }, data });
-  }
-  console.log(`Plantillas: ${archivos.length}`);
+  const pl = await sincronizarPlantillas(db);
+  console.log(`Plantillas: ${pl.total} (${pl.actualizadas} actualizadas, ${pl.respetadas} editadas por la consultora sin tocar)`);
 
   await sembrarBiblioteca();
 

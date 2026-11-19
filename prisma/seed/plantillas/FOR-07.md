@@ -10,7 +10,7 @@ descripcion: Se genera uno por cada evento desde la pestaña Accidentes e incide
 ---
 ## Datos de la empresa
 
-| Campo | |
+| Campo | Información |
 |---|---|
 | Razón social | {{empresa.razonSocial}} |
 | NIT | {{empresa.nit}} |
@@ -20,7 +20,7 @@ descripcion: Se genera uno por cada evento desde la pestaña Accidentes e incide
 
 ## Datos del evento
 
-| Campo | |
+| Campo | Información |
 |---|---|
 | Tipo de evento | {{ev.tipo}}{{#if ev.esAT}} — {{ev.gravedad}}{{/if}} |
 | Fecha y hora | {{ev.fecha}}{{#if ev.hora}}, {{ev.hora}}{{/if}} |
@@ -38,10 +38,10 @@ descripcion: Se genera uno por cada evento desde la pestaña Accidentes e incide
 
 ## Datos del trabajador
 
-| Campo | |
+| Campo | Información |
 |---|---|
 | Nombre | {{default ev.trabajador "______"}} |
-| Documento | {{default ev.cedula "______"}} |
+| Documento | {{default ev.doc "______"}} |
 | Cargo | {{default ev.cargo "______"}} |
 | Tipo de vinculación | {{default ev.vinculacion "______"}} |
 | Antigüedad en el cargo | {{default ev.antiguedad "______"}} |
@@ -115,7 +115,7 @@ Las lecciones aprendidas se divulgan a los trabajadores y al {{#if comites.copas
 
 ## Cierre
 
-| Campo | |
+| Campo | Información |
 |---|---|
 | Fecha de cierre de la investigación | {{default ev.invCierre "______"}} |
 {{#if ev.esGrave}}| Remisión a la ARL (accidente {{ev.gravedad}}) | {{default ev.remitidaArl "______"}} |

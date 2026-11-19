@@ -45,7 +45,7 @@ Procedimiento de rescate específico para cada tarea, con equipos y personal ent
 
 ## Permiso de trabajo en alturas
 
-| Campo | |
+| Campo | Información |
 |---|---|
 | Fecha y hora | |
 | Lugar y altura aproximada | |

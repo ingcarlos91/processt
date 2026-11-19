@@ -26,7 +26,7 @@ export function ComplementariosForm({ empresaId, secciones, inicial, faltan }: {
   });
   const [pend, start] = useTransition();
   const set = (k: string, v: Complementarios[string]) => setD((x) => ({ ...x, [k]: v }));
-  const guardar = () => start(async () => { await guardarComplementarios(empresaId, d); toast.success("Datos guardados. Regenere los documentos para verlos."); });
+  const guardar = () => start(async () => { await guardarComplementarios(empresaId, d); toast.success("Datos guardados. Los documentos se actualizaron solos (sus ediciones manuales se conservan)."); });
 
   return (
     <div id="complementarios" className="space-y-4 scroll-mt-16">
@@ -60,6 +60,12 @@ function Etiqueta({ c, falta }: { c: CampoComplementario; falta: boolean }) {
     </FieldLabel>
   );
 }
+
+const EJ_COL: Record<string, string> = {
+  recurso: "Ej.: Extintor ABC de 10 lb", ubicacion: "Ej.: Bodega principal", espacio: "Ej.: Tanque de agua", peligros: "Ej.: Atmósfera con poco oxígeno",
+  acceso: "Ej.: Escotilla superior", producto: "Ej.: Hipoclorito de sodio", uso: "Ej.: Limpieza y desinfección", area: "Ej.: Cuarto de aseo",
+  cantidad: "Ej.: 20 litros", pictogramas: "Ej.: Corrosivo, irritante", rubro: "Ej.: Exámenes médicos ocupacionales", equipo: "Ej.: Montacargas",
+};
 
 function CampoUI({ c, v, set, falta }: { c: CampoComplementario; v: Complementarios[string]; set: (v: Complementarios[string]) => void; falta: boolean }) {
   if (c.tipo === "persona") {
@@ -95,8 +101,8 @@ function CampoUI({ c, v, set, falta }: { c: CampoComplementario; v: Complementar
                       {col.tipo === "select"
                         ? <NativeSelect size="sm" className="w-full" value={f[col.k] ?? ""} onChange={(e) => upd(i, col.k, e.target.value)}><NativeSelectOption value="">—</NativeSelectOption>{col.opciones?.map((o) => <NativeSelectOption key={o} value={o}>{o}</NativeSelectOption>)}</NativeSelect>
                         : col.tipo === "number"
-                          ? <Input className="h-7 text-right tabular-nums" inputMode="numeric" value={miles(f[col.k])} onChange={(e) => upd(i, col.k, e.target.value.replace(/\D/g, ""))} />
-                          : <Input className={cn("h-7", col.tipo !== "date" && "min-w-40")} type={col.tipo ?? "text"} value={f[col.k] ?? ""} onChange={(e) => upd(i, col.k, e.target.value)} />}
+                          ? <Input className="h-7 text-right tabular-nums" inputMode="numeric" placeholder={col.k === "valor" ? "Ej.: 1.500.000" : "Ej.: 4"} value={miles(f[col.k])} onChange={(e) => upd(i, col.k, e.target.value.replace(/\D/g, ""))} />
+                          : <Input className={cn("h-7", col.tipo !== "date" && "min-w-40")} type={col.tipo ?? "text"} placeholder={col.tipo === "date" ? undefined : (EJ_COL[col.k] ?? col.etiqueta)} value={f[col.k] ?? ""} onChange={(e) => upd(i, col.k, e.target.value)} />}
                     </TableCell>
                   ))}
                   <TableCell className="p-1"><Button variant="ghost" size="icon-xs" aria-label="Quitar fila" onClick={() => set(filas.filter((_, j) => j !== i))}><Trash2 /></Button></TableCell>

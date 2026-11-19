@@ -21,8 +21,8 @@ export function ConsultoraForm({ inicial, ia }: { inicial: D; ia: { activa: bool
   const [pend, start] = useTransition();
   const set = <K extends keyof D>(k: K, v: D[K]) => setD((x) => ({ ...x, [k]: v }));
   const AY: Partial<Record<keyof D, string>> = { profesional: "respNombre", cargo: "cargoProfesional", licenciaSst: "licencia", licenciaFecha: "licenciaFecha", curso50hFecha: "curso50h" };
-  const campo = (k: keyof D, l: string, opts?: { tipo?: string; desc?: string }) => (
-    <Field><FieldLabel htmlFor={k} className="gap-1">{l}{AY[k] && <Ayuda k={AY[k]} />}</FieldLabel><Input id={k} type={opts?.tipo} value={String(d[k] ?? "")} onChange={(e) => set(k, e.target.value as never)} />{opts?.desc && <FieldDescription>{opts.desc}</FieldDescription>}</Field>
+  const campo = (k: keyof D, l: string, opts?: { tipo?: string; desc?: string; ph?: string }) => (
+    <Field><FieldLabel htmlFor={k} className="gap-1">{l}{AY[k] && <Ayuda k={AY[k]} />}</FieldLabel><Input id={k} type={opts?.tipo} placeholder={opts?.ph} value={String(d[k] ?? "")} onChange={(e) => set(k, e.target.value as never)} />{opts?.desc && <FieldDescription>{opts.desc}</FieldDescription>}</Field>
   );
   return (
     <div className="grid lg:grid-cols-[1fr_380px] gap-6 items-start max-w-6xl">
@@ -30,12 +30,12 @@ export function ConsultoraForm({ inicial, ia }: { inicial: D; ia: { activa: bool
         <CardHeader><CardTitle>Consultora y profesional que firma</CardTitle><CardDescription>Se usan en la designación del responsable (DOC-03), en las firmas “Elaboró” y en la evaluación inicial.</CardDescription></CardHeader>
         <CardContent>
           <FieldGroup className="grid md:grid-cols-2 gap-4">
-            {campo("nombre", "Nombre de la consultora")}
-            {campo("nit", "NIT de la consultora")}
+            {campo("nombre", "Nombre de la consultora", { ph: "Ej.: Gestión Segura S.A.S." })}
+            {campo("nit", "NIT de la consultora", { ph: "Ej.: 900123456" })}
             <FieldSeparator className="md:col-span-2">Profesional</FieldSeparator>
-            {campo("profesional", "Nombre completo")}
+            {campo("profesional", "Nombre completo", { ph: "Nombres y apellidos" })}
             <Field><FieldLabel htmlFor="cedula" className="gap-1">Documento de identidad <Ayuda k="documentoIdentidad" /></FieldLabel><CampoDocumento id="cedula" tipo={d.tipoDoc} numero={d.cedula} onTipo={(v) => set("tipoDoc", v)} onNumero={(v) => set("cedula", v)} /></Field>
-            {campo("cargo", "Cargo o vínculo con las empresas", { desc: "Por ejemplo: Asesora externa en SST" })}
+            {campo("cargo", "Cargo o vínculo con las empresas", { desc: "Por ejemplo: Asesora externa en SST", ph: "Ej.: Asesora externa en SST" })}
             <Field>
               <FieldLabel htmlFor="perfil" className="gap-1">Perfil <Ayuda k="perfil" /></FieldLabel>
               <NativeSelect id="perfil" className="w-full" value={d.perfil} onChange={(e) => set("perfil", e.target.value)}>
@@ -47,7 +47,7 @@ export function ConsultoraForm({ inicial, ia }: { inicial: D; ia: { activa: bool
               </NativeSelect>
               <FieldDescription>Define a qué empresas puede diseñarles el SG-SST (Res. 0312/2019 arts. 4, 10 y 17).</FieldDescription>
             </Field>
-            {campo("licenciaSst", "Licencia en SST", { desc: "Número de resolución (Res. 908/2025: licencia digital)" })}
+            {campo("licenciaSst", "Licencia en SST", { desc: "Número de resolución (Res. 908/2025: licencia digital)", ph: "Número de la resolución que otorgó la licencia" })}
             {campo("licenciaFecha", "Fecha de la licencia", { tipo: "date" })}
             <Field orientation="horizontal" className="md:col-span-1">
               <Switch id="c50" checked={d.curso50h} onCheckedChange={(v) => set("curso50h", v)} />
@@ -55,11 +55,11 @@ export function ConsultoraForm({ inicial, ia }: { inicial: D; ia: { activa: bool
             </Field>
             {campo("curso50hFecha", "Fecha del curso de 50 horas", { tipo: "date" })}
             <FieldSeparator className="md:col-span-2">Contacto</FieldSeparator>
-            {campo("telefono", "Teléfono")}
-            {campo("correo", "Correo", { tipo: "email" })}
+            {campo("telefono", "Teléfono", { ph: "Ej.: 300 123 4567" })}
+            {campo("correo", "Correo", { tipo: "email", ph: "nombre@empresa.com" })}
           </FieldGroup>
         </CardContent>
-        <CardFooter className="border-t"><Button disabled={pend} onClick={() => start(async () => { await guardarConsultora(d); toast.success("Datos guardados. Regenere los documentos de cada empresa para aplicarlos."); })}><Save /> Guardar</Button></CardFooter>
+        <CardFooter className="border-t"><Button disabled={pend} onClick={() => start(async () => { await guardarConsultora(d); toast.success("Datos guardados. Los documentos de todas las empresas se actualizaron."); })}><Save /> Guardar</Button></CardFooter>
       </Card>
       <Card>
         <CardHeader><CardTitle className="flex items-center gap-2"><Sparkles className="size-4" /> Asistente de IA</CardTitle><CardDescription>Sugiere tareas y peligros por cargo según la GTC 45, priorizando la biblioteca.</CardDescription></CardHeader>

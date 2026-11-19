@@ -138,8 +138,8 @@ export function UsuariosEditor({ usuarios, yoId }: { usuarios: U[]; yoId: string
                 <DialogDescription>{modal.tipo === "nuevo" ? "Entregue la contraseña inicial a la persona por un medio seguro; podrá cambiarla en “Mi cuenta”." : "Los cambios de rol aplican de inmediato."}</DialogDescription>
               </DialogHeader>
               <FieldGroup>
-                <Field><FieldLabel htmlFor="u-n">Nombre completo</FieldLabel><Input id="u-n" value={f.nombre} onChange={(e) => setF({ ...f, nombre: e.target.value })} /></Field>
-                <Field><FieldLabel htmlFor="u-e">Correo</FieldLabel><Input id="u-e" type="email" value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} /><FieldDescription>Es el usuario con el que inicia sesión.</FieldDescription></Field>
+                <Field><FieldLabel htmlFor="u-n">Nombre completo</FieldLabel><Input id="u-n" placeholder="Nombres y apellidos" value={f.nombre} onChange={(e) => setF({ ...f, nombre: e.target.value })} /></Field>
+                <Field><FieldLabel htmlFor="u-e">Correo</FieldLabel><Input id="u-e" placeholder="nombre@empresa.com" type="email" value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} /><FieldDescription>Es el usuario con el que inicia sesión.</FieldDescription></Field>
                 <Field>
                   <FieldLabel htmlFor="u-r">Rol</FieldLabel>
                   <NativeSelect id="u-r" className="w-full" value={f.rol} onChange={(e) => setF({ ...f, rol: e.target.value })} disabled={modal.tipo === "editar" && modal.u.id === yoId}>

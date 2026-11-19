@@ -9,7 +9,7 @@ normas: ["RES-2013-1986"]
 ---
 ## Datos de la reunión
 
-| Campo | |
+| Campo | Información |
 |---|---|
 | Acta N.º | |
 | Fecha | |

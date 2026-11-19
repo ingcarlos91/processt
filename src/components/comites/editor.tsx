@@ -38,7 +38,7 @@ export function ComitesEditor({ empresaId, requeridos, comites, composicion, ref
   const [editando, setEditando] = useState<{ id: string; nombre: string; tipoDoc: string; cedula: string; cargo: string } | null>(null);
   const hoy = new Date().toISOString().slice(0, 10);
   return (
-    <div className="grid lg:grid-cols-2 gap-6 items-start">
+    <div className="grid gap-6">
       {requeridos.map((tipo) => {
         const c = comites.find((x) => x.tipo === tipo);
         const info = INFO[tipo];
@@ -62,14 +62,14 @@ export function ComitesEditor({ empresaId, requeridos, comites, composicion, ref
                     <Confirmar trigger={<Button size="xs" variant="ghost" />} titulo={`Eliminar ${info.nombre}`} destructivo accion="Eliminar" onConfirm={() => run(() => A.eliminarComite(empresaId, c.id))}><Trash2 /> Eliminar</Confirmar>
                   </div>
                   <Table>
-                    <TableHeader><TableRow><TableHead>Nombre</TableHead><TableHead>Cargo</TableHead><TableHead>Rol</TableHead><TableHead>Representa</TableHead><TableHead /></TableRow></TableHeader>
+                    <TableHeader><TableRow><TableHead>Nombre</TableHead><TableHead>Cargo</TableHead><TableHead>Rol</TableHead>{tipo !== "BRIGADA" && <TableHead>Representa</TableHead>}<TableHead className="w-20" /></TableRow></TableHeader>
                     <TableBody>
                       {c.miembros.map((m) => (
                         <TableRow key={m.id}>
                           {editando?.id === m.id ? (
                             <>
-                              <TableCell className="space-y-1.5"><Input value={editando.nombre} onChange={(e) => setEditando({ ...editando, nombre: e.target.value })} /><CampoDocumento tipo={editando.tipoDoc} numero={editando.cedula} onTipo={(v) => setEditando({ ...editando, tipoDoc: v })} onNumero={(v) => setEditando({ ...editando, cedula: v })} /></TableCell>
-                              <TableCell><Input value={editando.cargo} onChange={(e) => setEditando({ ...editando, cargo: e.target.value })} /></TableCell>
+                              <TableCell className="space-y-1.5"><Input value={editando.nombre} placeholder="Nombres y apellidos" onChange={(e) => setEditando({ ...editando, nombre: e.target.value })} /><CampoDocumento tipo={editando.tipoDoc} numero={editando.cedula} onTipo={(v) => setEditando({ ...editando, tipoDoc: v })} onNumero={(v) => setEditando({ ...editando, cedula: v })} /></TableCell>
+                              <TableCell><Input value={editando.cargo} placeholder="Ej.: Auxiliar de bodega" onChange={(e) => setEditando({ ...editando, cargo: e.target.value })} /></TableCell>
                             </>
                           ) : (
                             <>
@@ -78,7 +78,7 @@ export function ComitesEditor({ empresaId, requeridos, comites, composicion, ref
                             </>
                           )}
                           <TableCell>{ROLES.find((r) => r[0] === m.rol)?.[1] ?? m.rol}</TableCell>
-                          <TableCell>{m.representa}</TableCell>
+                          {tipo !== "BRIGADA" && <TableCell>{m.representa === "empleador" ? "Empleador" : m.representa === "trabajadores" ? "Trabajadores" : "—"}</TableCell>}
                           <TableCell>
                             <div className="flex justify-end gap-0.5">
                               {editando?.id === m.id
@@ -119,9 +119,9 @@ function NuevoMiembro({ tipo, onAgregar }: { tipo: string; onAgregar: (m: { nomb
   const [m, setM] = useState({ nombre: "", tipoDoc: "CC", cedula: "", cargo: "", rol: tipo === "BRIGADA" ? "brigadista" : tipo === "VIGIA" ? "vigia" : "principal", representa: tipo === "BRIGADA" ? "" : "trabajadores" });
   return (
     <div className="grid grid-cols-2 md:grid-cols-7 gap-2 w-full items-end">
-      <Field className="md:col-span-2"><FieldLabel className="text-xs">Nombre</FieldLabel><Input value={m.nombre} onChange={(e) => setM({ ...m, nombre: e.target.value })} /></Field>
+      <Field className="md:col-span-2"><FieldLabel className="text-xs">Nombre</FieldLabel><Input value={m.nombre} placeholder="Nombres y apellidos" onChange={(e) => setM({ ...m, nombre: e.target.value })} /></Field>
       <Field className="col-span-2 md:col-span-2"><FieldLabel className="text-xs gap-1">Documento <Ayuda k="documentoIdentidad" /></FieldLabel><CampoDocumento tipo={m.tipoDoc} numero={m.cedula} onTipo={(v) => setM({ ...m, tipoDoc: v })} onNumero={(v) => setM({ ...m, cedula: v })} /></Field>
-      <Field><FieldLabel className="text-xs">Cargo</FieldLabel><Input value={m.cargo} onChange={(e) => setM({ ...m, cargo: e.target.value })} /></Field>
+      <Field><FieldLabel className="text-xs">Cargo</FieldLabel><Input value={m.cargo} placeholder="Ej.: Auxiliar de bodega" onChange={(e) => setM({ ...m, cargo: e.target.value })} /></Field>
       <Field><FieldLabel className="text-xs gap-1">Rol <Ayuda k="rolComite" /></FieldLabel><NativeSelect className="w-full" value={m.rol} onChange={(e) => setM({ ...m, rol: e.target.value })}>{ROLES.map(([v, l]) => <NativeSelectOption key={v} value={v}>{l}</NativeSelectOption>)}</NativeSelect></Field>
       {tipo !== "BRIGADA" ? (
         <Field><FieldLabel className="text-xs gap-1">Representa <Ayuda k="representa" /></FieldLabel><NativeSelect className="w-full" value={m.representa} onChange={(e) => setM({ ...m, representa: e.target.value })}><NativeSelectOption value="trabajadores">Trabajadores</NativeSelectOption><NativeSelectOption value="empleador">Empleador</NativeSelectOption></NativeSelect></Field>
@@ -160,9 +160,9 @@ function DatosEleccion({ inicial, onGuardar }: { inicial: Record<string, unknown
           <Button variant="outline" size="sm" className="w-fit" onClick={() => setD({ ...d, resultados: [...res, { candidato: "", votos: "" }] })}><Plus /> Agregar candidato</Button>
         </Field>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-          <Field><FieldLabel className="text-xs">Votos en blanco</FieldLabel><Input type="number" value={d.blanco ?? ""} onChange={(e) => setD({ ...d, blanco: e.target.value })} /></Field>
-          <Field><FieldLabel className="text-xs">Votos nulos</FieldLabel><Input type="number" value={d.nulos ?? ""} onChange={(e) => setD({ ...d, nulos: e.target.value })} /></Field>
-          <Field><FieldLabel className="text-xs">Total de votantes</FieldLabel><Input type="number" value={d.votantes ?? ""} onChange={(e) => setD({ ...d, votantes: e.target.value })} /></Field>
+          <Field><FieldLabel className="text-xs">Votos en blanco</FieldLabel><Input type="number" placeholder="Ej.: 2" value={d.blanco ?? ""} onChange={(e) => setD({ ...d, blanco: e.target.value })} /></Field>
+          <Field><FieldLabel className="text-xs">Votos nulos</FieldLabel><Input type="number" placeholder="Ej.: 1" value={d.nulos ?? ""} onChange={(e) => setD({ ...d, nulos: e.target.value })} /></Field>
+          <Field><FieldLabel className="text-xs">Total de votantes</FieldLabel><Input type="number" placeholder="Ej.: 25" value={d.votantes ?? ""} onChange={(e) => setD({ ...d, votantes: e.target.value })} /></Field>
           <Field><FieldLabel className="text-xs">Jurados de votación</FieldLabel><Input value={d.jurados ?? ""} onChange={(e) => setD({ ...d, jurados: e.target.value })} placeholder="Nombres" /></Field>
         </div>
         <Button size="sm" className="w-fit" onClick={() => onGuardar(d)}>Guardar datos de la elección</Button>

@@ -116,6 +116,9 @@ export async function guardarConsultora(d: DatosConsultora) {
   await requiereUsuario();
   const c = await consultoraActual();
   await db.consultora.update({ where: { id: c.id }, data: { ...d, licenciaFecha: d.licenciaFecha ? new Date(d.licenciaFecha) : null } });
+  // Los datos de la consultora salen en firmas y encabezados: se actualizan los documentos de todas las empresas.
+  const { actualizarDocumentosExistentes } = await import("@/lib/generador/documentos");
+  for (const e of await db.empresa.findMany({ where: { consultoraId: c.id, etapa: "activa" }, select: { id: true } })) await actualizarDocumentosExistentes(e.id);
   revalidatePath("/", "layout");
   return { ok: true };
 }

@@ -16,7 +16,7 @@ export async function docxDocumento(empresaId: string, codigo: string, formato: 
     codigo: doc.codigo, nombre: doc.nombre, version: doc.version, fecha: doc.fechaEmision.toLocaleDateString("es-CO"),
     empresa: e.razonSocial, nit: e.digitoVerificacion ? `${e.nit}-${e.digitoVerificacion}` : e.nit,
     elaboro: [quien.nombre, quien.licencia ? `Lic. SST ${quien.licencia}` : ""].filter(Boolean).join(", "), aprobo: e.representanteLegal ?? "Representante legal",
-    horizontal: ["MTZ-02", "MTZ-01", "PLN-01", "MTZ-04", "FOR-02", "FOR-06"].includes(doc.codigo),
+    horizontal: ["MTZ-02", "MTZ-01", "MTZ-03", "PLN-01", "MTZ-04", "FOR-02", "FOR-06", "FOR-08", "PRG-07"].includes(doc.codigo),
     logo: await leerLogo(e.logoUrl, { ancho: 110, alto: 50 }),
   };
   const md = markdownDocumento(doc);

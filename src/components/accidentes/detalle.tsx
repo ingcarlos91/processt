@@ -158,7 +158,7 @@ export function EventoDetalle({ empresaId, ev, cargos, peligros, peligrosEnMatri
         <Paso n={2} titulo={ev.tipo === "EL" ? "Reporte FUREL" : "Reporte a la ARL y autoridades"} descripcion="Dentro de los dos días hábiles siguientes. Guarde la fecha de radicado y suba el soporte." normas={["Decreto Ley 1295/1994 art. 62"]}>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <Field><FieldLabel htmlFor="r-f" className="flex items-center gap-1">Fecha de radicado {ev.tipo === "EL" ? "FUREL" : "FURAT"} <Ayuda k="evFurat" /></FieldLabel><Input id="r-f" type="date" value={rep.fechaReporte} onChange={(e) => setRep({ ...rep, fechaReporte: e.target.value })} /></Field>
-            <Field><FieldLabel htmlFor="r-n">Número de radicado</FieldLabel><Input id="r-n" value={rep.furatNumero} onChange={(e) => setRep({ ...rep, furatNumero: e.target.value })} /></Field>
+            <Field><FieldLabel htmlFor="r-n">Número de radicado</FieldLabel><Input id="r-n" placeholder="Ej.: 2026-004512" value={rep.furatNumero} onChange={(e) => setRep({ ...rep, furatNumero: e.target.value })} /></Field>
             {grave && <Field><FieldLabel htmlFor="r-m">Aviso al Ministerio del Trabajo</FieldLabel><Input id="r-m" type="date" value={rep.reporteMinisterio} onChange={(e) => setRep({ ...rep, reporteMinisterio: e.target.value })} /><FieldDescription>Accidente {GRAVEDAD[ev.gravedad].t.toLowerCase()} (ver PRC-08).</FieldDescription></Field>}
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -220,7 +220,7 @@ export function EventoDetalle({ empresaId, ev, cargos, peligros, peligrosEnMatri
               <div className="flex items-center gap-1 text-sm font-medium">Causas básicas: factores del trabajo <Ayuda k="evBasicas" /></div>
               <ListaTexto items={an.trabajo ?? []} onChange={(v) => setAn({ ...an, trabajo: v })} placeholder="Supervisión, procedimientos, mantenimiento, compras…" sugeridos={sug?.s.trabajo} />
             </div>
-            <Field className="lg:col-span-2"><FieldLabel htmlFor="i-c">Conclusión</FieldLabel><Textarea id="i-c" rows={2} value={an.conclusion ?? ""} onChange={(e) => setAn({ ...an, conclusion: e.target.value })} /></Field>
+            <Field className="lg:col-span-2"><FieldLabel htmlFor="i-c">Conclusión</FieldLabel><Textarea id="i-c" rows={2} placeholder="Resuma por qué ocurrió el evento y qué se debe cambiar" value={an.conclusion ?? ""} onChange={(e) => setAn({ ...an, conclusion: e.target.value })} /></Field>
           </fieldset>
 
           <div className="grid gap-4 lg:grid-cols-2">
@@ -232,12 +232,12 @@ export function EventoDetalle({ empresaId, ev, cargos, peligros, peligrosEnMatri
                     <Button size="xs" variant="outline" disabled={pend || !datos.cargoId} onClick={() => start(async () => { await A.guardarInvestigacion(empresaId, ev.id, { equipo, analisis: an, lecciones, peligroId }); const r = await A.agregarPeligroDelEvento(empresaId, ev.id); if ("error" in r && r.error) toast.error(r.error); else { toast.success("Peligro agregado a la matriz como sugerido; valórelo en Cargos y matriz"); router.refresh(); } })}><ShieldPlus /> Agregar a la matriz</Button></div>
                 : <p className="text-xs text-muted-foreground">Ya está en la matriz del cargo: revise su valoración y sus controles en <Link className="underline" href={`/empresas/${empresaId}/matriz`}>Cargos y matriz</Link>.</p>)}
             </div>
-            <Field><FieldLabel htmlFor="i-l" className="flex items-center gap-1">Lecciones aprendidas <Ayuda k="evLecciones" /></FieldLabel><Textarea id="i-l" rows={3} disabled={cerrada} value={lecciones} onChange={(e) => setLecciones(e.target.value)} /></Field>
+            <Field><FieldLabel htmlFor="i-l" className="flex items-center gap-1">Lecciones aprendidas <Ayuda k="evLecciones" /></FieldLabel><Textarea id="i-l" rows={3} placeholder="Describa qué aprendió la empresa y cómo evitará que se repita" disabled={cerrada} value={lecciones} onChange={(e) => setLecciones(e.target.value)} /></Field>
           </div>
 
           <div className="flex flex-wrap items-center gap-2 border-t pt-4">
             {!cerrada && <Button disabled={pend} onClick={() => guardarInv()}>{pend ? <Spinner /> : <Save />} Guardar investigación</Button>}
-            {!cerrada && <Pedir trigger={<Button variant="outline"><Lock /> Cerrar investigación</Button>} titulo="Cerrar investigación" descripcion="Se verifica que haya equipo, causas inmediatas y básicas, y al menos una medida. Escriba la fecha de cierre (AAAA-MM-DD)." label="Fecha de cierre" inicial={hoy()} accion="Cerrar"
+            {!cerrada && <Pedir trigger={<Button variant="outline"><Lock /> Cerrar investigación</Button>} titulo="Cerrar investigación" descripcion="Se verifica que haya equipo, causas inmediatas y básicas, y al menos una medida. Elija la fecha de cierre." label="Fecha de cierre" tipo="date" inicial={hoy()} accion="Cerrar"
               onConfirm={(f) => start(async () => { await A.guardarInvestigacion(empresaId, ev.id, { equipo, analisis: an, lecciones, peligroId: peligroId || null }); const r = await A.cerrarInvestigacion(empresaId, ev.id, f); if ("error" in r && r.error) toast.error(r.error); else { toast.success("Investigación cerrada. Descargue el informe FOR-07 para firmarlo."); router.refresh(); } })} />}
             {cerrada && <Button variant="outline" disabled={pend} onClick={() => run(() => A.reabrirInvestigacion(empresaId, ev.id), "Investigación reabierta")}><LockOpen /> Reabrir</Button>}
           </div>
@@ -273,7 +273,7 @@ export function EventoDetalle({ empresaId, ev, cargos, peligros, peligrosEnMatri
                       <TableCell><Badge variant={a.estado === "cerrada" ? "default" : "outline"}>{a.estado === "cerrada" ? `Cerrada ${fechaLarga(a.fechaCierre)}` : "Abierta"}</Badge>{a.enPlan && <div className="mt-1 text-xs text-muted-foreground">En plan anual ({a.enPlan})</div>}</TableCell>
                       <TableCell>
                         <div className="flex justify-end gap-0.5">
-                          {a.estado === "abierta" && <Pedir trigger={<Button size="icon-sm" variant="ghost" aria-label="Cerrar acción y verificar eficacia" />} titulo="Cerrar acción" descripcion="Describa cómo verificó que la acción funcionó: inspección, medición, seguimiento sin repetición del evento." label="Verificación de eficacia" accion="Cerrar acción" onConfirm={(v) => run(() => A.cerrarAccion(empresaId, a.id, { fechaCierre: hoy(), eficacia: v }), "Acción cerrada")}><CheckCircle2 /></Pedir>}
+                          {a.estado === "abierta" && <Pedir trigger={<Button size="icon-sm" variant="ghost" aria-label="Cerrar acción y verificar eficacia" />} titulo="Cerrar acción" descripcion="Describa cómo verificó que la acción funcionó: inspección, medición, seguimiento sin repetición del evento." label="Verificación de eficacia" placeholder="Describa cómo verificó que la acción funcionó" accion="Cerrar acción" onConfirm={(v) => run(() => A.cerrarAccion(empresaId, a.id, { fechaCierre: hoy(), eficacia: v }), "Acción cerrada")}><CheckCircle2 /></Pedir>}
                           {!a.enPlan && a.estado === "abierta" && <Button size="icon-sm" variant="ghost" aria-label="Llevar al plan anual de trabajo" disabled={pend} onClick={() => run(() => A.enviarAccionAlPlan(empresaId, a.id), "Acción agregada al plan anual")}><CalendarPlus /></Button>}
                           <Button size="icon-sm" variant="ghost" aria-label="Editar acción" onClick={() => setAcc({ id: a.id, hallazgo: a.hallazgo, causa: a.causa, tipo: a.tipo, jerarquia: a.jerarquia, descripcion: a.descripcion, responsable: a.responsable, fechaLimite: a.fechaLimite })}><Pencil /></Button>
                           <Confirmar trigger={<Button size="icon-sm" variant="ghost" aria-label="Eliminar acción" />} titulo="Eliminar acción" descripcion="Se quita del registro FOR-06." accion="Eliminar" destructivo onConfirm={() => run(() => A.eliminarAccion(empresaId, a.id), "Acción eliminada")}><Trash2 /></Confirmar>
@@ -309,9 +309,9 @@ export function EventoDetalle({ empresaId, ev, cargos, peligros, peligrosEnMatri
           <DialogHeader><DialogTitle>{acc?.id ? "Editar acción" : "Nueva acción"}</DialogTitle><DialogDescription>Se registra en el formato de acciones correctivas, preventivas y de mejora (FOR-06).</DialogDescription></DialogHeader>
           {acc && (
             <div className="grid gap-4 sm:grid-cols-2">
-              <Field className="sm:col-span-2"><FieldLabel htmlFor="a-d">Medida</FieldLabel><Textarea id="a-d" rows={2} value={acc.descripcion} onChange={(e) => setAcc({ ...acc, descripcion: e.target.value })} /></Field>
-              <Field className="sm:col-span-2"><FieldLabel htmlFor="a-h">Hallazgo</FieldLabel><Input id="a-h" value={acc.hallazgo} onChange={(e) => setAcc({ ...acc, hallazgo: e.target.value })} /></Field>
-              <Field className="sm:col-span-2"><FieldLabel htmlFor="a-c">Causa que ataca</FieldLabel><Combo id="a-c" value={acc.causa} onChange={(v) => setAcc({ ...acc, causa: v })} grupos={(() => {
+              <Field className="sm:col-span-2"><FieldLabel htmlFor="a-d">Medida</FieldLabel><Textarea id="a-d" rows={2} placeholder="Ej.: Instalar guarda de protección en la sierra circular" value={acc.descripcion} onChange={(e) => setAcc({ ...acc, descripcion: e.target.value })} /></Field>
+              <Field className="sm:col-span-2"><FieldLabel htmlFor="a-h">Hallazgo</FieldLabel><Input id="a-h" placeholder="Ej.: Sierra circular sin guarda de protección" value={acc.hallazgo} onChange={(e) => setAcc({ ...acc, hallazgo: e.target.value })} /></Field>
+              <Field className="sm:col-span-2"><FieldLabel htmlFor="a-c">Causa que ataca</FieldLabel><Combo id="a-c" placeholder="Seleccione la causa o escriba una" value={acc.causa} onChange={(v) => setAcc({ ...acc, causa: v })} grupos={(() => {
                 const forma = cat.formas.find((f) => f.nombre === datos.mecanismo);
                 const propias = [...(an.personales ?? []), ...(an.trabajo ?? []), ...(an.actos ?? []), ...(an.condiciones ?? [])].filter(Boolean);
                 const tipicas = forma ? [...forma.personales, ...forma.trabajo, ...forma.actos, ...forma.condiciones].filter((c) => !propias.includes(c)) : [];
@@ -322,7 +322,7 @@ export function EventoDetalle({ empresaId, ev, cargos, peligros, peligrosEnMatri
               })()} /></Field>
               <Field><FieldLabel htmlFor="a-t">Tipo</FieldLabel><Selector id="a-t" value={acc.tipo} onChange={(v) => setAcc({ ...acc, tipo: v })} opciones={[{ valor: "correctiva", etiqueta: "Correctiva" }, { valor: "preventiva", etiqueta: "Preventiva" }, { valor: "mejora", etiqueta: "De mejora" }]} /></Field>
               <Field><FieldLabel htmlFor="a-j" className="flex items-center gap-1">Jerarquía <Ayuda k="evJerarquia" /></FieldLabel><Selector id="a-j" value={acc.jerarquia} onChange={(v) => setAcc({ ...acc, jerarquia: v })} opciones={Object.entries(JERARQUIA).map(([k, v]) => ({ valor: k, etiqueta: v }))} /></Field>
-              <Field><FieldLabel htmlFor="a-r">Responsable</FieldLabel><Combo id="a-r" value={acc.responsable} onChange={(v) => setAcc({ ...acc, responsable: v })} grupos={[{ titulo: "Personas registradas", opciones: personas.map((p) => ({ valor: p })) }]} /></Field>
+              <Field><FieldLabel htmlFor="a-r">Responsable</FieldLabel><Combo id="a-r" placeholder="Seleccione o escriba el responsable" value={acc.responsable} onChange={(v) => setAcc({ ...acc, responsable: v })} grupos={[{ titulo: "Personas registradas", opciones: personas.map((p) => ({ valor: p })) }]} /></Field>
               <Field><FieldLabel htmlFor="a-f">Fecha límite</FieldLabel><Input id="a-f" type="date" value={acc.fechaLimite} onChange={(e) => setAcc({ ...acc, fechaLimite: e.target.value })} /></Field>
             </div>
           )}

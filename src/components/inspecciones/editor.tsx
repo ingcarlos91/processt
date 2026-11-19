@@ -1,4 +1,5 @@
 "use client";
+import { FilaAccion, type AccionUI } from "@/components/acciones/fila-accion";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { Check, ClipboardCheck, Minus, Plus, Trash2, X } from "lucide-react";
@@ -24,7 +25,7 @@ import { cn } from "@/lib/utils";
 
 type Lista = { nombre: string; descripcion: string; items: string[]; frecuenciaDias: number };
 type Item = { pregunta: string; resultado: "cumple" | "no_cumple" | "na"; observacion: string };
-type Ins = { id: string; lista: string; fecha: string; lugar: string; responsable: string; participantes: string; observaciones: string; items: Item[]; acciones: { id: string; descripcion: string; estado: string; responsable: string; fechaLimite: string }[]; archivos: ArchivoUI[] };
+type Ins = { id: string; lista: string; fecha: string; lugar: string; responsable: string; participantes: string; observaciones: string; items: Item[]; acciones: AccionUI[]; archivos: ArchivoUI[] };
 
 const hoy = () => new Date().toISOString().slice(0, 10);
 const en30 = () => new Date(Date.now() + 30 * 864e5).toISOString().slice(0, 10);
@@ -93,9 +94,9 @@ export function InspeccionesEditor({ empresaId, inspecciones, listas, lugares, p
             <div className="space-y-5">
               <div className="grid gap-4 sm:grid-cols-4">
                 <Field><FieldLabel htmlFor="i-f">Fecha</FieldLabel><Input id="i-f" type="date" value={nueva.fecha} onChange={(e) => setNueva({ ...nueva, fecha: e.target.value })} /></Field>
-                <Field><FieldLabel>Lugar</FieldLabel><Combo value={nueva.lugar} onChange={(v) => setNueva({ ...nueva, lugar: v })} grupos={[{ titulo: "Sedes y zonas", opciones: lugares.map((x) => ({ valor: x })) }]} /></Field>
-                <Field><FieldLabel>Responsable</FieldLabel><Combo value={nueva.responsable} onChange={(v) => setNueva({ ...nueva, responsable: v })} grupos={[{ titulo: "Personas", opciones: personas.map((x) => ({ valor: x })) }]} /></Field>
-                <Field><FieldLabel>Acompañó (COPASST / Vigía)</FieldLabel><Combo value={nueva.participantes} onChange={(v) => setNueva({ ...nueva, participantes: v })} grupos={[{ titulo: "Personas", opciones: personas.map((x) => ({ valor: x })) }]} /></Field>
+                <Field><FieldLabel>Lugar</FieldLabel><Combo value={nueva.lugar} placeholder="Seleccione o escriba el lugar" onChange={(v) => setNueva({ ...nueva, lugar: v })} grupos={[{ titulo: "Sedes y zonas", opciones: lugares.map((x) => ({ valor: x })) }]} /></Field>
+                <Field><FieldLabel>Responsable</FieldLabel><Combo value={nueva.responsable} placeholder="Seleccione o escriba el responsable" onChange={(v) => setNueva({ ...nueva, responsable: v })} grupos={[{ titulo: "Personas", opciones: personas.map((x) => ({ valor: x })) }]} /></Field>
+                <Field><FieldLabel>Acompañó (COPASST / Vigía)</FieldLabel><Combo value={nueva.participantes} placeholder="Seleccione o escriba quién acompañó" onChange={(v) => setNueva({ ...nueva, participantes: v })} grupos={[{ titulo: "Personas", opciones: personas.map((x) => ({ valor: x })) }]} /></Field>
               </div>
               <div className="flex items-center gap-3 text-sm"><span className="text-muted-foreground">{calificados} de {nueva.items.length} calificados</span><Progress className="flex-1" value={(calificados / Math.max(1, nueva.items.length)) * 100} />
                 <Button size="xs" variant="ghost" onClick={() => setNueva({ ...nueva, items: nueva.items.map((i) => (i.resultado ? i : { ...i, resultado: "cumple" })) })}>Marcar pendientes como “cumple”</Button></div>
@@ -115,6 +116,7 @@ export function InspeccionesEditor({ empresaId, inspecciones, listas, lugares, p
                     {it.resultado && it.resultado !== "cumple" && <Input className="mt-2" placeholder="Observación (qué se encontró)" value={it.observacion ?? ""} onChange={(e) => setItem(i, { observacion: e.target.value })} />}
                     {it.resultado === "no_cumple" && it.accion && (
                       <div className="mt-2 grid gap-2 sm:grid-cols-[1fr_12rem_9rem]">
+                        <Input className="sm:col-span-3" placeholder="Causa raíz: por qué ocurre (opcional; también se puede agregar después)" value={it.accion.causa ?? ""} onChange={(e) => setItem(i, { accion: { ...it.accion!, causa: e.target.value } })} />
                         <Input placeholder="Acción correctiva (deje vacío para no crearla)" value={it.accion.descripcion} onChange={(e) => setItem(i, { accion: { ...it.accion!, descripcion: e.target.value } })} />
                         <Input placeholder="Responsable" value={it.accion.responsable ?? ""} onChange={(e) => setItem(i, { accion: { ...it.accion!, responsable: e.target.value } })} />
                         <Input type="date" value={it.accion.fechaLimite ?? ""} onChange={(e) => setItem(i, { accion: { ...it.accion!, fechaLimite: e.target.value } })} />
@@ -123,7 +125,7 @@ export function InspeccionesEditor({ empresaId, inspecciones, listas, lugares, p
                   </li>
                 ))}
               </ol>
-              <Field><FieldLabel htmlFor="i-o">Observaciones generales</FieldLabel><Textarea id="i-o" rows={2} value={nueva.observaciones} onChange={(e) => setNueva({ ...nueva, observaciones: e.target.value })} /></Field>
+              <Field><FieldLabel htmlFor="i-o">Observaciones generales</FieldLabel><Textarea id="i-o" rows={2} placeholder="Describa lo más relevante que se encontró" value={nueva.observaciones} onChange={(e) => setNueva({ ...nueva, observaciones: e.target.value })} /></Field>
             </div>
           )}
           <DialogFooter>
@@ -156,7 +158,7 @@ export function InspeccionesEditor({ empresaId, inspecciones, listas, lugares, p
                 </section>
                 <section className="space-y-2">
                   <h3 className="text-sm font-semibold">Acciones creadas</h3>
-                  {insVer.acciones.length === 0 ? <p className="text-sm text-muted-foreground">Ninguna.</p> : insVer.acciones.map((a) => <div key={a.id} className="flex gap-2 text-sm"><Badge variant={a.estado === "cerrada" ? "default" : "outline"}>{a.estado === "cerrada" ? "Cerrada" : "Abierta"}</Badge><span className="flex-1">{a.descripcion}<span className="block text-xs text-muted-foreground">{a.responsable}{a.fechaLimite ? ` · ${fecha(a.fechaLimite)}` : ""}</span></span></div>)}
+                  {insVer.acciones.length === 0 ? <p className="text-sm text-muted-foreground">Ninguna.</p> : insVer.acciones.map((a) => <FilaAccion key={a.id} empresaId={empresaId} a={a} />)}
                 </section>
                 <section className="space-y-2">
                   <div className="flex items-center justify-between"><h3 className="text-sm font-semibold">Fotos y registro firmado</h3><SubirArchivo empresaId={empresaId} ctx={{ tipo: "EVIDENCIA", inspeccionId: insVer.id }} titulo="Subir foto o registro" trigger={<Button size="xs"><Plus /> Subir</Button>} descripcionInicial={`${insVer.lista} ${insVer.lugar}`.trim()} ayuda="Fotos de los hallazgos o el formato firmado. Quedan como soporte del estándar 4.2.4." /></div>

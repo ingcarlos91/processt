@@ -14,9 +14,9 @@ export async function informeAuditoria(auditoriaId: string) {
   const r = resumenAuditoria(items);
   const md = `## Datos de la auditoría
 
-| Campo | |
+| Campo | Información |
 |---|---|
-| Empresa | ${c(e.razonSocial)} — NIT ${c(e.nit)} |
+| Empresa | ${c(e.razonSocial)} — NIT ${c(e.digitoVerificacion ? `${e.nit}-${e.digitoVerificacion}` : e.nit)} |
 | Periodo auditado | ${a.anio} |
 | Fecha de inicio | ${fecha(a.fechaInicio)} |
 | Fecha de cierre | ${fecha(a.fechaCierre)} |

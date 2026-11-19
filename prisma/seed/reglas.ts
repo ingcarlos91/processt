@@ -57,5 +57,5 @@ export const reglas: ReglaSeed[] = [
   { codigo: "ALTO-RIESGO-PENSION", nombre: "Cotización especial de pensión", prioridad: 30,
     condicion: { disparador: "altoRiesgoPension" }, efecto: { mensaje: "Verificar cotización especial de pensión para trabajadores en actividades de alto riesgo." }, normaRef: "Decreto 2090/2003" },
   { codigo: "APRENDICES", nombre: "Aprendices y practicantes", prioridad: 30,
-    condicion: { aprendicesMin: 1 }, efecto: { mensaje: "Verificar afiliación a ARL de aprendices y practicantes e incluirlos en inducción y capacitación." }, normaRef: "Decreto 0223/2026 (verificar); Decreto 1072/2015 art. 2.2.4.6.11" },
+    condicion: { aprendicesMin: 1 }, efecto: { mensaje: "Verificar afiliación a ARL de aprendices y practicantes e incluirlos en inducción y capacitación." }, normaRef: "Decreto 1072/2015 art. 2.2.4.6.11" },
 ];

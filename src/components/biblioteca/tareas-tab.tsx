@@ -64,8 +64,8 @@ export function TareasTab({ tareas, peligros, zonas, empresaId }: { tareas: T[];
                     <TableCell />
                     <TableCell colSpan={5} className="pr-6 py-3 space-y-3">
                       <div className="grid md:grid-cols-4 gap-3">
-                        <Field><FieldLabel className="text-xs">Nombre</FieldLabel><Input defaultValue={t.nombre} onBlur={(e) => e.target.value !== t.nombre && run(() => A.actualizarTareaTipo(t.id, { nombre: e.target.value }))} /></Field>
-                        <Field><FieldLabel className="text-xs">Actividad</FieldLabel><Input defaultValue={t.actividad} onBlur={(e) => e.target.value !== t.actividad && run(() => A.actualizarTareaTipo(t.id, { actividad: e.target.value }))} /></Field>
+                        <Field><FieldLabel className="text-xs">Nombre</FieldLabel><Input defaultValue={t.nombre} placeholder="Ej.: Cargue y descargue de mercancía" onBlur={(e) => e.target.value !== t.nombre && run(() => A.actualizarTareaTipo(t.id, { nombre: e.target.value }))} /></Field>
+                        <Field><FieldLabel className="text-xs">Actividad</FieldLabel><Input defaultValue={t.actividad} placeholder="Ej.: Almacenamiento" onBlur={(e) => e.target.value !== t.actividad && run(() => A.actualizarTareaTipo(t.id, { actividad: e.target.value }))} /></Field>
                         <Field><FieldLabel className="text-xs">Tarea de alto riesgo</FieldLabel><NativeSelect className="w-full" value={t.altoRiesgo ?? ""} onChange={(e) => run(() => A.actualizarTareaTipo(t.id, { altoRiesgo: e.target.value || null }))}>{ALTO.map(([v, l]) => <NativeSelectOption key={v} value={v}>{l}</NativeSelectOption>)}</NativeSelect></Field>
                         <Field orientation="horizontal" className="pt-6"><Switch checked={t.rutinaria} onCheckedChange={(v) => run(() => A.actualizarTareaTipo(t.id, { rutinaria: v }))} /><FieldLabel className="font-normal">Rutinaria</FieldLabel></Field>
                       </div>

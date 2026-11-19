@@ -31,7 +31,7 @@ Todo trabajador y contratista puede reportar condiciones inseguras, actos insegu
 
 ## Formato de autorreporte
 
-| Campo | |
+| Campo | Información |
 |---|---|
 | Fecha | |
 | Nombre (opcional) | |

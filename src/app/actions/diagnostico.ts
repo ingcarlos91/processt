@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 import { requiereUsuario } from "@/lib/auth/sesion";
 import { recalcularEmpresa } from "@/lib/empresa";
 import { prepararEstructura, aplicarCargoTipo, sugerirCargoTipo } from "@/lib/matriz/instanciar";
-import { MAPA_ESTADO_ACTUAL, calcularDiagnostico, aEstadoEvaluacion, type ItemDiag } from "@/lib/diagnostico";
+import { MAPA_ESTADO_ACTUAL, calcularDiagnostico, aEstadoEvaluacion, noAplicaInvalidos, type ItemDiag } from "@/lib/diagnostico";
 import { cerrarEvaluacion, generarPlanAnual, generarTodo } from "@/app/actions/sgsst";
 import { anioPlanDefecto } from "@/lib/plan/generar";
 
@@ -52,6 +52,9 @@ export async function cerrarDiagnostico(empresaId: string, id: string) {
   if (sin.length) return { error: `Falta evaluar: ${sin.slice(0, 8).join(", ")}${sin.length > 8 ? "…" : ""}.` };
   const sinJust = items.filter((i) => i.estado === "no_aplica" && !i.observacion.trim()).map((i) => i.codigo);
   if (sinJust.length) return { error: `Justifique los “no aplica”: ${sinJust.join(", ")}.` };
+  const emp = await db.empresa.findUniqueOrThrow({ where: { id: empresaId }, select: { resultadoReglas: true } });
+  const invalidos = noAplicaInvalidos(items, ((emp.resultadoReglas as { comites?: string[] } | null)?.comites ?? []));
+  if (invalidos.length) return { error: `${invalidos.join(", ")} no puede ser «no aplica»: la norma exige ese comité a esta empresa. Márquelo «cumple» o «no cumple».` };
   await db.diagnostico.update({ where: { id }, data: { estado: "cerrado", cerradoEn: new Date() } });
   rv(empresaId);
   return { ok: true as const };

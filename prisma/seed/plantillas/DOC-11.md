@@ -9,7 +9,7 @@ normas: ["DEC-1072-2015","RES-0312-2019"]
 ---
 ## Datos
 
-| Campo | |
+| Campo | Información |
 |---|---|
 | Periodo | {{anio}} |
 | Quien rinde cuentas | |

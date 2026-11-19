@@ -64,7 +64,7 @@ export async function cerrarAuditoria(empresaId: string, id: string, fechaCierre
     const ya = await db.accion.findFirst({ where: { auditoriaId: id, hallazgo: { startsWith: `Auditoría ${a.anio} — ${i.aspecto}` } } });
     if (ya) continue;
     await db.accion.create({ data: {
-      empresaId, auditoriaId: id, origen: "auditoria", fecha, hallazgo: `Auditoría ${a.anio} — ${i.aspecto}: ${i.hallazgo}`, causa: null,
+      empresaId, auditoriaId: id, origen: "auditoria", fecha, hallazgo: `Auditoría ${a.anio} — ${i.aspecto}: ${i.hallazgo}`, causa: i.accion.causa?.trim() || null,
       tipo: "correctiva", jerarquia: "administrativo", descripcion: i.accion.descripcion.trim(), responsable: i.accion.responsable || null, fechaLimite: dia(i.accion.fechaLimite),
     } });
     n++;

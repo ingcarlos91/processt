@@ -205,6 +205,11 @@ export async function construirContexto(empresaId: string) {
     ...(dis.alturas ? [{ rubro: "Trabajo en alturas", descripcion: "Certificación, equipos de protección contra caídas, coordinador", estandar: "4.2.3" }] : []),
   ];
 
+  // Cada rubro cita un estándar que aplique a la empresa (7, 21 o 60): si el sugerido no aplica, el equivalente más cercano.
+  const ALTERNO: Record<string, string[]> = { "3.1.7": ["3.1.2", "2.4.1"], "4.2.3": ["4.2.1", "4.1.2"], "4.2.1": ["4.1.2"], "4.2.5": ["4.1.2"], "4.1.4": ["4.1.2"], "5.1.1": ["2.4.1"], "1.1.3": ["2.4.1"] };
+  const aplicaEst = new Set(rr.estandares);
+  for (const r of presupuesto) if (!aplicaEst.has(r.estandar)) r.estandar = (ALTERNO[r.estandar] ?? []).find((x) => aplicaEst.has(x)) ?? r.estandar;
+
   // ── Datos complementarios (con espacios en blanco si faltan, para que el documento siga siendo imprimible) ──
   const comp = (e.datosComplementarios ?? {}) as Complementarios;
   const B = "______________________";
@@ -247,6 +252,8 @@ export async function construirContexto(empresaId: string) {
       presidente: miembros.find((m) => m.rol === "presidente")?.nombre ?? B, secretario: miembros.find((m) => m.rol === "secretario")?.nombre ?? B,
       empleador: miembros.filter((m) => m.representa === "Empleador"), trabajadores: miembros.filter((m) => m.representa === "Trabajadores"),
       eleccion: {
+        // La convocatoria abre las inscripciones: se fecha el día en que inician (antes de la votación), no el de generación.
+        convocatoria: fmtIso(d.fechaConvocatoria) || fmtIso(d.inscripcionDesde) || "",
         inscripcionDesde: fmtIso(d.inscripcionDesde) || "______", inscripcionHasta: fmtIso(d.inscripcionHasta) || "______",
         fechaVotacion: fmtIso(d.fechaVotacion) || "______", lugar: String(d.lugar ?? "") || "______", horario: String(d.horario ?? "") || "______",
         resultados: (Array.isArray(d.resultados) ? d.resultados : []) as { candidato: string; votos: string }[],
@@ -420,7 +427,7 @@ export async function contextoNomina(empresaId: string) {
     concepto: CONCEPTO[x.concepto] ?? x.concepto, restricciones: x.restricciones?.trim() || (x.concepto === "apto" ? "Ninguna" : "Sin registrar"), comunicado: ddmm(x.comunicadoTrabajador) || "Sin registrar", proximo: ddmm(x.proximo),
   }));
   const entregas = ts.flatMap((t) => t.entregasEpp.map((x) => ({ t, x }))).sort((a, b) => b.x.fecha.getTime() - a.x.fecha.getTime()).map(({ t, x }) => ({
-    fecha: ddmm(x.fecha), trabajador: t.nombres, doc: doc(t), cargo: t.cargo?.nombre ?? "", elemento: x.elemento, cantidad: x.cantidad, tipo: x.tipo === "reposicion" ? "Reposición" : "Dotación", capacitado: x.capacitado ? "S" : "N",
+    fecha: ddmm(x.fecha), trabajador: t.nombres, doc: doc(t), cargo: t.cargo?.nombre ?? "", elemento: x.elemento, cantidad: x.cantidad, tipo: x.tipo === "reposicion" ? "Reposición" : "Dotación", capacitado: x.capacitado ? "S" : "N", proxima: ddmm(x.proximaReposicion) || "Según desgaste",
   }));
   const capacitados = new Set(caps.flatMap((c) => c.asistentes.map((a) => a.trabajadorId)));
   const hoy = new Date();

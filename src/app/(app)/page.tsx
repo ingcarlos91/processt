@@ -77,15 +77,12 @@ export default async function Home() {
           <Section title="Empresas" description="Pase el mouse sobre los datos para ver el detalle." contentClassName="px-0">
             <Table>
               <TableHeader>
-                <TableRow><TableHead className="pl-6">Empresa</TableHead><TableHead>Riesgo</TableHead><TableHead>Trab.</TableHead><TableHead>Nivel</TableHead><TableHead>Estándares</TableHead><TableHead>Plan anual</TableHead><TableHead>Matriz</TableHead><TableHead>Documentos firmados</TableHead><TableHead>Horas del mes</TableHead><TableHead className="pr-6">Pendientes</TableHead></TableRow>
+                <TableRow><TableHead className="pl-6">Empresa</TableHead><TableHead>Estándares</TableHead><TableHead>Plan anual</TableHead><TableHead>Matriz</TableHead><TableHead>Firmados</TableHead><TableHead>Horas</TableHead><TableHead className="pr-6">Pendientes</TableHead></TableRow>
               </TableHeader>
               <TableBody>
                 {filas.map((e) => (
                   <TableRow key={e.id}>
-                    <TableCell className="pl-6"><Link href={`/empresas/${e.id}`} className="font-medium hover:underline">{e.nombre}</Link>{e.etapa === "diagnostico" && <Badge variant="outline" className="ml-2 border-violet-300 text-violet-700">En diagnóstico</Badge>}<div className="text-xs text-muted-foreground">NIT {e.nit}</div></TableCell>
-                    <TableCell>{ROMANO[e.claseRiesgo]}</TableCell>
-                    <TableCell>{e.trabajadores}</TableCell>
-                    <TableCell><Badge variant="outline">{e.nivel}</Badge></TableCell>
+                    <TableCell className="pl-6"><Link href={`/empresas/${e.id}`} className="font-medium hover:underline">{e.nombre}</Link>{e.etapa === "diagnostico" && <Badge variant="outline" className="ml-2 border-violet-300 text-violet-700">En diagnóstico</Badge>}<div className="text-xs text-muted-foreground">NIT {e.nit} · Riesgo {ROMANO[e.claseRiesgo]} · {e.trabajadores} trab. · {e.nivel} estándares</div></TableCell>
                     <TableCell>{e.valoracion ? <Tip texto={`Autoevaluación del ${e.evaluacionFecha?.slice(0, 10)}`}><Badge variant={VARIANTE[e.valoracion]}>{e.puntaje}% · {e.valoracion.toLowerCase()}</Badge></Tip> : <span className="text-xs text-muted-foreground">Sin evaluar</span>}</TableCell>
                     <TableCell>{e.planTotal ? <Tip texto={`${e.planEjecutadas} de ${e.planTotal} actividades del año ejecutadas; ${e.planVencidas} vencidas`}><div className="w-24"><div className="text-xs">{pct(e.planEjecutadas, e.planTotal)}%</div><Progress value={pct(e.planEjecutadas, e.planTotal)} /></div></Tip> : <span className="text-xs text-muted-foreground">Sin plan este año</span>}</TableCell>
                     <TableCell className="text-xs"><Tip texto={`${e.peligros} peligros aprobados; ${e.prioritarios} en nivel I o II; ${e.sugeridosMatriz} sugeridos sin revisar`}><span>{e.peligros} · <span className={e.prioritarios ? "font-medium text-orange-700" : ""}>{e.prioritarios} prioritarios</span></span></Tip></TableCell>

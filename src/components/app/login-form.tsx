@@ -21,11 +21,11 @@ export function LoginForm({ desde }: { desde: string }) {
         <input type="hidden" name="desde" value={desde} />
         <Field>
           <FieldLabel htmlFor="email">Correo</FieldLabel>
-          <Input id="email" name="email" type="email" autoComplete="username" required defaultValue={estado?.email} />
+          <Input id="email" placeholder="nombre@empresa.com" name="email" type="email" autoComplete="username" required defaultValue={estado?.email} />
         </Field>
         <Field>
           <FieldLabel htmlFor="password">Contraseña</FieldLabel>
-          <Input id="password" name="password" type="password" autoComplete="current-password" required />
+          <Input id="password" placeholder="Su contraseña" name="password" type="password" autoComplete="current-password" required />
           <FieldDescription>¿Olvidó la contraseña? El administrador puede restablecerla.</FieldDescription>
         </Field>
         <Button type="submit" disabled={pend}>{pend ? <Spinner /> : <LogIn />} Ingresar</Button>

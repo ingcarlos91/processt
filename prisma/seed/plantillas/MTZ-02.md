@@ -9,7 +9,7 @@ normas: ["GTC-45-2012","DEC-1072-2015","RES-0312-2019"]
 ---
 ## Información general
 
-| Campo | |
+| Campo | Información |
 |---|---|
 | Empresa | {{empresa.razonSocial}} — NIT {{empresa.nit}} |
 | Metodología | GTC 45 (ver PRC-10) |

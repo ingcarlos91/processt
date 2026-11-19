@@ -24,15 +24,14 @@ Garantizar el mantenimiento periódico de instalaciones, equipos, máquinas y he
 | Extintores (recarga) | | Preventivo | Anual | Proveedor certificado | |
 | Equipos de cómputo | | Preventivo | Semestral | | |
 | Aire acondicionado / ventilación | | Preventivo | Semestral | | |
-{{/if}}
 {{#if dis.maquinaria}}| Máquinas de producción (completar inventario) | | Preventivo | Según fabricante | | |
 {{/if}}{{#if dis.conduccion}}| Vehículos (completar inventario) | | Preventivo | Según kilometraje | | |
 {{/if}}{{#if dis.izaje}}| Montacargas / equipos de izaje (completar inventario) | | Preventivo y certificación | Según fabricante | | |
-{{/if}}
+{{/if}}{{/if}}
 
 ## Hoja de vida de equipos
 
-| Campo | |
+| Campo | Información |
 |---|---|
 | Equipo | |
 | Marca / modelo / serie | |

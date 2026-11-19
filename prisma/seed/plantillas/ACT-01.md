@@ -54,7 +54,7 @@ ______________________________________
 {{else}}
 ## Convocatoria a elecciones
 
-{{empresa.ciudad}}, {{fecha}}
+{{empresa.ciudad}}, {{#if integrantes.copasst.eleccion.convocatoria}}{{integrantes.copasst.eleccion.convocatoria}}{{else}}{{fecha}}{{/if}}
 
 La gerencia de {{empresa.razonSocial}} convoca a todos los trabajadores a inscribir sus candidatos y participar en la elección de sus representantes ante el COPASST para el periodo de dos (2) años.
 

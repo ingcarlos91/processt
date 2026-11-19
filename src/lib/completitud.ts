@@ -7,7 +7,8 @@ import { camposAplicables, type Complementarios, type Persona } from "@/lib/comp
 export type Faltante = { id: string; grupo: string; dato: string; detalle?: string; href: string; boton: string; docs: string[] };
 
 const vacio = (v: unknown) => !String(v ?? "").trim();
-const NOMBRE_COMITE: Record<string, string> = { COPASST: "COPASST", VIGIA: "Vigía de SST", CCL: "Comité de Convivencia Laboral", BRIGADA: "Brigada de emergencias" };
+// Con artículo, para frases como «Integrantes del COPASST» o «Integrantes de la Brigada».
+const NOMBRE_COMITE: Record<string, string> = { COPASST: "del COPASST", VIGIA: "del Vigía de SST", CCL: "del Comité de Convivencia Laboral", BRIGADA: "de la Brigada de emergencias" };
 const CLAVE_COMITE: Record<string, string> = { COPASST: "copasst", VIGIA: "copasst", CCL: "ccl", BRIGADA: "brigada" };
 
 export async function completitud(empresaId: string) {
@@ -79,12 +80,12 @@ export async function completitud(empresaId: string) {
     const com = e.comites.find((x) => x.tipo === tipo || (tipo === "COPASST" && x.tipo === "VIGIA") || (tipo === "VIGIA" && x.tipo === "COPASST"));
     const k = CLAVE_COMITE[tipo] ?? tipo.toLowerCase();
     const re = new RegExp(`integrantes\\.${k}\\b`);
-    const nombre = NOMBRE_COMITE[com?.tipo ?? tipo] ?? tipo;
+    const nombre = NOMBRE_COMITE[com?.tipo ?? tipo] ?? `del ${tipo}`;
     const g = { grupo: "Comités", href: `${B}/comites`, boton: "Ir a Comités" };
-    if (!com?.miembros.length) { add({ id: `com-${k}`, ...g, dato: `Integrantes del ${nombre}`, re }); continue; }
-    if (tipo !== "BRIGADA" && (!com.periodoInicio || !com.periodoFin)) add({ id: `com-${k}-per`, ...g, dato: `Periodo del ${nombre}`, detalle: "Fecha de conformación y vencimiento", re: new RegExp(`integrantes\\.${k}\\.(inicio|fin)`) });
+    if (!com?.miembros.length) { add({ id: `com-${k}`, ...g, dato: `Integrantes ${nombre}`, re }); continue; }
+    if (tipo !== "BRIGADA" && (!com.periodoInicio || !com.periodoFin)) add({ id: `com-${k}-per`, ...g, dato: `Periodo ${nombre}`, detalle: "Fecha de conformación y vencimiento", re: new RegExp(`integrantes\\.${k}\\.(inicio|fin)`) });
     const sinDoc = com.miembros.filter((m) => vacio(m.cedula));
-    if (sinDoc.length) add({ id: `com-${k}-doc`, ...g, dato: `Documento de integrantes del ${nombre}`, detalle: sinDoc.map((m) => m.nombre).join(", "), re: new RegExp(`integrantes\\.${k}|each (miembros|empleador|trabajadores)`) });
+    if (sinDoc.length) add({ id: `com-${k}-doc`, ...g, dato: `Documento de integrantes ${nombre}`, detalle: sinDoc.map((m) => m.nombre).join(", "), re: new RegExp(`integrantes\\.${k}|each (miembros|empleador|trabajadores)`) });
     if (k === "copasst" && com.tipo === "COPASST") {
       const d = (com.datos ?? {}) as Record<string, unknown>;
       if (vacio(d.fechaVotacion) || !(Array.isArray(d.resultados) && d.resultados.length)) add({ id: "com-eleccion", ...g, dato: "Datos de la elección del COPASST", detalle: "Inscripción, votación, resultados y jurados", re: /integrantes\.copasst\.eleccion/ });

@@ -615,6 +615,7 @@ model Plantilla {
   documentos   Documento[]
 
   @@map("plantilla")
+  editadaPorUsuario Boolean @default(false) @map("editada_por_usuario") // si la consultora la editó, los despliegues no la sobrescriben
 }
 
 model Documento {

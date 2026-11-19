@@ -57,7 +57,7 @@ export function EventoForm({ d, set, cargos, cat, lugares }: { d: DatosEvento; s
       <FieldSet>
         <FieldLegend variant="label">Persona afectada</FieldLegend>
         <div className="grid gap-4 sm:grid-cols-3">
-          <Field><Etiqueta htmlFor="ev-n">Nombre</Etiqueta><Input id="ev-n" value={d.trabajadorNombre ?? ""} onChange={(e) => u("trabajadorNombre", e.target.value)} /></Field>
+          <Field><Etiqueta htmlFor="ev-n">Nombre</Etiqueta><Input id="ev-n" placeholder="Nombres y apellidos" value={d.trabajadorNombre ?? ""} onChange={(e) => u("trabajadorNombre", e.target.value)} /></Field>
           <Field><Etiqueta htmlFor="ev-c" k="documentoIdentidad">Documento</Etiqueta><CampoDocumento id="ev-c" tipo={d.trabajadorTipoDoc} numero={d.trabajadorCedula} onTipo={(v) => u("trabajadorTipoDoc", v)} onNumero={(v) => u("trabajadorCedula", v)} /></Field>
           <Field>
             <Etiqueta htmlFor="ev-v" k="evVinculacion">Vinculación</Etiqueta>
@@ -69,7 +69,7 @@ export function EventoForm({ d, set, cargos, cat, lugares }: { d: DatosEvento; s
             <FieldDescription>Se usa para revisar su matriz de peligros.</FieldDescription>
           </Field>
           {!esAus && <Field><Etiqueta htmlFor="ev-a">Antigüedad en el cargo</Etiqueta><Input id="ev-a" value={d.antiguedad ?? ""} placeholder="Ej: 8 meses" onChange={(e) => u("antiguedad", e.target.value)} /></Field>}
-          {!esAus && <Field><Etiqueta htmlFor="ev-ta">Tarea que realizaba</Etiqueta><Combo id="ev-ta" value={d.tarea} onChange={(v) => u("tarea", v)} grupos={cargo ? [{ titulo: `Tareas del cargo ${cargo.nombre}`, opciones: cargo.tareas.map((t) => ({ valor: t })) }] : [{ opciones: tareasOtro.map((t) => ({ valor: t })) }]} /></Field>}
+          {!esAus && <Field><Etiqueta htmlFor="ev-ta">Tarea que realizaba</Etiqueta><Combo id="ev-ta" placeholder="Seleccione o escriba la tarea" value={d.tarea} onChange={(v) => u("tarea", v)} grupos={cargo ? [{ titulo: `Tareas del cargo ${cargo.nombre}`, opciones: cargo.tareas.map((t) => ({ valor: t })) }] : [{ opciones: tareasOtro.map((t) => ({ valor: t })) }]} /></Field>}
         </div>
       </FieldSet>
 
@@ -78,10 +78,10 @@ export function EventoForm({ d, set, cargos, cat, lugares }: { d: DatosEvento; s
           <FieldLegend variant="label">Qué pasó</FieldLegend>
           <Field><Etiqueta htmlFor="ev-d">Descripción</Etiqueta><Textarea id="ev-d" rows={4} value={d.descripcion ?? ""} placeholder="Qué hacía, qué pasó, cómo, con qué. Relato del trabajador y de los testigos. Sin diagnósticos médicos." onChange={(e) => u("descripcion", e.target.value)} /></Field>
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field><Etiqueta htmlFor="ev-m" k="evMecanismo">Forma del evento</Etiqueta><Combo id="ev-m" value={d.mecanismo} onChange={(v) => u("mecanismo", v)} grupos={grupos(cat.formas.map((f) => ({ id: f.id, nombre: f.nombre, descripcion: f.descripcion })))} /></Field>
-            <Field><Etiqueta htmlFor="ev-ag" k="evAgente">Agente</Etiqueta><Combo id="ev-ag" value={d.agente} onChange={(v) => u("agente", v)} grupos={grupos(cat.agentes, forma?.agentes)} /></Field>
-            {esAT && <Field><Etiqueta htmlFor="ev-le" k="evLesion">Tipo de lesión</Etiqueta><Combo id="ev-le" value={d.lesion} onChange={(v) => u("lesion", v)} grupos={grupos(cat.lesiones, forma?.lesiones)} /></Field>}
-            {esAT && <Field><Etiqueta htmlFor="ev-p" k="evParte">Parte del cuerpo</Etiqueta><Combo id="ev-p" value={d.parteCuerpo} onChange={(v) => u("parteCuerpo", v)} grupos={grupos(cat.partes, forma?.partes, "Típicas para esta forma de evento")} /></Field>}
+            <Field><Etiqueta htmlFor="ev-m" k="evMecanismo">Forma del evento</Etiqueta><Combo id="ev-m" placeholder="Seleccione o escriba la forma" value={d.mecanismo} onChange={(v) => u("mecanismo", v)} grupos={grupos(cat.formas.map((f) => ({ id: f.id, nombre: f.nombre, descripcion: f.descripcion })))} /></Field>
+            <Field><Etiqueta htmlFor="ev-ag" k="evAgente">Agente</Etiqueta><Combo id="ev-ag" placeholder="Seleccione o escriba el agente" value={d.agente} onChange={(v) => u("agente", v)} grupos={grupos(cat.agentes, forma?.agentes)} /></Field>
+            {esAT && <Field><Etiqueta htmlFor="ev-le" k="evLesion">Tipo de lesión</Etiqueta><Combo id="ev-le" placeholder="Seleccione o escriba la lesión" value={d.lesion} onChange={(v) => u("lesion", v)} grupos={grupos(cat.lesiones, forma?.lesiones)} /></Field>}
+            {esAT && <Field><Etiqueta htmlFor="ev-p" k="evParte">Parte del cuerpo</Etiqueta><Combo id="ev-p" placeholder="Seleccione o escriba la parte del cuerpo" value={d.parteCuerpo} onChange={(v) => u("parteCuerpo", v)} grupos={grupos(cat.partes, forma?.partes, "Típicas para esta forma de evento")} /></Field>}
             {esAT && lesion?.sugiereGrave && d.gravedad === "leve" && (
               <div className="flex flex-wrap items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800 sm:col-span-2">
                 <span className="flex-1">{lesion.descripcion || "Esta lesión puede clasificar el accidente como grave"} (Res. 1401/2007 art. 3).</span>
@@ -97,8 +97,8 @@ export function EventoForm({ d, set, cargos, cat, lugares }: { d: DatosEvento; s
         <FieldSet>
           <FieldLegend variant="label">Incapacidad</FieldLegend>
           <div className="grid gap-4 sm:grid-cols-3">
-            <Field><Etiqueta htmlFor="ev-di" k="evDias">Días de incapacidad</Etiqueta><Input id="ev-di" type="number" min={0} value={d.diasIncapacidad ?? 0} onChange={(e) => u("diasIncapacidad", Number(e.target.value))} /></Field>
-            {esAT && <Field><Etiqueta htmlFor="ev-dc" k="evDiasCargados">Días cargados</Etiqueta><Input id="ev-dc" type="number" min={0} value={d.diasCargados ?? 0} onChange={(e) => u("diasCargados", Number(e.target.value))} /></Field>}
+            <Field><Etiqueta htmlFor="ev-di" k="evDias">Días de incapacidad</Etiqueta><Input id="ev-di" type="number" min={0} placeholder="Ej.: 3" value={d.diasIncapacidad ?? 0} onChange={(e) => u("diasIncapacidad", Number(e.target.value))} /></Field>
+            {esAT && <Field><Etiqueta htmlFor="ev-dc" k="evDiasCargados">Días cargados</Etiqueta><Input id="ev-dc" type="number" min={0} placeholder="Ej.: 0" value={d.diasCargados ?? 0} onChange={(e) => u("diasCargados", Number(e.target.value))} /></Field>}
             {d.tipo === "EL" && (
               <Field>
                 <Etiqueta htmlFor="ev-cn">Caso</Etiqueta>

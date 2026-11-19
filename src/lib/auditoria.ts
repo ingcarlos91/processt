@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 import { estadoDocumento, ESTADOS_DOC } from "@/lib/estado-documento";
 
 export type ResultadoAud = "conforme" | "no_conforme" | "observacion" | "na" | "";
-export type ItemAuditoria = { n: number; aspecto: string; criterio: string; estandares: string[]; resultado: ResultadoAud; evidencia: string; hallazgo: string; accion?: { descripcion: string; responsable?: string; fechaLimite?: string } | null };
+export type ItemAuditoria = { n: number; aspecto: string; criterio: string; estandares: string[]; resultado: ResultadoAud; evidencia: string; hallazgo: string; accion?: { descripcion: string; causa?: string; responsable?: string; fechaLimite?: string } | null };
 
 export const ASPECTOS: Omit<ItemAuditoria, "resultado" | "evidencia" | "hallazgo">[] = [
   { n: 1, aspecto: "Cumplimiento de la política de SST", criterio: "La política está firmada, fechada, divulgada, disponible para los trabajadores y se revisa anualmente.", estandares: ["2.1.1"] },

@@ -17,7 +17,7 @@ export function PlantillaEditor({ id, contenido, version, contrato }: { id: stri
       <Card>
         <CardHeader><CardTitle>Texto de la plantilla (v{version})</CardTitle><CardDescription>Markdown con variables {"{{empresa.razonSocial}}"}, condiciones {"{{#if …}}"} y listas {"{{#each …}}"}. Cada “## ” es una sección editable en los documentos.</CardDescription></CardHeader>
         <CardContent className="space-y-3">
-          <Textarea className="font-mono text-xs min-h-[60vh]" value={txt} onChange={(e) => setTxt(e.target.value)} />
+          <Textarea className="font-mono text-xs min-h-[60vh]" placeholder="Escriba la plantilla en Markdown; use “## ” para iniciar cada sección" value={txt} onChange={(e) => setTxt(e.target.value)} />
           <div className="flex gap-2">
             <Button disabled={pend || txt === contenido} onClick={() => start(async () => { await guardarPlantilla(id, txt); toast.success("Plantilla guardada; regenere los documentos para aplicar el cambio"); })}><Save /> Guardar</Button>
             <Link href="/plantillas" className={buttonVariants({ variant: "outline" })}><ArrowLeft /> Volver</Link>

@@ -81,9 +81,9 @@ export async function informeGestion(empresaId: string, anio: number, mes: numbe
   const r = (e.responsableSst ?? {}) as { nombre?: string; tipoDoc?: string; cedula?: string };
   const md = `## Datos del informe
 
-| Campo | |
+| Campo | Información |
 |---|---|
-| Empresa | ${c(e.razonSocial)} — NIT ${c(e.nit)} |
+| Empresa | ${c(e.razonSocial)} — NIT ${c(e.digitoVerificacion ? `${e.nit}-${e.digitoVerificacion}` : e.nit)} |
 | Periodo | ${nombreMes} |
 | Nivel de estándares | ${e.nivelEstandares} estándares mínimos |
 | Elaboró | ${c(r.nombre || e.consultora?.profesional || "______")} |

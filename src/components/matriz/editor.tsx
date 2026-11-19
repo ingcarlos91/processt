@@ -85,7 +85,7 @@ export function MatrizEditor(props: {
         {props.sectorTipoId && <Button variant="outline" disabled={pend} tooltip="Agrega las zonas (con sus peligros como sugeridos) y los procesos típicos del sector que le falten a la empresa. No duplica ni modifica lo existente." onClick={() => start(async () => { const r = await A.completarDesdeSector(empresaId); if (!r.zonas && !r.procesos) toast.info("La empresa ya tiene todas las zonas y procesos del sector."); else toast.success(`Agregados: ${r.zonas} zona(s), ${r.procesos} proceso(s) y ${r.peligros} peligro(s) sugerido(s) para revisar.`); })}>Completar procesos y zonas del sector</Button>}
         <BotonDescarga href={`/api/empresas/${empresaId}/matriz.xlsx`} variant="outline" tooltip="Descargar la matriz de peligros en Excel con el formato de la GTC 45"><Download /> Excel GTC 45</BotonDescarga>
         <Link href={`/empresas/${empresaId}/matriz/versiones`} className={buttonVariants({ variant: "outline" })}><History /> Versiones{props.nVersiones ? ` (${props.nVersiones})` : ""}</Link>
-        <Pedir trigger={<Button variant="outline" disabled={pend} tooltip="Congela la matriz actual como una versión consultable y descargable" />} titulo="Cerrar versión de la matriz" descripcion="Se guarda una copia completa de la matriz como está hoy, con fecha, motivo y quién la cerró; queda en el historial de versiones y el MTZ-02 se actualiza. La matriz se actualiza mínimo una vez al año, ante cambios en procesos o instalaciones y siempre que ocurra un accidente mortal o un evento catastrófico (Decreto 1072/2015 art. 2.2.4.6.15; Res. 0312/2019 estándar 4.1.2)." label="Motivo (por ejemplo: inicial, actualización anual 2026, cambio de proceso, accidente)" inicial={props.version ? `Actualización anual ${new Date().getFullYear()}` : "Versión inicial"} accion="Cerrar versión"
+        <Pedir trigger={<Button variant="outline" disabled={pend} tooltip="Congela la matriz actual como una versión consultable y descargable" />} titulo="Cerrar versión de la matriz" descripcion="Se guarda una copia completa de la matriz como está hoy, con fecha, motivo y quién la cerró; queda en el historial de versiones y el MTZ-02 se actualiza. La matriz se actualiza mínimo una vez al año, ante cambios en procesos o instalaciones y siempre que ocurra un accidente mortal o un evento catastrófico (Decreto 1072/2015 art. 2.2.4.6.15; Res. 0312/2019 estándar 4.1.2)." label="Motivo (por ejemplo: inicial, actualización anual 2026, cambio de proceso, accidente)" placeholder="Ej.: Actualización anual" inicial={props.version ? `Actualización anual ${new Date().getFullYear()}` : "Versión inicial"} accion="Cerrar versión"
           onConfirm={(m) => start(async () => { const r = await A.cerrarVersionMatriz(empresaId, m); if ("error" in r) toast.error(r.error); else toast.success(`Versión v${r.numero} cerrada${r.pendientes ? `. Atención: ${r.pendientes} peligro(s) sugerido(s) sin aprobar no quedaron en la versión` : ""}.`); })}><Lock /> Cerrar versión</Pedir>
       </div>
       {props.version && <p className="text-xs text-muted-foreground -mt-4">Última versión cerrada: v{props.version.numero} ({props.version.motivo}) el {new Date(props.version.fecha).toLocaleDateString("es-CO")}. <Link className="underline underline-offset-2" href={`/empresas/${empresaId}/matriz/versiones`}>Ver historial</Link></p>}
@@ -97,8 +97,9 @@ export function MatrizEditor(props: {
         </Alert>
       ))}
 
-      <div className="grid xl:grid-cols-[380px_1fr] gap-6 items-start">
-        <div className="space-y-4">
+      {/* Estructura y cargos arriba (dos columnas); la matriz debajo, a todo el ancho, para que se vean todas sus columnas. */}
+      <div className="grid gap-6">
+        <div className="grid items-start gap-4 lg:grid-cols-2">
           <Estructura {...props} run={run} pend={pend} />
           <Section title={`Cargos (${cargos.length})`} description="Cada cargo tiene tareas; cada tarea tiene sus peligros.">
             <div className="space-y-3">
@@ -169,13 +170,20 @@ export function MatrizEditor(props: {
   );
 }
 
+const EJ_PELIGRO: Record<string, string> = {
+  descripcion: "Ej.: Ruido generado por la sierra circular", efectosPosibles: "Ej.: Hipoacusia, cefalea, estrés",
+  controlesFuente: "Ej.: Mantenimiento preventivo de la máquina", controlesMedio: "Ej.: Cabina de aislamiento", controlesIndividuo: "Ej.: Protector auditivo de inserción",
+  medidaEliminacion: "Ej.: Eliminar la tarea manual", medidaSustitucion: "Ej.: Cambiar por un equipo de menor ruido", medidaIngenieria: "Ej.: Encerramiento acústico",
+  medidaAdministrativa: "Ej.: Rotación de turnos y señalización de uso obligatorio", medidaEpp: "Ej.: Protector auditivo tipo copa",
+};
+
 type Run = (fn: () => Promise<unknown>, ok?: string) => void;
 
 function DetallePeligro({ p, empresaId, run }: { p: Peligro; empresaId: string; run: Run }) {
   const campo = (k: keyof Peligro, label: string) => (
     <Field>
       <FieldLabel htmlFor={`${String(k)}-${p.id}`} className="text-xs gap-1">{label} <Ayuda k={({ descripcion: "descripcionPeligro", efectosPosibles: "efectos" } as Record<string, string>)[String(k)] ?? String(k)} /></FieldLabel>
-      <Textarea id={`${String(k)}-${p.id}`} className="text-xs min-h-14" defaultValue={String(p[k] ?? "")} onBlur={(e) => e.target.value !== String(p[k] ?? "") && run(() => A.actualizarPeligro(empresaId, p.id, { [k]: e.target.value }))} />
+      <Textarea id={`${String(k)}-${p.id}`} className="text-xs min-h-14" placeholder={EJ_PELIGRO[String(k)]} defaultValue={String(p[k] ?? "")} onBlur={(e) => e.target.value !== String(p[k] ?? "") && run(() => A.actualizarPeligro(empresaId, p.id, { [k]: e.target.value }))} />
     </Field>
   );
   return (
@@ -257,8 +265,8 @@ function CargoCard({ c, empresaId, tareas, tareasTipo, cargosTipo, procesos, zon
         <CollapsibleContent>
           <CardContent className="border-t py-3 space-y-4">
             <div className="grid grid-cols-[1fr_72px] gap-2">
-              <Field><FieldLabel htmlFor={`cn-${c.id}`} className="text-xs">Nombre</FieldLabel><Input id={`cn-${c.id}`} defaultValue={c.nombre} onBlur={(e) => e.target.value !== c.nombre && run(() => A.actualizarCargo(empresaId, c.id, { nombre: e.target.value }))} /></Field>
-              <Field><FieldLabel htmlFor={`cp-${c.id}`} className="text-xs gap-1">Personas <Ayuda k="nPersonas" /></FieldLabel><Input id={`cp-${c.id}`} type="number" min={1} defaultValue={c.nPersonas} onBlur={(e) => Number(e.target.value) !== c.nPersonas && run(() => A.actualizarCargo(empresaId, c.id, { nPersonas: Number(e.target.value) }))} /></Field>
+              <Field><FieldLabel htmlFor={`cn-${c.id}`} className="text-xs">Nombre</FieldLabel><Input id={`cn-${c.id}`} placeholder="Ej.: Auxiliar de bodega" defaultValue={c.nombre} onBlur={(e) => e.target.value !== c.nombre && run(() => A.actualizarCargo(empresaId, c.id, { nombre: e.target.value }))} /></Field>
+              <Field><FieldLabel htmlFor={`cp-${c.id}`} className="text-xs gap-1">Personas <Ayuda k="nPersonas" /></FieldLabel><Input id={`cp-${c.id}`} placeholder="Ej.: 4" type="number" min={1} defaultValue={c.nPersonas} onBlur={(e) => Number(e.target.value) !== c.nPersonas && run(() => A.actualizarCargo(empresaId, c.id, { nPersonas: Number(e.target.value) }))} /></Field>
             </div>
             <Buscador className="w-full" placeholder="Buscar cargo tipo…" textoBoton="Aplicar tareas de un cargo tipo" opciones={opcCargos(cargosTipo)} onSelect={(v) => run(() => A.aplicarTipo(empresaId, c.id, v), "Tareas y peligros del cargo tipo agregados")} />
 
@@ -338,7 +346,7 @@ function NuevoCargo({ empresaId, cargosTipo, run, pend }: { empresaId: string; c
       <CardContent className="space-y-2">
         <div className="grid grid-cols-[1fr_72px] gap-2">
           <Input placeholder="Nombre" value={nombre} onChange={(e) => setNombre(e.target.value)} />
-          <Input type="number" min={1} aria-label="Personas" value={n} onChange={(e) => setN(Number(e.target.value))} />
+          <Input type="number" min={1} aria-label="Personas" placeholder="Ej.: 4" value={n} onChange={(e) => setN(Number(e.target.value))} />
         </div>
         <Buscador className="w-full" value={tipo || undefined} placeholder="Buscar cargo tipo…" textoBoton="Tipo de cargo (opcional)" opciones={opcCargos(cargosTipo)} onSelect={(v) => { setTipo(v); if (!nombre) setNombre(cargosTipo.find((t) => t.id === v)?.nombre.split(" / ")[0] ?? ""); }} />
       </CardContent>

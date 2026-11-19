@@ -9,7 +9,7 @@ normas: ["DEC-1072-2015"]
 ---
 ## Datos del simulacro
 
-| Campo | |
+| Campo | Información |
 |---|---|
 | Fecha | |
 | Sede | {{#each sedes}}{{nombre}}{{#unless @last}} / {{/unless}}{{/each}} |

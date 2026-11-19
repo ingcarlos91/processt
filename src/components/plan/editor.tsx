@@ -66,7 +66,7 @@ export function PlanEditor({ empresaId, anio, actividades }: { empresaId: string
           </PopoverContent>
         </Popover>
       </TableCell>
-      <TableCell className="w-48"><Input className="h-7" defaultValue={a.responsable} onBlur={(e) => e.target.value !== a.responsable && run(() => A.actualizarActividad(empresaId, a.id, { responsable: e.target.value }))} /></TableCell>
+      <TableCell className="w-48"><Input className="h-7" defaultValue={a.responsable} placeholder="Ej.: Responsable del SG-SST" onBlur={(e) => e.target.value !== a.responsable && run(() => A.actualizarActividad(empresaId, a.id, { responsable: e.target.value }))} /></TableCell>
       <TableCell className="pr-6 w-10"><Confirmar trigger={<Button variant="ghost" size="icon-xs" aria-label="Eliminar actividad" />} titulo="Eliminar actividad" descripcion={a.nombre} destructivo accion="Eliminar" onConfirm={() => run(() => A.eliminarActividad(empresaId, a.id))}><Trash2 /></Confirmar></TableCell>
     </TableRow>
   );
@@ -110,7 +110,7 @@ export function PlanEditor({ empresaId, anio, actividades }: { empresaId: string
         <CardContent className="flex flex-wrap gap-2">
           <NativeSelect value={nueva.mes} onChange={(e) => setNueva({ ...nueva, mes: Number(e.target.value) })}>{MESES.map((m, i) => <NativeSelectOption key={m} value={i + 1}>{m}</NativeSelectOption>)}</NativeSelect>
           <Input className="flex-1 min-w-72" placeholder="Actividad" value={nueva.nombre} onChange={(e) => setNueva({ ...nueva, nombre: e.target.value })} />
-          <Input className="w-56" placeholder="Responsable" value={nueva.responsable} onChange={(e) => setNueva({ ...nueva, responsable: e.target.value })} />
+          <Input className="w-72" placeholder="Responsable" value={nueva.responsable} onChange={(e) => setNueva({ ...nueva, responsable: e.target.value })} />
         </CardContent>
         <CardFooter><Button size="sm" disabled={!nueva.nombre || pend} onClick={() => { run(() => A.agregarActividad(empresaId, { anio, ...nueva }), "Actividad agregada"); setNueva({ ...nueva, nombre: "" }); }}><Plus /> Agregar</Button></CardFooter>
       </Card>

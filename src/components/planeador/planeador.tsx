@@ -123,7 +123,7 @@ export function Planeador({ fechas, empresas, empresaId, icsHref }: { fechas: Fe
               {!empresaId && <Field><FieldLabel>Empresa</FieldLabel><Selector value={rec.empresaId || "consultora"} onChange={(v) => setRec({ ...rec, empresaId: v === "consultora" ? "" : v })} opciones={[{ valor: "consultora", etiqueta: "De la consultora (sin empresa)" }, ...empresas.map((e) => ({ valor: e.id, etiqueta: e.nombre }))]} /></Field>}
               <Field><FieldLabel htmlFor="r-t">Qué</FieldLabel><Input id="r-t" value={rec.titulo} placeholder="Ej: Visita de seguimiento, entrega de informe mensual" onChange={(e) => setRec({ ...rec, titulo: e.target.value })} /></Field>
               <Field><FieldLabel htmlFor="r-f">Fecha</FieldLabel><Input id="r-f" type="date" value={rec.fecha} onChange={(e) => setRec({ ...rec, fecha: e.target.value })} /></Field>
-              <Field><FieldLabel htmlFor="r-n">Notas</FieldLabel><Textarea id="r-n" rows={2} value={rec.notas} onChange={(e) => setRec({ ...rec, notas: e.target.value })} /></Field>
+              <Field><FieldLabel htmlFor="r-n">Notas</FieldLabel><Textarea id="r-n" rows={2} placeholder="Detalles que quiera recordar" value={rec.notas} onChange={(e) => setRec({ ...rec, notas: e.target.value })} /></Field>
             </div>
           )}
           <DialogFooter>

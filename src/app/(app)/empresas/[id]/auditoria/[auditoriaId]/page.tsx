@@ -16,6 +16,6 @@ export default async function Auditoria({ params }: PageProps<"/empresas/[id]/au
     <AuditoriaDetalle empresaId={id} sistema={sistema}
       responsables={[...new Set([(e.responsableSst as { nombre?: string } | null)?.nombre, e.representanteLegal].filter(Boolean) as string[])]}
       a={{ id: a.id, anio: a.anio, fechaInicio: iso(a.fechaInicio), fechaCierre: iso(a.fechaCierre), auditor: a.auditor, auditorPerfil: a.auditorPerfil ?? "", participantes: a.participantes ?? "", alcance: a.alcance ?? "", estado: a.estado, conclusiones: a.conclusiones ?? "",
-        items: (a.items ?? []) as ItemAuditoria[], acciones: a.acciones.map((x) => ({ id: x.id, hallazgo: x.hallazgo, descripcion: x.descripcion, responsable: x.responsable ?? "", fechaLimite: iso(x.fechaLimite), estado: x.estado })), archivos: a.archivos.map(aArchivoUI) }} />
+        items: (a.items ?? []) as ItemAuditoria[], acciones: a.acciones.map((x) => ({ id: x.id, hallazgo: x.hallazgo, descripcion: x.descripcion, responsable: x.responsable ?? "", fechaLimite: iso(x.fechaLimite), estado: x.estado, causa: x.causa ?? "" })), archivos: a.archivos.map(aArchivoUI) }} />
   );
 }

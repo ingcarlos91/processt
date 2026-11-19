@@ -56,9 +56,9 @@ function Lista({ tipo, items, empresaId }: { tipo: string; items: It[]; empresaI
           <TableBody>
             {lista.map((i) => (
               <TableRow key={i.id}>
-                <TableCell className="pl-6 min-w-56"><Input className="h-7" defaultValue={i.nombre} onBlur={(e) => e.target.value !== i.nombre && guardar(i, { nombre: e.target.value })} /></TableCell>
-                <TableCell className="min-w-64"><Input className="h-7" defaultValue={i.descripcion} onBlur={(e) => e.target.value !== i.descripcion && guardar(i, { descripcion: e.target.value })} /></TableCell>
-                {cfg.campos.map(([c]) => <TableCell key={c}><Input className="h-7" defaultValue={String(i.detalle[c] ?? "")} onBlur={(e) => e.target.value !== String(i.detalle[c] ?? "") && guardar(i, { detalle: { [c]: e.target.value } })} /></TableCell>)}
+                <TableCell className="pl-6 min-w-56"><Input className="h-7" defaultValue={i.nombre} placeholder="Nombre" onBlur={(e) => e.target.value !== i.nombre && guardar(i, { nombre: e.target.value })} /></TableCell>
+                <TableCell className="min-w-64"><Input className="h-7" defaultValue={i.descripcion} placeholder="Descripción breve" onBlur={(e) => e.target.value !== i.descripcion && guardar(i, { descripcion: e.target.value })} /></TableCell>
+                {cfg.campos.map(([c, l]) => <TableCell key={c}><Input className="h-7" placeholder={l} defaultValue={String(i.detalle[c] ?? "")} onBlur={(e) => e.target.value !== String(i.detalle[c] ?? "") && guardar(i, { detalle: { [c]: e.target.value } })} /></TableCell>)}
                 <TableCell><Switch checked={i.validado} onCheckedChange={(v) => guardar(i, { validado: v })} aria-label="Validado" /></TableCell>
                 <TableCell className="pr-6 whitespace-nowrap">{empresaId && <Button size="icon-xs" variant="ghost" aria-label="Publicar en general" title="Publicar en general" onClick={() => run(() => A.publicarEnGeneral("catalogo", i.id), "Publicado en el catálogo general")}><Upload /></Button>}<Confirmar trigger={<Button size="icon-xs" variant="ghost" aria-label="Eliminar" />} titulo={`Eliminar “${i.nombre}”`} descripcion="Los peligros que lo mencionan conservan el texto." destructivo accion="Eliminar" onConfirm={() => run(() => A.eliminarCatalogoItem(i.id))}><Trash2 /></Confirmar></TableCell>
               </TableRow>

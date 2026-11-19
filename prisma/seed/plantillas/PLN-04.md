@@ -13,7 +13,7 @@ Establecer las medidas para prevenir, prepararse y responder ante situaciones de
 
 ## Información general
 
-| Campo | |
+| Campo | Información |
 |---|---|
 | Razón social | {{empresa.razonSocial}} |
 | Actividad | {{empresa.actividad}} |

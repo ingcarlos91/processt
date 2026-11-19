@@ -83,8 +83,10 @@ export async function mdAPdf(md: string, meta: Meta) {
       <td style="width:25%;border:1px solid #555;text-align:center;padding:2px;">Código: ${esc(meta.codigo)}</td></tr>
       <tr><td style="border:1px solid #555;text-align:center;font-weight:bold;padding:2px;">${esc(meta.nombre.toUpperCase())}</td>
       <td style="border:1px solid #555;text-align:center;padding:2px;">Versión: ${meta.version} · ${esc(meta.fecha)}</td></tr></table></div>`;
-  const footer = `<div style="width:100%;padding:0 12mm;font-family:Arial;font-size:7pt;color:#444;text-align:center;">
-    ${esc(meta.empresa)} — NIT ${esc(meta.nit)} &nbsp;|&nbsp; Elaboró: ${esc(meta.elaboro)} &nbsp;|&nbsp; Aprobó: ${esc(meta.aprobo)} &nbsp;|&nbsp; Página <span class="pageNumber"></span> de <span class="totalPages"></span></div>`;
+  // Pie en una sola línea: datos a la izquierda (se recortan si no caben) y número de página a la derecha.
+  const footer = `<div style="width:100%;padding:0 12mm;font-family:Arial;font-size:6.5pt;color:#444;display:flex;gap:8px;align-items:center;">
+    <div style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(meta.empresa)}${meta.nit ? ` — NIT ${esc(meta.nit)}` : ""}${meta.elaboro ? ` &nbsp;|&nbsp; Elaboró: ${esc(meta.elaboro)}` : ""}${meta.aprobo ? ` &nbsp;|&nbsp; Aprobó: ${esc(meta.aprobo)}` : ""}</div>
+    <div style="white-space:nowrap;">Página <span class="pageNumber"></span> de <span class="totalPages"></span></div></div>`;
   const b = await chromium();
   const ctx = await b.newContext();
   try {

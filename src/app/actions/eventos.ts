@@ -199,3 +199,13 @@ export async function enviarAccionAlPlan(empresaId: string, id: string) {
   await listo(empresaId, a.eventoId ?? undefined);
   return { ok: true as const, anio: act.anio, mes: act.mes };
 }
+
+/** Registra o corrige la causa raíz de una acción (de cualquier origen: inspección, auditoría, evento). */
+export async function actualizarCausaAccion(empresaId: string, id: string, causa: string) {
+  await requiereUsuario();
+  const a = await db.accion.findUniqueOrThrow({ where: { id } });
+  if (a.empresaId !== empresaId) return { error: "Acción no encontrada." };
+  await db.accion.update({ where: { id }, data: { causa: causa.trim() || null } });
+  await listo(empresaId, a.eventoId ?? undefined);
+  return { ok: true as const };
+}

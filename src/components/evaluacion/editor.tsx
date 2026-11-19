@@ -133,8 +133,8 @@ export function EvaluacionEditor({ empresaId, nivel, evaluaciones, actual }: {
               {actual.plan.map((p) => (
                 <TableRow key={p.id}>
                   <TableCell className="pl-6"><Badge variant="outline">{p.estandar}</Badge></TableCell>
-                  <TableCell className="min-w-80"><Textarea className="min-h-9 text-xs" defaultValue={p.actividad} onBlur={(e) => e.target.value !== p.actividad && run(() => A.actualizarPlanMejora(empresaId, p.id, { actividad: e.target.value }))} /></TableCell>
-                  <TableCell><Input defaultValue={p.responsable} onBlur={(e) => run(() => A.actualizarPlanMejora(empresaId, p.id, { responsable: e.target.value }))} /></TableCell>
+                  <TableCell className="min-w-80"><Textarea className="min-h-9 text-xs" defaultValue={p.actividad} placeholder="Describa la actividad para cumplir el estándar" onBlur={(e) => e.target.value !== p.actividad && run(() => A.actualizarPlanMejora(empresaId, p.id, { actividad: e.target.value }))} /></TableCell>
+                  <TableCell><Input defaultValue={p.responsable} placeholder="Ej.: Responsable del SG-SST" onBlur={(e) => run(() => A.actualizarPlanMejora(empresaId, p.id, { responsable: e.target.value }))} /></TableCell>
                   <TableCell><Input type="date" defaultValue={p.fecha} onChange={(e) => run(() => A.actualizarPlanMejora(empresaId, p.id, { fechaLimite: e.target.value }))} /></TableCell>
                   <TableCell className="pr-6">
                     <NativeSelect value={p.estado} onChange={(e) => run(() => A.actualizarPlanMejora(empresaId, p.id, { estado: e.target.value }))}>

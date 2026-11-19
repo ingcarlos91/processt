@@ -8,7 +8,7 @@ const iso = (d?: Date | null) => d?.toISOString().slice(0, 10) ?? "";
 export default async function Inspecciones({ params }: PageProps<"/empresas/[id]/inspecciones">) {
   const { id } = await params;
   const [ins, listas, e] = await Promise.all([
-    db.inspeccion.findMany({ where: { empresaId: id }, orderBy: { fecha: "desc" }, include: { acciones: { select: { id: true, descripcion: true, estado: true, responsable: true, fechaLimite: true } }, archivos: { orderBy: { subidoEn: "desc" } } } }),
+    db.inspeccion.findMany({ where: { empresaId: id }, orderBy: { fecha: "desc" }, include: { acciones: { select: { id: true, descripcion: true, estado: true, responsable: true, fechaLimite: true, causa: true } }, archivos: { orderBy: { subidoEn: "desc" } } } }),
     db.catalogoItem.findMany({ where: { tipo: "LISTA_INSPECCION", OR: [{ empresaId: null }, { empresaId: id }] }, orderBy: { nombre: "asc" } }),
     db.empresa.findUniqueOrThrow({ where: { id }, select: { responsableSst: true, sedes: { select: { nombre: true } }, zonas: { select: { nombre: true } }, comites: { select: { miembros: { select: { nombre: true } } } } } }),
   ]);
@@ -23,7 +23,7 @@ export default async function Inspecciones({ params }: PageProps<"/empresas/[id]
       inspecciones={ins.map((i) => ({
         id: i.id, lista: i.lista, fecha: iso(i.fecha), lugar: i.lugar ?? "", responsable: i.responsable ?? "", participantes: i.participantes ?? "", observaciones: i.observaciones ?? "",
         items: (i.items ?? []) as { pregunta: string; resultado: "cumple" | "no_cumple" | "na"; observacion: string }[],
-        acciones: i.acciones.map((a) => ({ id: a.id, descripcion: a.descripcion, estado: a.estado, responsable: a.responsable ?? "", fechaLimite: iso(a.fechaLimite) })),
+        acciones: i.acciones.map((a) => ({ id: a.id, descripcion: a.descripcion, estado: a.estado, responsable: a.responsable ?? "", fechaLimite: iso(a.fechaLimite), causa: a.causa ?? "" })),
         archivos: i.archivos.map(aArchivoUI),
       }))}
     />

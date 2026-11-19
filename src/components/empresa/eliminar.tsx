@@ -20,7 +20,7 @@ export function BotonEliminarEmpresa({ id, nombre }: { id: string; nombre: strin
         </DialogHeader>
         <Field>
           <FieldLabel htmlFor="conf">Escriba el nombre de la empresa para confirmar</FieldLabel>
-          <Input id="conf" value={txt} onChange={(e) => setTxt(e.target.value)} />
+          <Input id="conf" placeholder="Nombre exacto de la empresa" value={txt} onChange={(e) => setTxt(e.target.value)} />
         </Field>
         <DialogFooter>
           <DialogClose render={<Button variant="outline" />}>Cancelar</DialogClose>

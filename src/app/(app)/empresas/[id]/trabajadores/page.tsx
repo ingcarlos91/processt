@@ -29,7 +29,7 @@ export default async function Trabajadores({ params }: PageProps<"/empresas/[id]
       sugeridos={sugeridos}
       catalogoEpp={catalogo.filter((c) => c.tipo === "EPP").map((c) => c.nombre)}
       catalogoCapacitaciones={catalogo.filter((c) => c.tipo === "CAPACITACION").map((c) => c.nombre)}
-      actividades={actividades.map((a) => ({ id: a.id, nombre: a.nombre, periodo: `${a.mes}/${a.anio}` }))}
+      actividades={actividades.map((a) => ({ id: a.id, nombre: a.nombre, anio: a.anio, periodo: `${["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"][a.mes - 1]} ${a.anio}` }))}
       trabajadores={ts.map((t) => ({
         id: t.id, nombres: t.nombres, tipoDoc: t.tipoDoc, documento: t.documento ?? "", cargoId: t.cargoId ?? "", cargo: t.cargo?.nombre ?? "", vinculacion: t.vinculacion,
         fechaIngreso: iso(t.fechaIngreso), fechaRetiro: iso(t.fechaRetiro), activo: t.activo, sexo: t.sexo ?? "", fechaNacimiento: iso(t.fechaNacimiento), escolaridad: t.escolaridad ?? "",

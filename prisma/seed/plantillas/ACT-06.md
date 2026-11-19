@@ -9,7 +9,7 @@ normas: ["DEC-1072-2015","RES-0312-2019"]
 ---
 ## Datos de la revisión
 
-| Campo | |
+| Campo | Información |
 |---|---|
 | Empresa | {{empresa.razonSocial}} |
 | Periodo revisado | Enero a diciembre de {{anio}} |

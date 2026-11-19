@@ -17,6 +17,10 @@ function encabezado(ws: ExcelJS.Worksheet, titulo: string, ctx: Contexto, column
   ws.getCell(1, 1).value = titulo;
   ws.getCell(1, 1).font = { bold: true, size: 14, color: { argb: "FFFFFFFF" } };
   ws.getCell(1, 1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: NAVY } };
+  ws.getCell(1, 1).alignment = { vertical: "middle", horizontal: "center", wrapText: true };
+  ws.getRow(1).height = 34;
+  // Impresión: carta horizontal, ajustada al ancho de la hoja; el encabezado se repite en cada página.
+  ws.pageSetup = { paperSize: 1 as ExcelJS.PageSetup["paperSize"], orientation: "landscape", fitToPage: true, fitToWidth: 1, fitToHeight: 0, margins: { left: 0.3, right: 0.3, top: 0.4, bottom: 0.4, header: 0.2, footer: 0.2 } };
   ws.mergeCells(2, 1, 2, columnas);
   ws.getCell(2, 1).value = `${ctx.empresa.razonSocial} — NIT ${ctx.empresa.nit} — ${ctx.empresa.actividad} — Fecha: ${ctx.fecha} — Elaboró: ${ctx.responsable.nombre}${ctx.responsable.licencia ? ` (Licencia SST ${ctx.responsable.licencia})` : ""}${extra ? ` — ${extra}` : ""}`;
 }

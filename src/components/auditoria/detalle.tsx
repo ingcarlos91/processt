@@ -1,4 +1,5 @@
 "use client";
+import { FilaAccion, type AccionUI } from "@/components/acciones/fila-accion";
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -19,7 +20,7 @@ import { resumenAuditoria, type ItemAuditoria, type ResultadoAud } from "@/lib/a
 import * as A from "@/app/actions/auditoria";
 import { cn } from "@/lib/utils";
 
-type Aud = { id: string; anio: number; fechaInicio: string; fechaCierre: string; auditor: string; auditorPerfil: string; participantes: string; alcance: string; estado: string; conclusiones: string; items: ItemAuditoria[]; acciones: { id: string; hallazgo: string; descripcion: string; responsable: string; fechaLimite: string; estado: string }[]; archivos: ArchivoUI[] };
+type Aud = { id: string; anio: number; fechaInicio: string; fechaCierre: string; auditor: string; auditorPerfil: string; participantes: string; alcance: string; estado: string; conclusiones: string; items: ItemAuditoria[]; acciones: AccionUI[]; archivos: ArchivoUI[] };
 const RES: Record<Exclude<ResultadoAud, "">, { t: string; c: string; i: typeof Check }> = {
   conforme: { t: "Conforme", c: "border-emerald-500 bg-emerald-500 text-white", i: Check },
   observacion: { t: "Observación", c: "border-amber-500 bg-amber-500 text-white", i: Eye },
@@ -54,7 +55,7 @@ export function AuditoriaDetalle({ empresaId, a, sistema, responsables }: { empr
         <BotonDescarga href={`/api/empresas/${empresaId}/auditorias/${a.id}/informe`} variant="outline" tooltip="Informe de auditoría en Word, para firmar"><Download /> Informe Word</BotonDescarga>
         <BotonDescarga href={`/api/empresas/${empresaId}/auditorias/${a.id}/informe?formato=pdf`} variant="outline" texto="Generando PDF…" tooltip="Informe de auditoría en PDF"><FileDown /> PDF</BotonDescarga>
         {!cerrada && <Button disabled={pend || !cambio} onClick={() => guardar()}>{pend ? <Spinner /> : <Save />} Guardar</Button>}
-        {!cerrada && <Pedir trigger={<Button variant="outline" disabled={pend} tooltip="Exige todos los aspectos calificados; crea las acciones de las no conformidades en FOR-06" />} titulo="Cerrar auditoría" descripcion="Se verifican los aspectos y se crean las acciones de las no conformidades. Escriba la fecha de cierre (AAAA-MM-DD)." label="Fecha de cierre" inicial={new Date().toISOString().slice(0, 10)} accion="Cerrar"
+        {!cerrada && <Pedir trigger={<Button variant="outline" disabled={pend} tooltip="Exige todos los aspectos calificados; crea las acciones de las no conformidades en FOR-06" />} titulo="Cerrar auditoría" descripcion="Se verifican los aspectos y se crean las acciones de las no conformidades. Elija la fecha de cierre." label="Fecha de cierre" tipo="date" inicial={new Date().toISOString().slice(0, 10)} accion="Cerrar"
           onConfirm={(f) => guardar("", async () => { const res = await A.cerrarAuditoria(empresaId, a.id, f); if ("error" in res) toast.error(res.error); else toast.success(`Auditoría cerrada${res.acciones ? ` y ${res.acciones} acción(es) creadas en FOR-06` : ""}. Descargue el informe para firmarlo.`); })}><Lock /> Cerrar auditoría</Pedir>}
         {cerrada && <Button variant="outline" disabled={pend} onClick={() => start(async () => { await A.reabrirAuditoria(empresaId, a.id); toast.success("Auditoría reabierta"); router.refresh(); })}><LockOpen /> Reabrir</Button>}
       </div>
@@ -97,6 +98,7 @@ export function AuditoriaDetalle({ empresaId, a, sistema, responsables }: { empr
             )}
             {it.resultado === "no_conforme" && it.accion && !cerrada && (
               <div className="mt-2 grid gap-2 sm:grid-cols-[1fr_12rem_9rem]">
+                <Input className="sm:col-span-3" placeholder="Causa raíz: por qué ocurre la no conformidad" value={it.accion.causa ?? ""} onChange={(e) => set(it.n, { accion: { ...it.accion!, causa: e.target.value } })} />
                 <Input placeholder="Acción correctiva (se crea en FOR-06 al cerrar)" value={it.accion.descripcion} onChange={(e) => set(it.n, { accion: { ...it.accion!, descripcion: e.target.value } })} />
                 <Input placeholder="Responsable" value={it.accion.responsable ?? ""} onChange={(e) => set(it.n, { accion: { ...it.accion!, responsable: e.target.value } })} />
                 <Input type="date" value={it.accion.fechaLimite ?? ""} onChange={(e) => set(it.n, { accion: { ...it.accion!, fechaLimite: e.target.value } })} />
@@ -112,11 +114,11 @@ export function AuditoriaDetalle({ empresaId, a, sistema, responsables }: { empr
 
       {a.acciones.length > 0 && (
         <Section title="Acciones creadas (FOR-06)" contentClassName="space-y-2">
-          {a.acciones.map((x) => <div key={x.id} className="flex gap-2 text-sm"><Badge variant={x.estado === "cerrada" ? "default" : "outline"}>{x.estado === "cerrada" ? "Cerrada" : "Abierta"}</Badge><span className="flex-1">{x.descripcion}<span className="block text-xs text-muted-foreground">{x.hallazgo} · {x.responsable}{x.fechaLimite ? ` · ${fecha(x.fechaLimite)}` : ""}</span></span></div>)}
+          {a.acciones.map((x) => <FilaAccion key={x.id} empresaId={empresaId} a={x} conHallazgo />)}
         </Section>
       )}
 
-      <Section title="Soportes" description="Plan de auditoría, listas de verificación diligenciadas, informe firmado. Quedan en Evidencias, estándar 6.1.2." actions={<SubirArchivo empresaId={empresaId} ctx={{ tipo: "EVIDENCIA", auditoriaId: a.id, estandarCodigo: "6.1.2" }} titulo="Subir soporte" trigger={<Button size="sm"><Plus /> Subir</Button>} descripcionInicial={`Auditoría interna ${a.anio}`} />}>
+      <Section title="Soportes" description="Plan de auditoría, listas de verificación diligenciadas, informe firmado. Quedan en Evidencias." actions={<SubirArchivo empresaId={empresaId} ctx={{ tipo: "EVIDENCIA", auditoriaId: a.id }} titulo="Subir soporte" trigger={<Button size="sm"><Plus /> Subir</Button>} descripcionInicial={`Auditoría interna ${a.anio}`} />}>
         <ListaArchivos empresaId={empresaId} archivos={a.archivos} vacio="Sin soportes." />
         {r.noConformes > 0 && !cerrada && <p className="mt-3 flex items-center gap-1.5 text-xs text-amber-700"><CircleAlert className="size-3.5" /> Al cerrar se crearán las acciones de las no conformidades que tengan acción escrita.</p>}
       </Section>

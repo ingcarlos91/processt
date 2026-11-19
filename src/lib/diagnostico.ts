@@ -9,6 +9,15 @@ export const MAPA_ESTADO_ACTUAL: Record<string, string[]> = {
   matriz: ["4.1.2"], epp: ["4.2.6"], mantenimiento: ["4.2.5"], emergencias: ["5.1.1"], brigada: ["5.1.2"], revision: ["6.1.3"],
 };
 
+/**
+ * Estándares que no pueden marcarse «no aplica» porque el motor de reglas exige el requisito a la empresa:
+ * COPASST/Vigía (1.1.6, Res. 2013/1986) siempre, y Comité de Convivencia (1.1.8, Res. 3461/2025) cuando aplica.
+ */
+export function noAplicaInvalidos(items: { codigo: string; estado: string }[], comites: string[]) {
+  const exigidos = new Set(["1.1.6", ...(comites.includes("CCL") ? ["1.1.8"] : [])]);
+  return items.filter((i) => (i.estado === "no_aplica" || i.estado === "NO_APLICA") && exigidos.has(i.codigo)).map((i) => i.codigo);
+}
+
 export type EstadoDiag = "cumple" | "no_cumple" | "no_aplica" | "";
 export type ItemDiag = { codigo: string; ciclo: string; grupo: string; descripcion: string; puntaje: number; modo: string; actividad: string; estado: EstadoDiag; observacion: string };
 

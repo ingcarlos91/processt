@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 import { requiereUsuario } from "@/lib/auth/sesion";
 import { actualizarDocumentos } from "@/lib/generador/documentos";
 
-export type ItemInspeccion = { pregunta: string; resultado: "cumple" | "no_cumple" | "na" | ""; observacion?: string; accion?: { descripcion: string; responsable?: string; fechaLimite?: string } | null };
+export type ItemInspeccion = { pregunta: string; resultado: "cumple" | "no_cumple" | "na" | ""; observacion?: string; accion?: { descripcion: string; causa?: string; responsable?: string; fechaLimite?: string } | null };
 const dia = (s?: string | null) => (s && /^\d{4}-\d{2}-\d{2}$/.test(s) ? new Date(s + "T12:00:00Z") : null);
 
 /** Guarda la inspección y crea una acción (FOR-06) por cada hallazgo marcado para seguimiento. */
@@ -22,6 +22,7 @@ export async function guardarInspeccion(empresaId: string, d: { id?: string; lis
     await db.accion.create({ data: {
       empresaId, inspeccionId: insp.id, origen: "inspeccion", fecha,
       hallazgo: `${d.lista}${d.lugar ? ` (${d.lugar})` : ""}: ${it.pregunta}${it.observacion ? ` — ${it.observacion}` : ""}`,
+      causa: it.accion.causa?.trim() || null,
       tipo: "correctiva", jerarquia: "administrativo", descripcion: it.accion.descripcion.trim(), responsable: it.accion.responsable || null, fechaLimite: dia(it.accion.fechaLimite),
     } });
     acciones++;

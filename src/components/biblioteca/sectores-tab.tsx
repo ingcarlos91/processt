@@ -41,7 +41,7 @@ export function SectoresTab({ sectores, tareas, zonas, iaActiva }: { sectores: S
           <DialogContent>
             <DialogHeader><DialogTitle>Nuevo sector</DialogTitle><DialogDescription>Un sector agrupa procesos, zonas y cargos típicos. Al elegir el código CIIU de una empresa, el sistema propone el sector que tenga ese código.</DialogDescription></DialogHeader>
             <Field><FieldLabel>Nombre</FieldLabel><Input value={nuevo.nombre} onChange={(e) => setNuevo({ ...nuevo, nombre: e.target.value })} placeholder="Ej: Minería de materiales de construcción" /></Field>
-            <Field><FieldLabel>Descripción</FieldLabel><Input value={nuevo.descripcion} onChange={(e) => setNuevo({ ...nuevo, descripcion: e.target.value })} /></Field>
+            <Field><FieldLabel>Descripción</FieldLabel><Input value={nuevo.descripcion} placeholder="Ej.: Extracción de arena, gravilla y arcilla" onChange={(e) => setNuevo({ ...nuevo, descripcion: e.target.value })} /></Field>
             <Field><FieldLabel>Códigos CIIU</FieldLabel><Input value={nuevo.ciius} onChange={(e) => setNuevo({ ...nuevo, ciius: e.target.value })} placeholder="08, 0811" /><FieldDescription>División de 2 dígitos o clase de 4 dígitos, separados por coma.</FieldDescription></Field>
             <DialogFooter>
               <DialogClose render={<Button variant="outline" />}>Cancelar</DialogClose>

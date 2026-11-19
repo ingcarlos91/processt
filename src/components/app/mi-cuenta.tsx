@@ -73,8 +73,8 @@ export function MiCuenta({ yo }: { yo: Yo }) {
           <Button disabled={pendP || !cambioPerfil} onClick={() => startP(async () => { const r = await actualizarMiPerfil(d); if ("error" in r) toast.error(r.error); else toast.success("Datos actualizados"); })}>{pendP && <Spinner />} Guardar cambios</Button>
         </>}>
         <FieldGroup className="grid gap-4 sm:grid-cols-2">
-          <Field><FieldLabel htmlFor="mn">Nombre completo</FieldLabel><Input id="mn" value={d.nombre} onChange={(e) => setD({ ...d, nombre: e.target.value })} /></Field>
-          <Field><FieldLabel htmlFor="me">Correo</FieldLabel><Input id="me" type="email" value={d.email} onChange={(e) => setD({ ...d, email: e.target.value })} /></Field>
+          <Field><FieldLabel htmlFor="mn">Nombre completo</FieldLabel><Input id="mn" placeholder="Nombres y apellidos" value={d.nombre} onChange={(e) => setD({ ...d, nombre: e.target.value })} /></Field>
+          <Field><FieldLabel htmlFor="me">Correo</FieldLabel><Input id="me" placeholder="nombre@empresa.com" type="email" value={d.email} onChange={(e) => setD({ ...d, email: e.target.value })} /></Field>
         </FieldGroup>
       </Bloque>
 
