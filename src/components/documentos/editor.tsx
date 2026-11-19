@@ -27,7 +27,7 @@ export function DocumentoEditor({ empresaId, doc, normas, secciones, firmados }:
   const [pend, start] = useTransition();
   const run = (fn: () => Promise<unknown>, ok?: string) => start(async () => { await fn(); if (ok) toast.success(ok); });
   return (
-    <div className="space-y-4 max-w-5xl">
+    <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-2">
         <Link href={`/empresas/${empresaId}/documentos`} className={buttonVariants({ variant: "ghost", size: "sm" })}><ArrowLeft /> Documentos</Link>
         <div className="flex-1" />

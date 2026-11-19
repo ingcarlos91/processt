@@ -13,9 +13,11 @@ export function EstadoDocumento({ estado, version, firmadoVersion, className }: 
         <span className={cn("size-1.5 rounded-full", e.punto)} />{e.t}{extra}
       </TooltipTrigger>
       <TooltipContent className="max-w-xs text-left">
-        <div className="font-medium">{e.t}</div>
-        <div className="mt-0.5 opacity-90">{e.que}</div>
-        <div className="mt-1.5 opacity-90"><span className="font-medium">Siguiente paso:</span> {e.siguiente}</div>
+        <div className="block space-y-1.5">
+          <div className="font-medium">{e.t}</div>
+          <p className="opacity-90">{e.que}</p>
+          <p className="opacity-90"><span className="font-medium">Siguiente paso:</span> {e.siguiente}</p>
+        </div>
       </TooltipContent>
     </Tooltip>
   );
