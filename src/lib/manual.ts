@@ -12,14 +12,16 @@ const E = "/empresas/[^/]+";
 
 export const MANUAL: SeccionManual[] = [
   {
-    id: "inicio", titulo: "Empresas (inicio)", ruta: /^\/$/,
-    resumen: "Lista de las empresas cliente. Desde aquí se crea una empresa nueva y se entra a gestionar su SG-SST.",
+    id: "inicio", titulo: "Tablero de la consultora (inicio)", ruta: /^\/$/,
+    resumen: "Su cartera de clientes de un vistazo: indicadores, lo vencido y lo próximo de todas las empresas, y a quién atender primero.",
     partes: [
-      { titulo: "Tabla de empresas", que: "Cada empresa con su clase de riesgo, trabajadores, nivel de estándares (7, 21 o 60), resultado de la evaluación, avance del plan anual, peligros en la matriz y documentos.", botones: [{ nombre: "Nombre de la empresa", hace: "Lleva al Resumen de la empresa, donde está todo su SG-SST por pestañas." }] },
-      { titulo: "Nueva empresa", que: "Cuestionario guiado de 7 pasos.", botones: [{ nombre: "Nueva empresa", hace: "Abre el cuestionario. Al terminar, el sistema calcula el nivel de estándares, los comités y las normas aplicables, y precarga la matriz de peligros por cargo." }] },
+      { titulo: "Indicadores de la cartera", que: "Empresas y trabajadores cubiertos, cumplimiento promedio de estándares, empresas en estado crítico, avance del plan anual de toda la cartera, documentos firmados y fechas vencidas." },
+      { titulo: "Atención: vencidos y próximos 14 días", que: "Las fechas del planeador que requieren acción pronto, de todas las empresas. Clic para ir a resolverla.", botones: [{ nombre: "Planeador", hace: "Abre el planeador completo." }] },
+      { titulo: "Prioridad por empresa", que: "Empresas ordenadas por urgencia: plazos de accidentes, estado crítico, sin autoevaluación, acciones y actividades vencidas, matriz desactualizada, documentos por firmar o sin generar." },
+      { titulo: "Tabla de empresas", que: "Riesgo, trabajadores, nivel, resultado de estándares, avance del plan, peligros prioritarios, documentos firmados y número de pendientes (pase el mouse para ver cuáles).", botones: [{ nombre: "Nombre de la empresa", hace: "Abre el Resumen de la empresa." }, { nombre: "Nueva empresa", hace: "Abre el cuestionario para crear una empresa." }] },
+      { titulo: "Cartera por nivel y riesgo", que: "Cuántas empresas tiene en cada nivel de estándares (7, 21, 60) y clase de riesgo." },
     ],
-    pasos: ["Cree la empresa con “Nueva empresa”.", "Revise el Resumen y la matriz de peligros.", "Haga la evaluación inicial, genere el plan anual y luego los documentos."],
-    relacionadas: ["nueva", "resumen"],
+    relacionadas: ["planeador", "nueva", "resumen"],
   },
   {
     id: "nueva", titulo: "Nueva empresa / Datos de la empresa", ruta: new RegExp(`^(/empresas/nueva|${E}/datos)$`),

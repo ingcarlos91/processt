@@ -1,66 +1,111 @@
 import Link from "next/link";
-import { Plus } from "lucide-react";
-import { db } from "@/lib/db";
+import { AlertTriangle, ArrowRight, CalendarClock, Plus } from "lucide-react";
 import { Page, PageHeader, Section, Stat } from "@/components/app/ui";
 import { buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { EstadoVacio } from "@/components/app/ilustraciones";
+import { Tip } from "@/components/app/tip";
+import { tableroConsultora } from "@/lib/tablero";
+import { fechasPlaneador, CATEGORIAS } from "@/lib/planeador";
+import { cn } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
 const VARIANTE: Record<string, "destructive" | "secondary" | "default"> = { "CRÍTICO": "destructive", "MODERADAMENTE ACEPTABLE": "secondary", ACEPTABLE: "default" };
+const ROMANO = ["", "I", "II", "III", "IV", "V"];
+const corta = (s: string) => new Date(s).toLocaleDateString("es-CO", { day: "numeric", month: "short", timeZone: "UTC" });
 
 export default async function Home() {
-  const empresas = await db.empresa.findMany({
-    orderBy: { razonSocial: "asc" },
-    include: { evaluaciones: { orderBy: { fecha: "desc" }, take: 1 }, actividades: { select: { estado: true, mes: true, anio: true } }, _count: { select: { documentos: true, peligros: true } } },
-  });
-  const mes = new Date().getMonth() + 1;
-  const anio = new Date().getFullYear();
-  const pendientesMes = empresas.reduce((s, e) => s + e.actividades.filter((a) => a.anio === anio && a.mes === mes && a.estado === "PENDIENTE").length, 0);
-  const vencidas = empresas.reduce((s, e) => s + e.actividades.filter((a) => a.anio === anio && a.mes < mes && a.estado === "PENDIENTE").length, 0);
+  const hoy = new Date();
+  const [{ filas, cartera, prioridad }, fechas] = await Promise.all([
+    tableroConsultora(hoy),
+    fechasPlaneador({ desde: hoy, hasta: new Date(hoy.getTime() + 14 * 864e5), hoy }),
+  ]);
+  const atencion = fechas.filter((f) => f.estado !== "hecho" && !f.mesCompleto).slice(0, 10);
+  const vencidosPlaneador = fechas.filter((f) => f.estado === "vencido").length;
   const nueva = <Link href="/empresas/nueva" className={buttonVariants()}><Plus /> Nueva empresa</Link>;
+  const pct = (a: number, b: number) => (b ? Math.round((a / b) * 100) : 0);
 
   return (
     <Page>
-      <PageHeader title="Empresas" description="Cada empresa cliente con su SG-SST: nivel de estándares mínimos (Res. 0312/2019), evaluación, matriz de peligros, documentos y plan anual." actions={nueva} />
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <Stat label="Empresas activas" value={empresas.length} />
-        <Stat label="Actividades pendientes este mes" value={pendientesMes} />
-        <Stat label="Actividades vencidas" value={vencidas} tone={vencidas ? "bad" : "ok"} />
-        <Stat label="Documentos generados" value={empresas.reduce((s, e) => s + e._count.documentos, 0)} />
-      </div>
-      {empresas.length === 0 ? (
-        <EstadoVacio ilustracion="empresas" titulo={<>Aún no hay empresas</>} descripcion={<>Cree la primera empresa y el sistema generará su SG-SST completo según la norma.</>}>{nueva}</EstadoVacio>
+      <PageHeader title="Tablero de la consultora" description="Su cartera de clientes de un vistazo: cumplimiento, pendientes y a quién atender primero." actions={nueva} />
+      {filas.length === 0 ? (
+        <EstadoVacio ilustracion="empresas" titulo="Aún no hay empresas" descripcion="Cree la primera empresa y el sistema generará su SG-SST completo según la norma.">{nueva}</EstadoVacio>
       ) : (
-        <Section contentClassName="px-0">
-          <Table>
-            <TableHeader>
-              <TableRow><TableHead className="pl-6">Empresa</TableHead><TableHead>Riesgo</TableHead><TableHead>Trabajadores</TableHead><TableHead>Estándares</TableHead><TableHead>Última evaluación</TableHead><TableHead>Plan anual</TableHead><TableHead>Matriz</TableHead><TableHead className="pr-6">Documentos</TableHead></TableRow>
-            </TableHeader>
-            <TableBody>
-              {empresas.map((e) => {
-                const ev = e.evaluaciones[0];
-                const p = ev ? (ev.nivel === 60 ? ev.puntajeBruto : ev.puntajeAjustado) : null;
-                const acts = e.actividades.filter((a) => a.anio === anio);
-                const ej = acts.filter((a) => a.estado === "EJECUTADA").length;
-                return (
+        <>
+          <div className="grid grid-cols-2 gap-4 lg:grid-cols-6">
+            <Stat label="Empresas" value={cartera.empresas} hint={`${cartera.trabajadores} trabajadores cubiertos`} />
+            <Stat label="Cumplimiento promedio" value={cartera.cumplimientoPromedio != null ? `${cartera.cumplimientoPromedio}%` : "—"} hint={cartera.sinEvaluacion ? `${cartera.sinEvaluacion} sin autoevaluación` : "Estándares mínimos"} tone={cartera.cumplimientoPromedio == null ? undefined : cartera.cumplimientoPromedio > 85 ? "ok" : cartera.cumplimientoPromedio >= 60 ? "warn" : "bad"} />
+            <Stat label="En estado crítico" value={cartera.criticas} hint="Menos de 60 % en estándares" tone={cartera.criticas ? "bad" : "ok"} />
+            <Stat label="Plan anual" value={cartera.planCumplimiento != null ? `${cartera.planCumplimiento}%` : "—"} hint="Ejecutado en el año, toda la cartera" />
+            <Stat label="Documentos firmados" value={`${cartera.docsFirmados} / ${cartera.docsAplicables}`} hint={<Progress value={pct(cartera.docsFirmados, cartera.docsAplicables)} />} />
+            <Stat label="Fechas vencidas" value={vencidosPlaneador} hint={<Link href="/planeador" className="underline underline-offset-2">Ver planeador</Link>} tone={vencidosPlaneador ? "bad" : "ok"} />
+          </div>
+
+          <div className="grid gap-6 lg:grid-cols-5">
+            <Section className="lg:col-span-3" title={<span className="flex items-center gap-2"><CalendarClock className="size-4" /> Atención: vencidos y próximos 14 días</span>} actions={<Link href="/planeador" className={buttonVariants({ size: "sm", variant: "ghost" })}>Planeador <ArrowRight /></Link>} contentClassName="px-0">
+              {atencion.length === 0 ? <p className="px-6 py-4 text-sm text-muted-foreground">Nada vencido ni con fecha en los próximos 14 días.</p> : (
+                <ul className="divide-y">
+                  {atencion.map((f) => (
+                    <li key={f.id}>
+                      <Link href={f.href} className="flex items-center gap-3 px-6 py-2.5 hover:bg-muted/40">
+                        <span className={cn("w-14 shrink-0 text-xs", f.estado === "vencido" ? "font-medium text-red-600" : "text-muted-foreground")}>{f.estado === "vencido" ? "Vencido" : corta(f.fecha)}</span>
+                        <span className={cn("size-2 shrink-0 rounded-full", CATEGORIAS[f.categoria].color)} />
+                        <span className="min-w-0 flex-1 truncate text-sm"><span className="font-medium">{f.empresa}:</span> {f.titulo}</span>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </Section>
+            <Section className="lg:col-span-2" title={<span className="flex items-center gap-2"><AlertTriangle className="size-4" /> Prioridad por empresa</span>} description="Ordenadas por lo más urgente." contentClassName="px-0">
+              {prioridad.length === 0 ? <p className="px-6 py-4 text-sm text-muted-foreground">Ninguna empresa con pendientes urgentes.</p> : (
+                <ul className="divide-y">
+                  {prioridad.slice(0, 6).map((f, i) => (
+                    <li key={f.id} className="px-6 py-3">
+                      <Link href={`/empresas/${f.id}`} className="flex items-center gap-2 font-medium hover:underline"><span className="flex size-5 items-center justify-center rounded-full bg-muted text-[11px]">{i + 1}</span>{f.nombre}</Link>
+                      <div className="mt-1.5 flex flex-wrap gap-1">{f.motivos.slice(0, 4).map((m) => <Badge key={m} variant="outline" className="font-normal">{m}</Badge>)}</div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </Section>
+          </div>
+
+          <Section title="Empresas" description="Pase el mouse sobre los datos para ver el detalle." contentClassName="px-0">
+            <Table>
+              <TableHeader>
+                <TableRow><TableHead className="pl-6">Empresa</TableHead><TableHead>Riesgo</TableHead><TableHead>Trab.</TableHead><TableHead>Nivel</TableHead><TableHead>Estándares</TableHead><TableHead>Plan anual</TableHead><TableHead>Matriz</TableHead><TableHead>Documentos firmados</TableHead><TableHead className="pr-6">Pendientes</TableHead></TableRow>
+              </TableHeader>
+              <TableBody>
+                {filas.map((e) => (
                   <TableRow key={e.id}>
-                    <TableCell className="pl-6"><Link href={`/empresas/${e.id}`} className="font-medium hover:underline">{e.razonSocial}</Link><div className="text-xs text-muted-foreground">NIT {e.nit}{e.digitoVerificacion ? `-${e.digitoVerificacion}` : ""} · {e.ciudad}</div></TableCell>
-                    <TableCell>{["", "I", "II", "III", "IV", "V"][e.claseRiesgo]}</TableCell>
-                    <TableCell>{e.nTrabajadoresPlanta + e.nEnMision}</TableCell>
-                    <TableCell><Badge variant="outline">{e.nivelEstandares}</Badge></TableCell>
-                    <TableCell>{ev?.valoracion ? <Badge variant={VARIANTE[ev.valoracion]}>{p}% · {ev.valoracion}</Badge> : <span className="text-xs text-muted-foreground">{ev ? "En curso" : "Sin evaluar"}</span>}</TableCell>
-                    <TableCell>{acts.length ? `${Math.round((ej / acts.length) * 100)}% (${ej}/${acts.length})` : <span className="text-xs text-muted-foreground">Sin plan</span>}</TableCell>
-                    <TableCell>{e._count.peligros} peligros</TableCell>
-                    <TableCell className="pr-6">{e._count.documentos}</TableCell>
+                    <TableCell className="pl-6"><Link href={`/empresas/${e.id}`} className="font-medium hover:underline">{e.nombre}</Link><div className="text-xs text-muted-foreground">NIT {e.nit}</div></TableCell>
+                    <TableCell>{ROMANO[e.claseRiesgo]}</TableCell>
+                    <TableCell>{e.trabajadores}</TableCell>
+                    <TableCell><Badge variant="outline">{e.nivel}</Badge></TableCell>
+                    <TableCell>{e.valoracion ? <Tip texto={`Autoevaluación del ${e.evaluacionFecha?.slice(0, 10)}`}><Badge variant={VARIANTE[e.valoracion]}>{e.puntaje}% · {e.valoracion.toLowerCase()}</Badge></Tip> : <span className="text-xs text-muted-foreground">Sin evaluar</span>}</TableCell>
+                    <TableCell>{e.planTotal ? <Tip texto={`${e.planEjecutadas} de ${e.planTotal} actividades del año ejecutadas; ${e.planVencidas} vencidas`}><div className="w-24"><div className="text-xs">{pct(e.planEjecutadas, e.planTotal)}%</div><Progress value={pct(e.planEjecutadas, e.planTotal)} /></div></Tip> : <span className="text-xs text-muted-foreground">Sin plan este año</span>}</TableCell>
+                    <TableCell className="text-xs"><Tip texto={`${e.peligros} peligros aprobados; ${e.prioritarios} en nivel I o II; ${e.sugeridosMatriz} sugeridos sin revisar`}><span>{e.peligros} · <span className={e.prioritarios ? "font-medium text-orange-700" : ""}>{e.prioritarios} prioritarios</span></span></Tip></TableCell>
+                    <TableCell><Tip texto={`${e.docsGenerados} generados de ${e.docsAplicables} aplicables; ${e.docsVolverFirmar} por volver a firmar`}><div className="w-28"><div className="text-xs">{e.docsFirmados} / {e.docsAplicables}</div><Progress value={pct(e.docsFirmados, e.docsAplicables)} /></div></Tip></TableCell>
+                    <TableCell className="pr-6">{e.motivos.length ? <Tip texto={<ul>{e.motivos.map((m) => <li key={m}>• {m}</li>)}</ul>}><Badge variant={e.prioridad >= 8 ? "destructive" : "outline"}>{e.motivos.length}</Badge></Tip> : <Badge variant="secondary">Al día</Badge>}</TableCell>
                   </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </Section>
+                ))}
+              </TableBody>
+            </Table>
+          </Section>
+
+          <div className="grid gap-6 md:grid-cols-2">
+            <Section title="Cartera por nivel de estándares" description="Res. 0312/2019 arts. 3, 9 y 16.">
+              <div className="space-y-2">{cartera.porNivel.map((x) => <div key={x.nivel} className="flex items-center gap-3 text-sm"><span className="w-28 shrink-0">{x.nivel} estándares</span><Progress className="flex-1" value={pct(x.n, cartera.empresas)} /><span className="w-6 text-right tabular-nums">{x.n}</span></div>)}</div>
+            </Section>
+            <Section title="Cartera por clase de riesgo" description="Clase de riesgo de la ARL (Decreto 1607/2002).">
+              <div className="space-y-2">{cartera.porRiesgo.map((x) => <div key={x.riesgo} className="flex items-center gap-3 text-sm"><span className="w-28 shrink-0">Riesgo {ROMANO[x.riesgo]}</span><Progress className="flex-1" value={pct(x.n, cartera.empresas)} /><span className="w-6 text-right tabular-nums">{x.n}</span></div>)}</div>
+            </Section>
+          </div>
+        </>
       )}
     </Page>
   );
