@@ -55,6 +55,8 @@ IA opcional: agregar `AI_GATEWAY_API_KEY=...` en `.env`. Sin clave, “Sugerir t
 
 - Accidentes e incidentes: pestaña con registro por evento (AT, incidente, EL, ausentismo), semáforo de plazos (FURAT 2 días hábiles — Decreto Ley 1295/1994 art. 62; investigación 15 días y remisión a ARL de graves/mortales — Res. 1401/2007), investigación (equipo art. 7, porqués, causas inmediatas y básicas, peligro relacionado → matriz), sugerencias por IA o por reglas, acciones con jerarquía de controles (modelo `Accion`, FOR-06) que se pueden llevar al plan anual, informe FOR-07 por evento en Word, soportes por evento en Evidencias (3.2.1/3.2.2). Nuevos FOR-07 (por evento, tipo INF) y FOR-08 (registro y análisis estadístico); FOR-06, ACT-06, ACT-02 y PRC-09 se alimentan de los eventos. Aviso de plazos vencidos en el Resumen.
 
+- Biblioteca → Accidentes (global): formas del evento con causas, medidas, lesiones/agentes/partes típicas y lección sugerida; agentes; tipos de lesión (con “sugiere grave”, Res. 1401/2007 art. 3); partes del cuerpo. Alimentan el formulario (selector con búsqueda y texto libre, típicas primero) y las sugerencias de investigación. Precarga: lugares desde sedes/zonas, tareas del cargo, responsable y fecha (+30 días) de acciones, lección por forma.
+
 ## Pendiente
 
 - PDF directo (hoy: Word; PDF desde Word o imprimir).

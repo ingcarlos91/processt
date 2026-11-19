@@ -15,12 +15,6 @@ export const GRAVEDAD: Record<string, { t: string; d: string }> = {
 
 export const VINCULACION: Record<string, string> = { planta: "Trabajador de planta", contratista: "Contratista", aprendiz: "Aprendiz o practicante", mision: "Trabajador en misión", visitante: "Visitante" };
 
-// Listas guía (se puede escribir otra opción).
-export const MECANISMOS = ["Caída de personas a nivel", "Caída de personas a distinto nivel", "Caída de objetos", "Golpe contra objetos", "Golpe por objetos", "Atrapamiento", "Corte o pinchazo", "Pisada sobre objetos", "Sobreesfuerzo", "Exposición a temperaturas extremas", "Contacto con electricidad", "Contacto con sustancias químicas", "Proyección de partículas", "Mordedura o picadura", "Accidente de tránsito", "Agresión o violencia", "Otro"];
-export const AGENTES = ["Máquinas o equipos", "Herramientas manuales", "Herramientas eléctricas", "Vehículos", "Escaleras o andamios", "Pisos y superficies", "Materiales u objetos", "Sustancias químicas", "Energía eléctrica", "Ambiente de trabajo", "Animales", "Personas", "Otro"];
-export const LESIONES = ["Golpe o contusión", "Herida", "Torcedura o esguince", "Fractura", "Quemadura", "Cuerpo extraño", "Luxación", "Amputación", "Trauma superficial", "Lesiones múltiples", "Otra"];
-export const PARTES_CUERPO = ["Cabeza", "Ojos", "Cuello", "Tronco", "Espalda", "Tórax", "Abdomen", "Miembros superiores", "Manos", "Dedos de la mano", "Miembros inferiores", "Pies", "Dedos del pie", "Ubicaciones múltiples", "Lesiones generales"];
-
 export const JERARQUIA: Record<string, string> = { eliminacion: "Eliminación", sustitucion: "Sustitución", ingenieria: "Control de ingeniería", administrativo: "Control administrativo", epp: "Elemento de protección personal" };
 export const ORIGEN_ACCION: Record<string, string> = { investigacion: "Investigación de evento", inspeccion: "Inspección", auditoria: "Auditoría", revision: "Revisión por la dirección", arl: "Recomendación de la ARL", autoridad: "Requerimiento de autoridad", trabajador: "Reporte de trabajador" };
 

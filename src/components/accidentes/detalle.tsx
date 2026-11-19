@@ -27,6 +27,8 @@ import { TIPOS_EVENTO, GRAVEDAD, JERARQUIA, ROLES_EQUIPO, type Analisis, type In
 import type { PlazoUI } from "@/lib/eventos-ui";
 import * as A from "@/app/actions/eventos";
 import type { SugerenciaInvestigacion } from "@/lib/ia/investigacion";
+import type { CatalogoAccidentes } from "@/lib/catalogo-accidentes";
+import { Combo } from "@/components/app/combo";
 
 type Accion = { id: string; hallazgo: string; causa: string; tipo: string; jerarquia: string; descripcion: string; responsable: string; fechaLimite: string; estado: string; fechaCierre: string; eficacia: string; enPlan: string };
 type Ev = {
@@ -75,8 +77,8 @@ function ListaTexto({ items, onChange, placeholder, numerada, sugeridos }: { ite
   );
 }
 
-export function EventoDetalle({ empresaId, ev, cargos, peligros, peligrosEnMatriz, equipoSugerido, responsable, iaActiva }: {
-  empresaId: string; ev: Ev; cargos: CargoOpcion[]; peligros: OpcionBuscador[]; peligrosEnMatriz: string[]; equipoSugerido: Integrante[]; responsable: string; iaActiva: boolean;
+export function EventoDetalle({ empresaId, ev, cargos, peligros, peligrosEnMatriz, equipoSugerido, responsable, iaActiva, cat, lugares, personas }: {
+  empresaId: string; ev: Ev; cargos: CargoOpcion[]; peligros: OpcionBuscador[]; peligrosEnMatriz: string[]; equipoSugerido: Integrante[]; responsable: string; iaActiva: boolean; cat: CatalogoAccidentes; lugares: string[]; personas: string[];
 }) {
   const router = useRouter();
   const [pend, start] = useTransition();
@@ -101,8 +103,9 @@ export function EventoDetalle({ empresaId, ev, cargos, peligros, peligrosEnMatri
   const [sug, setSug] = useState<{ fuente: string; s: SugerenciaInvestigacion } | null>(null);
   const [sugiriendo, startSug] = useTransition();
   // 4. Acciones
-  const vacia = { id: "", hallazgo: "", causa: "", tipo: "correctiva", jerarquia: "administrativo", descripcion: "", responsable: "", fechaLimite: "" };
-  const [acc, setAcc] = useState<typeof vacia | null>(null);
+  const en30 = () => new Date(Date.now() + 30 * 864e5).toISOString().slice(0, 10);
+  const vacia = () => ({ id: "", hallazgo: "", causa: "", tipo: "correctiva", jerarquia: "administrativo", descripcion: "", responsable, fechaLimite: en30() });
+  const [acc, setAcc] = useState<ReturnType<typeof vacia> | null>(null);
 
   const guardarInv = (msg = "Investigación guardada") => run(() => A.guardarInvestigacion(empresaId, ev.id, { equipo, analisis: an, lecciones, peligroId: peligroId || null }), msg);
   const sugerir = () => startSug(async () => {
@@ -136,7 +139,7 @@ export function EventoDetalle({ empresaId, ev, cargos, peligros, peligrosEnMatri
 
       <Paso n={1} titulo="Registro del evento" descripcion="Los datos que pide el FURAT y la investigación. Sin diagnósticos médicos (dato sensible)." normas={["Ley 1581/2012"]}
         accion={cambioDatos && <Button size="sm" disabled={pend} onClick={() => run(() => A.actualizarEvento(empresaId, ev.id, datos), "Registro actualizado")}><Save /> Guardar registro</Button>}>
-        <EventoForm d={datos} set={setDatos} cargos={cargos} />
+        <EventoForm d={datos} set={setDatos} cargos={cargos} cat={cat} lugares={lugares} />
         {cambioDatos && <div className="flex justify-end gap-2"><Button variant="ghost" onClick={() => setDatos(ev.datos)}>Descartar</Button><Button disabled={pend} onClick={() => run(() => A.actualizarEvento(empresaId, ev.id, datos), "Registro actualizado")}>{pend ? <Spinner /> : <Save />} Guardar registro</Button></div>}
       </Paso>
 
@@ -234,14 +237,14 @@ export function EventoDetalle({ empresaId, ev, cargos, peligros, peligrosEnMatri
 
       {t.investiga && (
         <Paso n={(t.reporta || grave) ? 4 : 3} titulo="Medidas de control y acciones" descripcion="Cada medida con responsable y fecha, según la jerarquía de controles. Se registran en FOR-06 y se pueden llevar al plan anual." normas={["Decreto 1072/2015 arts. 2.2.4.6.24 y 2.2.4.6.33"]}
-          accion={<Button size="sm" onClick={() => setAcc({ ...vacia, hallazgo: datos.mecanismo ? `${datos.mecanismo} — ${datos.cargo ?? ""}` : "Hallazgo de la investigación" })}><Plus /> Agregar acción</Button>}>
+          accion={<Button size="sm" onClick={() => setAcc({ ...vacia(), hallazgo: datos.mecanismo ? `${datos.mecanismo} — ${datos.cargo ?? ""}` : "Hallazgo de la investigación" })}><Plus /> Agregar acción</Button>}>
           {sug && sug.s.acciones.length > 0 && (
             <div className="space-y-1.5 rounded-lg border border-violet-200 bg-violet-50/50 p-3">
               <div className="text-sm font-medium">Medidas propuestas</div>
               {sug.s.acciones.map((a, i) => (
                 <div key={i} className="flex flex-wrap items-center gap-2 text-sm">
                   <Badge variant="outline">{JERARQUIA[a.jerarquia]}</Badge><span className="flex-1">{a.descripcion}</span>
-                  <Button size="xs" variant="outline" onClick={() => setAcc({ ...vacia, hallazgo: datos.mecanismo || "Hallazgo de la investigación", causa: [...(an.trabajo ?? []), ...(an.personales ?? [])][0] ?? "", tipo: a.tipo, jerarquia: a.jerarquia, descripcion: a.descripcion, responsable })}><Plus /> Usar</Button>
+                  <Button size="xs" variant="outline" onClick={() => setAcc({ ...vacia(), hallazgo: datos.mecanismo ? `${datos.mecanismo}${datos.cargo ? ` — ${datos.cargo}` : ""}` : "Hallazgo de la investigación", causa: [...(an.trabajo ?? []), ...(an.personales ?? [])][0] ?? "", tipo: a.tipo, jerarquia: a.jerarquia, descripcion: a.descripcion })}><Plus /> Usar</Button>
                 </div>
               ))}
             </div>
@@ -299,10 +302,10 @@ export function EventoDetalle({ empresaId, ev, cargos, peligros, peligrosEnMatri
             <div className="grid gap-4 sm:grid-cols-2">
               <Field className="sm:col-span-2"><FieldLabel htmlFor="a-d">Medida</FieldLabel><Textarea id="a-d" rows={2} value={acc.descripcion} onChange={(e) => setAcc({ ...acc, descripcion: e.target.value })} /></Field>
               <Field className="sm:col-span-2"><FieldLabel htmlFor="a-h">Hallazgo</FieldLabel><Input id="a-h" value={acc.hallazgo} onChange={(e) => setAcc({ ...acc, hallazgo: e.target.value })} /></Field>
-              <Field className="sm:col-span-2"><FieldLabel htmlFor="a-c">Causa que ataca</FieldLabel><Input id="a-c" list="a-c-l" value={acc.causa} onChange={(e) => setAcc({ ...acc, causa: e.target.value })} /><datalist id="a-c-l">{[...(an.actos ?? []), ...(an.condiciones ?? []), ...(an.personales ?? []), ...(an.trabajo ?? [])].filter(Boolean).map((c) => <option key={c} value={c} />)}</datalist></Field>
+              <Field className="sm:col-span-2"><FieldLabel htmlFor="a-c">Causa que ataca</FieldLabel><Combo id="a-c" value={acc.causa} onChange={(v) => setAcc({ ...acc, causa: v })} grupos={[{ titulo: "Causas básicas", opciones: [...(an.personales ?? []), ...(an.trabajo ?? [])].filter(Boolean).map((c) => ({ valor: c })) }, { titulo: "Causas inmediatas", opciones: [...(an.actos ?? []), ...(an.condiciones ?? [])].filter(Boolean).map((c) => ({ valor: c })) }]} /></Field>
               <Field><FieldLabel htmlFor="a-t">Tipo</FieldLabel><NativeSelect id="a-t" className="w-full" value={acc.tipo} onChange={(e) => setAcc({ ...acc, tipo: e.target.value })}><NativeSelectOption value="correctiva">Correctiva</NativeSelectOption><NativeSelectOption value="preventiva">Preventiva</NativeSelectOption><NativeSelectOption value="mejora">De mejora</NativeSelectOption></NativeSelect></Field>
               <Field><FieldLabel htmlFor="a-j" className="flex items-center gap-1">Jerarquía <Ayuda k="evJerarquia" /></FieldLabel><NativeSelect id="a-j" className="w-full" value={acc.jerarquia} onChange={(e) => setAcc({ ...acc, jerarquia: e.target.value })}>{Object.entries(JERARQUIA).map(([k, v]) => <NativeSelectOption key={k} value={k}>{v}</NativeSelectOption>)}</NativeSelect></Field>
-              <Field><FieldLabel htmlFor="a-r">Responsable</FieldLabel><Input id="a-r" value={acc.responsable} onChange={(e) => setAcc({ ...acc, responsable: e.target.value })} /></Field>
+              <Field><FieldLabel htmlFor="a-r">Responsable</FieldLabel><Combo id="a-r" value={acc.responsable} onChange={(v) => setAcc({ ...acc, responsable: v })} grupos={[{ titulo: "Personas registradas", opciones: personas.map((p) => ({ valor: p })) }]} /></Field>
               <Field><FieldLabel htmlFor="a-f">Fecha límite</FieldLabel><Input id="a-f" type="date" value={acc.fechaLimite} onChange={(e) => setAcc({ ...acc, fechaLimite: e.target.value })} /></Field>
             </div>
           )}

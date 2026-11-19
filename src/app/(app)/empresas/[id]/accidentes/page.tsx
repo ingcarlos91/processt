@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 import { plazosUI } from "@/lib/eventos-ui";
 import { EventosLista } from "@/components/accidentes/lista";
+import { cargarCatalogoAccidentes } from "@/lib/catalogo-accidentes";
 
 export const dynamic = "force-dynamic";
 
@@ -8,10 +9,13 @@ export default async function Accidentes({ params, searchParams }: PageProps<"/e
   const { id } = await params;
   const sp = await searchParams;
   const anio = Number(sp.anio) || new Date().getUTCFullYear();
-  const [eventos, cargos, acciones] = await Promise.all([
+  const [eventos, cargos, acciones, cat, sedes, zonas] = await Promise.all([
     db.evento.findMany({ where: { empresaId: id }, orderBy: { fecha: "desc" }, include: { _count: { select: { acciones: true, archivos: true } } } }),
     db.cargo.findMany({ where: { empresaId: id }, orderBy: { nombre: "asc" }, include: { tareas: { include: { tarea: { select: { nombre: true } } } } } }),
     db.accion.findMany({ where: { empresaId: id }, select: { estado: true, fechaLimite: true } }),
+    cargarCatalogoAccidentes(),
+    db.sede.findMany({ where: { empresaId: id }, select: { nombre: true } }),
+    db.zona.findMany({ where: { empresaId: id }, select: { nombre: true } }),
   ]);
   const hoy = new Date();
   const lista = eventos.map((e) => ({
@@ -21,7 +25,7 @@ export default async function Accidentes({ params, searchParams }: PageProps<"/e
   }));
   const anios = [...new Set([anio, hoy.getUTCFullYear(), ...eventos.map((e) => e.fecha.getUTCFullYear())])].sort((a, b) => b - a);
   return (
-    <EventosLista empresaId={id} anio={anio} anios={anios} eventos={lista}
+    <EventosLista empresaId={id} anio={anio} anios={anios} eventos={lista} cat={cat} lugares={[...new Set([...zonas, ...sedes].map((x) => x.nombre))]}
       cargos={cargos.map((c) => ({ id: c.id, nombre: c.nombre, tareas: c.tareas.map((t) => t.tarea.nombre) }))}
       acciones={{ abiertas: acciones.filter((a) => a.estado === "abierta").length, vencidas: acciones.filter((a) => a.estado === "abierta" && a.fechaLimite && a.fechaLimite < hoy).length }} />
   );

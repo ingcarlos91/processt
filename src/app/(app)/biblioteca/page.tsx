@@ -6,6 +6,8 @@ import { TareasTab } from "@/components/biblioteca/tareas-tab";
 import { SectoresTab } from "@/components/biblioteca/sectores-tab";
 import { CatalogosTab } from "@/components/biblioteca/catalogos-tab";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { AccidentesTab } from "@/components/biblioteca/accidentes-tab";
+import { cargarCatalogoAccidentes } from "@/lib/catalogo-accidentes";
 
 export const dynamic = "force-dynamic";
 
@@ -37,6 +39,7 @@ export default async function Biblioteca() {
           <TabsTrigger value="tareas">Tareas</TabsTrigger>
           <TabsTrigger value="peligros">Peligros</TabsTrigger>
           <TabsTrigger value="catalogos">Exámenes, EPP y capacitaciones</TabsTrigger>
+          <TabsTrigger value="accidentes">Accidentes</TabsTrigger>
         </TabsList>
         <TabsContent value="sectores" className="mt-4">
           <SectoresTab
@@ -54,6 +57,9 @@ export default async function Biblioteca() {
             catalogo={catalogoLite}
             peligros={peligros.map((p) => ({ id: p.id, clasificacion: p.clasificacion, sub: p.subclasificacion ?? "", descripcion: p.descripcion, efectos: p.efectosPosibles, nd: p.ndDefault, ne: p.neDefault, nc: p.ncDefault, ingenieria: p.medidaIngenieria ?? "", administrativa: p.medidaAdministrativa ?? "", epp: p.eppSugerido, examenes: p.examenesSugeridos, capacitaciones: p.capacitacionesSugeridas, normas: p.normas, pve: p.pveAsociado ?? "", validado: p.validado, usos: p._count.evaluados, enTareas: p._count.tareas }))}
           />
+        </TabsContent>
+        <TabsContent value="accidentes" className="mt-4">
+          <AccidentesTab cat={await cargarCatalogoAccidentes()} />
         </TabsContent>
         <TabsContent value="catalogos" className="mt-4">
           <CatalogosTab items={catalogo.map((c) => ({ id: c.id, tipo: c.tipo, nombre: c.nombre, descripcion: c.descripcion ?? "", detalle: (c.detalle ?? {}) as Record<string, unknown>, normas: c.normas, validado: c.validado }))} />

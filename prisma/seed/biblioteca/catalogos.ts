@@ -172,8 +172,11 @@ export const capacitaciones: Cap[] = [
   ["Curso virtual de 50 horas del SG-SST", "Curso del Ministerio del Trabajo.", "Responsable del SG-SST y COPASST", 50, "Única vez; actualización de 20 horas cada 3 años", ["RES-4927-2016"], true],
 ];
 
+import { itemsAccidentes } from "./accidentes";
+
 export function itemsCatalogo() {
   return [
+    ...itemsAccidentes(),
     ...examenes.map(([nombre, descripcion, enfasis, periodicidad, normas]) => ({ tipo: "EXAMEN", nombre, descripcion, detalle: { enfasis, periodicidad, momento: ["ingreso", "periodico", "retiro"] }, normas: normas ?? [] })),
     ...epp.map(([nombre, descripcion, parteCuerpo, normaTecnica, reposicion]) => ({ tipo: "EPP", nombre, descripcion, detalle: { parteCuerpo, normaTecnica, reposicion }, normas: [] as string[] })),
     ...capacitaciones.map(([nombre, descripcion, dirigidoA, intensidadHoras, periodicidad, normas, certificacion]) => ({ tipo: "CAPACITACION", nombre, descripcion, detalle: { dirigidoA, intensidadHoras, periodicidad, certificacion: !!certificacion }, normas: normas ?? [] })),
