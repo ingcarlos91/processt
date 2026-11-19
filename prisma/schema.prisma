@@ -91,6 +91,8 @@ model Empresa {
   fechaInicioSgsst         DateTime?   @map("fecha_inicio_sgsst")
   sectorTipoId             String?     @map("sector_tipo_id")
   sectorTipo               SectorTipo? @relation(fields: [sectorTipoId], references: [id])
+  // Datos que piden los documentos (emergencias, contactos, inventarios, presupuesto…). Ver src/lib/complementarios.ts
+  datosComplementarios     Json        @default("{}") @map("datos_complementarios")
   resultadoReglas          Json?       @map("resultado_reglas") // salida del motor de reglas (nivel, items, documentos, normas, comites) con norma_ref
   creadoEn                 DateTime    @default(now()) @map("creado_en")
   actualizadoEn            DateTime    @updatedAt @map("actualizado_en")
@@ -706,6 +708,8 @@ model Comite {
   periodoInicio DateTime?       @map("periodo_inicio")
   periodoFin    DateTime?       @map("periodo_fin")
   normaRef      String?         @map("norma_ref")
+  // Datos de la elección o conformación: convocatoria, votación, resultados.
+  datos         Json            @default("{}")
   miembros      ComiteMiembro[]
   actas         Acta[]
 

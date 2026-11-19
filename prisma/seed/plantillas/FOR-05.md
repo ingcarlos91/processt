@@ -12,7 +12,8 @@ normas: ["DEC-1072-2015"]
 | Campo | |
 |---|---|
 | Fecha | |
-| Sede | |
+| Sede | {{#each sedes}}{{nombre}}{{#unless @last}} / {{/unless}}{{/each}} |
+| Punto de encuentro | {{op.puntoEncuentro}} |
 | Escenario simulado | ☐ Sismo ☐ Incendio ☐ Otro: |
 | Tipo | ☐ Avisado ☐ Sin aviso |
 | Hora de la alarma | |
@@ -37,4 +38,4 @@ normas: ["DEC-1072-2015"]
 |---|---|---|---|
 | | | | |
 
-Firmas: Jefe de brigada ____________  Responsable del SG-SST ____________
+Firmas: ______________ {{#each integrantes.brigada.miembros}}{{#if (eq rol "jefe_brigada")}}{{nombre}}{{/if}}{{/each}} (Jefe de brigada)   ______________ {{responsable.nombre}} (Responsable del SG-SST)

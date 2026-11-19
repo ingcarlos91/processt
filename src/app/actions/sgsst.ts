@@ -221,3 +221,18 @@ export async function actualizarPeligroCatalogo(id: string, d: Record<string, st
   await db.peligroCatalogo.update({ where: { id }, data });
   revalidatePath("/biblioteca");
 }
+
+// ───────── Datos complementarios y datos de comités ─────────
+export async function guardarComplementarios(empresaId: string, datos: Record<string, unknown>) {
+  await requiereUsuario();
+  await db.empresa.update({ where: { id: empresaId }, data: { datosComplementarios: datos as object } });
+  rv(empresaId);
+  return { ok: true };
+}
+
+export async function guardarDatosComite(empresaId: string, comiteId: string, datos: Record<string, unknown>) {
+  await requiereUsuario();
+  await db.comite.update({ where: { id: comiteId }, data: { datos: datos as object } });
+  rv(empresaId);
+  return { ok: true };
+}

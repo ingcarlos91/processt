@@ -15,10 +15,11 @@ import { NormaRef } from "@/components/app/ui";
 import { Confirmar } from "@/components/app/confirmar";
 import { Porque } from "@/components/app/porque";
 import { Ayuda } from "@/components/app/ayuda";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import * as A from "@/app/actions/sgsst";
 
 type Miembro = { id: string; nombre: string; cedula: string; cargo: string; rol: string; representa: string };
-type Comite = { id: string; tipo: string; inicio: string; fin: string; normaRef: string; miembros: Miembro[] };
+type Comite = { id: string; tipo: string; inicio: string; fin: string; normaRef: string; datos: Record<string, unknown>; miembros: Miembro[] };
 
 const INFO: Record<string, { nombre: string; doc: string; desc: string }> = {
   COPASST: { nombre: "Comité Paritario de SST (COPASST)", doc: "ACT-01", desc: "Paritario, periodo de 2 años, reunión mensual, 4 horas semanales para sus funciones." },
@@ -77,7 +78,7 @@ export function ComitesEditor({ empresaId, requeridos, comites, composicion, ref
                 </div>
               )}
             </CardContent>
-            {c && <CardFooter className="border-t"><NuevoMiembro tipo={tipo} onAgregar={(m) => run(() => A.agregarMiembro(empresaId, c.id, m), "Integrante agregado")} /></CardFooter>}
+            {c && <CardFooter className="border-t flex-col items-stretch gap-4"><NuevoMiembro tipo={tipo} onAgregar={(m) => run(() => A.agregarMiembro(empresaId, c.id, m), "Integrante agregado")} />{tipo === "COPASST" && <DatosEleccion inicial={c.datos} onGuardar={(d) => run(() => A.guardarDatosComite(empresaId, c.id, d), "Datos de la elección guardados")} />}</CardFooter>}
           </Card>
         );
       })}
@@ -103,5 +104,45 @@ function NuevoMiembro({ tipo, onAgregar }: { tipo: string; onAgregar: (m: { nomb
       ) : <div />}
       <Button className="md:col-span-6 w-fit" size="sm" disabled={!m.nombre} onClick={() => { onAgregar(m); setM({ ...m, nombre: "", cedula: "", cargo: "" }); }}><Plus /> Agregar integrante</Button>
     </div>
+  );
+}
+
+type Eleccion = { inscripcionDesde?: string; inscripcionHasta?: string; fechaVotacion?: string; lugar?: string; horario?: string; resultados?: { candidato: string; votos: string }[]; blanco?: string; nulos?: string; votantes?: string; jurados?: string };
+
+/** Datos de la convocatoria y votación del COPASST (Res. 2013/1986). Se usan en el ACT-01. */
+function DatosEleccion({ inicial, onGuardar }: { inicial: Record<string, unknown>; onGuardar: (d: Eleccion) => void }) {
+  const [d, setD] = useState<Eleccion>({ resultados: [], ...(inicial as Eleccion) });
+  const res = d.resultados ?? [];
+  return (
+    <Collapsible>
+      <CollapsibleTrigger render={<Button variant="outline" size="sm" className="w-fit" />}>Datos de la elección (convocatoria y votación)</CollapsibleTrigger>
+      <CollapsibleContent className="pt-3 space-y-3">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+          <Field><FieldLabel className="text-xs">Inscripción desde</FieldLabel><Input type="date" value={d.inscripcionDesde ?? ""} onChange={(e) => setD({ ...d, inscripcionDesde: e.target.value })} /></Field>
+          <Field><FieldLabel className="text-xs">Inscripción hasta</FieldLabel><Input type="date" value={d.inscripcionHasta ?? ""} onChange={(e) => setD({ ...d, inscripcionHasta: e.target.value })} /></Field>
+          <Field><FieldLabel className="text-xs">Fecha de votación</FieldLabel><Input type="date" value={d.fechaVotacion ?? ""} onChange={(e) => setD({ ...d, fechaVotacion: e.target.value })} /></Field>
+          <Field><FieldLabel className="text-xs">Lugar</FieldLabel><Input value={d.lugar ?? ""} onChange={(e) => setD({ ...d, lugar: e.target.value })} placeholder="Sala de juntas" /></Field>
+          <Field><FieldLabel className="text-xs">Horario</FieldLabel><Input value={d.horario ?? ""} onChange={(e) => setD({ ...d, horario: e.target.value })} placeholder="8:00 a 12:00" /></Field>
+        </div>
+        <Field>
+          <FieldLabel className="text-xs">Resultados por candidato</FieldLabel>
+          {res.map((r, i) => (
+            <div key={i} className="flex gap-2">
+              <Input placeholder="Candidato" value={r.candidato} onChange={(e) => setD({ ...d, resultados: res.map((x, j) => (j === i ? { ...x, candidato: e.target.value } : x)) })} />
+              <Input className="w-28" type="number" placeholder="Votos" value={r.votos} onChange={(e) => setD({ ...d, resultados: res.map((x, j) => (j === i ? { ...x, votos: e.target.value } : x)) })} />
+              <Button variant="ghost" size="icon" aria-label="Quitar" onClick={() => setD({ ...d, resultados: res.filter((_, j) => j !== i) })}><Trash2 /></Button>
+            </div>
+          ))}
+          <Button variant="outline" size="sm" className="w-fit" onClick={() => setD({ ...d, resultados: [...res, { candidato: "", votos: "" }] })}><Plus /> Agregar candidato</Button>
+        </Field>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+          <Field><FieldLabel className="text-xs">Votos en blanco</FieldLabel><Input type="number" value={d.blanco ?? ""} onChange={(e) => setD({ ...d, blanco: e.target.value })} /></Field>
+          <Field><FieldLabel className="text-xs">Votos nulos</FieldLabel><Input type="number" value={d.nulos ?? ""} onChange={(e) => setD({ ...d, nulos: e.target.value })} /></Field>
+          <Field><FieldLabel className="text-xs">Total de votantes</FieldLabel><Input type="number" value={d.votantes ?? ""} onChange={(e) => setD({ ...d, votantes: e.target.value })} /></Field>
+          <Field><FieldLabel className="text-xs">Jurados de votación</FieldLabel><Input value={d.jurados ?? ""} onChange={(e) => setD({ ...d, jurados: e.target.value })} placeholder="Nombres" /></Field>
+        </div>
+        <Button size="sm" className="w-fit" onClick={() => onGuardar(d)}>Guardar datos de la elección</Button>
+      </CollapsibleContent>
+    </Collapsible>
   );
 }

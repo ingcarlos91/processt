@@ -27,7 +27,7 @@ normas: ["LEY-1010-2006","RES-3461-2025","LEY-2365-2024","RES-2646-2008"]
 
 ## Canales de atención
 
-Las quejas pueden presentarse por escrito ante cualquier miembro del Comité de Convivencia Laboral o al correo {{default empresa.correo "_______________"}}, con garantía de confidencialidad.
+Las quejas pueden presentarse por escrito ante cualquier miembro del Comité de Convivencia Laboral o al correo {{op.correoQuejas}}, con garantía de confidencialidad.
 
 ## Firma
 

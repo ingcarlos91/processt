@@ -28,7 +28,7 @@ Todo trabajo en el que exista el riesgo de caer a 1,5 m o más sobre un nivel in
 ## Medidas de prevención
 
 1. Capacitación y certificación de los trabajadores según su rol (trabajador autorizado, coordinador de trabajo en alturas).
-2. Designación del coordinador de trabajo en alturas: ______________________.
+2. Designación del coordinador de trabajo en alturas: **{{op.coordinadorAlturas.nombre}}**{{#if op.coordinadorAlturas.cedula}} (certificado {{op.coordinadorAlturas.cedula}}){{/if}}.
 3. Sistema de permiso de trabajo y listas de chequeo antes de cada tarea.
 4. Delimitación y señalización del área.
 5. Evaluación médica con concepto de aptitud para trabajo en alturas.

@@ -29,8 +29,13 @@ Definir los elementos de protección personal (EPP) requeridos por cargo en **{{
 
 ## Registro de entrega de EPP
 
+Una fila por cargo con sus EPP; complete fecha, trabajador y firma en cada entrega.
+
 | Fecha | Trabajador | Cédula | Cargo | EPP entregado | Cantidad | Tipo (dotación / reposición) | Capacitado en uso (S/N) | Firma |
 |---|---|---|---|---|---|---|---|---|
-| | | | | | | | | |
-| | | | | | | | | |
+{{#each cargos}}
+{{#if epp.length}}
+| | | | {{nombre}} | {{join epp "; "}} | | | | |
+{{/if}}
+{{/each}}
 | | | | | | | | | |

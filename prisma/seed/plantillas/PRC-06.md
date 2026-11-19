@@ -28,7 +28,7 @@ Acoso sexual es todo acto de persecución, hostigamiento o asedio, de carácter 
 
 ## Canal de denuncia
 
-La denuncia puede presentarse de forma verbal o escrita ante: ______________________ (persona designada por la gerencia, distinta del Comité de Convivencia Laboral) o al correo ______________________. Se garantiza confidencialidad, no revictimización y prohibición de represalias.
+La denuncia puede presentarse de forma verbal o escrita ante: **{{op.acosoSexual.nombre}}**{{#if op.acosoSexual.cargo}}, {{op.acosoSexual.cargo}}{{/if}} (persona designada por la gerencia, distinta del Comité de Convivencia Laboral){{#if op.acosoSexual.correo}}, contacto {{op.acosoSexual.correo}}{{/if}}. Se garantiza confidencialidad, no revictimización y prohibición de represalias.
 
 ## Ruta de atención
 

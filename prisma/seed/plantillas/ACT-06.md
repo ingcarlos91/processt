@@ -14,7 +14,7 @@ normas: ["DEC-1072-2015","RES-0312-2019"]
 | Empresa | {{empresa.razonSocial}} |
 | Periodo revisado | Enero a diciembre de {{anio}} |
 | Fecha de la revisión | |
-| Participantes | Representante legal, responsable del SG-SST, {{#if comites.copasst.esVigia}}Vigía de SST{{else}}representante del COPASST{{/if}} |
+| Participantes | {{empresa.representanteLegal}} (representante legal), {{responsable.nombre}} (responsable del SG-SST), {{integrantes.copasst.presidente}} ({{#if comites.copasst.esVigia}}Vigía de SST{{else}}COPASST{{/if}}) |
 
 ## Revisión (art. 2.2.4.6.31 del Decreto 1072 de 2015)
 

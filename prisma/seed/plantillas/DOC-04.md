@@ -27,9 +27,9 @@ Espacio para reuniones de los comités, equipos de cómputo, elementos de emerge
 | Rubro | Descripción | Estándar | Valor ($) |
 |---|---|---|---|
 {{#each presupuesto}}
-| {{rubro}} | {{descripcion}} | {{estandar}} | |
+| {{rubro}} | {{descripcion}} | {{estandar}} | {{valor}} |
 {{/each}}
-| **Total** | | | |
+| **Total** | | | **{{op.presupuestoTotal}}** |
 
 ## Aprobación
 

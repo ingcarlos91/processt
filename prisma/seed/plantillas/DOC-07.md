@@ -52,4 +52,6 @@ Informar al médico que realiza las evaluaciones médicas ocupacionales los perf
 
 Elaboró: {{consultora.profesional}} — Licencia SST {{consultora.licencia}}  |  Fecha: {{fecha}}
 
-Validó (médico de la IPS): ______________________ Licencia: __________
+IPS: {{op.ips}}
+
+Validó (médico de la IPS): {{op.medicoIps.nombre}}  Licencia: {{default op.medicoIps.cedula "__________"}}

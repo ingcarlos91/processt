@@ -15,13 +15,19 @@ Garantizar el mantenimiento periódico de instalaciones, equipos, máquinas y he
 
 | Equipo / instalación | Ubicación | Tipo de mantenimiento | Frecuencia | Responsable (interno / proveedor) | Próxima fecha |
 |---|---|---|---|---|---|
+{{#if op.equipos.length}}
+{{#each op.equipos}}
+| {{celda equipo}} | {{celda ubicacion}} | {{tipo}} | {{frecuencia}} | {{celda responsable}} | {{proxima}} |
+{{/each}}
+{{else}}
 | Instalaciones eléctricas | | Preventivo | Anual | | |
 | Extintores (recarga) | | Preventivo | Anual | Proveedor certificado | |
 | Equipos de cómputo | | Preventivo | Semestral | | |
 | Aire acondicionado / ventilación | | Preventivo | Semestral | | |
-{{#if dis.maquinaria}}| Máquinas de producción | | Preventivo | Según fabricante | | |
-{{/if}}{{#if dis.conduccion}}| Vehículos | | Preventivo | Según kilometraje | | |
-{{/if}}{{#if dis.izaje}}| Montacargas / equipos de izaje | | Preventivo y certificación | Según fabricante | | |
+{{/if}}
+{{#if dis.maquinaria}}| Máquinas de producción (completar inventario) | | Preventivo | Según fabricante | | |
+{{/if}}{{#if dis.conduccion}}| Vehículos (completar inventario) | | Preventivo | Según kilometraje | | |
+{{/if}}{{#if dis.izaje}}| Montacargas / equipos de izaje (completar inventario) | | Preventivo y certificación | Según fabricante | | |
 {{/if}}
 
 ## Hoja de vida de equipos

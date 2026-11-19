@@ -19,12 +19,18 @@ normas: ["RES-2013-1986"]
 
 ## Asistentes
 
-| Nombre | Rol | Firma |
-|---|---|---|
-| | Presidente | |
-| | Secretario | |
-| | | |
-| | | |
+| Nombre | Rol | Asistió | Firma |
+|---|---|---|---|
+{{#if integrantes.copasst.hayMiembros}}
+{{#each integrantes.copasst.miembros}}
+| {{nombre}} | {{rolTexto}} {{representa}} | ☐ | |
+{{/each}}
+{{else}}
+| | Presidente | ☐ | |
+| | Secretario | ☐ | |
+| | | ☐ | |
+{{/if}}
+| {{responsable.nombre}} | Responsable del SG-SST (invitado) | ☐ | |
 
 ## Orden del día
 
@@ -49,4 +55,4 @@ normas: ["RES-2013-1986"]
 
 ## Firmas
 
-______________________ Presidente  ______________________ Secretario
+______________________ {{integrantes.copasst.presidente}} (Presidente)  ______________________ {{integrantes.copasst.secretario}} (Secretario)

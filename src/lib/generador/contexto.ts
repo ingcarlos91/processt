@@ -7,11 +7,15 @@ import { generarPlan, MESES, anioPlanDefecto } from "@/lib/plan/generar";
 import { disparadoresDesdeMatriz } from "@/lib/reglas/matriz-disparadores";
 import { contexto as ctxReglas } from "@/lib/reglas/motor";
 import { TURNOS } from "@/lib/ayuda";
+import type { Complementarios, Persona } from "@/lib/complementarios";
 
 const ROMANO = ["", "I", "II", "III", "IV", "V"];
 const PERFIL_TEXTO: Record<string, string> = { tecnico: "Técnico en SST", tecnologo: "Tecnólogo en SST", profesional: "Profesional en SST", especialista: "Profesional con posgrado en SST" };
 const PVE_NOMBRE: Record<string, string> = { osteomuscular: "Prevención de desórdenes musculoesqueléticos", auditivo: "Conservación auditiva", visual: "Conservación visual", quimico: "Riesgo químico", psicosocial: "Riesgo psicosocial", respiratorio: "Protección respiratoria", biologico: "Riesgo biológico" };
 const fmt = (d?: Date | null) => (d ? d.toLocaleDateString("es-CO", { day: "numeric", month: "long", year: "numeric" }) : "");
+/** Fechas guardadas sin hora (solo día): se muestran en UTC para no correrse un día por la zona horaria. */
+const fmtDia = (d?: Date | null) => (d ? d.toLocaleDateString("es-CO", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" }) : "");
+const fmtIso = (v: unknown) => { const t = String(v ?? ""); return /^\d{4}-\d{2}-\d{2}$/.test(t) ? fmtDia(new Date(t + "T00:00:00Z")) : t; };
 
 export async function cargarEmpresa(id: string) {
   return db.empresa.findUniqueOrThrow({
@@ -200,6 +204,44 @@ export async function construirContexto(empresaId: string) {
     ...(dis.alturas ? [{ rubro: "Trabajo en alturas", descripcion: "Certificación, equipos de protección contra caídas, coordinador", estandar: "4.2.3" }] : []),
   ];
 
+  // ── Datos complementarios (con espacios en blanco si faltan, para que el documento siga siendo imprimible) ──
+  const comp = (e.datosComplementarios ?? {}) as Complementarios;
+  const B = "______________________";
+  const txt = (k: string, def = B) => { const v = comp[k]; return typeof v === "string" && v.trim() ? v.trim() : def; };
+  const persona = (k: string) => { const p = (comp[k] ?? {}) as Persona; return { nombre: p.nombre?.trim() || B, cargo: p.cargo?.trim() || "", cedula: p.cedula?.trim() || "", correo: p.correo?.trim() || "", registrado: !!p.nombre?.trim() }; };
+  const tabla = (k: string) => ((Array.isArray(comp[k]) ? comp[k] : []) as Record<string, string>[]).filter((f) => Object.values(f).some((x) => String(x ?? "").trim())).map((f) => Object.fromEntries(Object.entries(f).map(([kk, vv]) => [kk, fmtIso(vv)])));
+  const pesos = (n: number) => n.toLocaleString("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 0 });
+  const valores = tabla("presupuesto");
+  const presupuestoConValor = presupuesto.map((r) => { const v = Number(valores.find((x) => x.rubro === r.rubro)?.valor ?? 0); return { ...r, valor: v ? pesos(v) : "", valorNum: v }; });
+  const totalPresupuesto = presupuestoConValor.reduce((s2, r) => s2 + r.valorNum, 0);
+  const op = {
+    arlLinea: txt("arlLinea"), telefonoSst: txt("telefonoSst", consultora.telefono || B), correoQuejas: txt("correoQuejas", e.correo || B),
+    acosoSexual: persona("acosoSexual"), ips: txt("ips"), medicoIps: persona("medicoIps"), puntoEncuentro: txt("puntoEncuentro"), alarma: txt("alarma"),
+    recursosEmergencia: tabla("recursosEmergencia"), coordinadorAlturas: persona("coordinadorAlturas"),
+    espaciosConfinados: tabla("espaciosConfinados"), quimicos: tabla("quimicos"), equipos: tabla("equipos"),
+    presupuestoTotal: totalPresupuesto ? pesos(totalPresupuesto) : "",
+  };
+
+  // ── Comités: integrantes por rol ──
+  const ROL: Record<string, string> = { presidente: "Presidente", secretario: "Secretario", principal: "Principal", suplente: "Suplente", vigia: "Vigía", jefe_brigada: "Jefe de brigada", brigadista: "Brigadista", principal_empleador: "Principal", principal_trabajadores: "Principal", suplente_empleador: "Suplente", suplente_trabajadores: "Suplente" };
+  const comite = (tipos: string[]) => {
+    const c = e.comites.find((x) => tipos.includes(x.tipo));
+    const miembros = (c?.miembros ?? []).map((m) => ({ nombre: m.nombre, cedula: m.cedula ?? "", cargo: m.cargo ?? "", rol: m.rol, rolTexto: ROL[m.rol] ?? m.rol, representa: m.representa === "empleador" ? "Empleador" : m.representa === "trabajadores" ? "Trabajadores" : "" }));
+    const d = (c?.datos ?? {}) as Record<string, unknown>;
+    return {
+      registrado: !!c, inicio: fmtDia(c?.periodoInicio) || B, fin: fmtDia(c?.periodoFin) || B, miembros, hayMiembros: miembros.length > 0,
+      presidente: miembros.find((m) => m.rol === "presidente")?.nombre ?? B, secretario: miembros.find((m) => m.rol === "secretario")?.nombre ?? B,
+      empleador: miembros.filter((m) => m.representa === "Empleador"), trabajadores: miembros.filter((m) => m.representa === "Trabajadores"),
+      eleccion: {
+        inscripcionDesde: fmtIso(d.inscripcionDesde) || "______", inscripcionHasta: fmtIso(d.inscripcionHasta) || "______",
+        fechaVotacion: fmtIso(d.fechaVotacion) || "______", lugar: String(d.lugar ?? "") || "______", horario: String(d.horario ?? "") || "______",
+        resultados: (Array.isArray(d.resultados) ? d.resultados : []) as { candidato: string; votos: string }[],
+        blanco: String(d.blanco ?? ""), nulos: String(d.nulos ?? ""), votantes: String(d.votantes ?? ""), jurados: String(d.jurados ?? "") || B,
+      },
+    };
+  };
+  const integrantes = { copasst: comite(["COPASST", "VIGIA"]), ccl: comite(["CCL"]), brigada: comite(["BRIGADA"]) };
+
   const porClas = new Map<string, { total: number; prioritarios: number }>();
   for (const f of filas) { const v = porClas.get(f.clasificacion) ?? { total: 0, prioritarios: 0 }; v.total++; if (f.nivelRiesgo === "I" || f.nivelRiesgo === "II") v.prioritarios++; porClas.set(f.clasificacion, v); }
 
@@ -242,7 +284,7 @@ export async function construirContexto(empresaId: string) {
     normas: normasDb.map((n) => ({ codigo: n.codigo, tipo: n.tipo === "Resolucion" ? "Resolución" : n.tipo === "GuiaTecnica" ? "Guía técnica" : n.tipo, numero: n.numero, anio: n.anio, entidad: n.entidad, nombre: n.nombre, articulosClave: n.articulosClave ?? "", resumen: n.resumen, evidenciaCumplimiento: n.evidenciaCumplimiento ?? "" })),
     estandares: (await db.estandar.findMany({ where: { codigo: { in: rr.estandares } }, orderBy: { orden: "asc" } })).map((s) => ({ codigo: s.codigo, ciclo: s.ciclo, grupo: s.grupo, descripcion: s.descripcion, puntaje: s.puntaje })),
     comites: { copasst: { aplica: true, esVigia: cop.tipo === "VIGIA", composicion: cop.texto, porParte: cop.porParte }, ccl: { aplica: rr.comites.includes("CCL") }, brigada: { aplica: true } },
-    capacitaciones, plan, evaluacion, planMejora, dis, indicadores: INDICADORES, pve, amenazas, presupuesto, altoRiesgo,
+    capacitaciones, plan, evaluacion, planMejora, dis, indicadores: INDICADORES, pve, amenazas, presupuesto: presupuestoConValor, altoRiesgo, op, integrantes,
     documentosLista: plantillas.map((p) => ({ codigo: p.codigo, nombre: p.nombre, version: e.documentos.find((d) => d.codigo === p.codigo)?.version ?? 1, carpeta: p.carpeta ?? "" })),
     _reglas: rr,
   };

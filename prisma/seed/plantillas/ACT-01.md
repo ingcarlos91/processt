@@ -18,16 +18,22 @@ Por tener {{empresa.trabajadores}} trabajadores, **{{empresa.razonSocial}}** deb
 {{#if comites.copasst.esVigia}}
 ## Designación del Vigía
 
-{{empresa.ciudad}}, {{fecha}}
+{{empresa.ciudad}}, {{integrantes.copasst.inicio}}
 
 El representante legal de {{empresa.razonSocial}} designa como Vigía de Seguridad y Salud en el Trabajo a:
 
 | Rol | Nombre | Cédula | Cargo |
 |---|---|---|---|
+{{#if integrantes.copasst.hayMiembros}}
+{{#each integrantes.copasst.miembros}}
+| {{rolTexto}} | {{nombre}} | {{cedula}} | {{cargo}} |
+{{/each}}
+{{else}}
 | Vigía principal | | | |
 | Suplente | | | |
+{{/if}}
 
-Periodo: dos (2) años a partir de la fecha de esta designación.
+Periodo: dos (2) años, del {{integrantes.copasst.inicio}} al {{integrantes.copasst.fin}}.
 
 ## Funciones del Vigía
 
@@ -52,8 +58,8 @@ Vigía de SST — Acepto la designación
 
 La gerencia de {{empresa.razonSocial}} convoca a todos los trabajadores a inscribir sus candidatos y participar en la elección de sus representantes ante el COPASST para el periodo de dos (2) años.
 
-- Inscripción de candidatos: del ______ al ______.
-- Fecha de votación: ______. Lugar: ______. Horario: ______.
+- Inscripción de candidatos: del {{integrantes.copasst.eleccion.inscripcionDesde}} al {{integrantes.copasst.eleccion.inscripcionHasta}}.
+- Fecha de votación: {{integrantes.copasst.eleccion.fechaVotacion}}. Lugar: {{integrantes.copasst.eleccion.lugar}}. Horario: {{integrantes.copasst.eleccion.horario}}.
 - Se elegirán {{comites.copasst.porParte}} representante(s) principal(es) y sus suplentes por los trabajadores.
 
 ______________________________________
@@ -61,33 +67,45 @@ ______________________________________
 
 ## Acta de votación y escrutinio
 
-Siendo las ____ del día ______, se realizó la votación para elegir a los representantes de los trabajadores ante el COPASST, con los siguientes resultados:
+El día {{integrantes.copasst.eleccion.fechaVotacion}}, en {{integrantes.copasst.eleccion.lugar}}, se realizó la votación para elegir a los representantes de los trabajadores ante el COPASST, con los siguientes resultados:
 
 | Candidato | Votos |
 |---|---|
+{{#if integrantes.copasst.eleccion.resultados.length}}
+{{#each integrantes.copasst.eleccion.resultados}}
+| {{candidato}} | {{votos}} |
+{{/each}}
+{{else}}
 | | |
 | | |
-| Votos en blanco | |
-| Votos nulos | |
-| **Total de votantes** | |
+{{/if}}
+| Votos en blanco | {{integrantes.copasst.eleccion.blanco}} |
+| Votos nulos | {{integrantes.copasst.eleccion.nulos}} |
+| **Total de votantes** | {{integrantes.copasst.eleccion.votantes}} |
 
-Jurados de votación:
+Jurados de votación: {{integrantes.copasst.eleccion.jurados}}
 
 ______________________ ______________________
 
 ## Acta de conformación del COPASST
 
-En {{empresa.ciudad}}, el día ______, se reunieron los representantes del empleador designados por el representante legal y los representantes de los trabajadores elegidos por votación, para conformar el COPASST de {{empresa.razonSocial}} por el periodo de dos (2) años.
+En {{empresa.ciudad}}, el día {{integrantes.copasst.inicio}}, se reunieron los representantes del empleador designados por el representante legal y los representantes de los trabajadores elegidos por votación, para conformar el COPASST de {{empresa.razonSocial}} por el periodo de dos (2) años.
 
 | Representación | Rol | Nombre | Cédula | Cargo | Firma |
 |---|---|---|---|---|---|
+{{#if integrantes.copasst.hayMiembros}}
+{{#each integrantes.copasst.miembros}}
+| {{representa}} | {{rolTexto}} | {{nombre}} | {{cedula}} | {{cargo}} | |
+{{/each}}
+{{else}}
 | Empleador | Principal | | | | |
 | Empleador | Suplente | | | | |
 | Trabajadores | Principal | | | | |
 | Trabajadores | Suplente | | | | |
+{{/if}}
 
-- Presidente (designado por el empleador): ______________________
-- Secretario (elegido por el comité): ______________________
+- Presidente (designado por el empleador): {{integrantes.copasst.presidente}}
+- Secretario (elegido por el comité): {{integrantes.copasst.secretario}}
 
 El empleador concede a los miembros del comité cuatro (4) horas semanales dentro de la jornada para el cumplimiento de sus funciones (Resolución 2013 de 1986, art. 7). Las reuniones ordinarias se realizarán mensualmente.
 

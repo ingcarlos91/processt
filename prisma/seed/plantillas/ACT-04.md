@@ -21,14 +21,22 @@ Se convoca a los trabajadores a postular candidatos y votar por sus representant
 
 ## Acta de conformación
 
+Fecha de conformación: {{integrantes.ccl.inicio}}. Periodo: hasta el {{integrantes.ccl.fin}}.
+
 | Representación | Rol | Nombre | Cédula | Cargo | Firma |
 |---|---|---|---|---|---|
+{{#if integrantes.ccl.hayMiembros}}
+{{#each integrantes.ccl.miembros}}
+| {{representa}} | {{rolTexto}} | {{nombre}} | {{cedula}} | {{cargo}} | |
+{{/each}}
+{{else}}
 | Empleador | Principal | | | | |
 | Empleador | Suplente | | | | |
 | Trabajadores | Principal | | | | |
 | Trabajadores | Suplente | | | | |
+{{/if}}
 
-Presidente: ______________________  Secretario: ______________________
+Presidente: {{integrantes.ccl.presidente}}  Secretario: {{integrantes.ccl.secretario}}
 
 ## Reglamento de funcionamiento
 
@@ -54,7 +62,7 @@ Presidente: ______________________  Secretario: ______________________
 
 | Paso | Actividad | Plazo |
 |---|---|---|
-| 1 | Recepción de la queja escrita (física o al correo del comité) | Día 0 |
+| 1 | Recepción de la queja escrita (física o al correo {{op.correoQuejas}}) | Día 0 |
 | 2 | Revisión de competencia y citación a las partes por separado | Dentro de los 10 días |
 | 3 | Escucha individual de las partes | — |
 | 4 | Reunión de diálogo y acuerdo de compromisos | — |

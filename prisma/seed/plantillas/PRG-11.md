@@ -25,4 +25,10 @@ Prevenir accidentes en el trabajo en espacios confinados de **{{empresa.razonSoc
 
 | N.º | Espacio | Ubicación | Peligros | Acceso | Señalizado |
 |---|---|---|---|---|---|
+{{#if op.espaciosConfinados.length}}
+{{#each op.espaciosConfinados}}
+| {{inc @index}} | {{celda espacio}} | {{celda ubicacion}} | {{celda peligros}} | {{celda acceso}} | {{senalizado}} |
+{{/each}}
+{{else}}
 | 1 | | | | | |
+{{/if}}

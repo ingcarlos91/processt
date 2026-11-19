@@ -9,6 +9,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
 import { BotonGenerarTodo } from "@/components/empresa/acciones";
 import { Porque } from "@/components/app/porque";
+import { Alert, AlertAction, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { ClipboardList } from "lucide-react";
+import { faltantes, type Complementarios } from "@/lib/complementarios";
 
 export const dynamic = "force-dynamic";
 const ESTADO: Record<string, "outline" | "secondary" | "default"> = { BORRADOR: "outline", APROBADO: "secondary", FIRMADO: "default" };
@@ -21,6 +24,9 @@ export default async function Documentos({ params }: PageProps<"/empresas/[id]/d
     db.plantilla.findMany({ where: { codigo: { in: rr.documentos.map((d) => d.codigo) } }, orderBy: { codigo: "asc" } }),
   ]);
   const carpetas = [...new Set(plantillas.map((p) => p.carpeta ?? "Otros"))].sort();
+  const emp = await db.empresa.findUniqueOrThrow({ where: { id }, select: { datosComplementarios: true, disparadores: true, comites: { select: { tipo: true, _count: { select: { miembros: true } } } } } });
+  const falta = faltantes((emp.datosComplementarios ?? {}) as Complementarios, (emp.disparadores ?? {}) as Record<string, boolean>, rr.documentos.map((d) => d.codigo));
+  const comitesSinIntegrantes = rr.comites.filter((c) => !emp.comites.some((x) => (x.tipo === c || (c === "COPASST" && x.tipo === "VIGIA")) && x._count.miembros > 0));
   const acciones = (
     <div className="flex gap-2">
       <BotonGenerarTodo empresaId={id} />
@@ -43,6 +49,23 @@ export default async function Documentos({ params }: PageProps<"/empresas/[id]/d
         <span className="text-sm text-muted-foreground">{docs.length} de {rr.documentos.length} documentos generados · se conservan las ediciones manuales al regenerar</span>
         <div className="flex-1" />{acciones}
       </div>
+      {(falta.length > 0 || comitesSinIntegrantes.length > 0) && (
+        <Alert>
+          <ClipboardList />
+          <AlertTitle>Para que los documentos salgan completos faltan algunos datos</AlertTitle>
+          <AlertDescription>
+            <ul className="list-disc pl-4 space-y-0.5">
+              {falta.map((f) => <li key={f.k}>{f.etiqueta} <span className="text-muted-foreground">({f.documentos.join(", ")})</span></li>)}
+              {comitesSinIntegrantes.map((c) => <li key={c}>Integrantes de {c === "COPASST" ? "COPASST o Vigía" : c === "CCL" ? "Comité de Convivencia" : "brigada"} <span className="text-muted-foreground">(se registran en Comités)</span></li>)}
+            </ul>
+            Mientras tanto, los documentos salen con espacios en blanco para llenar a mano.
+          </AlertDescription>
+          <AlertAction className="flex flex-col gap-1">
+            {falta.length > 0 && <Link href={`/empresas/${id}/datos#complementarios`} className={buttonVariants({ size: "sm" })}>Completar datos</Link>}
+            {comitesSinIntegrantes.length > 0 && <Link href={`/empresas/${id}/comites`} className={buttonVariants({ size: "sm", variant: "outline" })}>Ir a Comités</Link>}
+          </AlertAction>
+        </Alert>
+      )}
       {carpetas.map((c) => (
         <Section key={c} title={c} contentClassName="px-0">
           <Table className="[&_td]:whitespace-normal">

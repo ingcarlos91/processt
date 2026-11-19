@@ -13,14 +13,20 @@ El empleador debe conformar, capacitar, entrenar y dotar la brigada de prevenci�
 
 ## Acta de conformación
 
-En {{empresa.ciudad}}, el {{fecha}}, **{{empresa.razonSocial}}** conforma su brigada de emergencias con los siguientes integrantes voluntarios:
+En {{empresa.ciudad}}, el {{integrantes.brigada.inicio}}, **{{empresa.razonSocial}}** conforma su brigada de emergencias con los siguientes integrantes voluntarios:
 
-| Nombre | Cédula | Cargo | Sede / área | Rol en la brigada | Firma |
-|---|---|---|---|---|---|
-| | | | | Jefe de brigada | |
-| | | | | Primeros auxilios | |
-| | | | | Control de incendios | |
-| | | | | Evacuación | |
+| Nombre | Cédula | Cargo | Rol en la brigada | Firma |
+|---|---|---|---|---|
+{{#if integrantes.brigada.hayMiembros}}
+{{#each integrantes.brigada.miembros}}
+| {{nombre}} | {{cedula}} | {{cargo}} | {{rolTexto}} | |
+{{/each}}
+{{else}}
+| | | | Jefe de brigada | |
+| | | | Primeros auxilios | |
+| | | | Control de incendios | |
+| | | | Evacuación | |
+{{/if}}
 
 Se recomienda al menos un brigadista por área y por turno.
 

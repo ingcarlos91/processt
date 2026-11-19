@@ -27,7 +27,7 @@ Atención de requerimientos de la ARL, el Ministerio del Trabajo, contratistas, 
 
 ## Autorreporte de condiciones de trabajo y salud
 
-Todo trabajador y contratista puede reportar condiciones inseguras, actos inseguros, incidentes o cambios en su estado de salud mediante el formato de autorreporte (físico o digital), al jefe inmediato, al responsable del SG-SST o al {{#if comites.copasst.esVigia}}Vigía{{else}}COPASST{{/if}}. El responsable del SG-SST da respuesta en un plazo máximo de quince (15) días.
+Todo trabajador y contratista puede reportar condiciones inseguras, actos inseguros, incidentes o cambios en su estado de salud mediante el formato de autorreporte (físico o digital), al jefe inmediato, al responsable del SG-SST o al {{#if comites.copasst.esVigia}}Vigía{{else}}COPASST{{/if}}. El responsable del SG-SST ({{responsable.nombre}}, {{op.telefonoSst}}) da respuesta en un plazo máximo de quince (15) días.
 
 ## Formato de autorreporte
 

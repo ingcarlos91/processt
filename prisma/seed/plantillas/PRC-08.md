@@ -37,6 +37,6 @@ Cuando la EPS o la ARL diagnostique una enfermedad laboral, el empleador diligen
 
 | Entidad | Contacto |
 |---|---|
-| ARL | {{empresa.arl}} — Línea de atención: __________ |
-| EPS principal | {{default empresa.eps "__________"}} |
-| Responsable del SG-SST | {{responsable.nombre}} — __________ |
+| ARL | {{empresa.arl}} — Línea de atención: {{op.arlLinea}} |
+| EPS principal | {{default empresa.eps "______________________"}} |
+| Responsable del SG-SST | {{responsable.nombre}} — {{op.telefonoSst}} |

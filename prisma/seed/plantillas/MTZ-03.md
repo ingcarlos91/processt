@@ -16,8 +16,14 @@ Identificar las sustancias químicas usadas o almacenadas en **{{empresa.razonSo
 
 | N.º | Producto | Uso | Área | Cantidad almacenada | Pictogramas SGA | Palabra de advertencia | ¿Carcinógeno o toxicidad aguda? | FDS disponible | EPP requerido |
 |---|---|---|---|---|---|---|---|---|---|
+{{#if op.quimicos.length}}
+{{#each op.quimicos}}
+| {{inc @index}} | {{celda producto}} | {{celda uso}} | {{celda area}} | {{cantidad}} | {{celda pictogramas}} | {{advertencia}} | {{carcinogeno}} | {{fds}} | {{celda epp}} |
+{{/each}}
+{{else}}
 | 1 | | | | | | | | | |
 | 2 | | | | | | | | | |
+{{/if}}
 
 ## Medidas
 

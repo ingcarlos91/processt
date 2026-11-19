@@ -3,6 +3,9 @@ import { profesionalDe } from "@/lib/profesional";
 import { IntakeWizard } from "@/components/empresa/intake-wizard";
 import type { IntakeData } from "@/app/actions/empresas";
 import { BotonEliminarEmpresa } from "@/components/empresa/eliminar";
+import { ComplementariosForm } from "@/components/empresa/complementarios-form";
+import { camposAplicables, faltantes, type Complementarios } from "@/lib/complementarios";
+import { construirContexto } from "@/lib/generador/contexto";
 
 export const dynamic = "force-dynamic";
 
@@ -28,6 +31,13 @@ export default async function Datos({ params }: PageProps<"/empresas/[id]/datos"
     <>
       <p className="text-sm text-muted-foreground max-w-4xl">Edite los datos de la empresa. Los cargos se gestionan en la pestaña “Cargos y matriz de peligros”. Al guardar se recalculan el nivel de estándares, comités y normas; luego regenere los documentos.</p>
       <IntakeWizard sectores={sectores} cargosTipo={cargosTipo} ciius={ciius} inicial={inicial} empresaId={id} profesional={profesionalDe(await consultoraActual())} tieneLogo={!!e.logoUrl} />
+      {await (async () => {
+        const ctx = await construirContexto(id);
+        const secciones = camposAplicables(ctx.dis).map((sec) => ({ ...sec, campos: sec.campos.map((c) => (c.k === "presupuesto" ? { ...c, filasSugeridas: ctx.presupuesto.map((r) => ({ rubro: r.rubro })) } : c)) }));
+        const datos = (e.datosComplementarios ?? {}) as Complementarios;
+        const falta = faltantes(datos, ctx.dis, ctx._reglas.documentos.map((d) => d.codigo)).map((f) => f.k);
+        return <ComplementariosForm empresaId={id} secciones={secciones} inicial={datos} faltan={falta} />;
+      })()}
       <BotonEliminarEmpresa id={id} nombre={e.razonSocial} />
     </>
   );

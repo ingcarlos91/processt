@@ -58,19 +58,27 @@ Interpretación por elemento: 0 a 1 = vulnerabilidad alta; 1,1 a 2 = media; 2,1 
 
 ## Recursos disponibles
 
-| Recurso | Cantidad | Ubicación |
-|---|---|---|
-| Extintores | | |
-| Botiquín | | |
-| Camilla | | |
-| Señalización de evacuación | | |
-| Alarma | | |
+| Recurso | Cantidad | Ubicación | Vencimiento / recarga |
+|---|---|---|---|
+{{#if op.recursosEmergencia.length}}
+{{#each op.recursosEmergencia}}
+| {{celda recurso}} | {{cantidad}} | {{celda ubicacion}} | {{vence}} |
+{{/each}}
+{{else}}
+| Extintores | | | |
+| Botiquín | | | |
+| Camilla | | | |
+| Señalización de evacuación | | | |
+{{/if}}
 
-Redes de apoyo externas: Bomberos (119), Policía (123), Cruz Roja (132), Defensa Civil (144), línea de emergencias de la ARL {{empresa.arl}}.
+- **Alarma:** {{op.alarma}}
+- **Punto de encuentro:** {{op.puntoEncuentro}}
+
+Redes de apoyo externas: Bomberos (119), Policía (123), Cruz Roja (132), Defensa Civil (144), línea de atención de la ARL {{empresa.arl}}: {{op.arlLinea}}.
 
 ## Procedimientos operativos normalizados (PON)
 
-**Evacuación:** al sonar la alarma, suspender actividades, desconectar equipos si es seguro, seguir las rutas señalizadas sin correr, no usar ascensores, dirigirse al punto de encuentro (__________) y reportarse con el brigadista.
+**Evacuación:** al sonar la alarma, suspender actividades, desconectar equipos si es seguro, seguir las rutas señalizadas sin correr, no usar ascensores, dirigirse al punto de encuentro ({{op.puntoEncuentro}}) y reportarse con el brigadista.
 
 **Sismo:** durante el movimiento, protegerse junto a estructuras firmes, alejarse de ventanas y objetos que puedan caer; al terminar, evacuar según la orden del jefe de brigada.
 
@@ -84,7 +92,7 @@ Redes de apoyo externas: Bomberos (119), Policía (123), Cruz Roja (132), Defens
 
 ## Brigada, capacitación y simulacros
 
-- La brigada se conforma, capacita y dota según el ACT-05.
+- La brigada se conforma, capacita y dota según el ACT-05.{{#if integrantes.brigada.hayMiembros}} Integrantes actuales: {{#each integrantes.brigada.miembros}}{{nombre}} ({{rolTexto}}){{#unless @last}}, {{/unless}}{{/each}}.{{/if}}
 - Todos los trabajadores son informados, capacitados y entrenados en el plan de emergencias.
 - Se realiza como mínimo **un (1) simulacro al año** con la participación de todos los trabajadores (art. 2.2.4.6.25 numeral 10), y se documenta en el formato FOR-05.
 - Los equipos de emergencia (extintores, botiquín, alarma, señalización) se inspeccionan periódicamente.
