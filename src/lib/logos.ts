@@ -1,8 +1,6 @@
-import { mkdir, readFile, unlink, writeFile } from "node:fs/promises";
-import { join } from "node:path";
+import { guardar, leer, borrar } from "@/lib/almacen";
 import { imageSize } from "image-size";
 
-const DIR = join(process.cwd(), "uploads", "logos");
 const TIPOS: Record<string, "png" | "jpg"> = { "image/png": "png", "image/jpeg": "jpg" };
 export const LOGO_MAX_BYTES = 2 * 1024 * 1024;
 
@@ -13,21 +11,20 @@ export async function guardarLogo(empresaId: string, file: File) {
   if (file.size > LOGO_MAX_BYTES) throw new Error("El logo no puede superar 2 MB.");
   const buf = Buffer.from(await file.arrayBuffer());
   imageSize(buf); // valida que sea una imagen legible
-  await mkdir(DIR, { recursive: true });
-  for (const e of Object.values(TIPOS)) await unlink(join(DIR, `${empresaId}.${e}`)).catch(() => null);
-  await writeFile(join(DIR, `${empresaId}.${ext}`), buf);
+  for (const e of Object.values(TIPOS)) await borrar(`uploads/logos/${empresaId}.${e}`);
+  await guardar(`uploads/logos/${empresaId}.${ext}`, buf, file.type);
   return `uploads/logos/${empresaId}.${ext}`;
 }
 
 export async function borrarLogo(empresaId: string) {
-  for (const e of Object.values(TIPOS)) await unlink(join(DIR, `${empresaId}.${e}`)).catch(() => null);
+  for (const e of Object.values(TIPOS)) await borrar(`uploads/logos/${empresaId}.${e}`);
 }
 
 /** Lee el logo y calcula su tamaño para que quepa en una caja manteniendo la proporción. */
 export async function leerLogo(logoUrl: string | null | undefined, caja = { ancho: 110, alto: 50 }) {
   if (!logoUrl || !logoUrl.startsWith("uploads/")) return null;
   try {
-    const buf = await readFile(join(process.cwd(), logoUrl));
+    const buf = await leer(logoUrl);
     const { width = 1, height = 1 } = imageSize(buf);
     const escala = Math.min(caja.ancho / width, caja.alto / height);
     const tipo: "png" | "jpg" = logoUrl.endsWith(".png") ? "png" : "jpg";

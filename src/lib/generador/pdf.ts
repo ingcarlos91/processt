@@ -1,6 +1,6 @@
 // Exportación a PDF: el mismo documento del Word (encabezado con logo, firmas, pie con páginas),
 // armado en HTML e impreso con Chromium (Playwright). Tamaño carta.
-import type { Browser } from "playwright";
+import type { Browser } from "playwright-core";
 import { mdAHtml } from "./exportar";
 
 type Meta = {
@@ -13,8 +13,18 @@ type Meta = {
 };
 
 let navegador: Promise<Browser> | null = null;
+
+/** En Vercel: Chromium para funciones serverless (@sparticuz/chromium). En local: el Chromium de Playwright. */
+async function lanzar(): Promise<Browser> {
+  if (process.env.VERCEL) {
+    const [{ chromium: pw }, { default: sparticuz }] = await Promise.all([import("playwright-core"), import("@sparticuz/chromium")]);
+    return pw.launch({ executablePath: await sparticuz.executablePath(), args: sparticuz.args, headless: true });
+  }
+  const { chromium: pw } = await import("playwright");
+  return pw.launch();
+}
 async function chromium() {
-  if (!navegador) navegador = import("playwright").then((p) => p.chromium.launch());
+  if (!navegador) navegador = lanzar();
   const b = await navegador;
   if (!b.isConnected()) { navegador = null; return chromium(); }
   return b;

@@ -13,7 +13,12 @@ const nextConfig: NextConfig = {
   },
   // El botón de Next.js en desarrollo tapaba el avatar del menú (abajo a la izquierda).
   devIndicators: { position: "bottom-right" },
-  serverExternalPackages: ["@prisma/client", "prisma"],
+  serverExternalPackages: ["@prisma/client", "prisma", "playwright", "playwright-core", "@sparticuz/chromium"],
+  // En Vercel las funciones solo llevan los archivos que importan: se incluyen el Chromium serverless
+  // (PDF) y el logo de PROCESST (membrete del diagnóstico), que se leen del disco.
+  outputFileTracingIncludes: {
+    "/api/**/*": ["./node_modules/@sparticuz/chromium/bin/**", "./public/brand/**"],
+  },
   experimental: { serverActions: { bodySizeLimit: "12mb" } },
 };
 

@@ -52,7 +52,7 @@ export function SubirArchivo({ empresaId, ctx, trigger, titulo = "Subir archivo"
           <FieldLabel>Archivo</FieldLabel>
           <input ref={ref} type="file" accept={ACEPTA} className="hidden" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
           <Button variant="outline" className={cn("justify-start font-normal", !file && "text-muted-foreground")} onClick={() => ref.current?.click()}><Paperclip /> {file ? `${file.name} · ${tam(file.size)}` : "Elegir archivo…"}</Button>
-          <FieldDescription>PDF, foto (JPG, PNG), Word o Excel. Máximo 10 MB. Desde el celular puede tomar la foto directamente.</FieldDescription>
+          <FieldDescription>PDF, foto (JPG, PNG), Word o Excel. Máximo 4 MB (fotos del celular: suelen pesar menos). Desde el celular puede tomar la foto directamente.</FieldDescription>
         </Field>
         <Field><FieldLabel htmlFor="adj-d">Descripción</FieldLabel><Input id="adj-d" value={desc} onChange={(e) => setDesc(e.target.value)} placeholder="Ej: Lista de asistencia capacitación en alturas" /></Field>
         <Field><FieldLabel htmlFor="adj-f">Fecha del hecho</FieldLabel><Input id="adj-f" type="date" value={fecha} onChange={(e) => setFecha(e.target.value)} /><FieldDescription>Fecha de la firma, la capacitación o la reunión (no la de hoy, si es distinta).</FieldDescription></Field>
