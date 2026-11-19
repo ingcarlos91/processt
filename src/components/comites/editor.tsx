@@ -15,11 +15,12 @@ import { NormaRef } from "@/components/app/ui";
 import { Confirmar } from "@/components/app/confirmar";
 import { Porque } from "@/components/app/porque";
 import { Ayuda } from "@/components/app/ayuda";
+import { SubirArchivo, ListaArchivos, type ArchivoUI } from "@/components/app/adjuntos";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import * as A from "@/app/actions/sgsst";
 
 type Miembro = { id: string; nombre: string; cedula: string; cargo: string; rol: string; representa: string };
-type Comite = { id: string; tipo: string; inicio: string; fin: string; normaRef: string; datos: Record<string, unknown>; miembros: Miembro[] };
+type Comite = { id: string; tipo: string; inicio: string; fin: string; normaRef: string; datos: Record<string, unknown>; actas: ArchivoUI[]; miembros: Miembro[] };
 
 const INFO: Record<string, { nombre: string; doc: string; desc: string }> = {
   COPASST: { nombre: "Comité Paritario de SST (COPASST)", doc: "ACT-01", desc: "Paritario, periodo de 2 años, reunión mensual, 4 horas semanales para sus funciones." },
@@ -75,6 +76,13 @@ export function ComitesEditor({ empresaId, requeridos, comites, composicion, ref
                       {!c.miembros.length && <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground">Sin integrantes</TableCell></TableRow>}
                     </TableBody>
                   </Table>
+                  <div className="space-y-2 rounded-lg border p-3">
+                    <div className="flex items-center justify-between">
+                      <div className="text-sm font-medium">Actas y documentos firmados</div>
+                      <SubirArchivo empresaId={empresaId} ctx={{ tipo: "ACTA", comiteId: c.id }} titulo="Subir acta firmada" ayuda={tipo === "BRIGADA" ? "Acta de conformación, registros de capacitación o informes de simulacro firmados." : "Acta de conformación, de elección o de cada reunión, firmada. La norma pide reunión mensual."} />
+                    </div>
+                    <ListaArchivos empresaId={empresaId} archivos={c.actas} vacio="Sin actas subidas." />
+                  </div>
                 </div>
               )}
             </CardContent>

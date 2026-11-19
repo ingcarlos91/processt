@@ -5,7 +5,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const TABS = [
   ["", "Resumen"], ["/datos", "Datos"], ["/matriz", "Cargos y matriz"], ["/biblioteca", "Biblioteca propia"], ["/evaluacion", "Evaluación"],
-  ["/documentos", "Documentos"], ["/plan", "Plan anual"], ["/comites", "Comités"], ["/indicadores", "Indicadores"],
+  ["/documentos", "Documentos"], ["/evidencias", "Evidencias"], ["/plan", "Plan anual"], ["/comites", "Comités"], ["/indicadores", "Indicadores"],
 ] as const;
 
 export function EmpresaTabs({ id }: { id: string }) {

@@ -1,7 +1,7 @@
 "use client";
 import { useMemo, useState, useTransition } from "react";
 import { toast } from "sonner";
-import { CalendarDays, Check, Plus, Sparkles, Trash2, Download } from "lucide-react";
+import { CalendarDays, Check, Plus, Sparkles, Trash2, Download, Paperclip, Upload } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -14,6 +14,8 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Section, Stat, NormaRef } from "@/components/app/ui";
 import { Confirmar } from "@/components/app/confirmar";
 import { Porque } from "@/components/app/porque";
+import { SubirArchivo, ListaArchivos, type ArchivoUI } from "@/components/app/adjuntos";
+import { Popover, PopoverContent, PopoverDescription, PopoverHeader, PopoverTitle, PopoverTrigger } from "@/components/ui/popover";
 import * as A from "@/app/actions/sgsst";
 import { MESES } from "@/lib/plan/generar";
 import { cn } from "@/lib/utils";
@@ -27,7 +29,7 @@ const ORIGEN: Record<string, string> = {
   periodica: "Es una obligación periódica fijada por la norma.",
 };
 
-type Act = { id: string; mes: number; nombre: string; estandar: string; normaRef: string; responsable: string; estado: string; origen: string };
+type Act = { id: string; mes: number; nombre: string; estandar: string; normaRef: string; responsable: string; estado: string; origen: string; evidencias: ArchivoUI[] };
 
 export function PlanEditor({ empresaId, anio, actividades }: { empresaId: string; anio: number; actividades: Act[] }) {
   const [pend, start] = useTransition();
@@ -60,6 +62,16 @@ export function PlanEditor({ empresaId, anio, actividades }: { empresaId: string
       <TableCell><span className={cn(a.estado === "EJECUTADA" && "line-through text-muted-foreground")}>{a.nombre}</span> <Porque titulo="¿Por qué esta actividad?" normas={[a.normaRef]}>{ORIGEN[a.origen] ?? "Actividad del plan."}</Porque></TableCell>
       <TableCell className="w-20">{a.estandar && <Badge variant="outline">{a.estandar}</Badge>}</TableCell>
       <TableCell className="w-56"><NormaRef>{a.normaRef}</NormaRef></TableCell>
+      <TableCell className="w-20">
+        <Popover>
+          <PopoverTrigger render={<Button size="xs" variant={a.evidencias.some((x) => x.activo) ? "secondary" : "ghost"} aria-label="Evidencias" />}><Paperclip /> {a.evidencias.filter((x) => x.activo).length || ""}</PopoverTrigger>
+          <PopoverContent className="w-96" align="end">
+            <PopoverHeader><PopoverTitle>Evidencias</PopoverTitle><PopoverDescription>{a.nombre}</PopoverDescription></PopoverHeader>
+            <ListaArchivos empresaId={empresaId} archivos={a.evidencias} compacta vacio="Sin evidencias. Suba la lista de asistencia, fotos o el informe." />
+            <SubirArchivo empresaId={empresaId} ctx={{ tipo: "EVIDENCIA", actividadId: a.id }} titulo="Subir evidencia" trigger={<Button size="sm" className="w-full"><Upload /> Subir evidencia</Button>} ayuda="Al subirla, la actividad queda marcada como ejecutada en la fecha que indique." descripcionInicial={a.nombre} />
+          </PopoverContent>
+        </Popover>
+      </TableCell>
       <TableCell className="w-48"><Input className="h-7" defaultValue={a.responsable} onBlur={(e) => e.target.value !== a.responsable && run(() => A.actualizarActividad(empresaId, a.id, { responsable: e.target.value }))} /></TableCell>
       <TableCell className="pr-6 w-10"><Confirmar trigger={<Button variant="ghost" size="icon-xs" aria-label="Eliminar actividad" />} titulo="Eliminar actividad" descripcion={a.nombre} destructivo accion="Eliminar" onConfirm={() => run(() => A.eliminarActividad(empresaId, a.id))}><Trash2 /></Confirmar></TableCell>
     </TableRow>
@@ -87,7 +99,7 @@ export function PlanEditor({ empresaId, anio, actividades }: { empresaId: string
         <Stat label="Meta" value="≥ 90%" hint="Indicador de proceso (Decreto 1072 art. 2.2.4.6.21)" />
       </div>
       {vista === "tabla" ? (
-        <Section contentClassName="px-0"><Table className="[&_td]:whitespace-normal"><TableHeader><TableRow><TableHead className="pl-6" /><TableHead>Mes</TableHead><TableHead>Actividad</TableHead><TableHead>Ítem</TableHead><TableHead>Fundamento</TableHead><TableHead>Responsable</TableHead><TableHead /></TableRow></TableHeader><TableBody>{lista.map(fila)}</TableBody></Table></Section>
+        <Section contentClassName="px-0"><Table className="[&_td]:whitespace-normal"><TableHeader><TableRow><TableHead className="pl-6" /><TableHead>Mes</TableHead><TableHead>Actividad</TableHead><TableHead>Ítem</TableHead><TableHead>Fundamento</TableHead><TableHead>Evidencias</TableHead><TableHead>Responsable</TableHead><TableHead /></TableRow></TableHeader><TableBody>{lista.map(fila)}</TableBody></Table></Section>
       ) : MESES.map((m, i) => {
         const delMes = lista.filter((a) => a.mes === i + 1);
         if (!delMes.length) return null;

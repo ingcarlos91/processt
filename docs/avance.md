@@ -51,6 +51,8 @@ IA opcional: agregar `AI_GATEWAY_API_KEY=...` en `.env`. Sin clave, “Sugerir t
 - Documentos diligenciados: integrantes de comités, datos de la elección del COPASST y “Datos para los documentos” (emergencias, contactos, inventarios, presupuesto) en la pestaña Datos; aviso de datos faltantes en Documentos.
 - Editor visual (Tiptap) tipo Word para las secciones, con tablas editables; guarda Markdown. Modo avanzado opcional.
 
+- Archivos: subir documento firmado (pasa a Firmado y avisa si cambió después), evidencias por actividad del plan (la marca ejecutada), soportes por ítem de la evaluación, actas por comité, pestaña Evidencias por estándar y expediente ZIP para Ministerio/ARL. PDF, imágenes, Word y Excel hasta 10 MB; nunca se borran (se retiran con motivo). Se guardan en `uploads/empresas/` (fuera de git).
+
 ## Pendiente
 
 - Archivos de la fuente BW Modelica en `public/fonts/bw-modelica/`.

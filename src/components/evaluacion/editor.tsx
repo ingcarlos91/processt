@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { useTransition } from "react";
 import { toast } from "sonner";
-import { ClipboardCheck, Download, Lock, LockOpen, Plus, Trash2 } from "lucide-react";
+import { ClipboardCheck, Download, Lock, LockOpen, Plus, Trash2, Paperclip, Upload } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -16,10 +16,12 @@ import { Section, Stat, NormaRef } from "@/components/app/ui";
 import { Confirmar } from "@/components/app/confirmar";
 import { Porque } from "@/components/app/porque";
 import { Ayuda } from "@/components/app/ayuda";
+import { SubirArchivo, ListaArchivos, type ArchivoUI } from "@/components/app/adjuntos";
+import { Popover, PopoverContent, PopoverDescription, PopoverHeader, PopoverTitle, PopoverTrigger } from "@/components/ui/popover";
 import * as A from "@/app/actions/sgsst";
 import { cn } from "@/lib/utils";
 
-type It = { id: string; codigo: string; ciclo: string; grupo: string; subgrupo: string; descripcion: string; puntaje: number; modo: string; estado: string; justificacion: string; observacion: string };
+type It = { id: string; codigo: string; ciclo: string; grupo: string; subgrupo: string; descripcion: string; puntaje: number; modo: string; soportes: ArchivoUI[]; estado: string; justificacion: string; observacion: string };
 type Cal = { puntaje: number; valoracion: string; accion: string; obtenido: number; maximo: number; pendientes: number };
 type Plan = { id: string; estandar: string; actividad: string; responsable: string; fecha: string; recursos: string; soporte: string; estado: string };
 
@@ -95,7 +97,18 @@ export function EvaluacionEditor({ empresaId, nivel, evaluaciones, actual }: {
                 {its.map((i) => (
                   <TableRow key={i.id} className={cn(i.estado === "NO_CUMPLE" && "bg-red-50/60", i.estado === "PENDIENTE" && "bg-muted/40")}>
                     <TableCell className="pl-6 font-mono text-xs whitespace-nowrap">{i.codigo} <Porque titulo={`Ítem ${i.codigo}`} normas={["Res. 0312/2019 arts. 16 y 27"]}>{`Vale ${i.puntaje} puntos. Qué revisa el inspector: ${i.modo}`}</Porque></TableCell>
-                    <TableCell><div className="font-medium text-sm">{i.descripcion}</div><div className="text-xs text-muted-foreground mt-1">{i.modo}</div></TableCell>
+                    <TableCell>
+                      <div className="font-medium text-sm">{i.descripcion}</div>
+                      <div className="text-xs text-muted-foreground mt-1">{i.modo}</div>
+                      <Popover>
+                        <PopoverTrigger render={<Button size="xs" variant={i.soportes.some((x) => x.activo) ? "secondary" : "outline"} className="mt-2" />}><Paperclip /> {i.soportes.filter((x) => x.activo).length ? `${i.soportes.filter((x) => x.activo).length} soporte(s)` : "Sin soportes"}</PopoverTrigger>
+                        <PopoverContent className="w-[28rem]" align="start">
+                          <PopoverHeader><PopoverTitle>Soportes del ítem {i.codigo}</PopoverTitle><PopoverDescription>Documentos firmados que lo respaldan, evidencias del plan anual y actas ligadas a este estándar.</PopoverDescription></PopoverHeader>
+                          <ListaArchivos empresaId={empresaId} archivos={i.soportes} compacta vacio="Aún no hay soportes. Lo que pide el inspector está arriba en gris." />
+                          <SubirArchivo empresaId={empresaId} ctx={{ tipo: "EVIDENCIA", estandarCodigo: i.codigo }} titulo={`Subir soporte del ítem ${i.codigo}`} trigger={<Button size="sm" className="w-full"><Upload /> Subir soporte</Button>} ayuda={i.modo} />
+                        </PopoverContent>
+                      </Popover>
+                    </TableCell>
                     <TableCell className="tabular-nums">{i.puntaje}</TableCell>
                     <TableCell>
                       <div className="flex gap-1">

@@ -610,6 +610,7 @@ model Documento {
   archivoPdfUrl  String?            @map("archivo_pdf_url")
   archivoDocxUrl String?            @map("archivo_docx_url")
   secciones      DocumentoSeccion[]
+  archivos       Evidencia[]
 
   @@unique([empresaId, codigo])
   @@map("documento")
@@ -651,17 +652,33 @@ model ActividadPlan {
   @@map("actividad_plan")
 }
 
+// Archivos subidos: documentos firmados, evidencias de ejecución y actas.
+// Nunca se borran definitivamente (Decreto 1072/2015 art. 2.2.4.6.13): "eliminar" los marca inactivos.
 model Evidencia {
-  id             String         @id @default(cuid())
-  empresaId      String         @map("empresa_id")
-  empresa        Empresa        @relation(fields: [empresaId], references: [id], onDelete: Cascade)
-  actividadId    String?        @map("actividad_id")
-  actividad      ActividadPlan? @relation(fields: [actividadId], references: [id])
-  estandarCodigo String?        @map("estandar_codigo")
-  descripcion    String
-  archivoUrl     String?        @map("archivo_url")
-  fecha          DateTime       @default(now())
+  id               String         @id @default(cuid())
+  empresaId        String         @map("empresa_id")
+  empresa          Empresa        @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  tipo             String         @default("EVIDENCIA") // DOCUMENTO_FIRMADO | EVIDENCIA | ACTA
+  actividadId      String?        @map("actividad_id")
+  actividad        ActividadPlan? @relation(fields: [actividadId], references: [id], onDelete: SetNull)
+  documentoId      String?        @map("documento_id")
+  documento        Documento?     @relation(fields: [documentoId], references: [id], onDelete: SetNull)
+  documentoVersion Int?           @map("documento_version") // versión del documento que se firmó
+  comiteId         String?        @map("comite_id")
+  comite           Comite?        @relation(fields: [comiteId], references: [id], onDelete: SetNull)
+  estandarCodigo   String?        @map("estandar_codigo")
+  descripcion      String
+  archivoUrl       String?        @map("archivo_url") // ruta relativa en uploads/
+  nombreArchivo    String?        @map("nombre_archivo")
+  mime             String?
+  tamano           Int?
+  fecha            DateTime       @default(now()) // fecha del hecho (firma, capacitación, reunión)
+  subidoEn         DateTime       @default(now()) @map("subido_en")
+  subidoPor        String?        @map("subido_por") // nombre del usuario
+  activo           Boolean        @default(true)
+  motivoBaja       String?        @map("motivo_baja")
 
+  @@index([empresaId, estandarCodigo])
   @@map("evidencia")
 }
 
@@ -712,6 +729,7 @@ model Comite {
   datos         Json            @default("{}")
   miembros      ComiteMiembro[]
   actas         Acta[]
+  archivos      Evidencia[]
 
   @@map("comite")
 }

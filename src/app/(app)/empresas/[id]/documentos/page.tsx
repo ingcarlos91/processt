@@ -20,7 +20,7 @@ export default async function Documentos({ params }: PageProps<"/empresas/[id]/d
   const { id } = await params;
   const rr = await recalcularEmpresa(id);
   const [docs, plantillas] = await Promise.all([
-    db.documento.findMany({ where: { empresaId: id }, include: { secciones: { select: { requiereRevision: true, contenidoEditado: true } } } }),
+    db.documento.findMany({ where: { empresaId: id }, include: { secciones: { select: { requiereRevision: true, contenidoEditado: true } }, archivos: { where: { activo: true, tipo: "DOCUMENTO_FIRMADO" }, orderBy: { subidoEn: "desc" }, take: 1 } } }),
     db.plantilla.findMany({ where: { codigo: { in: rr.documentos.map((d) => d.codigo) } }, orderBy: { codigo: "asc" } }),
   ]);
   const carpetas = [...new Set(plantillas.map((p) => p.carpeta ?? "Otros"))].sort();
@@ -84,7 +84,10 @@ export default async function Documentos({ params }: PageProps<"/empresas/[id]/d
                     </TableCell>
                     <TableCell><div className="flex flex-wrap gap-1">{p.estandares.map((e) => <NormaRef key={e}>{e}</NormaRef>)}</div></TableCell>
                     <TableCell>{d ? `v${d.version}` : "—"}</TableCell>
-                    <TableCell>{d ? <Badge variant={ESTADO[d.estado]}>{d.estado.toLowerCase()}</Badge> : <Badge variant="outline">sin generar</Badge>}</TableCell>
+                    <TableCell>
+                      {d ? <Badge variant={ESTADO[d.estado]}>{d.estado.toLowerCase()}{d.archivos[0] ? ` v${d.archivos[0].documentoVersion}` : ""}</Badge> : <Badge variant="outline">sin generar</Badge>}
+                      {d?.archivos[0]?.documentoVersion && d.archivos[0].documentoVersion < d.version && <Badge variant="destructive" className="ml-1">cambió después de firmar</Badge>}
+                    </TableCell>
                     <TableCell className="pr-6 text-right">
                       {d && <div className="flex justify-end gap-1">
                         <Link href={`/empresas/${id}/documentos/${p.codigo}`} className={buttonVariants({ size: "sm", variant: "outline" })}><PenLine /> Ver y editar</Link>
