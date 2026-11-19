@@ -109,6 +109,7 @@ export function TrabajadoresEditor({ empresaId, trabajadores, cargos, sugeridos,
             <Table>
               <TableHeader><TableRow><TableHead className="pl-6">Trabajador</TableHead><TableHead>Cargo</TableHead><TableHead>Vinculación</TableHead><TableHead>Ingreso</TableHead><TableHead>Último examen</TableHead><TableHead>EPP</TableHead><TableHead>Capacitaciones</TableHead><TableHead className="pr-6 w-28" /></TableRow></TableHeader>
               <TableBody>
+                {lista.length === 0 && <TableRow><TableCell colSpan={8} className="p-0"><EstadoVacio ilustracion="busqueda" compacto className="rounded-none border-0" titulo="Ningún trabajador coincide" descripcion={q ? `No hay trabajadores que coincidan con “${q}”.` : "Todos los trabajadores están retirados: active “Ver retirados”."} /></TableCell></TableRow>}
                 {lista.map((t) => {
                   const x = ultimoEx(t);
                   return (
@@ -139,7 +140,14 @@ export function TrabajadoresEditor({ empresaId, trabajadores, cargos, sugeridos,
       {/* ───── Exámenes ───── */}
       <TabsContent value="examenes" className="mt-4 space-y-4">
         <p className="text-sm text-muted-foreground">Solo el concepto de aptitud y las recomendaciones de la IPS; nunca diagnósticos (dato sensible, Ley 1581/2012). Alimenta el registro FOR-02 y el planeador avisa el próximo examen.</p>
-        <Section contentClassName="px-0" title="Último examen por trabajador">
+        {activos.length === 0 ? (
+          <EstadoVacio ilustracion="usuarios" titulo="Primero registre los trabajadores" descripcion="Los exámenes médicos ocupacionales se registran por trabajador. Agréguelos o impórtelos desde Excel en la pestaña Trabajadores." />
+        ) : !activos.some((t) => t.examenes.length) ? (
+          <EstadoVacio ilustracion="evidencias" titulo="Aún no hay exámenes médicos registrados" descripcion="Registre el examen de ingreso, periódico o de retiro de cada trabajador con su concepto de aptitud. El sistema le avisará en el planeador cuándo toca el próximo.">
+            <Button onClick={() => abrirExamen(activos[0].id)}><Stethoscope /> Registrar el primero</Button>
+          </EstadoVacio>
+        ) : null}
+        {activos.some((t) => t.examenes.length) && <Section contentClassName="px-0" title="Último examen por trabajador">
           <Table className="[&_td]:whitespace-normal">
             <TableHeader><TableRow><TableHead className="pl-6">Trabajador</TableHead><TableHead>Último</TableHead><TableHead>Concepto</TableHead><TableHead>Restricciones / recomendaciones</TableHead><TableHead>Próximo</TableHead><TableHead className="pr-6 w-32" /></TableRow></TableHeader>
             <TableBody>
@@ -153,10 +161,9 @@ export function TrabajadoresEditor({ empresaId, trabajadores, cargos, sugeridos,
                   <TableCell className="pr-6"><Button size="sm" variant="outline" onClick={() => abrirExamen(t.id)}><Plus /> Registrar</Button></TableCell>
                 </TableRow>
               ); })}
-              {!activos.length && <TableRow><TableCell colSpan={6} className="py-6 text-center text-muted-foreground">Registre primero los trabajadores.</TableCell></TableRow>}
             </TableBody>
           </Table>
-        </Section>
+        </Section>}
       </TabsContent>
 
       {/* ───── EPP ───── */}
@@ -165,7 +172,11 @@ export function TrabajadoresEditor({ empresaId, trabajadores, cargos, sugeridos,
           <p className="flex-1 text-sm text-muted-foreground">Registro de entrega (MTZ-04). Se conserva veinte años (Decreto 1072/2015 art. 2.2.4.6.13). Si indica la próxima reposición, el planeador la avisa.</p>
           <Button disabled={!activos.length} onClick={() => abrirEntrega([])}><HardHat /> Registrar entrega</Button>
         </div>
-        <Section contentClassName="px-0">
+        {!trabajadores.some((t) => t.entregas.length) ? (
+          <EstadoVacio ilustracion="epp" titulo={activos.length ? "Aún no hay entregas de EPP registradas" : "Primero registre los trabajadores"} descripcion={activos.length ? "Registre la entrega de elementos de protección a uno o varios trabajadores; para cada uno se precargan los EPP de su cargo según la matriz de peligros." : "Las entregas de EPP se registran por trabajador. Agréguelos o impórtelos desde Excel en la pestaña Trabajadores."}>
+            {activos.length > 0 && <Button onClick={() => abrirEntrega([])}><HardHat /> Registrar la primera entrega</Button>}
+          </EstadoVacio>
+        ) : <Section contentClassName="px-0">
           <Table>
             <TableHeader><TableRow><TableHead className="pl-6">Fecha</TableHead><TableHead>Trabajador</TableHead><TableHead>Elemento</TableHead><TableHead>Cant.</TableHead><TableHead>Tipo</TableHead><TableHead>Capacitado</TableHead><TableHead>Reposición</TableHead><TableHead className="pr-6 w-12" /></TableRow></TableHeader>
             <TableBody>
@@ -177,10 +188,9 @@ export function TrabajadoresEditor({ empresaId, trabajadores, cargos, sugeridos,
                   <TableCell className="pr-6"><Confirmar trigger={<Button size="icon-sm" variant="ghost" aria-label="Eliminar entrega" />} titulo="Eliminar entrega" descripcion="Se quita del registro de entrega." accion="Eliminar" destructivo onConfirm={() => run(() => A.eliminarEntrega(empresaId, x.id), "Entrega eliminada")}><Trash2 /></Confirmar></TableCell>
                 </TableRow>
               ))}
-              {!trabajadores.some((t) => t.entregas.length) && <TableRow><TableCell colSpan={8} className="py-6 text-center text-muted-foreground">Sin entregas registradas.</TableCell></TableRow>}
             </TableBody>
           </Table>
-        </Section>
+        </Section>}
       </TabsContent>
 
       {/* ───── Capacitaciones ───── */}
@@ -189,7 +199,7 @@ export function TrabajadoresEditor({ empresaId, trabajadores, cargos, sugeridos,
           <p className="flex-1 text-sm text-muted-foreground">Cada capacitación ejecutada con su asistencia. Si la liga a una actividad del plan anual, la actividad queda ejecutada. Alimenta el programa de capacitación (PRG-01).</p>
           <Button disabled={!activos.length} onClick={() => setCap({ fecha: hoy(), tema: "", horas: 1, facilitador: "", modalidad: "presencial", actividadId: "", asistentes: [] })}><Plus /> Registrar capacitación</Button>
         </div>
-        {capacitaciones.length === 0 ? <EstadoVacio ilustracion="evaluacion" compacto titulo="Sin capacitaciones registradas" descripcion="Registre cada capacitación con su fecha, tema, horas y asistentes." /> : (
+        {capacitaciones.length === 0 ? <EstadoVacio ilustracion="evaluacion" titulo={activos.length ? "Aún no hay capacitaciones registradas" : "Primero registre los trabajadores"} descripcion={activos.length ? "Registre cada capacitación con su fecha, tema, horas y asistentes. Si la liga a una actividad del plan anual, la actividad queda ejecutada." : "La asistencia a capacitaciones se registra por trabajador. Agréguelos o impórtelos desde Excel en la pestaña Trabajadores."}>{activos.length > 0 && <Button onClick={() => setCap({ fecha: hoy(), tema: "", horas: 1, facilitador: "", modalidad: "presencial", actividadId: "", asistentes: [] })}><GraduationCap /> Registrar la primera</Button>}</EstadoVacio> : (
           <Section contentClassName="px-0">
             <Table className="[&_td]:whitespace-normal">
               <TableHeader><TableRow><TableHead className="pl-6">Fecha</TableHead><TableHead>Tema</TableHead><TableHead>Horas</TableHead><TableHead>Asistentes</TableHead><TableHead>Actividad del plan</TableHead><TableHead className="pr-6 w-20" /></TableRow></TableHeader>
