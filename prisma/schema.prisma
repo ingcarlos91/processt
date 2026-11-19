@@ -1,0 +1,686 @@
+// processt — SG-SST para consultora (Colombia)
+// Convención: tablas y campos en español sin tildes.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────── Consultora y usuarios ───────────────────────────
+
+model Consultora {
+  id            String    @id @default(cuid())
+  nombre        String
+  nit           String?
+  licenciaSst   String?   @map("licencia_sst")
+  licenciaFecha DateTime? @map("licencia_fecha")
+  profesional   String? // nombre de la profesional que firma
+  cedula        String?
+  telefono      String?
+  correo        String?
+  firmaUrl      String?   @map("firma_url")
+  logoUrl       String?   @map("logo_url")
+  creadoEn      DateTime  @default(now()) @map("creado_en")
+  empresas      Empresa[]
+
+  @@map("consultora")
+}
+
+// ─────────────────────────── Empresa cliente ───────────────────────────
+
+model Empresa {
+  id                       String      @id @default(cuid())
+  consultoraId             String      @map("consultora_id")
+  consultora               Consultora  @relation(fields: [consultoraId], references: [id])
+  razonSocial              String      @map("razon_social")
+  nit                      String
+  digitoVerificacion       String?     @map("digito_verificacion")
+  direccion                String?
+  ciudad                   String?
+  departamento             String?
+  telefono                 String?
+  correo                   String?
+  representanteLegal       String?     @map("representante_legal")
+  representanteCedula      String?     @map("representante_cedula")
+  ciiu                     String?
+  descripcionActividad     String?     @map("descripcion_actividad")
+  claseRiesgo              Int         @default(1) @map("clase_riesgo") // 1..5 (Decreto 1607/2002)
+  claseRiesgoJustificacion String?     @map("clase_riesgo_justificacion")
+  arl                      String?
+  epsPrincipal             String?     @map("eps_principal")
+  nTrabajadoresPlanta      Int         @default(0) @map("n_trabajadores_planta")
+  nContratistas            Int         @default(0) @map("n_contratistas")
+  nAprendices              Int         @default(0) @map("n_aprendices")
+  nEnMision                Int         @default(0) @map("n_en_mision")
+  nVehiculos               Int         @default(0) @map("n_vehiculos")
+  horario                  String?
+  turnos                   String?
+  nivelEstandares          Int         @default(7) @map("nivel_estandares") // 7 | 21 | 60
+  esUpa                    Boolean     @default(false) @map("es_upa") // unidad de producción agropecuaria
+  disparadores             Json        @default("{}") // { alturas: true, confinados: false, quimicos: true, ... }
+  estadoActual             Json        @default("{}") @map("estado_actual") // respuestas del paso 6 del intake (por ítem)
+  responsableSst           Json?       @map("responsable_sst") // { nombre, cedula, cargo, perfil, licencia, licenciaFecha, curso50h, curso50hFecha }
+  logoUrl                  String?     @map("logo_url")
+  fechaInicioSgsst         DateTime?   @map("fecha_inicio_sgsst")
+  sectorTipoId             String?     @map("sector_tipo_id")
+  sectorTipo               SectorTipo? @relation(fields: [sectorTipoId], references: [id])
+  resultadoReglas          Json?       @map("resultado_reglas") // salida del motor de reglas (nivel, items, documentos, normas, comites) con norma_ref
+  creadoEn                 DateTime    @default(now()) @map("creado_en")
+  actualizadoEn            DateTime    @updatedAt @map("actualizado_en")
+
+  sedes           Sede[]
+  zonas           Zona[]
+  procesos        Proceso[]
+  cargos          Cargo[]
+  tareas          Tarea[]
+  peligros        PeligroEvaluado[]
+  matrizVersiones MatrizVersion[]
+  evaluaciones    Evaluacion[]
+  documentos      Documento[]
+  actividades     ActividadPlan[]
+  evidencias      Evidencia[]
+  eventos         Evento[]
+  trabajadoresMes TrabajadoresMes[]
+  comites         Comite[]
+
+  @@map("empresa")
+}
+
+model Sede {
+  id          String  @id @default(cuid())
+  empresaId   String  @map("empresa_id")
+  empresa     Empresa @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  nombre      String
+  direccion   String?
+  ciudad      String?
+  claseRiesgo Int?    @map("clase_riesgo")
+  principal   Boolean @default(false)
+  zonas       Zona[]
+  cargos      Cargo[]
+
+  @@map("sede")
+}
+
+model Zona {
+  id         String            @id @default(cuid())
+  empresaId  String            @map("empresa_id")
+  empresa    Empresa           @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  sedeId     String?           @map("sede_id")
+  sede       Sede?             @relation(fields: [sedeId], references: [id])
+  zonaTipoId String?           @map("zona_tipo_id")
+  zonaTipo   ZonaTipo?         @relation(fields: [zonaTipoId], references: [id])
+  nombre     String
+  tareas     Tarea[]
+  cargos     Cargo[]
+  peligros   PeligroEvaluado[]
+
+  @@map("zona")
+}
+
+model Proceso {
+  id            String       @id @default(cuid())
+  empresaId     String       @map("empresa_id")
+  empresa       Empresa      @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  procesoTipoId String?      @map("proceso_tipo_id")
+  procesoTipo   ProcesoTipo? @relation(fields: [procesoTipoId], references: [id])
+  nombre        String
+  descripcion   String?
+  orden         Int          @default(0)
+  tareas        Tarea[]
+
+  @@map("proceso")
+}
+
+model Cargo {
+  id                   String            @id @default(cuid())
+  empresaId            String            @map("empresa_id")
+  empresa              Empresa           @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  cargoTipoId          String?           @map("cargo_tipo_id")
+  cargoTipo            CargoTipo?        @relation(fields: [cargoTipoId], references: [id])
+  sedeId               String?           @map("sede_id")
+  sede                 Sede?             @relation(fields: [sedeId], references: [id])
+  zonaId               String?           @map("zona_id")
+  zona                 Zona?             @relation(fields: [zonaId], references: [id])
+  nombre               String
+  area                 String?
+  nPersonas            Int               @default(1) @map("n_personas")
+  descripcionFunciones String?           @map("descripcion_funciones")
+  tareas               CargoTarea[]
+  peligros             PeligroEvaluado[]
+
+  @@map("cargo")
+}
+
+model Tarea {
+  id          String            @id @default(cuid())
+  empresaId   String            @map("empresa_id")
+  empresa     Empresa           @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  tareaTipoId String?           @map("tarea_tipo_id")
+  tareaTipo   TareaTipo?        @relation(fields: [tareaTipoId], references: [id])
+  procesoId   String?           @map("proceso_id")
+  proceso     Proceso?          @relation(fields: [procesoId], references: [id])
+  zonaId      String?           @map("zona_id")
+  zona        Zona?             @relation(fields: [zonaId], references: [id])
+  actividad   String? // actividad (GTC 45) a la que pertenece la tarea
+  nombre      String
+  rutinaria   Boolean           @default(true)
+  altoRiesgo  String?           @map("alto_riesgo") // alturas | confinado | electrico | izaje | caliente | null
+  estado      String            @default("aprobado") // sugerido | aprobado
+  fuente      String            @default("manual") // biblioteca | ia | manual
+  cargos      CargoTarea[]
+  peligros    PeligroEvaluado[]
+
+  @@map("tarea")
+}
+
+model CargoTarea {
+  cargoId String @map("cargo_id")
+  tareaId String @map("tarea_id")
+  cargo   Cargo  @relation(fields: [cargoId], references: [id], onDelete: Cascade)
+  tarea   Tarea  @relation(fields: [tareaId], references: [id], onDelete: Cascade)
+
+  @@id([cargoId, tareaId])
+  @@map("cargo_tarea")
+}
+
+// ─────────────────────────── Biblioteca (conocimiento compartido) ───────────────────────────
+
+model SectorTipo {
+  id          String           @id @default(cuid())
+  nombre      String
+  ciius       String[]         @default([]) // divisiones o códigos CIIU asociados
+  descripcion String?
+  validado    Boolean          @default(false)
+  procesos    ProcesoTipo[]
+  cargos      CargoTipo[]
+  zonas       SectorZonaTipo[]
+  empresas    Empresa[]
+
+  @@map("sector_tipo")
+}
+
+model ProcesoTipo {
+  id           String      @id @default(cuid())
+  sectorTipoId String?     @map("sector_tipo_id")
+  sectorTipo   SectorTipo? @relation(fields: [sectorTipoId], references: [id])
+  nombre       String
+  descripcion  String?
+  validado     Boolean     @default(false)
+  tareas       TareaTipo[]
+  procesos     Proceso[]
+
+  @@map("proceso_tipo")
+}
+
+model ZonaTipo {
+  id          String            @id @default(cuid())
+  nombre      String            @unique
+  descripcion String?
+  validado    Boolean           @default(false)
+  peligros    ZonaTipoPeligro[]
+  sectores    SectorZonaTipo[]
+  zonas       Zona[]
+
+  @@map("zona_tipo")
+}
+
+model SectorZonaTipo {
+  sectorTipoId String     @map("sector_tipo_id")
+  zonaTipoId   String     @map("zona_tipo_id")
+  sectorTipo   SectorTipo @relation(fields: [sectorTipoId], references: [id], onDelete: Cascade)
+  zonaTipo     ZonaTipo   @relation(fields: [zonaTipoId], references: [id], onDelete: Cascade)
+
+  @@id([sectorTipoId, zonaTipoId])
+  @@map("sector_zona_tipo")
+}
+
+model CargoTipo {
+  id           String             @id @default(cuid())
+  sectorTipoId String?            @map("sector_tipo_id")
+  sectorTipo   SectorTipo?        @relation(fields: [sectorTipoId], references: [id])
+  nombre       String
+  descripcion  String?
+  validado     Boolean            @default(false)
+  tareas       CargoTipoTarea[]
+  peligros     CargoTipoPeligro[]
+  cargos       Cargo[]
+
+  @@map("cargo_tipo")
+}
+
+model TareaTipo {
+  id            String             @id @default(cuid())
+  procesoTipoId String?            @map("proceso_tipo_id")
+  procesoTipo   ProcesoTipo?       @relation(fields: [procesoTipoId], references: [id])
+  nombre        String
+  actividad     String?
+  rutinaria     Boolean            @default(true)
+  altoRiesgo    String?            @map("alto_riesgo")
+  validado      Boolean            @default(false)
+  peligros      TareaTipoPeligro[]
+  cargos        CargoTipoTarea[]
+  tareas        Tarea[]
+
+  @@map("tarea_tipo")
+}
+
+model CargoTipoTarea {
+  cargoTipoId String    @map("cargo_tipo_id")
+  tareaTipoId String    @map("tarea_tipo_id")
+  cargoTipo   CargoTipo @relation(fields: [cargoTipoId], references: [id], onDelete: Cascade)
+  tareaTipo   TareaTipo @relation(fields: [tareaTipoId], references: [id], onDelete: Cascade)
+
+  @@id([cargoTipoId, tareaTipoId])
+  @@map("cargo_tipo_tarea")
+}
+
+// Catálogo de peligros según clasificación GTC 45
+model PeligroCatalogo {
+  id                       String             @id @default(cuid())
+  clasificacion            String // Biologico | Fisico | Quimico | Psicosocial | Biomecanico | Condiciones de seguridad | Fenomenos naturales
+  subclasificacion         String? // p. ej. "Ruido", "Iluminación", "Locativo", "Mecánico", "Eléctrico", "Postura", "Esfuerzo"
+  descripcion              String
+  efectosPosibles          String             @map("efectos_posibles")
+  ndDefault                Int                @default(2) @map("nd_default") // 0,2,6,10
+  neDefault                Int                @default(2) @map("ne_default") // 1..4
+  ncDefault                Int                @default(10) @map("nc_default") // 10,25,60,100
+  controlesFuente          String?            @map("controles_fuente")
+  controlesMedio           String?            @map("controles_medio")
+  controlesIndividuo       String?            @map("controles_individuo")
+  medidaEliminacion        String?            @map("medida_eliminacion")
+  medidaSustitucion        String?            @map("medida_sustitucion")
+  medidaIngenieria         String?            @map("medida_ingenieria")
+  medidaAdministrativa     String?            @map("medida_administrativa")
+  medidaEpp                String?            @map("medida_epp")
+  eppSugerido              String[]           @default([]) @map("epp_sugerido")
+  examenesSugeridos        String[]           @default([]) @map("examenes_sugeridos")
+  capacitacionesSugeridas  String[]           @default([]) @map("capacitaciones_sugeridas")
+  normas                   String[]           @default([]) // codigos de Norma
+  pveAsociado              String?            @map("pve_asociado") // osteomuscular | auditivo | visual | quimico | psicosocial | respiratorio | biologico
+  requisitoLegalEspecifico Boolean            @default(false) @map("requisito_legal_especifico")
+  validado                 Boolean            @default(false)
+  tareas                   TareaTipoPeligro[]
+  zonas                    ZonaTipoPeligro[]
+  cargos                   CargoTipoPeligro[]
+  evaluados                PeligroEvaluado[]
+
+  @@map("peligro_catalogo")
+}
+
+model TareaTipoPeligro {
+  tareaTipoId String          @map("tarea_tipo_id")
+  peligroId   String          @map("peligro_id")
+  nd          Int?
+  ne          Int?
+  nc          Int?
+  tareaTipo   TareaTipo       @relation(fields: [tareaTipoId], references: [id], onDelete: Cascade)
+  peligro     PeligroCatalogo @relation(fields: [peligroId], references: [id], onDelete: Cascade)
+
+  @@id([tareaTipoId, peligroId])
+  @@map("tarea_tipo_peligro")
+}
+
+model ZonaTipoPeligro {
+  zonaTipoId String          @map("zona_tipo_id")
+  peligroId  String          @map("peligro_id")
+  nd         Int?
+  ne         Int?
+  nc         Int?
+  zonaTipo   ZonaTipo        @relation(fields: [zonaTipoId], references: [id], onDelete: Cascade)
+  peligro    PeligroCatalogo @relation(fields: [peligroId], references: [id], onDelete: Cascade)
+
+  @@id([zonaTipoId, peligroId])
+  @@map("zona_tipo_peligro")
+}
+
+model CargoTipoPeligro {
+  cargoTipoId String          @map("cargo_tipo_id")
+  peligroId   String          @map("peligro_id")
+  nd          Int?
+  ne          Int?
+  nc          Int?
+  cargoTipo   CargoTipo       @relation(fields: [cargoTipoId], references: [id], onDelete: Cascade)
+  peligro     PeligroCatalogo @relation(fields: [peligroId], references: [id], onDelete: Cascade)
+
+  @@id([cargoTipoId, peligroId])
+  @@map("cargo_tipo_peligro")
+}
+
+// ─────────────────────────── Matriz de peligros (instancia por empresa) ───────────────────────────
+
+model MatrizVersion {
+  id        String            @id @default(cuid())
+  empresaId String            @map("empresa_id")
+  empresa   Empresa           @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  numero    Int
+  motivo    String // inicial | anual | gestion_cambio
+  fecha     DateTime          @default(now())
+  snapshot  Json? // copia de la matriz al cerrar la versión
+  peligros  PeligroEvaluado[]
+
+  @@map("matriz_version")
+}
+
+model PeligroEvaluado {
+  id                   String           @id @default(cuid())
+  empresaId            String           @map("empresa_id")
+  empresa              Empresa          @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  matrizVersionId      String?          @map("matriz_version_id")
+  matrizVersion        MatrizVersion?   @relation(fields: [matrizVersionId], references: [id])
+  origen               String // tarea | zona | cargo
+  tareaId              String?          @map("tarea_id")
+  tarea                Tarea?           @relation(fields: [tareaId], references: [id], onDelete: Cascade)
+  zonaId               String?          @map("zona_id")
+  zona                 Zona?            @relation(fields: [zonaId], references: [id], onDelete: Cascade)
+  cargoId              String?          @map("cargo_id")
+  cargo                Cargo?           @relation(fields: [cargoId], references: [id], onDelete: Cascade)
+  peligroId            String?          @map("peligro_id")
+  peligro              PeligroCatalogo? @relation(fields: [peligroId], references: [id])
+  clasificacion        String
+  descripcion          String
+  efectosPosibles      String?          @map("efectos_posibles")
+  controlesFuente      String?          @map("controles_fuente")
+  controlesMedio       String?          @map("controles_medio")
+  controlesIndividuo   String?          @map("controles_individuo")
+  nd                   Int              @default(2)
+  ne                   Int              @default(2)
+  nc                   Int              @default(10)
+  peorConsecuencia     String?          @map("peor_consecuencia")
+  requisitoLegal       Boolean          @default(false) @map("requisito_legal")
+  medidaEliminacion    String?          @map("medida_eliminacion")
+  medidaSustitucion    String?          @map("medida_sustitucion")
+  medidaIngenieria     String?          @map("medida_ingenieria")
+  medidaAdministrativa String?          @map("medida_administrativa")
+  medidaEpp            String?          @map("medida_epp")
+  estado               String           @default("aprobado") // sugerido | aprobado
+  fuente               String           @default("manual") // biblioteca | ia | manual
+  creadoEn             DateTime         @default(now()) @map("creado_en")
+
+  @@map("peligro_evaluado")
+}
+
+// ─────────────────────────── Normativo ───────────────────────────
+
+model Estandar {
+  id                String           @id @default(cuid())
+  codigo            String           @unique // "1.1.1"
+  ciclo             String // PLANEAR | HACER | VERIFICAR | ACTUAR
+  grupo             String // "1. Recursos (10%)"
+  subgrupo          String // "1.1 Recursos financieros..."
+  descripcion       String
+  puntaje           Float
+  aplica7           Boolean          @default(false) @map("aplica_7")
+  aplica21          Boolean          @default(false) @map("aplica_21")
+  modoVerificacion  String?          @map("modo_verificacion") // qué evidencia pide el inspector (Res. 0312 art. 16)
+  actividadSugerida String?          @map("actividad_sugerida") // actividad para el plan de mejoramiento
+  orden             Int
+  items             EvaluacionItem[]
+
+  @@map("estandar")
+}
+
+model Norma {
+  id                     String    @id @default(cuid())
+  codigo                 String    @unique // "DEC-1072-2015"
+  tipo                   String // Ley | Decreto | Resolucion | Circular | GuiaTecnica | Norma
+  numero                 String
+  anio                   Int
+  entidad                String
+  nombre                 String
+  tema                   String
+  resumen                String
+  articulosClave         String?   @map("articulos_clave")
+  urlOficial             String?   @map("url_oficial")
+  condicionAplicabilidad Json      @default("{\"siempre\":true}") @map("condicion_aplicabilidad")
+  vigenteDesde           DateTime? @map("vigente_desde")
+  derogadaPor            String?   @map("derogada_por")
+  vigente                Boolean   @default(true)
+  evidenciaCumplimiento  String?   @map("evidencia_cumplimiento") // qué documento/registro demuestra cumplimiento
+
+  @@map("norma")
+}
+
+model ReglaAplicabilidad {
+  id        String  @id @default(cuid())
+  codigo    String  @unique
+  nombre    String
+  condicion Json // { trabajadores: {min,max}, claseRiesgo: {in: []}, disparador: "alturas", esUpa: true }
+  efecto    Json // { nivel, documentos: [], normas: [], comites: [], capacitaciones: [], mensaje }
+  normaRef  String  @map("norma_ref")
+  prioridad Int     @default(0)
+  activa    Boolean @default(true)
+
+  @@map("regla_aplicabilidad")
+}
+
+model CiiuClaseRiesgo {
+  id          String @id @default(cuid())
+  codigo      String @unique // "4711" o división "47"
+  descripcion String
+  claseRiesgo Int    @map("clase_riesgo")
+  fuente      String @default("Decreto 1607/2002")
+
+  @@map("ciiu_clase_riesgo")
+}
+
+// ─────────────────────────── Evaluación (inicial y autoevaluación anual) ───────────────────────────
+
+model Evaluacion {
+  id              String                 @id @default(cuid())
+  empresaId       String                 @map("empresa_id")
+  empresa         Empresa                @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  tipo            String // inicial | anual
+  anio            Int
+  fecha           DateTime               @default(now())
+  nivel           Int
+  puntajeBruto    Float?                 @map("puntaje_bruto")
+  puntajeAjustado Float?                 @map("puntaje_ajustado")
+  valoracion      String? // CRITICO | MODERADAMENTE_ACEPTABLE | ACEPTABLE
+  cerrada         Boolean                @default(false)
+  observaciones   String?
+  items           EvaluacionItem[]
+  planMejora      PlanMejoramientoItem[]
+
+  @@map("evaluacion")
+}
+
+model EvaluacionItem {
+  id            String     @id @default(cuid())
+  evaluacionId  String     @map("evaluacion_id")
+  evaluacion    Evaluacion @relation(fields: [evaluacionId], references: [id], onDelete: Cascade)
+  estandarId    String     @map("estandar_id")
+  estandar      Estandar   @relation(fields: [estandarId], references: [id])
+  estado        String     @default("PENDIENTE") // CUMPLE | NO_CUMPLE | NO_APLICA | PENDIENTE
+  justificacion String?
+  observacion   String?
+  evidenciaIds  String[]   @default([]) @map("evidencia_ids")
+
+  @@unique([evaluacionId, estandarId])
+  @@map("evaluacion_item")
+}
+
+model PlanMejoramientoItem {
+  id             String     @id @default(cuid())
+  evaluacionId   String     @map("evaluacion_id")
+  evaluacion     Evaluacion @relation(fields: [evaluacionId], references: [id], onDelete: Cascade)
+  estandarCodigo String     @map("estandar_codigo")
+  actividad      String
+  responsable    String?
+  fechaLimite    DateTime?  @map("fecha_limite")
+  recursos       String?
+  soporte        String?
+  estado         String     @default("PENDIENTE") // PENDIENTE | EN_CURSO | CUMPLIDA
+  avance         String?
+
+  @@map("plan_mejoramiento_item")
+}
+
+// ─────────────────────────── Plantillas y documentos ───────────────────────────
+
+model Plantilla {
+  id           String      @id @default(cuid())
+  codigo       String      @unique // "POL-01"
+  nombre       String
+  tipo         String // POL | DOC | PRG | PRC | FOR | ACT | MTZ | PLN
+  nivelMin     Int         @default(7) @map("nivel_min") // 7 | 21 | 60
+  condicion    Json? // condición adicional (disparador, trabajadores>=10, etc.)
+  estandares   String[]    @default([])
+  normas       String[]    @default([]) // codigos de Norma
+  descripcion  String?
+  contenidoMd  String      @map("contenido_md") // Markdown + Handlebars; secciones separadas por "## "
+  version      Int         @default(1)
+  vigenteDesde DateTime    @default(now()) @map("vigente_desde")
+  carpeta      String? // carpeta destino en el ZIP (p. ej. "2. Gestion integral")
+  documentos   Documento[]
+
+  @@map("plantilla")
+}
+
+model Documento {
+  id             String             @id @default(cuid())
+  empresaId      String             @map("empresa_id")
+  empresa        Empresa            @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  plantillaId    String             @map("plantilla_id")
+  plantilla      Plantilla          @relation(fields: [plantillaId], references: [id])
+  codigo         String // POL-01
+  nombre         String
+  version        Int                @default(1)
+  estado         String             @default("BORRADOR") // BORRADOR | APROBADO | FIRMADO
+  fechaEmision   DateTime           @default(now()) @map("fecha_emision")
+  generadoEn     DateTime           @default(now()) @map("generado_en")
+  archivoPdfUrl  String?            @map("archivo_pdf_url")
+  archivoDocxUrl String?            @map("archivo_docx_url")
+  secciones      DocumentoSeccion[]
+
+  @@unique([empresaId, codigo])
+  @@map("documento")
+}
+
+model DocumentoSeccion {
+  id                String    @id @default(cuid())
+  documentoId       String    @map("documento_id")
+  documento         Documento @relation(fields: [documentoId], references: [id], onDelete: Cascade)
+  orden             Int
+  titulo            String
+  contenidoGenerado String    @map("contenido_generado")
+  contenidoEditado  String?   @map("contenido_editado")
+  requiereRevision  Boolean   @default(false) @map("requiere_revision") // generado cambió y existe edición manual
+  actualizadoEn     DateTime  @updatedAt @map("actualizado_en")
+
+  @@map("documento_seccion")
+}
+
+// ─────────────────────────── Plan anual, evidencias, eventos ───────────────────────────
+
+model ActividadPlan {
+  id             String      @id @default(cuid())
+  empresaId      String      @map("empresa_id")
+  empresa        Empresa     @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  anio           Int
+  mes            Int // 1..12
+  nombre         String
+  descripcion    String?
+  estandarCodigo String?     @map("estandar_codigo")
+  normaRef       String?     @map("norma_ref")
+  responsable    String?
+  recursos       String?
+  origen         String      @default("nivel") // nivel | matriz | mejoramiento | comite | periodica | manual
+  estado         String      @default("PENDIENTE") // PENDIENTE | EJECUTADA | VENCIDA | CANCELADA
+  fechaEjecucion DateTime?   @map("fecha_ejecucion")
+  evidencias     Evidencia[]
+
+  @@map("actividad_plan")
+}
+
+model Evidencia {
+  id             String         @id @default(cuid())
+  empresaId      String         @map("empresa_id")
+  empresa        Empresa        @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  actividadId    String?        @map("actividad_id")
+  actividad      ActividadPlan? @relation(fields: [actividadId], references: [id])
+  estandarCodigo String?        @map("estandar_codigo")
+  descripcion    String
+  archivoUrl     String?        @map("archivo_url")
+  fecha          DateTime       @default(now())
+
+  @@map("evidencia")
+}
+
+model Evento {
+  id              String    @id @default(cuid())
+  empresaId       String    @map("empresa_id")
+  empresa         Empresa   @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  tipo            String // AT | INCIDENTE | EL | AUSENTISMO
+  fecha           DateTime
+  descripcion     String?
+  cargo           String?
+  diasIncapacidad Int       @default(0) @map("dias_incapacidad")
+  diasCargados    Int       @default(0) @map("dias_cargados")
+  mortal          Boolean   @default(false)
+  casoNuevo       Boolean   @default(true) @map("caso_nuevo") // para EL: nuevo vs antiguo
+  origenAusencia  String?   @map("origen_ausencia") // laboral | comun
+  reportadoArl    Boolean   @default(false) @map("reportado_arl")
+  fechaReporte    DateTime? @map("fecha_reporte")
+  investigado     Boolean   @default(false)
+
+  @@map("evento")
+}
+
+model TrabajadoresMes {
+  id              String  @id @default(cuid())
+  empresaId       String  @map("empresa_id")
+  empresa         Empresa @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  anio            Int
+  mes             Int
+  nTrabajadores   Int     @map("n_trabajadores")
+  diasProgramados Int?    @map("dias_programados")
+
+  @@unique([empresaId, anio, mes])
+  @@map("trabajadores_mes")
+}
+
+// ─────────────────────────── Comités ───────────────────────────
+
+model Comite {
+  id            String          @id @default(cuid())
+  empresaId     String          @map("empresa_id")
+  empresa       Empresa         @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  tipo          String // COPASST | VIGIA | CCL | BRIGADA
+  periodoInicio DateTime?       @map("periodo_inicio")
+  periodoFin    DateTime?       @map("periodo_fin")
+  normaRef      String?         @map("norma_ref")
+  miembros      ComiteMiembro[]
+  actas         Acta[]
+
+  @@map("comite")
+}
+
+model ComiteMiembro {
+  id         String  @id @default(cuid())
+  comiteId   String  @map("comite_id")
+  comite     Comite  @relation(fields: [comiteId], references: [id], onDelete: Cascade)
+  nombre     String
+  cedula     String?
+  cargo      String?
+  rol        String // presidente | secretario | principal_empleador | principal_trabajadores | suplente_empleador | suplente_trabajadores | brigadista | jefe_brigada
+  representa String? // empleador | trabajadores
+
+  @@map("comite_miembro")
+}
+
+model Acta {
+  id          String   @id @default(cuid())
+  comiteId    String   @map("comite_id")
+  comite      Comite   @relation(fields: [comiteId], references: [id], onDelete: Cascade)
+  numero      Int
+  fecha       DateTime
+  tipo        String   @default("ordinaria") // conformacion | ordinaria | extraordinaria
+  contenidoMd String   @map("contenido_md")
+  compromisos Json     @default("[]")
+
+  @@map("acta")
+}

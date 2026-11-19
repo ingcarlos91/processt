@@ -1,9 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
-  cacheComponents: true,
-  partialPrefetching: true,
+  // App interna 100% dinámica: sin Cache Components para simplificar el acceso a BD en páginas.
+  cacheComponents: false,
   turbopack: {
     rules: {
       "*.css": {
@@ -12,6 +11,7 @@ const nextConfig: NextConfig = {
       },
     },
   },
+  serverExternalPackages: ["@prisma/client", "prisma"],
 };
 
 export default nextConfig;
