@@ -3,7 +3,7 @@ import { evaluarEmpresa, composicionCopasst, type ResultadoReglas } from "@/lib/
 import { calcular, CLASIFICACION_ETIQUETA } from "@/lib/gtc45";
 import { INDICADORES } from "@/lib/indicadores";
 import { calificar } from "@/lib/evaluacion";
-import { generarPlan, MESES } from "@/lib/plan/generar";
+import { generarPlan, MESES, anioPlanDefecto } from "@/lib/plan/generar";
 
 const ROMANO = ["", "I", "II", "III", "IV", "V"];
 const PERFIL_TEXTO: Record<string, string> = { tecnico: "Técnico en SST", tecnologo: "Tecnólogo en SST", profesional: "Profesional en SST", especialista: "Profesional con posgrado en SST" };
@@ -171,10 +171,11 @@ export async function construirContexto(empresaId: string) {
   }
 
   // Plan anual: persistido o generado en memoria
-  const anio = new Date().getFullYear();
-  const anioPlan = e.actividades.length ? e.actividades[0].anio : anio;
-  const plan = (e.actividades.length
-    ? e.actividades.map((a) => ({ mes: a.mes, nombre: a.nombre, estandarCodigo: a.estandarCodigo ?? "", normaRef: a.normaRef ?? "", responsable: a.responsable ?? "", recursos: a.recursos ?? "" }))
+  const anioObjetivo = anioPlanDefecto();
+  const anioPlan = e.actividades.some((a) => a.anio === anioObjetivo) ? anioObjetivo : e.actividades.length ? Math.max(...e.actividades.map((a) => a.anio)) : anioObjetivo;
+  const actsAnio = e.actividades.filter((a) => a.anio === anioPlan);
+  const plan = (actsAnio.length
+    ? actsAnio.map((a) => ({ mes: a.mes, nombre: a.nombre, estandarCodigo: a.estandarCodigo ?? "", normaRef: a.normaRef ?? "", responsable: a.responsable ?? "", recursos: a.recursos ?? "" }))
     : generarPlan({
         nivel: rr.nivel, comites: rr.comites, disparadores: dis,
         capacitaciones: capacitaciones.map((c) => ({ tema: c.tema, mes: c.mesNum, norma: c.norma })),

@@ -85,3 +85,8 @@ export function generarPlan(e: Entrada): ActividadGen[] {
 
   return a.sort((x, y) => x.mes - y.mes);
 }
+
+/** Año de planeación por defecto: en noviembre y diciembre se formula el plan del año siguiente (Res. 0312/2019 art. 26). */
+export function anioPlanDefecto(hoy = new Date()) {
+  return hoy.getMonth() >= 10 ? hoy.getFullYear() + 1 : hoy.getFullYear();
+}

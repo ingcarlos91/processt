@@ -20,13 +20,15 @@ export default async function Resumen({ params }: PageProps<"/empresas/[id]">) {
     where: { id },
     include: {
       evaluaciones: { orderBy: { fecha: "desc" }, take: 1 }, documentos: { select: { estado: true, secciones: { select: { requiereRevision: true } } } },
-      actividades: { where: { anio: new Date().getFullYear() } }, peligros: { select: { nd: true, ne: true, nc: true, estado: true } }, comites: true, cargos: true,
+      actividades: { where: { anio: { in: [new Date().getFullYear(), new Date().getFullYear() + 1] } } }, peligros: { select: { nd: true, ne: true, nc: true, estado: true } }, comites: true, cargos: true,
     },
   });
   const ev = e.evaluaciones[0];
+  const anioAct = e.actividades.some((a) => a.anio === new Date().getFullYear()) ? new Date().getFullYear() : new Date().getFullYear() + 1;
+  e.actividades = e.actividades.filter((a) => a.anio === anioAct);
   const puntaje = ev ? (ev.nivel === 60 ? ev.puntajeBruto : ev.puntajeAjustado) : null;
   const ej = e.actividades.filter((a) => a.estado === "EJECUTADA").length;
-  const mes = new Date().getMonth() + 1;
+  const mes = anioAct > new Date().getFullYear() ? 1 : new Date().getMonth() + 1;
   const proximas = e.actividades.filter((a) => a.estado === "PENDIENTE" && a.mes >= mes).sort((a, b) => a.mes - b.mes).slice(0, 8);
   const vencidas = e.actividades.filter((a) => a.estado === "PENDIENTE" && a.mes < mes).length;
   const niveles = e.peligros.filter((p) => p.estado === "aprobado").map((p) => calcular(p.nd, p.ne, p.nc).nivel);

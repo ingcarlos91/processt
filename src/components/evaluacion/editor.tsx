@@ -9,7 +9,6 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -97,11 +96,12 @@ export function EvaluacionEditor({ empresaId, nivel, evaluaciones, actual }: {
                     <TableCell><div className="font-medium text-sm">{i.descripcion}</div><div className="text-xs text-muted-foreground mt-1">{i.modo}</div></TableCell>
                     <TableCell className="tabular-nums">{i.puntaje}</TableCell>
                     <TableCell>
-                      <ToggleGroup variant="outline" size="sm" disabled={actual.cerrada || pend} value={[i.estado]} onValueChange={(v) => v[0] && run(() => A.actualizarItemEvaluacion(empresaId, i.id, { estado: v[0] }))}>
-                        <ToggleGroupItem value="CUMPLE" className="data-pressed:bg-emerald-600 data-pressed:text-white">Cumple</ToggleGroupItem>
-                        <ToggleGroupItem value="NO_CUMPLE" className="data-pressed:bg-destructive data-pressed:text-white">No cumple</ToggleGroupItem>
-                        <ToggleGroupItem value="NO_APLICA" className="data-pressed:bg-secondary">No aplica</ToggleGroupItem>
-                      </ToggleGroup>
+                      <div className="flex gap-1">
+                        {([["CUMPLE", "Cumple", "bg-emerald-600 text-white hover:bg-emerald-600/90"], ["NO_CUMPLE", "No cumple", "bg-destructive text-white hover:bg-destructive/90"], ["NO_APLICA", "No aplica", ""]] as const).map(([v, l, on]) => (
+                          <Button key={v} size="xs" variant={i.estado === v ? (v === "NO_APLICA" ? "secondary" : "default") : "outline"} className={cn(i.estado === v && on)} disabled={actual.cerrada || pend}
+                            onClick={() => run(() => A.actualizarItemEvaluacion(empresaId, i.id, { estado: i.estado === v ? "PENDIENTE" : v }))}>{l}</Button>
+                        ))}
+                      </div>
                     </TableCell>
                     <TableCell className="pr-6">
                       <Textarea className="min-h-9 text-xs" disabled={actual.cerrada} placeholder={i.estado === "NO_APLICA" ? "Justificación obligatoria" : "Observación"} aria-invalid={i.estado === "NO_APLICA" && !i.justificacion}

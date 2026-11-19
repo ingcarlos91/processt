@@ -10,7 +10,6 @@ import { Progress } from "@/components/ui/progress";
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Section, Stat, NormaRef } from "@/components/app/ui";
 import { Confirmar } from "@/components/app/confirmar";
@@ -62,9 +61,10 @@ export function PlanEditor({ empresaId, anio, actividades }: { empresaId: string
         <NativeSelect value={anio} onChange={(e) => (window.location.href = `?anio=${e.target.value}`)}>
           {[anio - 1, anio, anio + 1].map((y) => <NativeSelectOption key={y} value={y}>{y}</NativeSelectOption>)}
         </NativeSelect>
-        <ToggleGroup variant="outline" value={[vista]} onValueChange={(v) => v[0] && setVista(v[0])}>
-          <ToggleGroupItem value="mes">Por mes</ToggleGroupItem><ToggleGroupItem value="tabla">Tabla</ToggleGroupItem>
-        </ToggleGroup>
+        <div className="flex">
+          <Button variant={vista === "mes" ? "secondary" : "outline"} className="rounded-r-none" onClick={() => setVista("mes")}>Por mes</Button>
+          <Button variant={vista === "tabla" ? "secondary" : "outline"} className="rounded-l-none -ml-px" onClick={() => setVista("tabla")}>Tabla</Button>
+        </div>
         <label className="flex items-center gap-2 text-sm"><Checkbox checked={ocultarComites} onCheckedChange={(v) => setOcultarComites(!!v)} /> Ocultar reuniones mensuales de comités</label>
         <div className="flex-1" />
         {generar}
