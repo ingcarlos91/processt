@@ -15,7 +15,7 @@ import { EstadoVacio } from "@/components/app/ilustraciones";
 import { BotonGenerarTodo } from "@/components/empresa/acciones";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ClipboardList } from "lucide-react";
-import { faltantes, SECCIONES, type Complementarios } from "@/lib/complementarios";
+import { completitud } from "@/lib/completitud";
 
 export const dynamic = "force-dynamic";
 
@@ -35,20 +35,12 @@ export default async function Documentos({ params, searchParams }: PageProps<"/e
   const conteo = Object.fromEntries((Object.keys(ESTADOS_DOC) as EstadoDoc[]).map((k) => [k, plantillas.filter((p) => estadoDe(p.codigo) === k).length])) as Record<EstadoDoc, number>;
   const visibles = filtro ? plantillas.filter((p) => estadoDe(p.codigo) === filtro) : plantillas;
   const carpetas = [...new Set(visibles.map((p) => p.carpeta ?? "Otros"))].sort();
-  const emp = await db.empresa.findUniqueOrThrow({ where: { id }, select: { datosComplementarios: true, disparadores: true, responsableSst: true, comites: { select: { tipo: true, _count: { select: { miembros: true } } } } } });
-  const resp = (emp.responsableSst ?? {}) as { nombre?: string; licencia?: string; cedula?: string };
-  const faltaResp = [!resp.nombre?.trim() && "nombre", !resp.cedula?.trim() && "cédula", !resp.licencia?.trim() && "licencia"].filter(Boolean) as string[];
-  const falta = faltantes((emp.datosComplementarios ?? {}) as Complementarios, (emp.disparadores ?? {}) as Record<string, boolean>, rr.documentos.map((d) => d.codigo));
-  const comitesSinIntegrantes = [...new Set(rr.comites)].filter((c) => !emp.comites.some((x) => (x.tipo === c || (c === "COPASST" && x.tipo === "VIGIA")) && x._count.miembros > 0));
-  const NOMBRE_COMITE: Record<string, string> = { COPASST: "COPASST", VIGIA: "Vigía de SST", CCL: "Comité de Convivencia Laboral", BRIGADA: "Brigada de emergencias" };
-  const DOCS_COMITE: Record<string, string[]> = { COPASST: ["ACT-01", "ACT-02"], VIGIA: ["ACT-01", "ACT-02"], CCL: ["ACT-04"], BRIGADA: ["ACT-05", "PLN-04"] };
-  const seccionDe = (k: string) => SECCIONES.find((x) => x.campos.some((c) => c.k === k));
-  const grupos = [
-    ...(faltaResp.length ? [{ titulo: "Responsable del SG-SST", boton: "Ir a Datos", href: `/empresas/${id}/datos`, items: [{ t: `Falta: ${faltaResp.join(", ")}`, docs: ["DOC-03", "Firmas", "Elaboró"] }] }] : []),
-    ...SECCIONES.map((sec) => ({ sec, items: falta.filter((f) => seccionDe(f.k)?.id === sec.id) })).filter((x) => x.items.length)
-      .map(({ sec, items }) => ({ titulo: sec.titulo, boton: "Completar datos", href: `/empresas/${id}/datos#complementarios`, items: items.map((f) => ({ t: f.etiqueta, docs: f.documentos })) })),
-    ...(comitesSinIntegrantes.length ? [{ titulo: "Comités", boton: "Ir a Comités", href: `/empresas/${id}/comites`, items: comitesSinIntegrantes.map((c) => ({ t: `Integrantes: ${NOMBRE_COMITE[c] ?? c}`, docs: DOCS_COMITE[c] ?? [] })) }] : []),
-  ];
+  // Trazabilidad: cada dato faltante, dónde se llena y qué documentos afecta (calculado desde las plantillas).
+  const comp = await completitud(id);
+  const grupos = [...new Set(comp.faltantes.map((f) => f.grupo))].map((g) => {
+    const xs = comp.faltantes.filter((f) => f.grupo === g);
+    return { titulo: g, boton: xs[0].boton, href: xs[0].href, items: xs.map((f) => ({ t: f.detalle ? `${f.dato} — ${f.detalle}` : f.dato, docs: f.docs, href: f.href })) };
+  });
   const totalFaltantes = grupos.reduce((n, g) => n + g.items.length, 0);
   const acciones = (
     <div className="flex gap-2">
@@ -77,8 +69,8 @@ export default async function Documentos({ params, searchParams }: PageProps<"/e
       {grupos.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2"><ClipboardList className="size-4 text-muted-foreground" /> Faltan {totalFaltantes} datos para que los documentos salgan completos</CardTitle>
-            <CardDescription>No tiene que volver a generar: al guardar estos datos, los documentos se actualizan solos. Mientras tanto salen con espacios en blanco para llenar a mano.</CardDescription>
+            <CardTitle className="flex items-center gap-2"><ClipboardList className="size-4 text-muted-foreground" /> Faltan {totalFaltantes} datos para que los documentos salgan completos · {comp.docsCompletos} de {comp.aplicables} documentos sin datos pendientes</CardTitle>
+            <CardDescription>No tiene que volver a generar: al guardar estos datos, los documentos se actualizan solos. Mientras tanto salen con espacios en blanco o «Por definir». Cada documento muestra al abrirlo qué le falta.</CardDescription>
           </CardHeader>
           <CardContent className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
             {grupos.map((g) => (
@@ -87,7 +79,7 @@ export default async function Documentos({ params, searchParams }: PageProps<"/e
                 <ul className="flex-1 space-y-2.5">
                   {g.items.map((it) => (
                     <li key={it.t} className="text-sm leading-snug">
-                      <div>{it.t}</div>
+                      <Link href={it.href} className="hover:underline">{it.t}</Link>
                       <div className="mt-1 flex flex-wrap gap-1">{it.docs.map((d) => <Badge key={d} variant="outline" className="font-mono text-[10px]">{d}</Badge>)}</div>
                     </li>
                   ))}
@@ -112,7 +104,7 @@ export default async function Documentos({ params, searchParams }: PageProps<"/e
                     <TableCell className="pl-6 font-mono text-xs">{p.codigo}</TableCell>
                     <TableCell>
                       <div className="font-medium"><Tip texto={<>{rr.documentos.find((x) => x.codigo === p.codigo)?.porque}{p.normas.length ? ` (${p.normas.join(", ")})` : ""}</>}><span>{p.nombre}</span></Tip></div>
-                      <div className="flex gap-1 mt-1">{editadas > 0 && <Badge variant="secondary">{editadas} secciones editadas</Badge>}{revisar > 0 && <Badge variant="outline" className="border-amber-300 text-amber-800">{revisar} sección(es) por revisar</Badge>}</div>
+                      <div className="flex gap-1 mt-1">{(comp.porDocumento[p.codigo]?.length ?? 0) > 0 && <Tip texto={comp.porDocumento[p.codigo].map((f) => f.dato).join(" · ")}><Badge variant="outline" className="border-amber-300 text-amber-800">Faltan {comp.porDocumento[p.codigo].length} dato(s)</Badge></Tip>}{editadas > 0 && <Badge variant="secondary">{editadas} secciones editadas</Badge>}{revisar > 0 && <Badge variant="outline" className="border-amber-300 text-amber-800">{revisar} sección(es) por revisar</Badge>}</div>
                     </TableCell>
                     <TableCell><div className="flex flex-wrap gap-1">{p.estandares.map((e) => <NormaRef key={e}>{e}</NormaRef>)}</div></TableCell>
                     <TableCell>{d ? `v${d.version}` : "—"}</TableCell>

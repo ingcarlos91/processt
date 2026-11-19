@@ -73,6 +73,7 @@ IA opcional: agregar `AI_GATEWAY_API_KEY=...` en `.env`. Sin clave, “Sugerir t
 - Exportación a PDF con Playwright (documentos, informe de gestión, informe de investigación, informe de auditoría). En Vercel requerirá Chromium para serverless.
 - Auditoría interna anual (13 aspectos del art. 2.2.4.6.30 con evidencia de PROCESST, no conformidades a FOR-06, informe Word/PDF, PRG-10, ACT-06, planeador).
 - Diagnóstico inicial opcional: crear empresa «Empezar con diagnóstico» (etapa diagnóstico, sin matriz ni documentos), lista de chequeo por PHVA con puntaje Res. 0312, informe PDF membreteado por la consultora y firmado, «Iniciar el SG-SST con este diagnóstico» (evaluación inicial + plan de mejoramiento + plan anual + documentos), línea base en Resumen e informe mensual.
+- Trazabilidad de datos (lib/completitud): cada dato faltante con dónde se llena y qué documentos lo usan (leído de las plantillas); panel en Documentos, insignia por documento, aviso dentro de cada documento y alerta en Resumen. Evaluación de cumplimiento de la matriz legal (columna «Cumple» de MTZ-01). Celdas de registros sin dato muestran «Pendiente», «Sin registrar», «Por definir» o «Ninguno identificado». Verificado: 270 pantallas sin errores y 309 descargas (Word, PDF, Excel, ZIP) correctas.
 
 ## Pendiente
 

@@ -64,9 +64,9 @@ Presidente: {{integrantes.ccl.presidente}}  Secretario: {{integrantes.ccl.secret
 |---|---|---|
 | 1 | Recepción de la queja escrita (física o al correo {{op.correoQuejas}}) | Día 0 |
 | 2 | Revisión de competencia y citación a las partes por separado | Dentro de los 10 días |
-| 3 | Escucha individual de las partes | — |
-| 4 | Reunión de diálogo y acuerdo de compromisos | — |
-| 5 | Plan de mejora y seguimiento de compromisos | — |
+| 3 | Escucha individual de las partes | Según la programación del comité |
+| 4 | Reunión de diálogo y acuerdo de compromisos | Después de la escucha de las partes |
+| 5 | Plan de mejora y seguimiento de compromisos | Según los compromisos acordados |
 | 6 | Cierre del caso e informe a la alta dirección | Máximo 65 días calendario desde la recepción |
 
 ## Firmas

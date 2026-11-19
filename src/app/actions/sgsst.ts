@@ -248,3 +248,13 @@ export async function guardarDatosComite(empresaId: string, comiteId: string, da
   rv(empresaId);
   return { ok: true };
 }
+
+/** Guarda la evaluación de cumplimiento de la matriz legal (columna «Cumple» de MTZ-01). */
+export async function guardarCumplimientoLegal(empresaId: string, evaluacion: Record<string, { cumple?: string; evidencia?: string }>) {
+  await requiereUsuario();
+  const e = await db.empresa.findUniqueOrThrow({ where: { id: empresaId }, select: { datosComplementarios: true } });
+  await db.empresa.update({ where: { id: empresaId }, data: { datosComplementarios: { ...((e.datosComplementarios ?? {}) as object), cumplimientoLegal: evaluacion } } });
+  await generarDocumentos(empresaId, ["MTZ-01"]).catch(() => null);
+  rv(empresaId);
+  return { ok: true };
+}

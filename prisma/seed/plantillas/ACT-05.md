@@ -40,10 +40,10 @@ Se recomienda al menos un brigadista por área y por turno.
 
 | Tema | Intensidad | Mes |
 |---|---|---|
-| Primeros auxilios básicos | 8 h | |
-| Prevención y control de incendios, uso de extintores | 4 h | |
-| Evacuación y rescate | 4 h | |
-| Simulacro anual | — | |
+| Primeros auxilios básicos | 8 h | {{op.brigadaPlan.capacitacion}} |
+| Prevención y control de incendios, uso de extintores | 4 h | {{op.brigadaPlan.capacitacion}} |
+| Evacuación y rescate | 4 h | {{op.brigadaPlan.capacitacion}} |
+| Simulacro anual | Una jornada | {{op.brigadaPlan.simulacro}} |
 
 ## Dotación
 

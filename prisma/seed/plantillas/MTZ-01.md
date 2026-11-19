@@ -20,7 +20,7 @@ La aplicabilidad se determinó con base en: actividad económica (CIIU {{empresa
 | N.º | Tipo | Número | Año | Entidad | Tema | Artículos aplicables | Descripción | Evidencia de cumplimiento | Cumple |
 |---|---|---|---|---|---|---|---|---|---|
 {{#each normas}}
-| {{inc @index}} | {{tipo}} | {{numero}} | {{anio}} | {{celda entidad}} | {{celda nombre}} | {{celda articulosClave}} | {{celda resumen}} | {{celda evidenciaCumplimiento}} | |
+| {{inc @index}} | {{tipo}} | {{numero}} | {{anio}} | {{celda entidad}} | {{celda nombre}} | {{#if articulosClave}}{{celda articulosClave}}{{else}}Por precisar (ver Normas y estándares){{/if}} | {{celda resumen}} | {{celda evidenciaCumplimiento}} | {{cumple}} |
 {{/each}}
 
 ## Actualización

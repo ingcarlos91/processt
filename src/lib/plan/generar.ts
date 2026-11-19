@@ -50,7 +50,7 @@ export function generarPlan(e: Entrada): ActividadGen[] {
   if (n21) for (let m = 3; m <= 12; m += 3) add(m, "Seguimiento a restricciones y recomendaciones médico-laborales", "3.1.6", "Res. 0312/2019 est. 3.1.6");
   add(5, "Campaña de promoción de la salud mental y prevención del consumo de SPA", "3.1.7", "Decreto 728/2025; Ley 2460/2025");
   add(10, "Semana de la salud y estilos de vida saludable (mes de la salud mental)", "3.1.7", "Decreto 728/2025; Res. 1075/1992");
-  if (n21) add(6, "Aplicación o seguimiento de la batería de riesgo psicosocial", undefined, "Res. 2764/2022", "Psicólogo con licencia en SST", "nivel", "Financieros");
+  if (n21) add(6, "Aplicación o seguimiento de la batería de riesgo psicosocial", "4.1.2", "Res. 2764/2022", "Psicólogo con licencia en SST", "nivel", "Financieros");
   if (n60) for (let m = 1; m <= 12; m++) add(m, "Registro y cálculo de indicadores de accidentalidad y ausentismo", "3.3.1", "Res. 0312/2019 art. 30");
   else for (let m = 3; m <= 12; m += 3) add(m, "Registro estadístico de accidentes, incidentes y ausentismo", "3.2.3", "Res. 0312/2019 art. 30");
   if (n60) add(12, "Cálculo de mortalidad, prevalencia e incidencia de enfermedad laboral", "3.3.3", "Res. 0312/2019 art. 30");
@@ -62,9 +62,9 @@ export function generarPlan(e: Entrada): ActividadGen[] {
   if (n21) add(4, "Ejecutar mantenimiento preventivo de instalaciones y equipos", "4.2.5", "Res. 0312/2019 est. 4.2.5", RSST, "nivel", "Financieros");
   if (n21) add(1, "Entrega y reposición de EPP según matriz", "4.2.6", "Res. 2400/1979; Res. 0312/2019 est. 4.2.6", RSST, "nivel", "Financieros");
   if (n60) add(4, "Mediciones ambientales de riesgos prioritarios", "4.1.4", "Res. 0312/2019 est. 4.1.4", RSST, "nivel", "Financieros");
-  if (e.disparadores.alturas) add(3, "Revisión del programa de protección contra caídas, certificación y equipos", undefined, "Res. 4272/2021");
+  if (e.disparadores.alturas) add(3, "Revisión del programa de protección contra caídas, certificación y equipos", "4.2.1", "Res. 4272/2021");
   if (e.disparadores.quimicos) add(3, "Actualizar inventario de sustancias químicas, FDS y etiquetado SGA", "4.1.3", "Decreto 1496/2018");
-  if (e.disparadores.confinados) add(3, "Revisión del programa de espacios confinados", undefined, "Res. 0491/2020");
+  if (e.disparadores.confinados) add(3, "Revisión del programa de espacios confinados", "4.2.1", "Res. 0491/2020");
 
   // Amenazas
   add(4, "Revisar y actualizar el plan de prevención, preparación y respuesta ante emergencias", "5.1.1", "Decreto 1072/2015 art. 2.2.4.6.25");

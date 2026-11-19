@@ -13,7 +13,7 @@ normas: ["RES-1843-2025","RES-0312-2019"]
 |---|---|---|---|---|---|---|---|---|---|---|---|
 {{#if nomina.hayExamenes}}
 {{#each nomina.examenes}}
-| {{n}} | {{celda trabajador}} | {{doc}} | {{celda cargo}} | {{tipo}} | {{fecha}} | {{concepto}} | {{celda restricciones}} | {{comunicado}} | | | {{proximo}} |
+| {{n}} | {{celda trabajador}} | {{doc}} | {{celda cargo}} | {{tipo}} | {{fecha}} | {{concepto}} | {{celda restricciones}} | {{comunicado}} | Sin registrar | {{#if (eq concepto "Apto")}}No requiere{{else}}Ver seguimiento{{/if}} | {{default proximo "Por programar"}} |
 {{/each}}
 {{else}}
 | 1 | | | | | | | | | | | |

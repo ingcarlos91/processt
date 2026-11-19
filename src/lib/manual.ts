@@ -207,6 +207,7 @@ export const MANUAL: SeccionManual[] = [
     id: "documentos", titulo: "Documentos del SG-SST", ruta: new RegExp(`^${E}/documentos$`),
     resumen: "Todos los documentos que la norma exige a esta empresa, redactados por el sistema con sus datos y organizados por carpetas.",
     partes: [
+      { titulo: "Datos que faltan (trazabilidad)", que: "Cada dato que falta para que los documentos salgan completos: dónde se llena (enlace) y qué documentos lo usan (calculado leyendo las plantillas). Incluye datos de la empresa, responsable, Mi consultora, datos complementarios, comités, evaluación de la matriz legal y registros (exámenes, capacitaciones, inspecciones, acciones). Cada fila de documento muestra «Faltan N dato(s)» y al abrir el documento aparece el aviso con los enlaces. Lo que no se ha registrado sale como espacio en blanco, «Por definir», «Por evaluar» o «Pendiente», nunca vacío sin explicación." },
       { titulo: "Acciones", que: "Sobre todos los documentos.", botones: [
         { nombre: "Generar / actualizar todos los documentos", hace: "Redacta o actualiza todos. Úselo después de cambiar la matriz, la evaluación o el plan. Las ediciones manuales se conservan." },
         { nombre: "Descargar todo (ZIP)", hace: "Todos los documentos en Word por carpetas, con la matriz y la evaluación en Excel." },
@@ -226,6 +227,7 @@ export const MANUAL: SeccionManual[] = [
     id: "documento", titulo: "Documento (ver y editar)", ruta: new RegExp(`^${E}/documentos/[^/]+$`),
     resumen: "Un documento dividido en secciones. El sistema redacta cada sección; usted puede editarla y su edición se conserva al regenerar.",
     partes: [
+      { titulo: "Aviso de datos", que: "Arriba: los datos que le faltan a este documento, con enlace a dónde se llenan; en verde si está completo. En la matriz legal (MTZ-01) aparece además la evaluación de cumplimiento por norma (Sí / Parcial / No y evidencia), que llena la columna «Cumple»." },
       { titulo: "Barra superior", que: "Acciones del documento.", botones: [
         { nombre: "Estado y Marcar como aprobado", hace: "Muestra el estado del documento. Cuando lo haya revisado, márquelo como aprobado; el estado Firmado se pone solo al subir el firmado." },
         { nombre: "Regenerar", hace: "Vuelve a llenar el documento con los datos actuales; sus ediciones manuales se conservan." },

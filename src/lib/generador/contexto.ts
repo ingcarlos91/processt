@@ -216,19 +216,24 @@ export async function construirContexto(empresaId: string) {
   // Rubros sugeridos con su valor, más los rubros que la consultora agregó como filas nuevas.
   const norm = (t: unknown) => String(t ?? "").trim().toLowerCase();
   const presupuestoConValor = [
-    ...presupuesto.map((r) => { const v = Number(valores.find((x) => norm(x.rubro) === norm(r.rubro))?.valor ?? 0); return { ...r, valor: v ? pesos(v) : "", valorNum: v }; }),
+    ...presupuesto.map((r) => { const v = Number(valores.find((x) => norm(x.rubro) === norm(r.rubro))?.valor ?? 0); return { ...r, valor: v ? pesos(v) : "Por definir", valorNum: v }; }),
     ...valores.filter((x) => norm(x.rubro) && !presupuesto.some((r) => norm(r.rubro) === norm(x.rubro))).map((x) => {
       const v = Number(x.valor ?? 0);
       return { rubro: String(x.rubro).trim(), descripcion: "Rubro agregado por la consultora", estandar: "", valor: v ? pesos(v) : "", valorNum: v };
     }),
   ];
   const totalPresupuesto = presupuestoConValor.reduce((s2, r) => s2 + r.valorNum, 0);
+  const legal = (comp.cumplimientoLegal ?? {}) as unknown as Record<string, { cumple?: string; evidencia?: string }>;
+  const MESES_N = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+  const actsBrigada = await db.actividadPlan.findMany({ where: { empresaId: e.id, OR: [{ nombre: { contains: "brigada", mode: "insensitive" } }, { nombre: { contains: "simulacro", mode: "insensitive" } }] }, orderBy: [{ anio: "desc" }, { mes: "asc" }], select: { nombre: true, mes: true } });
+  const mesDe = (re: RegExp, def: number) => MESES_N[(actsBrigada.find((a) => re.test(a.nombre))?.mes ?? def) - 1];
+  const brigadaPlan = { capacitacion: mesDe(/capacitaci[oó]n de la brigada/i, 5), simulacro: mesDe(/simulacro/i, 10) };
   const op = {
     arlLinea: txt("arlLinea"), telefonoSst: txt("telefonoSst", consultora.telefono || B), correoQuejas: txt("correoQuejas", e.correo || B),
     acosoSexual: persona("acosoSexual"), ips: txt("ips"), medicoIps: persona("medicoIps"), puntoEncuentro: txt("puntoEncuentro"), alarma: txt("alarma"),
-    recursosEmergencia: tabla("recursosEmergencia"), coordinadorAlturas: persona("coordinadorAlturas"),
+    brigadaPlan, recursosEmergencia: tabla("recursosEmergencia"), coordinadorAlturas: persona("coordinadorAlturas"),
     espaciosConfinados: tabla("espaciosConfinados"), quimicos: tabla("quimicos"), equipos: tabla("equipos"),
-    presupuestoTotal: totalPresupuesto ? pesos(totalPresupuesto) : "",
+    presupuestoTotal: totalPresupuesto ? pesos(totalPresupuesto) : "Por definir",
   };
 
   // ── Comités: integrantes por rol ──
@@ -274,14 +279,14 @@ export async function construirContexto(empresaId: string) {
   const inspeccionesDb = await db.inspeccion.findMany({ where: { empresaId: e.id }, orderBy: { fecha: "asc" }, include: { _count: { select: { acciones: true } } } });
   const inspecciones = inspeccionesDb.map((i) => {
     const its = (i.items ?? []) as { resultado: string }[]; const ap = its.filter((x) => x.resultado !== "na");
-    return { fecha: ddmm(i.fecha), lista: i.lista, lugar: i.lugar ?? "", responsable: i.responsable ?? "", cumplimiento: ap.length ? `${Math.round((ap.filter((x) => x.resultado === "cumple").length / ap.length) * 100)} %` : "100 %", hallazgos: its.filter((x) => x.resultado === "no_cumple").length, acciones: i._count.acciones };
+    return { fecha: ddmm(i.fecha), lista: i.lista, lugar: i.lugar?.trim() || "Sin registrar", responsable: i.responsable?.trim() || "Sin registrar", cumplimiento: ap.length ? `${Math.round((ap.filter((x) => x.resultado === "cumple").length / ap.length) * 100)} %` : "100 %", hallazgos: its.filter((x) => x.resultado === "no_cumple").length, acciones: i._count.acciones };
   });
 
   return {
     empresa: {
       id: e.id, razonSocial: e.razonSocial, nit: e.digitoVerificacion ? `${e.nit}-${e.digitoVerificacion}` : e.nit,
       direccion: e.direccion ?? "", ciudad: e.ciudad ?? "", departamento: e.departamento ?? "", telefono: e.telefono ?? "", correo: e.correo ?? "",
-      representanteLegal: e.representanteLegal ?? "", representanteCedula: e.representanteCedula ?? "", representanteTipoDoc: abrevDoc(e.representanteTipoDoc), representanteDoc: docTexto(e.representanteTipoDoc, e.representanteCedula), ciiu: e.ciiu ?? "", actividad: e.descripcionActividad ?? "",
+      representanteLegal: e.representanteLegal?.trim() || "______________________", representanteCedula: e.representanteCedula ?? "", representanteTipoDoc: abrevDoc(e.representanteTipoDoc), representanteDoc: docTexto(e.representanteTipoDoc, e.representanteCedula), ciiu: e.ciiu ?? "", actividad: e.descripcionActividad ?? "",
       claseRiesgo: e.claseRiesgo, claseRiesgoRomano: ROMANO[e.claseRiesgo], arl: e.arl ?? "", eps: e.epsPrincipal ?? "",
       trabajadores, contratistas: e.nContratistas, aprendices: e.nAprendices, vehiculos: e.nVehiculos, horario: e.horario ?? "", turnos: (e.turnos ?? "").split(",").map((t) => TURNOS.find((x) => x.valor === t)?.etiqueta ?? t).filter(Boolean).join("; "),
       nivel: rr.nivel, sector: e.sectorTipo?.nombre ?? "", logoUrl: e.logoUrl ?? "", tieneLogo: !!e.logoUrl,
@@ -305,7 +310,7 @@ export async function construirContexto(empresaId: string) {
     procesos: e.procesos.map((p) => ({ nombre: p.nombre, descripcion: p.descripcion ?? "", tareas: e.tareas.filter((t) => t.procesoId === p.id).map((t) => t.nombre) })),
     cargos,
     matriz: { version: ultimaVersion ? { numero: ultimaVersion.numero, fecha: fmtDia(ultimaVersion.fecha), motivo: ultimaVersion.motivo } : null, filas, prioritarios, porClasificacion: [...porClas.entries()].map(([clasificacion, v]) => ({ clasificacion, ...v })), tieneFilas: filas.length > 0 },
-    normas: normasDb.map((n) => ({ codigo: n.codigo, tipo: n.tipo === "Resolucion" ? "Resolución" : n.tipo === "GuiaTecnica" ? "Guía técnica" : n.tipo, numero: n.numero, anio: n.anio, entidad: n.entidad, nombre: n.nombre, articulosClave: n.articulosClave ?? "", resumen: n.resumen, evidenciaCumplimiento: n.evidenciaCumplimiento ?? "" })),
+    normas: normasDb.map((n) => ({ codigo: n.codigo, tipo: n.tipo === "Resolucion" ? "Resolución" : n.tipo === "GuiaTecnica" ? "Guía técnica" : n.tipo, numero: n.numero, anio: n.anio, entidad: n.entidad, nombre: n.nombre, articulosClave: n.articulosClave ?? "", resumen: n.resumen, evidenciaCumplimiento: legal[n.codigo]?.evidencia?.trim() || n.evidenciaCumplimiento || "", cumple: legal[n.codigo]?.cumple || "Por evaluar" })),
     estandares: (await db.estandar.findMany({ where: { codigo: { in: rr.estandares } }, orderBy: { orden: "asc" } })).map((s) => ({ codigo: s.codigo, ciclo: s.ciclo, grupo: s.grupo, descripcion: s.descripcion, puntaje: s.puntaje })),
     comites: { copasst: { aplica: true, esVigia: cop.tipo === "VIGIA", composicion: cop.texto, porParte: cop.porParte }, ccl: { aplica: rr.comites.includes("CCL") }, brigada: { aplica: true } },
     capacitaciones, plan, evaluacion, planMejora, dis, indicadores: INDICADORES, pve, amenazas, presupuesto: presupuestoConValor, altoRiesgo, op, integrantes, accidentalidad, acciones: accidentalidad.acciones, nomina, inspecciones, hayInspecciones: inspecciones.length > 0, auditorias, hayAuditorias: auditorias.length > 0, ultimaAuditoria,
@@ -362,9 +367,9 @@ export async function contextoAccidentalidad(empresaId: string) {
     pendientes: eventos.filter((e) => e.invEstado === "pendiente" || e.invEstado === "en_curso").map(fila),
     porCargo: contar(lesivos, (e) => e.cargo), porMecanismo: contar(lesivos, (e) => e.mecanismo), porParte: contar(at, (e) => e.parteCuerpo), porLugar: contar(lesivos, (e) => e.lugar),
     acciones: acciones.map((a, i) => ({
-      n: i + 1, fecha: ddmm(a.fecha), origen: ORIG[a.origen] ?? a.origen, hallazgo: a.hallazgo, causa: a.causa ?? "", tipo: a.tipo.charAt(0).toUpperCase() + a.tipo.slice(1),
+      n: i + 1, fecha: ddmm(a.fecha), origen: ORIG[a.origen] ?? a.origen, hallazgo: a.hallazgo, causa: a.causa?.trim() || (a.estado === "cerrada" ? "No registrada" : "Por analizar"), tipo: a.tipo.charAt(0).toUpperCase() + a.tipo.slice(1),
       jerarquia: a.jerarquia ? JER[a.jerarquia] ?? a.jerarquia : "", descripcion: a.descripcion, responsable: a.responsable ?? "", fechaLimite: ddmm(a.fechaLimite),
-      fechaCierre: ddmm(a.fechaCierre), eficacia: a.eficacia ?? "", estado: a.estado === "cerrada" ? "Cerrada" : "Abierta",
+      fechaCierre: ddmm(a.fechaCierre) || (a.estado === "cerrada" ? "Sin fecha" : "Abierta"), eficacia: a.eficacia?.trim() || (a.estado === "cerrada" ? "Sin registrar" : "Pendiente (acción abierta)"), estado: a.estado === "cerrada" ? "Cerrada" : "Abierta",
     })),
     hayAcciones: acciones.length > 0,
   };
@@ -411,7 +416,7 @@ export async function contextoNomina(empresaId: string) {
   const doc = (t: (typeof ts)[number]) => (t.documento ? docTexto(t.tipoDoc, t.documento) : "");
   const examenes = ts.flatMap((t) => t.examenes.map((x) => ({ t, x }))).sort((a, b) => b.x.fecha.getTime() - a.x.fecha.getTime()).map(({ t, x }, i) => ({
     n: i + 1, trabajador: t.nombres, doc: doc(t), cargo: t.cargo?.nombre ?? "", tipo: TIPO_EXAMEN[x.tipo] ?? x.tipo, fecha: ddmm(x.fecha),
-    concepto: CONCEPTO[x.concepto] ?? x.concepto, restricciones: x.restricciones ?? "", comunicado: ddmm(x.comunicadoTrabajador), proximo: ddmm(x.proximo),
+    concepto: CONCEPTO[x.concepto] ?? x.concepto, restricciones: x.restricciones?.trim() || (x.concepto === "apto" ? "Ninguna" : "Sin registrar"), comunicado: ddmm(x.comunicadoTrabajador) || "Sin registrar", proximo: ddmm(x.proximo),
   }));
   const entregas = ts.flatMap((t) => t.entregasEpp.map((x) => ({ t, x }))).sort((a, b) => b.x.fecha.getTime() - a.x.fecha.getTime()).map(({ t, x }) => ({
     fecha: ddmm(x.fecha), trabajador: t.nombres, doc: doc(t), cargo: t.cargo?.nombre ?? "", elemento: x.elemento, cantidad: x.cantidad, tipo: x.tipo === "reposicion" ? "Reposición" : "Dotación", capacitado: x.capacitado ? "S" : "N",
@@ -428,7 +433,7 @@ export async function contextoNomina(empresaId: string) {
   const VINC: Record<string, string> = { planta: "Planta", contratista: "Contratista", aprendiz: "Aprendiz", mision: "En misión" };
   return {
     hay: ts.length > 0, total: activos.length, examenes, hayExamenes: examenes.length > 0, entregas, hayEntregas: entregas.length > 0,
-    capacitaciones: caps.map((c) => ({ fecha: ddmm(c.fecha), tema: c.tema, horas: c.horas, modalidad: c.modalidad === "virtual" ? "Virtual" : "Presencial", facilitador: c.facilitador ?? "", asistentes: c._count.asistentes })),
+    capacitaciones: caps.map((c) => ({ fecha: ddmm(c.fecha), tema: c.tema, horas: c.horas, modalidad: c.modalidad === "virtual" ? "Virtual" : "Presencial", facilitador: c.facilitador?.trim() || "Sin registrar", asistentes: c._count.asistentes })),
     hayCapacitaciones: caps.length > 0, horasCapacitacion: caps.reduce((s, c) => s + c.horas, 0),
     cobertura: pct(activos.filter((t) => capacitados.has(t.id)).length, activos.length),
     perfil: {
