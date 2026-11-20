@@ -12,7 +12,8 @@ export function Selector({ id, value, onChange, opciones, placeholder = "Selecci
   return (
     <Select value={value || null} onValueChange={(v) => { const x = (v as string | null) ?? ""; if (x !== (value ?? "")) onChange(x); }} items={items} disabled={disabled}>
       <SelectTrigger id={id} className={cn("w-full", className)}><SelectValue placeholder={placeholder} /></SelectTrigger>
-      <SelectContent>
+      {/* La lista crece con el texto (al menos el ancho del botón, máximo 32rem) para que se lea completa. */}
+      <SelectContent className="w-auto min-w-(--anchor-width) max-w-[min(32rem,calc(100vw-2rem))]">
         {opciones.map((o) => (
           <SelectItem key={o.valor} value={o.valor}>
             {o.detalle ? <div className="min-w-0"><div>{o.etiqueta}</div><div className="text-xs text-muted-foreground">{o.detalle}</div></div> : o.etiqueta}

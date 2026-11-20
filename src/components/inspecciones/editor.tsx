@@ -81,7 +81,7 @@ export function InspeccionesEditor({ empresaId, inspecciones, listas, lugares, p
 
       {inspecciones.length === 0 ? (
         <EstadoVacio ilustracion="matriz" titulo="Aún no hay inspecciones" descripcion="Elija una lista de chequeo (locativa, extintores, botiquín, EPP, herramientas, vehículos, eléctrica, orden y aseo) y califique cada ítem. Las listas se editan en Biblioteca → Inspecciones.">
-          <Selector className="w-72" value="" placeholder="Elija la lista de chequeo…" onChange={(v) => v && abrir(v)} opciones={listas.map((l) => ({ valor: l.nombre, etiqueta: l.nombre }))} />
+          <Selector className="w-80" value="" placeholder="Elija la lista de chequeo…" onChange={(v) => v && abrir(v)} opciones={listas.map((l) => ({ valor: l.nombre, etiqueta: l.nombre }))} />
         </EstadoVacio>
       ) : (
         <Section contentClassName="px-0">
