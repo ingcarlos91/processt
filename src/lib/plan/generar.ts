@@ -103,3 +103,34 @@ export function anioPlanVigente(actividades: { anio: number }[], hoy = new Date(
   const n = (y: number) => actividades.filter((x) => x.anio === y).length;
   return n(a + 1) > n(a) ? a + 1 : a;
 }
+
+/**
+ * Plan del año en que la empresa inicia el SG-SST: la Res. 0312/2019 art. 26 prevé la ejecución "en cualquier
+ * fracción del año" para la empresa creada durante el año; el plan va desde el mes de inicio hasta diciembre.
+ * Las actividades periódicas (se repiten en el año) solo quedan desde el mes de inicio; las que se hacen una vez
+ * y caían en meses anteriores se reprograman en los meses que quedan, repartidas, para no nacer vencidas (si quedan
+ * dos meses o menos, pasan al plan del año siguiente).
+ * Lo que la empresa no hizo antes de iniciar es una brecha del diagnóstico y va al plan de mejoramiento.
+ * Fuente: docs/requisitos/plan-anual.md.
+ */
+export function ajustarAlInicio<T extends { mes: number; nombre: string }>(acts: T[], desde: number): T[] {
+  if (desde <= 1) return acts;
+  const veces = new Map<string, number>();
+  for (const a of acts) veces.set(a.nombre, (veces.get(a.nombre) ?? 0) + 1);
+  const quedan = 13 - desde;
+  const out: T[] = [];
+  for (const a of acts) {
+    if (a.mes >= desde) { out.push(a); continue; }
+    if ((veces.get(a.nombre) ?? 1) > 1) continue; // periódica: el mes ya pasó antes de existir el plan
+    // Con dos meses o menos (inicio en noviembre o diciembre) no se amontona: esas actividades van en el plan
+    // completo del año siguiente, que se genera al mismo tiempo.
+    if (quedan <= 2) continue;
+    out.push({ ...a, mes: desde + ((a.mes - 1) % quedan) });
+  }
+  return out.sort((x, y) => x.mes - y.mes);
+}
+
+/** Mes desde el que va el plan de un año: el de inicio del SG-SST si ese año es el de inicio; si no, enero. */
+export function mesInicioPlan(anio: number, inicioSgsst: Date) {
+  return inicioSgsst.getFullYear() === anio ? inicioSgsst.getMonth() + 1 : inicioSgsst.getFullYear() > anio ? 13 : 1;
+}

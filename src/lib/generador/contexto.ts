@@ -6,7 +6,7 @@ import { evaluarEmpresa, composicionCopasst, type ResultadoReglas } from "@/lib/
 import { calcular, CLASIFICACION_ETIQUETA } from "@/lib/gtc45";
 import { INDICADORES, calcularMensuales, calcularAnuales } from "@/lib/indicadores";
 import { calificar, sumaPuntos } from "@/lib/evaluacion";
-import { generarPlan, MESES, anioPlanDefecto } from "@/lib/plan/generar";
+import { generarPlan, MESES, anioPlanDefecto, mesInicioPlan } from "@/lib/plan/generar";
 import { disparadoresDesdeMatriz } from "@/lib/reglas/matriz-disparadores";
 import { contexto as ctxReglas } from "@/lib/reglas/motor";
 import { composicionCcl, nivelPesv } from "@/lib/reglas/condicion";
@@ -344,6 +344,8 @@ export async function construirContexto(empresaId: string) {
       curso50hFecha: consultora.curso50h ? consultora.curso50hFecha || "Aprobado" : "", correo: consultora.correo ?? "", telefono: consultora.telefono ?? "",
     },
     fecha: fmt(new Date()), anio: anioPlan, anioSiguiente: anioPlan + 1,
+    // Periodo del plan: del mes de inicio del SG-SST a diciembre en el año de inicio (Res. 0312/2019 art. 26).
+    planPeriodo: (() => { const m = Math.min(12, mesInicioPlan(anioPlan, e.fechaInicioSgsst ?? e.creadoEn)); return m > 1 ? `${MESES[m - 1].toLowerCase()} a diciembre de ${anioPlan} (primer año del SG-SST: se ejecuta en la fracción del año que queda, Res. 0312/2019 art. 26)` : `enero a diciembre de ${anioPlan}`; })(),
     sedes: e.sedes.map((s) => ({ nombre: s.nombre, direccion: s.direccion ?? "", ciudad: s.ciudad ?? "" })),
     procesos: e.procesos.map((p) => ({ nombre: p.nombre, descripcion: p.descripcion ?? "", tareas: e.tareas.filter((t) => t.procesoId === p.id).map((t) => t.nombre) })),
     cargos,

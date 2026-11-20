@@ -11,6 +11,7 @@ Helpers: `{{inc @index}}`, `{{#if (eq a b)}}`, `{{#if (gte a b)}}`, `{{upper x}}
 | `responsable.*` | nombre, cedula, cargo, perfilTexto, licencia, licenciaFecha, curso50hFecha |
 | `consultora.*` | nombre, profesional, cedula, licencia, correo, telefono |
 | `fecha`, `anio`, `anioSiguiente` | fecha de emisión (texto), año vigente |
+| `planPeriodo` | periodo del plan anual: "enero a diciembre de AAAA" o, en el año de inicio del SG-SST, "<mes> a diciembre de AAAA (…Res. 0312/2019 art. 26)" |
 | `sedes[]` | nombre, direccion, ciudad |
 | `procesos[]` | nombre, descripcion, tareas[] (texto) |
 | `cargos[]` | nombre, nPersonas, area, funciones, tareas[], peligros[] {clasificacion, descripcion, nivelRiesgo}, epp[] (EPP sugerido por los peligros de la matriz del cargo, sin repetir), examenes[], capacitaciones[], altoRiesgo[], periodicidadMeses (número o null), periodicidad ("Cada año", "Cada 6 meses"; vacío si no está definida), periodicidadMotivo (justificación técnica, Res. 1843/2025 art. 15), controles[] {peligro, fuente, medio, individuo, medidas} (controles de la matriz del cargo, Res. 1843/2025 art. 16) |

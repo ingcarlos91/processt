@@ -6,7 +6,6 @@ import { recalcularEmpresa } from "@/lib/empresa";
 import { prepararEstructura, aplicarCargoTipo, sugerirCargoTipo } from "@/lib/matriz/instanciar";
 import { MAPA_ESTADO_ACTUAL, calcularDiagnostico, aEstadoEvaluacion, noAplicaInvalidos, type ItemDiag } from "@/lib/diagnostico";
 import { cerrarEvaluacion, generarPlanAnual, generarTodo } from "@/app/actions/sgsst";
-import { anioPlanDefecto } from "@/lib/plan/generar";
 
 const rv = (id: string) => { revalidatePath(`/empresas/${id}`, "layout"); revalidatePath("/"); };
 async function delaEmpresa(empresaId: string, id: string) {
@@ -104,7 +103,11 @@ export async function iniciarSgsst(empresaId: string, diagnosticoId?: string) {
     await cerrarEvaluacion(empresaId, ev.id);
     await db.diagnostico.update({ where: { id: diagnosticoId }, data: { evaluacionId } });
   }
-  await generarPlanAnual(empresaId, anioPlanDefecto());
+  // Plan del año de inicio desde este mes hasta diciembre (Res. 0312/2019 art. 26, "cualquier fracción del año").
+  // En noviembre se generan también el del año siguiente; en diciembre, solo el del año siguiente (docs/requisitos/plan-anual.md).
+  const hoy = new Date(), mes = hoy.getMonth() + 1;
+  if (mes <= 11) await generarPlanAnual(empresaId, hoy.getFullYear());
+  if (mes >= 11) await generarPlanAnual(empresaId, hoy.getFullYear() + 1);
   const docs = await generarTodo(empresaId);
   rv(empresaId);
   return { ok: true as const, evaluacionId, documentos: docs.total };

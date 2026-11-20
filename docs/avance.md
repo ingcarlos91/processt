@@ -90,6 +90,8 @@ IA opcional: agregar `AI_GATEWAY_API_KEY=...` en `.env`. Sin clave, “Sugerir t
 
 - Ruta de implementación (src/lib/ruta.ts): 10 pasos en el orden del Decreto 1072 y la Res. 0312 (diagnóstico e inicio, datos, matriz, trabajadores, comités, documentos, plan anual, inducción/exámenes/EPP, operación, cierre del año) que se cumplen solos con los datos. Tarjeta en el Resumen con el siguiente paso, panel con la ruta completa, una línea en la pestaña del paso actual y columna "Ruta" en el tablero. Reemplaza los avisos de etapa y de datos faltantes del Resumen.
 
+- Plan anual según la Res. 0312/2019 art. 26 (docs/requisitos/plan-anual.md): de enero a diciembre; el año de inicio del SG-SST (fechaInicioSgsst) va desde ese mes hasta diciembre, sin actividades en meses anteriores (lo periódico arranca en el mes de inicio, lo anual se reparte en los meses que quedan; con dos meses o menos pasa al plan del año siguiente) y el plan de mejoramiento en los tres primeros meses. Al iniciar en noviembre se generan el plan corto y el del año siguiente; en diciembre, solo el del siguiente. PLN-01 dice el periodo real.
+
 ## Pendiente
 
 - PDF directo (hoy: Word; PDF desde Word o imprimir).

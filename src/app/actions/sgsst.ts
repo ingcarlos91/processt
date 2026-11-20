@@ -8,7 +8,7 @@ import { db } from "@/lib/db";
 import { recalcularEmpresa } from "@/lib/empresa";
 import { generarDocumentos } from "@/lib/generador/documentos";
 import { construirContexto } from "@/lib/generador/contexto";
-import { generarPlan } from "@/lib/plan/generar";
+import { generarPlan, ajustarAlInicio, mesInicioPlan } from "@/lib/plan/generar";
 import { calcularComposicion, calidadDe, composicionGuardada } from "@/lib/comites";
 import { calificar, permiteNoAplica } from "@/lib/evaluacion";
 
@@ -150,12 +150,18 @@ export async function generarPlanAnual(empresaId: string, anio: number) {
   // Se reemplazan solo las actividades generadas que siguen pendientes; se conservan las ejecutadas y las manuales.
   await db.actividadPlan.deleteMany({ where: { empresaId, anio, estado: "PENDIENTE", origen: { not: "manual" } } });
   const conservadas = await db.actividadPlan.findMany({ where: { empresaId, anio } });
-  const acts = generarPlan({
+  // Inicio del SG-SST (fechaInicioSgsst; si no hay, la creación de la empresa). El año de inicio se planea
+  // desde ese mes hasta diciembre (Res. 0312/2019 art. 26); los demás años, de enero a diciembre.
+  const emp = await db.empresa.findUniqueOrThrow({ where: { id: empresaId }, select: { fechaInicioSgsst: true, creadoEn: true } });
+  const desde = Math.min(12, mesInicioPlan(anio, emp.fechaInicioSgsst ?? emp.creadoEn));
+  // Plan de mejoramiento primero: en los tres primeros meses del plan (Res. 0312/2019 art. 28: crítico, "de inmediato").
+  const mesMejora = (i: number) => Math.min(12, desde + (i % 3));
+  const acts = ajustarAlInicio(generarPlan({
     nivel: ctx.empresa.nivel, comites: ctx._reglas.comites, disparadores: ctx.dis,
     capacitaciones: ctx.capacitaciones.map((c) => ({ tema: c.tema, mes: c.mesNum, norma: c.norma })),
     prioritarios: ctx.matriz.prioritarios.map((p) => ({ descripcion: p.descripcion, medida: p.ingenieria || p.administrativa || p.epp || "Definir medida" })),
-    mejoras: ctx.planMejora.map((p, i) => ({ estandar: p.estandar, actividad: p.actividad, mes: Math.min(12, new Date().getMonth() + 2 + (i % 4)) })),
-  }).filter((a) => !conservadas.some((c) => c.nombre === a.nombre && c.mes === a.mes));
+    mejoras: ctx.planMejora.map((p, i) => ({ estandar: p.estandar, actividad: p.actividad, mes: mesMejora(i) })),
+  }), desde).filter((a) => !conservadas.some((c) => c.nombre === a.nombre && c.mes === a.mes));
   await db.actividadPlan.createMany({ data: acts.map((a) => ({ empresaId, anio, mes: a.mes, nombre: a.nombre, estandarCodigo: a.estandarCodigo, normaRef: a.normaRef, responsable: a.responsable, recursos: a.recursos, origen: a.origen })) });
   await generarDocumentos(empresaId, ["PLN-01"]).catch(() => null);
   rv(empresaId);

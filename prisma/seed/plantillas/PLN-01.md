@@ -9,7 +9,7 @@ normas: ["DEC-1072-2015","RES-0312-2019"]
 ---
 ## Objetivo
 
-Establecer las actividades, responsables, recursos y cronograma para alcanzar los objetivos del SG-SST de **{{empresa.razonSocial}}** durante el periodo enero a diciembre de {{anio}} (Decreto 1072 de 2015, art. 2.2.4.6.17 parágrafo 2; Resolución 0312 de 2019, estándar 2.4.1 y art. 26).
+Establecer las actividades, responsables, recursos y cronograma para alcanzar los objetivos del SG-SST de **{{empresa.razonSocial}}** durante el periodo {{planPeriodo}} (Decreto 1072 de 2015, art. 2.2.4.6.17 parágrafo 2; Resolución 0312 de 2019, estándar 2.4.1 y art. 26).
 
 ## Objetivos y metas
 

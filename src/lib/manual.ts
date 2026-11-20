@@ -297,7 +297,7 @@ export const MANUAL: SeccionManual[] = [
   },
   {
     id: "plan", titulo: "Plan anual de trabajo", ruta: new RegExp(`^${E}/plan$`),
-    resumen: "Actividades del año con su mes, responsable, norma y evidencias. Se genera desde el nivel de estándares, los comités, la matriz, el plan de mejoramiento y las obligaciones periódicas.",
+    resumen: "Actividades del año con su mes, responsable, norma y evidencias. Se genera desde el nivel de estándares, los comités, la matriz, el plan de mejoramiento y las obligaciones periódicas. Va de enero a diciembre; el año en que se inicia el SG-SST va desde el mes de inicio hasta diciembre (Res. 0312/2019 art. 26): lo periódico arranca ese mes, lo anual que caía antes se reparte en los meses que quedan y el plan de mejoramiento va primero. Si se inicia en noviembre se generan el plan corto y el del año siguiente; en diciembre, solo el del año siguiente.",
     partes: [
       { titulo: "Indicadores", que: "Actividades, cumplimiento del plan, vencidas y meta (90 %)." },
       { titulo: "Vistas", que: "Por mes o tabla.", botones: [
