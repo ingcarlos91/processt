@@ -55,7 +55,8 @@ const CSS = `
   p { margin: 0 0 6pt; text-align: justify; }
   ul, ol { margin: 0 0 6pt; padding-left: 18pt; }
   li { margin-bottom: 2pt; }
-  table { width: 100%; border-collapse: collapse; margin: 6pt 0 10pt; font-size: 8.8pt; page-break-inside: auto; }
+  /* Con border-collapse, Chromium recorta la mitad del borde derecho si la tabla ocupa el 100 %: se deja 1 px de aire. */
+  table { width: calc(100% - 2px); margin: 6pt 1px 10pt; border-collapse: collapse; font-size: 8.8pt; page-break-inside: auto; }
   tr { page-break-inside: avoid; }
   th, td { border: 1px solid #9aa7b5; padding: 3pt 4pt; vertical-align: top; text-align: left; }
   th { background: #d9e2f3; font-weight: bold; }
