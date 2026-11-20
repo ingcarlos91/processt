@@ -5,7 +5,7 @@ tipo: INF
 nivelMin: 7
 carpeta: 3. Gestión de la salud
 estandares: ["3.2.2"]
-normas: ["RES-1401-2007","RES-0156-2005","DEC-1072-2015","RES-0312-2019"]
+normas: ["RES-1401-2007","RES-0156-2005","DEC-1072-2015","RES-0312-2019","LEY-1581-2012"]
 descripcion: Se genera uno por cada evento desde la pestaña Accidentes e incidentes. Sigue el contenido mínimo del informe de investigación de la Resolución 1401 de 2007 (arts. 9 a 13).
 ---
 ## 1. Identificación del aportante (Res. 1401/2007 art. 9; Res. 156/2005)
@@ -19,6 +19,7 @@ descripcion: Se genera uno por cada evento desde la pestaña Accidentes e incide
 | Dirección | {{default empresa.direccion "______"}}, {{empresa.ciudad}}{{#if empresa.departamento}}, {{empresa.departamento}}{{/if}} |
 | Teléfono y correo | {{default empresa.telefono "______"}}{{#if empresa.correo}} — {{empresa.correo}}{{/if}} |
 | ARL | {{default empresa.arl "______"}} |
+| Sede o centro de trabajo donde labora el trabajador | ______ |
 | Representante legal | {{empresa.representanteLegal}} — {{empresa.representanteDoc}} |
 | Responsable del SG-SST | {{responsable.nombre}}{{#if responsable.licencia}} — Licencia SST {{responsable.licencia}}{{/if}} |
 
@@ -30,6 +31,8 @@ descripcion: Se genera uno por cada evento desde la pestaña Accidentes e incide
 |---|---|
 | Nombres y apellidos | {{default ev.trabajador "______"}} |
 | Documento de identidad | {{default ev.doc "______"}} |
+| Fecha de nacimiento y sexo | ______ |
+| EPS y AFP del trabajador | ______ |
 | Tipo de vinculación | {{default ev.vinculacion "______"}} |
 | Cargo u ocupación | {{default ev.cargo "______"}} |
 | Antigüedad en el cargo | {{default ev.antiguedad "______"}} |
@@ -60,7 +63,7 @@ descripcion: Se genera uno por cada evento desde la pestaña Accidentes e incide
 {{/if}}{{#if ev.reporteMinisterio}}| Reporte a la Dirección Territorial del Ministerio del Trabajo | {{ev.reporteMinisterio}} |
 {{/if}}
 
-Se registra únicamente el tipo de lesión y la parte del cuerpo afectada; el diagnóstico médico es dato sensible del trabajador y no hace parte de este informe (Ley 1581 de 2012).
+Las variables del evento siguen las tablas de códigos del FURAT (Resolución 156 de 2005, anexo técnico) para el tipo de lesión, la parte del cuerpo, el agente y el mecanismo (Resolución 1401 de 2007, art. 9). Se registra únicamente el tipo de lesión y la parte del cuerpo afectada; el diagnóstico médico es dato sensible del trabajador y no hace parte de este informe (Ley 1581 de 2012).
 
 ## 4. Descripción del evento (Res. 1401/2007 art. 10)
 
@@ -103,7 +106,7 @@ Se relacionan todas las causas encontradas, separando las inmediatas de las bás
 
 ## 6. Medidas de intervención (Res. 1401/2007 art. 12)
 
-Medidas que la empresa se compromete a adoptar para prevenir eventos similares, cada una con responsable y fecha de ejecución, dirigidas a la fuente, el medio y el trabajador y con relación lógica con las causas básicas. Se definen con la jerarquía de controles (Decreto 1072 de 2015, art. 2.2.4.6.24).
+Medidas que la empresa se compromete a adoptar para prevenir eventos similares, cada una con responsable y fecha de ejecución, dirigidas a la fuente, el medio y el trabajador y con relación lógica con las causas básicas (art. 12). En la descripción de cada medida se indica a qué apunta (fuente, medio o trabajador) y qué causa básica ataca. Se definen con la jerarquía de controles (Decreto 1072 de 2015, art. 2.2.4.6.24).
 
 | N.º | Medida | Tipo | Jerarquía | Responsable | Fecha de ejecución | Estado |
 |---|---|---|---|---|---|---|
@@ -116,7 +119,9 @@ Medidas que la empresa se compromete a adoptar para prevenir eventos similares, 
 | 2 | | | | | | |
 {{/if}}
 
-La empresa implementa las medidas, registra su cumplimiento y verifica su efectividad (art. 12). Quedan en el registro de acciones correctivas, preventivas y de mejora (FOR-06) y en el plan anual de trabajo (art. 4 num. 6).
+**Trabajadores potencialmente expuestos:** cargos, áreas, turnos o sedes con exposición al mismo peligro a los que se extienden las medidas (Resolución 0312 de 2019, estándar 3.2.2): ______
+
+La empresa implementa las medidas, registra su cumplimiento y verifica su efectividad (art. 12); la verificación de la efectividad se registra al cerrar cada acción en el FOR-06. Quedan en el registro de acciones correctivas, preventivas y de mejora (FOR-06) y en el plan anual de trabajo (art. 4 num. 6).
 
 ## 7. Lecciones aprendidas
 
@@ -126,7 +131,7 @@ Las lecciones aprendidas se divulgan a los trabajadores y al {{#if comites.copas
 
 ## 8. Equipo investigador y firmas (Res. 1401/2007 arts. 7 y 13)
 
-Equipo conformado según el art. 7: {{join ev.rolesMinimos ", "}}{{#if ev.esGrave}}, por tratarse de un accidente {{ev.gravedad}}{{/if}}.{{#if ev.esMortal}} Accidente mortal: la investigación se realiza obligatoriamente en el formato suministrado por la ARL (art. 4 num. 3); este informe lo acompaña.{{/if}}
+Equipo conformado según el art. 7: {{join ev.rolesMinimos ", "}}{{#if ev.esGrave}}, por tratarse de un accidente {{ev.gravedad}}{{/if}}.{{#if ev.esMortal}} Accidente mortal: la investigación se adelanta con el {{#if comites.copasst.esVigia}}Vigía de SST{{else}}COPASST{{/if}} dentro de los 15 días calendario siguientes a la muerte (Decreto 1072 de 2015, art. 2.2.4.1.6) y obligatoriamente en el formato suministrado por la ARL (art. 4 num. 3); este informe lo acompaña.{{/if}}
 
 | Nombre | Cargo | Identificación | Rol en la investigación |
 |---|---|---|---|
@@ -167,7 +172,7 @@ ______________________________________
 |---|---|
 | Lugar y dirección donde se realizó la investigación | {{default ev.invLugar "______"}} |
 | Fecha de inicio de la investigación | {{default ev.invInicio "______"}} |
-| Fechas y horas de las sesiones | {{default ev.invFechas "Según la fecha de inicio y la de cierre"}} |
+| Fechas y horas de las sesiones | {{default ev.invFechas "______ (fecha y hora de cada sesión)"}} |
 | Fecha de cierre del informe | {{default ev.invCierre "______"}} |
 {{#if ev.esGrave}}| Remisión del informe a la ARL (accidente {{ev.gravedad}}) | {{default ev.remitidaArl "Pendiente"}} — plazo: {{ev.plazoRemision}} |
 {{/if}}
@@ -176,4 +181,4 @@ ______________________________________
 {{else}}El informe se conserva en el expediente del SG-SST; los incidentes y accidentes leves no se remiten a la ARL, pero el Ministerio del Trabajo puede solicitarlos en cualquier momento (art. 14).
 {{/if}}
 
-La investigación se realizó dentro de los quince (15) días siguientes a la ocurrencia del evento (art. 4 num. 2). Este informe y las pruebas de los correctivos se conservan a disposición del Ministerio del Trabajo (art. 4 num. 10) por veinte (20) años (Decreto 1072 de 2015, art. 2.2.4.6.13).
+La investigación debe realizarse dentro de los quince (15) días siguientes a la ocurrencia del evento (art. 4 num. 2); las fechas de inicio y de cierre registradas arriba permiten verificarlo. Este informe y las pruebas de los correctivos se archivan a disposición del Ministerio del Trabajo (art. 4 num. 10; Decreto 1072 de 2015, art. 2.2.4.6.12 num. 11). Por política de la empresa se conservan por veinte (20) años.

@@ -1,4 +1,5 @@
 "use client";
+import { TIPOS_EXAMEN, REGIMENES_ESPECIALES, conceptosPermitidos } from "@/lib/examenes";
 import { Ayuda } from "@/components/app/ayuda";
 import type { Entidades } from "@/lib/entidades";
 import { useMemo, useState, useTransition } from "react";
@@ -28,15 +29,15 @@ import { abrevDoc } from "@/lib/documento-identidad";
 import * as A from "@/app/actions/trabajadores";
 import { cn, hoyLocal } from "@/lib/utils";
 
-type Examen = { id: string; tipo: string; fecha: string; ips: string; concepto: string; restricciones: string; comunicadoTrabajador: string; proximo: string };
+type Examen = { id: string; tipo: string; fecha: string; ips: string; concepto: string; regimen?: string; restricciones: string; comunicadoTrabajador: string; proximo: string };
 type Entrega = { id: string; fecha: string; elemento: string; cantidad: number; tipo: string; capacitado: boolean; proximaReposicion: string };
 type T = { id: string; nombres: string; tipoDoc: string; documento: string; cargoId: string; cargo: string; vinculacion: string; fechaIngreso: string; fechaRetiro: string; activo: boolean; sexo: string; fechaNacimiento: string; escolaridad: string; telefono: string; correo: string; eps: string; afp: string; conduce: boolean; modalidad: string; turnoNocturno: boolean; altoRiesgoPension: boolean; manipulaAlimentos: boolean; examenes: Examen[]; entregas: Entrega[]; capacitaciones: number };
 type Cap = { id: string; fecha: string; tema: string; horas: number; facilitador: string; modalidad: string; actividadId: string; actividad: string; asistentes: string[] };
 type Res = { error?: string } | { ok: true };
 
 const VINC: Record<string, string> = { planta: "Planta", contratista: "Contratista", aprendiz: "Aprendiz", mision: "En misión" };
-const TIPO_EX: Record<string, string> = { ingreso: "Ingreso", periodico: "Periódico", retiro: "Retiro", post_incapacidad: "Post incapacidad", cambio_ocupacion: "Cambio de ocupación" };
-const CONCEPTO: Record<string, { t: string; c: string }> = { apto: { t: "Apto", c: "border-emerald-300 bg-emerald-50 text-emerald-700" }, apto_restricciones: { t: "Apto con restricciones", c: "border-amber-300 bg-amber-50 text-amber-800" }, aplazado: { t: "Aplazado", c: "border-slate-300 text-slate-700" }, no_apto: { t: "No apto", c: "border-red-300 bg-red-50 text-red-700" } };
+const TIPO_EX = TIPOS_EXAMEN;
+const CONCEPTO: Record<string, { t: string; c: string }> = { apto: { t: "Apto", c: "border-emerald-300 bg-emerald-50 text-emerald-700" }, apto_recomendaciones: { t: "Apto con recomendaciones", c: "border-emerald-300 bg-emerald-50 text-emerald-700" }, apto_restricciones: { t: "Apto con restricciones", c: "border-amber-300 bg-amber-50 text-amber-800" }, aplazado: { t: "Aplazado", c: "border-slate-300 text-slate-700" }, no_apto: { t: "No apto", c: "border-red-300 bg-red-50 text-red-700" } };
 const ESCOLARIDAD = ["Primaria", "Bachillerato", "Técnico", "Tecnólogo", "Profesional", "Posgrado", "Ninguna"];
 const hoy = () => hoyLocal();
 const enAnios = (f: string, n: number) => { const d = new Date(f + "T12:00:00Z"); d.setUTCFullYear(d.getUTCFullYear() + n); return d.toISOString().slice(0, 10); };
@@ -333,10 +334,11 @@ export function TrabajadoresEditor({ empresaId, trabajadores, cargos, sugeridos,
                   <Field className="sm:col-span-2"><FieldLabel htmlFor="x-i">IPS</FieldLabel><Input id="x-i" placeholder="Ej.: IPS Salud Ocupacional" value={examen.ips} onChange={(e) => setExamen({ ...examen, ips: e.target.value })} /></Field>
                 </SeccionFormulario>
                 <SeccionFormulario titulo="Concepto y seguimiento" descripcion="El concepto de aptitud es el único dato de salud que se guarda (Ley 1581/2012)." columnas={2}>
-                  <Field className="sm:col-span-2"><FieldLabel>Concepto de aptitud</FieldLabel><Selector value={examen.concepto} onChange={(v) => setExamen({ ...examen, concepto: v })} opciones={Object.entries(CONCEPTO).map(([k, v]) => ({ valor: k, etiqueta: v.t }))} /></Field>
+                  <Field><FieldLabel>Certificado de régimen especial</FieldLabel><Selector value={examen.regimen || "ninguno"} onChange={(v) => setExamen({ ...examen, regimen: v === "ninguno" ? "" : v, concepto: v === "ninguno" && examen.concepto === "no_apto" ? "apto_restricciones" : examen.concepto })} opciones={[{ valor: "ninguno", etiqueta: "Ninguno (evaluación general)" }, ...Object.entries(REGIMENES_ESPECIALES).map(([k, v]) => ({ valor: k, etiqueta: v }))]} /><FieldDescription>Alturas, conducción, alimentos, armas, electricidad o espacios confinados (Res. 1843/2025 art. 2).</FieldDescription></Field>
+                  <Field><FieldLabel>Concepto de aptitud</FieldLabel><Selector value={examen.concepto} onChange={(v) => setExamen({ ...examen, concepto: v })} opciones={conceptosPermitidos(examen.regimen).map((k) => ({ valor: k, etiqueta: CONCEPTO[k].t }))} /><FieldDescription>{examen.regimen ? "En este certificado se admite \"no apto\"." : "\"No apto\" no se usa en la evaluación general (Res. 1843/2025 art. 19 par.)."}</FieldDescription></Field>
                   <Field className="sm:col-span-2"><FieldLabel htmlFor="x-r">Restricciones y recomendaciones</FieldLabel><Textarea id="x-r" rows={3} value={examen.restricciones} placeholder="Ej: Evitar levantar más de 12 kg durante 3 meses" onChange={(e) => setExamen({ ...examen, restricciones: e.target.value })} /></Field>
                   <Field><FieldLabel htmlFor="x-c">Comunicado al trabajador</FieldLabel><Input id="x-c" type="date" value={examen.comunicadoTrabajador} onChange={(e) => setExamen({ ...examen, comunicadoTrabajador: e.target.value })} /></Field>
-                  <Field><FieldLabel htmlFor="x-p">Próximo examen</FieldLabel><Input id="x-p" type="date" value={examen.proximo} onChange={(e) => setExamen({ ...examen, proximo: e.target.value })} /><FieldDescription>Según la periodicidad del profesiograma.</FieldDescription></Field>
+                  <Field><FieldLabel htmlFor="x-p">Próximo examen</FieldLabel><Input id="x-p" type="date" value={examen.proximo} onChange={(e) => setExamen({ ...examen, proximo: e.target.value })} /><FieldDescription>Según la periodicidad que la empresa definió con justificación técnica (Res. 1843/2025 art. 15).</FieldDescription></Field>
                 </SeccionFormulario>
               </SeccionesFormulario>
             </DialogBody>

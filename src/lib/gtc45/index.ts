@@ -39,9 +39,9 @@ export const ACEPTABILIDAD: Record<string, string> = {
 };
 export const SIGNIFICADO_NR: Record<string, string> = {
   I: "Situación crítica. Suspender actividades hasta que el riesgo esté bajo control. Intervención urgente.",
-  II: "Corregir y adoptar medidas de control de inmediato.",
+  II: "Corregir y adoptar medidas de control de inmediato. Sin embargo, suspenda actividades si el nivel de riesgo es igual o superior a 360.",
   III: "Mejorar si es posible. Justificar la intervención y su rentabilidad.",
-  IV: "Mantener las medidas de control existentes.",
+  IV: "Mantener las medidas de control existentes, pero considerar soluciones o mejoras y hacer comprobaciones periódicas para asegurar que el riesgo aún es aceptable.",
 };
 
 export function calcular(nd: number, ne: number, nc: number) {

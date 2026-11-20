@@ -14,15 +14,17 @@ Definir y asignar los recursos financieros, técnicos, humanos y de otra índole
 ## Recursos humanos
 
 - Responsable del SG-SST: {{default responsable.nombre "Por designar"}}.
-- {{#if comites.copasst.esVigia}}Vigía de SST{{else}}Integrantes del COPASST{{/if}}, con el tiempo de cuatro (4) horas semanales dentro de la jornada para el cumplimiento de sus funciones (Decreto Ley 1295 de 1994, art. 63 literal b).
+- {{#if comites.copasst.esVigia}}Vigía de SST, con el tiempo necesario dentro de la jornada para cumplir sus funciones (Decreto 1072 de 2015, art. 2.2.4.6.8 numeral 9). Como buena práctica, la empresa le asigna ______ horas semanales.{{else}}Integrantes del COPASST, con un mínimo de cuatro (4) horas semanales por miembro dentro de la jornada normal de trabajo para el funcionamiento del comité (Decreto Ley 1295 de 1994, art. 63 literal b).{{/if}}
 - Comité de Convivencia Laboral y brigada de emergencias.
 - Asesoría de la ARL {{default empresa.arl "______"}}.
 
-## Recursos técnicos y físicos
+## Recursos técnicos, tecnológicos y físicos
 
-Espacio para reuniones de los comités, equipos de cómputo, elementos de emergencia (extintores, botiquín, camilla, señalización), elementos de protección personal y archivo físico o digital de la documentación.
+Espacio para reuniones de los comités, equipos de cómputo y software para la gestión y el archivo digital del SG-SST, elementos de emergencia (extintores, botiquín, camilla, señalización), elementos de protección personal y archivo físico de la documentación.
 
 ## Presupuesto anual
+
+Cada rubro financia las actividades del plan anual de trabajo {{anio}} (PLN-01) asociadas al mismo estándar mínimo, lo que permite evidenciar la asignación de recursos con base en el plan (Resolución 0312 de 2019, estándar 1.1.3).
 
 | Rubro | Descripción | Estándar | Valor ($) |
 |---|---|---|---|

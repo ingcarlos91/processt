@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { PenLine } from "lucide-react";
+import { PenLine, Eye } from "lucide-react";
 import { db } from "@/lib/db";
 import { Page, PageHeader, Section, NormaRef } from "@/components/app/ui";
 import { Badge } from "@/components/ui/badge";
@@ -27,7 +27,7 @@ export default async function Plantillas() {
                   <TableCell><div className="flex flex-wrap gap-1">{p.estandares.map((e) => <NormaRef key={e}>{e}</NormaRef>)}</div></TableCell>
                   <TableCell className="text-right tabular-nums">v{p.version}</TableCell>
                   <TableCell className="text-right tabular-nums">{p._count.documentos}</TableCell>
-                  <TableCell className="pr-6 text-right"><Link href={`/plantillas/${p.codigo}`} className={buttonVariants({ size: "sm", variant: "outline" })}><PenLine /> Editar</Link></TableCell>
+                  <TableCell className="pr-6 text-right"><div className="inline-flex gap-1.5"><Link href={`/plantillas/${p.codigo}/ver`} className={buttonVariants({ size: "sm" })}><Eye /> Ver</Link><Link href={`/plantillas/${p.codigo}`} className={buttonVariants({ size: "sm", variant: "outline" })}><PenLine /> Editar</Link></div></TableCell>
                 </TableRow>
               ))}
             </TableBody>

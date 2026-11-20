@@ -98,12 +98,13 @@ export async function importarTrabajadores(empresaId: string, texto: string) {
 }
 
 // ───────── Exámenes médicos ocupacionales (FOR-02) ─────────
-export async function guardarExamen(empresaId: string, d: { id?: string; trabajadorId: string; tipo: string; fecha: string; ips?: string; concepto: string; restricciones?: string; comunicadoTrabajador?: string; proximo?: string }) {
+export async function guardarExamen(empresaId: string, d: { id?: string; trabajadorId: string; tipo: string; fecha: string; ips?: string; concepto: string; regimen?: string; restricciones?: string; comunicadoTrabajador?: string; proximo?: string }) {
   await requiereUsuario();
   await delaEmpresa(empresaId, d.trabajadorId);
   const fecha = dia(d.fecha);
   if (!fecha) return { error: "Escriba la fecha del examen." };
-  const data = { trabajadorId: d.trabajadorId, tipo: d.tipo, fecha, ips: d.ips || null, concepto: d.concepto, restricciones: d.restricciones?.trim() || null, comunicadoTrabajador: dia(d.comunicadoTrabajador), proximo: dia(d.proximo) };
+  if (d.concepto === "no_apto" && !d.regimen) return { error: "\"No apto\" solo se usa en los certificados de regímenes especiales (Res. 1843/2025 art. 19 par.). Elija el régimen o use apto con restricciones." };
+  const data = { trabajadorId: d.trabajadorId, tipo: d.tipo, fecha, ips: d.ips || null, concepto: d.concepto, regimen: d.regimen || null, restricciones: d.restricciones?.trim() || null, comunicadoTrabajador: dia(d.comunicadoTrabajador), proximo: dia(d.proximo) };
   if (d.id) await db.examenMedico.update({ where: { id: d.id }, data }); else await db.examenMedico.create({ data });
   await listo(empresaId);
   return { ok: true as const };

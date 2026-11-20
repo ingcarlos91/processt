@@ -1,7 +1,8 @@
 // Corre en cada build de Vercel (después de las migraciones):
 // 1. Corre la siembra completa (idempotente y aditiva): lo nuevo de la biblioteca y los catálogos llega a
 //    producción sin pisar lo que la consultora haya editado.
-// 2. Si están ADMIN_EMAIL, ADMIN_NOMBRE y ADMIN_PASSWORD y ese usuario no existe, lo crea como administrador.
+// 2. Después actualiza las empresas existentes (scripts/actualizar-empresas.ts).
+// 3. Si están ADMIN_EMAIL, ADMIN_NOMBRE y ADMIN_PASSWORD y ese usuario no existe, lo crea como administrador.
 //    Después del primer despliegue se puede borrar ADMIN_PASSWORD de Vercel.
 import { execSync } from "node:child_process";
 import { db, consultoraActual } from "../src/lib/db";
@@ -13,6 +14,9 @@ async function main() {
   // respetando las editadas por la consultora; biblioteca aditiva que solo actualiza lo no validado).
   console.log("[sembrar] Sincronizando catálogos, normas, reglas, plantillas y biblioteca…");
   execSync("npx tsx prisma/seed/index.ts", { stdio: "inherit" });
+  // 2. Empresas existentes: reglas, documentos y puntajes al día con lo sembrado.
+  console.log("[sembrar] Actualizando empresas existentes…");
+  execSync("npx tsx scripts/actualizar-empresas.ts", { stdio: "inherit" });
 
   const email = process.env.ADMIN_EMAIL?.trim().toLowerCase(), nombre = process.env.ADMIN_NOMBRE?.trim(), password = process.env.ADMIN_PASSWORD;
   if (email && nombre && password) {

@@ -872,10 +872,12 @@ model ExamenMedico {
   id                   String     @id @default(cuid())
   trabajadorId         String     @map("trabajador_id")
   trabajador           Trabajador @relation(fields: [trabajadorId], references: [id], onDelete: Cascade)
-  tipo                 String // ingreso | periodico | retiro | post_incapacidad | cambio_ocupacion
+  tipo                 String // Res. 1843/2025 art. 8: ingreso (pre-ingreso) | periodico | cambio_ocupacion | retiro (egreso) | post_incapacidad | retorno_laboral | seguimiento
   fecha                DateTime
   ips                  String?
-  concepto             String // apto | apto_restricciones | aplazado | no_apto
+  // Res. 1843/2025 art. 19 par.: no se usa "no apto" salvo en los regímenes especiales del art. 2 (campo regimen).
+  concepto             String // apto | apto_recomendaciones | apto_restricciones | aplazado | no_apto (solo con regimen)
+  regimen              String? // alturas | conduccion | alimentos | armas | electrico | confinados
   restricciones        String? // recomendaciones y restricciones (sin diagnósticos)
   comunicadoTrabajador DateTime?  @map("comunicado_trabajador")
   proximo              DateTime?

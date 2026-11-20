@@ -23,7 +23,7 @@ const TIPOS: Record<string, string> = { AT: "Accidente de trabajo", INCIDENTE: "
 
 export function IndicadoresEditor({ empresaId, anio, trabajadoresBase, mensuales, anuales, plan, estandares, tm, eventos, fichas }: {
   empresaId: string; anio: number; trabajadoresBase: number; cargos: string[]; mensuales: Mensual[];
-  anuales: { mortalidad: number; prevalencia: number | null; incidencia: number | null; promedioTrabajadores: number };
+  anuales: { mortalidad: number | null; prevalencia: number | null; incidencia: number | null; promedioTrabajadores: number };
   plan: number | null; estandares: number | null; tm: { mes: number; n: number; dias: number | null }[]; eventos: Ev[]; fichas: Indicador[];
 }) {
   const [, start] = useTransition();
@@ -40,7 +40,7 @@ export function IndicadoresEditor({ empresaId, anio, trabajadoresBase, mensuales
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
           <Stat label="Estándares mínimos" value={estandares != null ? `${estandares}%` : "—"} hint="Meta > 85%" tone={estandares == null ? undefined : estandares > 85 ? "ok" : estandares >= 60 ? "warn" : "bad"} />
           <Stat label="Cumplimiento plan anual" value={plan != null ? `${plan}%` : "—"} hint="Meta ≥ 90%" tone={plan == null ? undefined : plan >= 90 ? "ok" : "warn"} />
-          <Stat label="Proporción AT mortales" value={`${f(anuales.mortalidad)}%`} hint="Anual" tone={anuales.mortalidad ? "bad" : "ok"} />
+          <Stat label="Proporción AT mortales" value={anuales.mortalidad === null ? "—" : `${f(anuales.mortalidad)}%`} hint={anuales.mortalidad === null ? "Sin accidentes de trabajo en el año" : "Anual"} tone={anuales.mortalidad ? "bad" : "ok"} />
           <Stat label="Prevalencia EL" value={f(anuales.prevalencia, 0)} hint="Por 100.000 trabajadores" />
           <Stat label="Incidencia EL" value={f(anuales.incidencia, 0)} hint="Por 100.000 trabajadores" />
         </div>

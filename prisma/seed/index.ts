@@ -13,6 +13,12 @@ import { zonasAmp, tareasAmp, cargosAmp, sectoresAmp } from "./biblioteca/estruc
 import { itemsCatalogo } from "./biblioteca/catalogos";
 
 // Lecciones que la semilla puso en versiones anteriores; si la consultora no las cambió, se actualizan.
+// Versiones anteriores de listas de inspección sembradas; si la consultora no las editó, se actualizan.
+const LISTAS_SEMBRADAS_ANTES: Record<string, string[][]> = {
+  "Inspección de bioseguridad y residuos": [
+    ["Guardián para cortopunzantes en cada punto de uso, rotulado, rígido y con menos de 3/4 de su capacidad", "No se reencapsulan agujas ni se manipulan cortopunzantes con la mano", "Lavado de instrumental con guantes gruesos (de caucho o nitrilo) y cepillo de mango largo", "Uso de EPP según el procedimiento: guantes, tapabocas o respirador, gafas o careta y bata", "Lavamanos con jabón, toallas desechables y protocolo de higiene de manos visible", "Superficies y equipos limpiados y desinfectados según el protocolo", "Residuos separados en recipientes con bolsa del color definido en el PGIRASA y rotulados", "Almacenamiento central de residuos señalizado, con acceso restringido y registro de entrega al gestor", "Protocolo de atención de la exposición a riesgo biológico conocido por el personal (lavado, reporte inmediato, valoración médica)", "Trabajadores expuestos con esquema de vacunación registrado (hepatitis B, tétanos)", "Derrames de fluidos atendidos con kit y procedimiento definido"],
+  ],
+};
 const LECCIONES_SEMBRADAS_ANTES = [
   "Use la herramienta adecuada, en buen estado y con guantes anticorte; corte siempre en dirección contraria al cuerpo.",
 ];
@@ -154,6 +160,12 @@ async function sembrarBiblioteca() {
   for (const it of items) {
     const prev = await db.catalogoItem.findFirst({ where: { tipo: it.tipo, nombre: it.nombre, empresaId: null } });
     if (!prev) { await db.catalogoItem.create({ data: { ...it, detalle: it.detalle as object } }); conteo.catalogo++; }
+    else if (it.tipo === "LISTA_INSPECCION") {
+      // Se reemplazan los ítems solo si la lista sigue igual a una versión sembrada antes (no se pisa lo editado).
+      const actuales = JSON.stringify(((prev.detalle ?? {}) as { items?: string[] }).items ?? []);
+      if ((LISTAS_SEMBRADAS_ANTES[it.nombre] ?? []).some((v) => JSON.stringify(v) === actuales) && actuales !== JSON.stringify(it.detalle.items))
+        await db.catalogoItem.update({ where: { id: prev.id }, data: { detalle: it.detalle as object, normas: it.normas } });
+    }
     else if (it.tipo === "FORMA_EVENTO") {
       // Solo agrega: causas, medidas y claves nuevas se suman sin quitar lo editado en Biblioteca;
       // la lección se reemplaza solo si sigue siendo un texto sembrado anterior.

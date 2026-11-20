@@ -1,0 +1,1056 @@
+{
+ "frente": "B — Evaluación, verificación y mejora",
+ "artefactos": [
+  {
+   "codigo": "DOC-05",
+   "nombre": "Evaluación inicial del SG-SST",
+   "normasCitadas": [
+    "DEC-1072-2015",
+    "RES-0312-2019"
+   ],
+   "requisitos": [
+    {
+     "id": "DOC-05-R1",
+     "requisito": "Identificar la normatividad vigente en riesgos laborales, incluidos los estándares mínimos",
+     "norma": "DEC-1072-2015",
+     "articulo": "art. 2.2.4.6.16 num. 1",
+     "fuente": "https://normativa.colpensiones.gov.co/colpensiones/docs/decreto_1072_2015_pr009.htm",
+     "seccionQueLoCubre": "## Aspectos evaluados (art. 2.2.4.6.16)",
+     "estado": "cumple",
+     "detalle": "Cuenta las normas aplicables y remite a la matriz legal.",
+     "confianza": "alta"
+    },
+    {
+     "id": "DOC-05-R2",
+     "requisito": "Verificar la identificación de peligros y valoración de riesgos (anual)",
+     "norma": "DEC-1072-2015",
+     "articulo": "art. 2.2.4.6.16 num. 2",
+     "fuente": "https://normativa.colpensiones.gov.co/colpensiones/docs/decreto_1072_2015_pr009.htm",
+     "seccionQueLoCubre": "## Aspectos evaluados (art. 2.2.4.6.16)",
+     "estado": "cumple",
+     "detalle": "Toma conteo de peligros y prioritarios de la matriz.",
+     "confianza": "alta"
+    },
+    {
+     "id": "DOC-05-R3",
+     "requisito": "Identificar amenazas y evaluar la vulnerabilidad (anual)",
+     "norma": "DEC-1072-2015",
+     "articulo": "art. 2.2.4.6.16 num. 3",
+     "fuente": "https://normativa.colpensiones.gov.co/colpensiones/docs/decreto_1072_2015_pr009.htm",
+     "seccionQueLoCubre": "## Aspectos evaluados (art. 2.2.4.6.16)",
+     "estado": "parcial",
+     "detalle": "Solo remite al plan de emergencias; no consigna resultado ni fecha del análisis de vulnerabilidad.",
+     "confianza": "alta"
+    },
+    {
+     "id": "DOC-05-R4",
+     "requisito": "Evaluar la efectividad de las medidas de control, incluidos los reportes de los trabajadores (anual)",
+     "norma": "DEC-1072-2015",
+     "articulo": "art. 2.2.4.6.16 num. 4",
+     "fuente": "https://normativa.colpensiones.gov.co/colpensiones/docs/decreto_1072_2015_pr009.htm",
+     "seccionQueLoCubre": "## Aspectos evaluados (art. 2.2.4.6.16)",
+     "estado": "parcial",
+     "detalle": "Texto fijo 'se verifica en la matriz'; no hay resultado de la evaluación de efectividad ni mención de los reportes de trabajadores.",
+     "confianza": "alta"
+    },
+    {
+     "id": "DOC-05-R5",
+     "requisito": "Verificar el cumplimiento del programa de capacitación anual, con inducción y reinducción para todos los tipos de vinculación",
+     "norma": "DEC-1072-2015",
+     "articulo": "art. 2.2.4.6.16 num. 5",
+     "fuente": "https://normativa.colpensiones.gov.co/colpensiones/docs/decreto_1072_2015_pr009.htm",
+     "seccionQueLoCubre": "## Aspectos evaluados (art. 2.2.4.6.16)",
+     "estado": "parcial",
+     "detalle": "Solo 'ver ítems 1.2.1 y 1.2.2'; no inyecta horas, cobertura ni ejecución (el contexto ya tiene nomina.capacitaciones).",
+     "confianza": "alta"
+    },
+    {
+     "id": "DOC-05-R6",
+     "requisito": "Evaluar los puestos de trabajo en el marco de los programas de vigilancia epidemiológica",
+     "norma": "DEC-1072-2015",
+     "articulo": "art. 2.2.4.6.16 num. 6",
+     "fuente": "https://normativa.colpensiones.gov.co/colpensiones/docs/decreto_1072_2015_pr009.htm",
+     "seccionQueLoCubre": "## Aspectos evaluados (art. 2.2.4.6.16)",
+     "estado": "falta",
+     "detalle": "Solo enuncia el aspecto; no hay dato ni campo de resultado.",
+     "confianza": "alta"
+    },
+    {
+     "id": "DOC-05-R7",
+     "requisito": "Descripción sociodemográfica, diagnóstico de condiciones de salud y análisis de estadísticas de enfermedad y accidentalidad",
+     "norma": "DEC-1072-2015",
+     "articulo": "art. 2.2.4.6.16 num. 7",
+     "fuente": "https://normativa.colpensiones.gov.co/colpensiones/docs/decreto_1072_2015_pr009.htm",
+     "seccionQueLoCubre": "## Aspectos evaluados (art. 2.2.4.6.16)",
+     "estado": "falta",
+     "detalle": "Solo enuncia el aspecto; no trae el perfil sociodemográfico ni estadísticas aunque el sistema tiene eventos y trabajadores.",
+     "confianza": "alta"
+    },
+    {
+     "id": "DOC-05-R8",
+     "requisito": "Analizar estadísticas de enfermedad y accidentalidad de los dos últimos años como línea base",
+     "norma": "DEC-1072-2015",
+     "articulo": "art. 2.2.4.6.16 par. 1",
+     "fuente": "https://normativa.colpensiones.gov.co/colpensiones/docs/decreto_1072_2015_pr009.htm",
+     "seccionQueLoCubre": "## Aspectos evaluados (art. 2.2.4.6.16)",
+     "estado": "falta",
+     "detalle": "Se menciona 'dos últimos años' pero no se calcula ni presenta ninguna cifra.",
+     "confianza": "alta"
+    },
+    {
+     "id": "DOC-05-R9",
+     "requisito": "Registro y seguimiento de los resultados de los indicadores del año inmediatamente anterior",
+     "norma": "DEC-1072-2015",
+     "articulo": "art. 2.2.4.6.16 num. 8",
+     "fuente": "https://normativa.colpensiones.gov.co/colpensiones/docs/decreto_1072_2015_pr009.htm",
+     "seccionQueLoCubre": "## Aspectos evaluados (art. 2.2.4.6.16)",
+     "estado": "falta",
+     "detalle": "Solo enuncia; no inyecta los indicadores del año anterior (calcularAnuales/Mensuales disponibles).",
+     "confianza": "alta"
+    },
+    {
+     "id": "DOC-05-R10",
+     "requisito": "La evaluación debe documentarse y ser la base para la planificación (plan anual)",
+     "norma": "DEC-1072-2015",
+     "articulo": "art. 2.2.4.6.16 par. 2",
+     "fuente": "https://normativa.colpensiones.gov.co/colpensiones/docs/decreto_1072_2015_pr009.htm",
+     "seccionQueLoCubre": "## Conclusión",
+     "estado": "cumple",
+     "detalle": "Declara que es línea base del plan anual; prioridades salen del plan de mejora.",
+     "confianza": "alta"
+    },
+    {
+     "id": "DOC-05-R11",
+     "requisito": "Mecanismos de autorreporte de condiciones de trabajo y salud de trabajadores y contratistas, usados como insumo",
+     "norma": "DEC-1072-2015",
+     "articulo": "art. 2.2.4.6.16 par. 3",
+     "fuente": "https://normativa.colpensiones.gov.co/colpensiones/docs/decreto_1072_2015_pr009.htm",
+     "seccionQueLoCubre": null,
+     "estado": "falta",
+     "detalle": "No se menciona el autorreporte como insumo de la evaluación.",
+     "confianza": "alta"
+    },
+    {
+     "id": "DOC-05-R12",
+     "requisito": "Realizada por el responsable del SG-SST o persona externa con licencia en SST; identifica prioridades para el plan anual",
+     "norma": "RES-0312-2019",
+     "articulo": "art. 16, estándar 2.3.1",
+     "fuente": "https://normograma.mintic.gov.co/mintic/compilacion/docs/resolucion_mtra_0312_2019.htm",
+     "seccionQueLoCubre": "## Datos de la empresa",
+     "estado": "cumple",
+     "detalle": "Evaluador con licencia y sección de prioridades.",
+     "confianza": "alta"
+    },
+    {
+     "id": "DOC-05-R13",
+     "requisito": "Calificación con la tabla de valores; ítems que no aplican a empresas de menos de 50 trabajadores riesgo I-III reciben el porcentaje máximo",
+     "norma": "RES-0312-2019",
+     "articulo": "art. 27",
+     "fuente": "https://normograma.mintic.gov.co/mintic/compilacion/docs/resolucion_mtra_0312_2019.htm",
+     "seccionQueLoCubre": "## Resultado de la tabla de valores",
+     "estado": "parcial",
+     "detalle": "Para nivel 7/21 solo lista los ítems aplicables y el puntaje sale normalizado (obtenido/máximo aplicable), no 100 menos lo perdido; no muestra la justificación de 'No aplica' (se usa observacion, no justificacion). Ver hallazgo en EVAL-0312.",
+     "confianza": "alta"
+    },
+    {
+     "id": "DOC-05-R14",
+     "requisito": "Valoración crítica (<60), moderadamente aceptable (60-85) o aceptable (>85) con su acción",
+     "norma": "RES-0312-2019",
+     "articulo": "art. 28",
+     "fuente": "https://normograma.mintic.gov.co/mintic/compilacion/docs/resolucion_mtra_0312_2019.htm",
+     "seccionQueLoCubre": "## Resultado de la tabla de valores",
+     "estado": "cumple",
+     "detalle": "Umbrales y acción correctos en valorar().",
+     "confianza": "alta"
+    }
+   ],
+   "citasIncorrectas": [],
+   "sinSustento": [
+    {
+     "texto": "Fecha de evaluación: {{evaluacion.fecha}} (toma e.evaluaciones[0])",
+     "problema": "Usa la evaluación más reciente, que puede ser una autoevaluación anual y no la inicial; el documento quedaría rotulado como evaluación inicial con datos de otra evaluación."
+    }
+   ]
+  },
+  {
+   "codigo": "PLN-02",
+   "nombre": "Plan de mejoramiento de estándares mínimos",
+   "normasCitadas": [
+    "RES-0312-2019",
+    "CIR-027-2026"
+   ],
+   "requisitos": [
+    {
+     "id": "PLN-02-R1",
+     "requisito": "Plan con actividades concretas, responsables, plazos, recursos y evidencias de efectividad",
+     "norma": "RES-0312-2019",
+     "articulo": "art. 28",
+     "fuente": "https://normograma.mintic.gov.co/mintic/compilacion/docs/resolucion_mtra_0312_2019.htm",
+     "seccionQueLoCubre": "## Acciones de mejora",
+     "estado": "cumple",
+     "detalle": "Tabla con las seis columnas. Nota: el soporte por defecto es el modo de verificación del estándar, no una evidencia de efectividad.",
+     "confianza": "alta"
+    },
+    {
+     "id": "PLN-02-R2",
+     "requisito": "Crítico (<60 %): plan de inmediato; reporte de avances a la ARL en máximo 3 meses; seguimiento anual y plan de visita del MinTrabajo",
+     "norma": "RES-0312-2019",
+     "articulo": "art. 28",
+     "fuente": "https://normograma.mintic.gov.co/mintic/compilacion/docs/resolucion_mtra_0312_2019.htm",
+     "seccionQueLoCubre": "## Seguimiento y reporte",
+     "estado": "cumple",
+     "detalle": "Texto condicional correcto.",
+     "confianza": "alta"
+    },
+    {
+     "id": "PLN-02-R3",
+     "requisito": "Moderadamente aceptable (60-85 %): plan; reporte de avances a la ARL en máximo 6 meses; plan de visita",
+     "norma": "RES-0312-2019",
+     "articulo": "art. 28",
+     "fuente": "https://normograma.mintic.gov.co/mintic/compilacion/docs/resolucion_mtra_0312_2019.htm",
+     "seccionQueLoCubre": "## Seguimiento y reporte",
+     "estado": "cumple",
+     "detalle": "Texto condicional correcto.",
+     "confianza": "alta"
+    },
+    {
+     "id": "PLN-02-R4",
+     "requisito": "Aceptable (>85 %): mantener calificación y evidencias a disposición del MinTrabajo e incluir mejoras en el plan anual",
+     "norma": "RES-0312-2019",
+     "articulo": "art. 28",
+     "fuente": "https://normograma.mintic.gov.co/mintic/compilacion/docs/resolucion_mtra_0312_2019.htm",
+     "seccionQueLoCubre": "## Resultado de la evaluación",
+     "estado": "cumple",
+     "detalle": "Vía evaluacion.accion.",
+     "confianza": "alta"
+    },
+    {
+     "id": "PLN-02-R5",
+     "requisito": "El plan de mejora se aprueba dentro del plan anual; la autoevaluación se hace en diciembre de cada año",
+     "norma": "RES-0312-2019",
+     "articulo": "art. 26",
+     "fuente": "https://normograma.mintic.gov.co/mintic/compilacion/docs/resolucion_mtra_0312_2019.htm",
+     "seccionQueLoCubre": "## Seguimiento y reporte",
+     "estado": "parcial",
+     "detalle": "Menciona la aprobación en el plan anual pero no la autoevaluación de diciembre; el planeador programa la siguiente autoevaluación a un año de la última (no en diciembre) y cita arts. 27-28 en lugar de 26.",
+     "confianza": "alta"
+    },
+    {
+     "id": "PLN-02-R6",
+     "requisito": "Enviar copia de la autoevaluación y del plan de mejoramiento a la ARL",
+     "norma": "RES-0312-2019",
+     "articulo": "art. 28 par. 1",
+     "fuente": "https://normograma.mintic.gov.co/mintic/compilacion/docs/resolucion_mtra_0312_2019.htm",
+     "seccionQueLoCubre": "## Seguimiento y reporte",
+     "estado": "parcial",
+     "detalle": "Dice 'con copia a la ARL' pero ligado al avance, no a la autoevaluación y el plan.",
+     "confianza": "alta"
+    },
+    {
+     "id": "PLN-02-R7",
+     "requisito": "Registrar la autoevaluación y el plan de mejoramiento de la vigencia en la aplicación del Fondo de Riesgos Laborales (sgrl.mintrabajo.gov.co) hasta el 31 de julio de 2026",
+     "norma": "CIR-027-2026",
+     "articulo": "num. 1-2 (remite a Res. 0312 art. 28 par. 2)",
+     "fuente": "https://normograma.mintic.gov.co/mintic/compilacion/docs/circular_mintra_0027_2026.htm",
+     "seccionQueLoCubre": "## Seguimiento y reporte",
+     "estado": "parcial",
+     "detalle": "La plantilla dice que lo que se registra es 'el avance'; según la circular se registran la autoevaluación y el plan. No da el plazo (31-jul-2026) ni la URL.",
+     "confianza": "alta"
+    },
+    {
+     "id": "PLN-02-R8",
+     "requisito": "Presentar informe de avance del plan en julio, teniendo en cuenta las recomendaciones de la ARL",
+     "norma": "RES-0312-2019",
+     "articulo": "art. 28; Circular 027/2026",
+     "fuente": "https://normograma.mintic.gov.co/mintic/compilacion/docs/resolucion_mtra_0312_2019.htm",
+     "seccionQueLoCubre": "## Seguimiento y reporte",
+     "estado": "cumple",
+     "detalle": "Menciona el avance en julio; no menciona las recomendaciones de la ARL (menor).",
+     "confianza": "alta"
+    }
+   ],
+   "citasIncorrectas": [
+    {
+     "texto": "El avance se informa en el mes de julio y se registra en la aplicación del Fondo de Riesgos Laborales ... (Circular 027 de 2026)",
+     "problema": "La Circular 027/2026 ordena registrar la autoevaluación y el plan de mejoramiento (vigencia 2025, hasta el 31/07/2026); el informe de avance de julio es otra obligación (art. 28).",
+     "correccion": "Separar: (1) registro de autoevaluación y plan en sgrl.mintrabajo.gov.co hasta el 31 de julio de 2026 y copia a la ARL; (2) informe de avance en julio con las recomendaciones de la ARL."
+    }
+   ],
+   "sinSustento": []
+  },
+  {
+   "codigo": "PRG-10",
+   "nombre": "Programa de auditoría interna del SG-SST",
+   "normasCitadas": [
+    "DEC-1072-2015",
+    "RES-0312-2019"
+   ],
+   "requisitos": [
+    {
+     "id": "PRG-10-R1",
+     "requisito": "Auditoría de cumplimiento al menos una vez al año",
+     "norma": "DEC-1072-2015",
+     "articulo": "art. 2.2.4.6.29",
+     "fuente": "https://normativa.colpensiones.gov.co/colpensiones/docs/decreto_1072_2015_pr009.htm",
+     "seccionQueLoCubre": "## Planificación",
+     "estado": "cumple",
+     "detalle": "Periodicidad anual.",
+     "confianza": "alta"
+    },
+    {
+     "id": "PRG-10-R2",
+     "requisito": "Planificada con participación del COPASST o Vigía",
+     "norma": "DEC-1072-2015",
+     "articulo": "art. 2.2.4.6.29; Res. 0312 est. 6.1.4",
+     "fuente": "https://normativa.colpensiones.gov.co/colpensiones/docs/decreto_1072_2015_pr009.htm",
+     "seccionQueLoCubre": "## Planificación",
+     "estado": "cumple",
+     "detalle": "",
+     "confianza": "alta"
+    },
+    {
+     "id": "PRG-10-R3",
+     "requisito": "Auditor interno independiente de la actividad auditada; no audita su propio trabajo",
+     "norma": "DEC-1072-2015",
+     "articulo": "art. 2.2.4.6.29 y par.",
+     "fuente": "https://normativa.colpensiones.gov.co/colpensiones/docs/decreto_1072_2015_pr009.htm",
+     "seccionQueLoCubre": "## Planificación",
+     "estado": "cumple",
+     "detalle": "",
+     "confianza": "alta"
+    },
+    {
+     "id": "PRG-10-R4",
+     "requisito": "El programa define competencia del auditor, alcance, periodicidad, metodología y presentación de informes, y tiene en cuenta auditorías previas",
+     "norma": "DEC-1072-2015",
+     "articulo": "art. 2.2.4.6.29 par.",
+     "fuente": "https://normativa.colpensiones.gov.co/colpensiones/docs/decreto_1072_2015_pr009.htm",
+     "seccionQueLoCubre": "## Planificación",
+     "estado": "parcial",
+     "detalle": "Falta la competencia concreta exigida al auditor y que se consideren los resultados de auditorías previas (solo se listan).",
+     "confianza": "alta"
+    },
+    {
+     "id": "PRG-10-R5",
+     "requisito": "Alcance mínimo de 13 aspectos",
+     "norma": "DEC-1072-2015",
+     "articulo": "art. 2.2.4.6.30 num. 1-13",
+     "fuente": "https://normativa.colpensiones.gov.co/colpensiones/docs/decreto_1072_2015_pr009.htm",
+     "seccionQueLoCubre": "## Alcance (art. 2.2.4.6.30)",
+     "estado": "cumple",
+     "detalle": "Los 13 aspectos en orden. Ítem 5 dice 'Mecanismo de comunicación'; la norma habla de la comunicación de los contenidos del SG-SST a los trabajadores (menor).",
+     "confianza": "alta"
+    },
+    {
+     "id": "PRG-10-R6",
+     "requisito": "Comunicar los resultados a los responsables de adoptar medidas preventivas, correctivas o de mejora",
+     "norma": "DEC-1072-2015",
+     "articulo": "art. 2.2.4.6.29",
+     "fuente": "https://normativa.colpensiones.gov.co/colpensiones/docs/decreto_1072_2015_pr009.htm",
+     "seccionQueLoCubre": "## Informe",
+     "estado": "cumple",
+     "detalle": "",
+     "confianza": "alta"
+    },
+    {
+     "id": "PRG-10-R7",
+     "requisito": "Obligación aplicable a todo empleador del Decreto 1072 (no solo a quienes tienen 60 estándares)",
+     "norma": "DEC-1072-2015",
+     "articulo": "arts. 2.2.4.6.1 y 2.2.4.6.29",
+     "fuente": "https://normativa.colpensiones.gov.co/colpensiones/docs/decreto_1072_2015_pr009.htm",
+     "seccionQueLoCubre": "frontmatter nivelMin: 60",
+     "estado": "parcial",
+     "detalle": "PRG-10 solo se genera para nivel 60. El art. 2.2.4.6.29 no distingue tamaño; la Res. 0312 solo exige 6.1.2/6.1.4 a nivel 60. Decisión de la consultora; el módulo de auditorías sí está disponible para todos.",
+     "confianza": "media"
+    }
+   ],
+   "citasIncorrectas": [],
+   "sinSustento": []
+  },
+  {
+   "codigo": "ACT-06",
+   "nombre": "Acta de revisión del SG-SST por la alta dirección",
+   "normasCitadas": [
+    "DEC-1072-2015",
+    "RES-0312-2019"
+   ],
+   "requisitos": [
+    {
+     "id": "ACT-06-R1",
+     "requisito": "Revisión al menos una vez al año, independiente del tamaño de la empresa",
+     "norma": "DEC-1072-2015",
+     "articulo": "art. 2.2.4.6.31",
+     "fuente": "https://normativa.colpensiones.gov.co/colpensiones/docs/decreto_1072_2015_pr009.htm",
+     "seccionQueLoCubre": "frontmatter nivelMin: 21",
+     "estado": "falta",
+     "detalle": "La plantilla tiene nivelMin 21: no se genera para empresas de 7 estándares, aunque el artículo dice expresamente 'independiente del tamaño de la empresa'.",
+     "confianza": "alta"
+    },
+    {
+     "id": "ACT-06-R2",
+     "requisito": "Los 24 aspectos de la revisión",
+     "norma": "DEC-1072-2015",
+     "articulo": "art. 2.2.4.6.31 num. 1-24",
+     "fuente": "https://normativa.colpensiones.gov.co/colpensiones/docs/decreto_1072_2015_pr009.htm",
+     "seccionQueLoCubre": "## Revisión (art. 2.2.4.6.31 del Decreto 1072 de 2015)",
+     "estado": "cumple",
+     "detalle": "Las 24 filas en orden y con redacción fiel.",
+     "confianza": "alta"
+    },
+    {
+     "id": "ACT-06-R3",
+     "requisito": "Analizar resultados de indicadores y auditorías anteriores",
+     "norma": "DEC-1072-2015",
+     "articulo": "art. 2.2.4.6.31 num. 7",
+     "fuente": "https://normativa.colpensiones.gov.co/colpensiones/docs/decreto_1072_2015_pr009.htm",
+     "seccionQueLoCubre": "fila 7",
+     "estado": "parcial",
+     "detalle": "Inyecta la auditoría pero no los indicadores (frecuencia, severidad, ausentismo, cumplimiento del plan) que el sistema ya calcula.",
+     "confianza": "alta"
+    },
+    {
+     "id": "ACT-06-R4",
+     "requisito": "Identificar el ausentismo laboral por causas asociadas con SST",
+     "norma": "DEC-1072-2015",
+     "articulo": "art. 2.2.4.6.31 num. 21",
+     "fuente": "https://normativa.colpensiones.gov.co/colpensiones/docs/decreto_1072_2015_pr009.htm",
+     "seccionQueLoCubre": "fila 21",
+     "estado": "parcial",
+     "detalle": "Solo días perdidos por AT; omite días por enfermedad laboral.",
+     "confianza": "alta"
+    },
+    {
+     "id": "ACT-06-R5",
+     "requisito": "Cumplimiento del plan de trabajo anual y su cronograma",
+     "norma": "DEC-1072-2015",
+     "articulo": "art. 2.2.4.6.31 num. 2",
+     "fuente": "https://normativa.colpensiones.gov.co/colpensiones/docs/decreto_1072_2015_pr009.htm",
+     "seccionQueLoCubre": "fila 2",
+     "estado": "parcial",
+     "detalle": "Fila vacía; el sistema tiene actividades ejecutadas/programadas que podría inyectar.",
+     "confianza": "alta"
+    },
+    {
+     "id": "ACT-06-R6",
+     "requisito": "Documentar los resultados y divulgarlos al COPASST/Vigía y al responsable del SG-SST",
+     "norma": "DEC-1072-2015",
+     "articulo": "art. 2.2.4.6.31 par.",
+     "fuente": "https://normativa.colpensiones.gov.co/colpensiones/docs/decreto_1072_2015_pr009.htm",
+     "seccionQueLoCubre": "## Comunicación",
+     "estado": "cumple",
+     "detalle": "",
+     "confianza": "alta"
+    },
+    {
+     "id": "ACT-06-R7",
+     "requisito": "Estándar 6.1.3: revisión anual por la alta dirección, resultados y alcance de la auditoría",
+     "norma": "RES-0312-2019",
+     "articulo": "art. 16 est. 6.1.3",
+     "fuente": "https://normograma.mintic.gov.co/mintic/compilacion/docs/resolucion_mtra_0312_2019.htm",
+     "seccionQueLoCubre": "fila 7",
+     "estado": "cumple",
+     "detalle": "",
+     "confianza": "alta"
+    }
+   ],
+   "citasIncorrectas": [],
+   "sinSustento": []
+  },
+  {
+   "codigo": "FOR-06",
+   "nombre": "Registro de acciones correctivas, preventivas y de mejora",
+   "normasCitadas": [
+    "DEC-1072-2015",
+    "RES-0312-2019"
+   ],
+   "requisitos": [
+    {
+     "id": "FOR-06-R1",
+     "requisito": "Acciones basadas en supervisión, inspecciones, medición de indicadores, auditoría y revisión por la dirección",
+     "norma": "DEC-1072-2015",
+     "articulo": "art. 2.2.4.6.33",
+     "fuente": "https://normativa.colpensiones.gov.co/colpensiones/docs/decreto_1072_2015_pr009.htm",
+     "seccionQueLoCubre": "## Registro (columna Fuente)",
+     "estado": "cumple",
+     "detalle": "",
+     "confianza": "alta"
+    },
+    {
+     "id": "FOR-06-R2",
+     "requisito": "Identificar y analizar las causas fundamentales de las no conformidades",
+     "norma": "DEC-1072-2015",
+     "articulo": "art. 2.2.4.6.33 num. 1",
+     "fuente": "https://normativa.colpensiones.gov.co/colpensiones/docs/decreto_1072_2015_pr009.htm",
+     "seccionQueLoCubre": "## Registro (Causa raíz)",
+     "estado": "cumple",
+     "detalle": "",
+     "confianza": "alta"
+    },
+    {
+     "id": "FOR-06-R3",
+     "requisito": "Adopción, planificación, aplicación, comprobación de la eficacia y documentación de las medidas",
+     "norma": "DEC-1072-2015",
+     "articulo": "art. 2.2.4.6.33 num. 2",
+     "fuente": "https://normativa.colpensiones.gov.co/colpensiones/docs/decreto_1072_2015_pr009.htm",
+     "seccionQueLoCubre": "## Registro (Verificación de eficacia)",
+     "estado": "cumple",
+     "detalle": "",
+     "confianza": "alta"
+    },
+    {
+     "id": "FOR-06-R4",
+     "requisito": "Si las medidas de prevención y protección son inadecuadas o pueden dejar de ser eficaces, evaluarlas y priorizarlas sin demora",
+     "norma": "DEC-1072-2015",
+     "articulo": "art. 2.2.4.6.33 par. 1",
+     "fuente": "https://normativa.colpensiones.gov.co/colpensiones/docs/decreto_1072_2015_pr009.htm",
+     "seccionQueLoCubre": null,
+     "estado": "falta",
+     "detalle": "No hay instrucción ni campo de prioridad.",
+     "confianza": "alta"
+    },
+    {
+     "id": "FOR-06-R5",
+     "requisito": "Acciones documentadas, difundidas a los niveles pertinentes, con responsables y fechas de cumplimiento",
+     "norma": "DEC-1072-2015",
+     "articulo": "art. 2.2.4.6.33 par. 2",
+     "fuente": "https://normativa.colpensiones.gov.co/colpensiones/docs/decreto_1072_2015_pr009.htm",
+     "seccionQueLoCubre": "## Instrucciones",
+     "estado": "parcial",
+     "detalle": "Responsable y fecha sí; la difusión solo es instrucción, sin columna de a quién/cuándo se comunicó.",
+     "confianza": "alta"
+    },
+    {
+     "id": "FOR-06-R6",
+     "requisito": "Implementar acciones correctivas de autoridades administrativas y de las ARL",
+     "norma": "RES-0312-2019",
+     "articulo": "art. 16 est. 7.1.4",
+     "fuente": "https://normograma.mintic.gov.co/mintic/compilacion/docs/resolucion_mtra_0312_2019.htm",
+     "seccionQueLoCubre": "## Registro (Fuente: ARL / autoridad)",
+     "estado": "cumple",
+     "detalle": "",
+     "confianza": "alta"
+    }
+   ],
+   "citasIncorrectas": [],
+   "sinSustento": []
+  },
+  {
+   "codigo": "PRG-01",
+   "nombre": "Programa de capacitación, inducción y reinducción en SST",
+   "normasCitadas": [
+    "DEC-1072-2015",
+    "RES-0312-2019"
+   ],
+   "requisitos": [
+    {
+     "id": "PRG-01-R1",
+     "requisito": "Definir los requisitos de conocimiento y práctica en SST que necesitan los trabajadores",
+     "norma": "DEC-1072-2015",
+     "articulo": "art. 2.2.4.6.11",
+     "fuente": "https://normativa.colpensiones.gov.co/colpensiones/docs/decreto_1072_2015_pr009.htm",
+     "seccionQueLoCubre": "## Necesidades de capacitación por cargo",
+     "estado": "cumple",
+     "detalle": "",
+     "confianza": "alta"
+    },
+    {
+     "id": "PRG-01-R2",
+     "requisito": "Programa documentado para identificar peligros y controlar riesgos, que llega a todos los niveles, incluidos contratistas, cooperados y trabajadores en misión",
+     "norma": "DEC-1072-2015",
+     "articulo": "art. 2.2.4.6.11",
+     "fuente": "https://normativa.colpensiones.gov.co/colpensiones/docs/decreto_1072_2015_pr009.htm",
+     "seccionQueLoCubre": "## Alcance",
+     "estado": "cumple",
+     "detalle": "",
+     "confianza": "alta"
+    },
+    {
+     "id": "PRG-01-R3",
+     "requisito": "Impartido por personal idóneo",
+     "norma": "DEC-1072-2015",
+     "articulo": "art. 2.2.4.6.11",
+     "fuente": "https://normativa.colpensiones.gov.co/colpensiones/docs/decreto_1072_2015_pr009.htm",
+     "seccionQueLoCubre": "## Ejecución (Facilitador)",
+     "estado": "parcial",
+     "detalle": "Registra al facilitador pero no exige ni documenta su idoneidad.",
+     "confianza": "alta"
+    },
+    {
+     "id": "PRG-01-R4",
+     "requisito": "Revisión mínimo anual con COPASST/Vigía y alta dirección",
+     "norma": "DEC-1072-2015",
+     "articulo": "art. 2.2.4.6.11 par. 1",
+     "fuente": "https://normativa.colpensiones.gov.co/colpensiones/docs/decreto_1072_2015_pr009.htm",
+     "seccionQueLoCubre": "## Revisión",
+     "estado": "cumple",
+     "detalle": "",
+     "confianza": "alta"
+    },
+    {
+     "id": "PRG-01-R5",
+     "requisito": "Inducción antes de iniciar labores, con aspectos generales y específicos, incluida la prevención de AT y EL",
+     "norma": "DEC-1072-2015",
+     "articulo": "art. 2.2.4.6.11 par. 2",
+     "fuente": "https://normativa.colpensiones.gov.co/colpensiones/docs/decreto_1072_2015_pr009.htm",
+     "seccionQueLoCubre": "## Inducción y reinducción",
+     "estado": "cumple",
+     "detalle": "",
+     "confianza": "alta"
+    },
+    {
+     "id": "PRG-01-R6",
+     "requisito": "Conservar registros de capacitación al menos 20 años desde el cese de la relación laboral",
+     "norma": "DEC-1072-2015",
+     "articulo": "art. 2.2.4.6.13",
+     "fuente": "https://normativa.colpensiones.gov.co/colpensiones/docs/decreto_1072_2015_pr009.htm",
+     "seccionQueLoCubre": "## Evaluación y registros",
+     "estado": "parcial",
+     "detalle": "Dice 20 años pero no 'contados desde el cese de la relación laboral'.",
+     "confianza": "alta"
+    },
+    {
+     "id": "PRG-01-R7",
+     "requisito": "Programa anual de capacitación PyP con soportes de ejecución (1.2.1) e inducción/reinducción (1.2.2)",
+     "norma": "RES-0312-2019",
+     "articulo": "art. 16 est. 1.2.1 y 1.2.2",
+     "fuente": "https://normograma.mintic.gov.co/mintic/compilacion/docs/resolucion_mtra_0312_2019.htm",
+     "seccionQueLoCubre": "## Cronograma temático / ## Ejecución",
+     "estado": "cumple",
+     "detalle": "",
+     "confianza": "alta"
+    }
+   ],
+   "citasIncorrectas": [],
+   "sinSustento": [
+    {
+     "texto": "La reinducción se realiza una vez al año o cuando cambien las condiciones de trabajo, el cargo o la normatividad.",
+     "problema": "Ni el Decreto 1072 (2.2.4.6.11, .16) ni la Res. 0312 fijan una periodicidad para la reinducción. Presentarlo como política de la empresa, no como obligación legal."
+    },
+    {
+     "texto": "Se evalúa la comprensión mediante prueba escrita u oral. Meta ≥ 90 %.",
+     "problema": "No lo exige la norma; es práctica de la empresa (indicadores propios, Res. 0312 art. 30 num. 6). Aceptable si no se presenta como obligación."
+    }
+   ]
+  },
+  {
+   "codigo": "EVAL-0312",
+   "nombre": "Autoevaluación de estándares mínimos: calificación (src/lib/evaluacion/index.ts) y Excel (evaluacion.xlsx)",
+   "normasCitadas": [
+    "RES-0312-2019"
+   ],
+   "requisitos": [
+    {
+     "id": "EVAL-R1",
+     "requisito": "Ítems que no aplican a empresas de menos de 50 trabajadores riesgo I-III: se otorga el porcentaje máximo en la columna 'No aplica' (el total sigue siendo sobre 100)",
+     "norma": "RES-0312-2019",
+     "articulo": "art. 27",
+     "fuente": "https://normograma.mintic.gov.co/mintic/compilacion/docs/resolucion_mtra_0312_2019.htm",
+     "seccionQueLoCubre": "calificar(): puntajeAjustado",
+     "estado": "falta",
+     "detalle": "ERROR GRAVE. Para nivel 7/21 solo se crean los 7 o 21 ítems y el puntaje se normaliza obtenido/máximo aplicable (máximo 12,5 en nivel 7 y 37,75 en nivel 21). Según el art. 27 los ítems no aplicables suman su valor máximo, así que el puntaje es 100 menos lo no cumplido. Ejemplo: nivel 7 que no cumple solo 1.2.1 (2 puntos): el sistema da 84 % (MODERADAMENTE ACEPTABLE, reporte a 6 meses); el art. 27 da 98 % (ACEPTABLE). Afecta evaluación, diagnóstico, DOC-05, PLN-02, Excel, planeador y plazos del plan.",
+     "confianza": "alta"
+    },
+    {
+     "id": "EVAL-R2",
+     "requisito": "Calificación de cada ítem por valor máximo o mínimo según cumpla o no",
+     "norma": "RES-0312-2019",
+     "articulo": "art. 27",
+     "fuente": "https://normograma.mintic.gov.co/mintic/compilacion/docs/resolucion_mtra_0312_2019.htm",
+     "seccionQueLoCubre": "calificar()",
+     "estado": "cumple",
+     "detalle": "CUMPLE suma su puntaje; NO_CUMPLE 0. Los PENDIENTE al cerrar se tratan como no cumplidos y se permite cerrar con pendientes (convendría bloquearlo).",
+     "confianza": "alta"
+    },
+    {
+     "id": "EVAL-R3",
+     "requisito": "Valores de la tabla (60 ítems, total 100) y columnas aplica7/aplica21",
+     "norma": "RES-0312-2019",
+     "articulo": "art. 27 (tabla) y arts. 3, 9",
+     "fuente": "https://normograma.mintic.gov.co/mintic/compilacion/docs/resolucion_mtra_0312_2019.htm",
+     "seccionQueLoCubre": "prisma/seed/estandares.ts",
+     "estado": "cumple",
+     "detalle": "Suma = 100; 7 y 21 ítems. La tabla es una imagen en el texto oficial: los valores por ítem no se pudieron cotejar uno a uno.",
+     "confianza": "media"
+    },
+    {
+     "id": "EVAL-R4",
+     "requisito": "'No aplica' solo previsto para empresas de menos de 50 trabajadores riesgo I-III, con justificación",
+     "norma": "RES-0312-2019",
+     "articulo": "art. 27",
+     "fuente": "https://normograma.mintic.gov.co/mintic/compilacion/docs/resolucion_mtra_0312_2019.htm",
+     "seccionQueLoCubre": "cerrarEvaluacion()",
+     "estado": "parcial",
+     "detalle": "Se exige justificación (bien), pero el código da puntaje completo a 'No aplica' también en nivel 60, caso que el art. 27 no prevé. Para nivel 7/21 el problema es el contrario (EVAL-R1).",
+     "confianza": "media"
+    },
+    {
+     "id": "EVAL-R5",
+     "requisito": "Valoración: <60 crítico; 60-85 moderadamente aceptable; >85 aceptable, con sus acciones",
+     "norma": "RES-0312-2019",
+     "articulo": "art. 28",
+     "fuente": "https://normograma.mintic.gov.co/mintic/compilacion/docs/resolucion_mtra_0312_2019.htm",
+     "seccionQueLoCubre": "valorar()",
+     "estado": "cumple",
+     "detalle": "Umbrales y textos correctos.",
+     "confianza": "alta"
+    },
+    {
+     "id": "EVAL-R6",
+     "requisito": "Formato de la tabla de valores: ciclo, estándar, ítem, valor, calificación (cumple totalmente / no cumple / no aplica con justificación), total",
+     "norma": "RES-0312-2019",
+     "articulo": "art. 27",
+     "fuente": "https://normograma.mintic.gov.co/mintic/compilacion/docs/resolucion_mtra_0312_2019.htm",
+     "seccionQueLoCubre": "evaluacionXlsx()",
+     "estado": "parcial",
+     "detalle": "El Excel no trae ciclo PHVA, grupo/subgrupo con su peso, ni columna 'No aplica' con justificación: exporta i.observacion y no el campo justificacion. En nivel 7/21 omite los ítems no aplicables con su valor máximo. Sin espacio de firma ni fecha de la autoevaluación.",
+     "confianza": "alta"
+    },
+    {
+     "id": "EVAL-R7",
+     "requisito": "Autoevaluación anual en diciembre; plan de mejora; plan anual desde el 1 de enero",
+     "norma": "RES-0312-2019",
+     "articulo": "art. 26",
+     "fuente": "https://normograma.mintic.gov.co/mintic/compilacion/docs/resolucion_mtra_0312_2019.htm",
+     "seccionQueLoCubre": "src/lib/plan/generar.ts; src/lib/planeador.ts",
+     "estado": "parcial",
+     "detalle": "El plan anual la pone en diciembre (bien), pero el planeador la programa a 12 meses de la última y cita arts. 27-28. No hay tareas para el reporte de avance a la ARL a los 3/6 meses, el avance de julio ni el registro hasta el 31-jul.",
+     "confianza": "alta"
+    },
+    {
+     "id": "EVAL-R8",
+     "requisito": "Registro de la autoevaluación y del plan en la plataforma del MinTrabajo y copia a la ARL",
+     "norma": "CIR-027-2026",
+     "articulo": "num. 1-2; Res. 0312 art. 28 par. 1-2",
+     "fuente": "https://normograma.mintic.gov.co/mintic/compilacion/docs/circular_mintra_0027_2026.htm",
+     "seccionQueLoCubre": null,
+     "estado": "falta",
+     "detalle": "El Excel no está pensado para ese registro ni recuerda el plazo; ninguna tarea lo recuerda.",
+     "confianza": "alta"
+    }
+   ],
+   "citasIncorrectas": [],
+   "sinSustento": []
+  },
+  {
+   "codigo": "INF-AUD",
+   "nombre": "Informe de auditoría interna (src/lib/auditoria.ts, src/lib/informe-auditoria.ts)",
+   "normasCitadas": [
+    "DEC-1072-2015",
+    "RES-0312-2019"
+   ],
+   "requisitos": [
+    {
+     "id": "AUD-R1",
+     "requisito": "Alcance mínimo de los 13 aspectos",
+     "norma": "DEC-1072-2015",
+     "articulo": "art. 2.2.4.6.30 num. 1-13",
+     "fuente": "https://normativa.colpensiones.gov.co/colpensiones/docs/decreto_1072_2015_pr009.htm",
+     "seccionQueLoCubre": "ASPECTOS / ## Resultados por aspecto",
+     "estado": "cumple",
+     "detalle": "Los 13 en orden, con criterio, estándares y evidencia del sistema.",
+     "confianza": "alta"
+    },
+    {
+     "id": "AUD-R2",
+     "requisito": "Planificada con el COPASST o Vigía",
+     "norma": "DEC-1072-2015",
+     "articulo": "art. 2.2.4.6.29",
+     "fuente": "https://normativa.colpensiones.gov.co/colpensiones/docs/decreto_1072_2015_pr009.htm",
+     "seccionQueLoCubre": "Datos: 'Planificada con'",
+     "estado": "parcial",
+     "detalle": "Campo libre que puede quedar en '______'; no se valida ni lo firma el COPASST/Vigía.",
+     "confianza": "alta"
+    },
+    {
+     "id": "AUD-R3",
+     "requisito": "Auditor independiente del área auditada, que no audite su propio trabajo; competencia definida",
+     "norma": "DEC-1072-2015",
+     "articulo": "art. 2.2.4.6.29 y par.",
+     "fuente": "https://normativa.colpensiones.gov.co/colpensiones/docs/decreto_1072_2015_pr009.htm",
+     "seccionQueLoCubre": "Datos: Auditor / perfil",
+     "estado": "parcial",
+     "detalle": "Registra auditor y perfil, pero no hay declaración de independencia; nada impide que el responsable del SG-SST audite su propio trabajo.",
+     "confianza": "alta"
+    },
+    {
+     "id": "AUD-R4",
+     "requisito": "Tener en cuenta los resultados de auditorías previas",
+     "norma": "DEC-1072-2015",
+     "articulo": "art. 2.2.4.6.29 par.",
+     "fuente": "https://normativa.colpensiones.gov.co/colpensiones/docs/decreto_1072_2015_pr009.htm",
+     "seccionQueLoCubre": "aspecto 12 (evidencia)",
+     "estado": "parcial",
+     "detalle": "Solo muestra la fecha de la auditoría anterior; no trae sus no conformidades ni el cierre de sus acciones.",
+     "confianza": "alta"
+    },
+    {
+     "id": "AUD-R5",
+     "requisito": "Comunicar los resultados a los responsables de las medidas preventivas, correctivas o de mejora",
+     "norma": "DEC-1072-2015",
+     "articulo": "art. 2.2.4.6.29",
+     "fuente": "https://normativa.colpensiones.gov.co/colpensiones/docs/decreto_1072_2015_pr009.htm",
+     "seccionQueLoCubre": "## Conclusiones",
+     "estado": "parcial",
+     "detalle": "Solo lo declara; no registra a quién ni cuándo se comunicó.",
+     "confianza": "alta"
+    },
+    {
+     "id": "AUD-R6",
+     "requisito": "Acciones con causa, responsable y fecha, registradas como correctivas",
+     "norma": "DEC-1072-2015",
+     "articulo": "art. 2.2.4.6.33",
+     "fuente": "https://normativa.colpensiones.gov.co/colpensiones/docs/decreto_1072_2015_pr009.htm",
+     "seccionQueLoCubre": "## Acciones correctivas y de mejora",
+     "estado": "parcial",
+     "detalle": "La tabla del informe no muestra la causa raíz (sí se captura en item.accion.causa).",
+     "confianza": "alta"
+    },
+    {
+     "id": "AUD-R7",
+     "requisito": "Auditoría anual (estándares 6.1.2 y 6.1.4)",
+     "norma": "RES-0312-2019",
+     "articulo": "art. 16 est. 6.1.2, 6.1.4",
+     "fuente": "https://normograma.mintic.gov.co/mintic/compilacion/docs/resolucion_mtra_0312_2019.htm",
+     "seccionQueLoCubre": "## Objetivo y alcance",
+     "estado": "cumple",
+     "detalle": "",
+     "confianza": "alta"
+    }
+   ],
+   "citasIncorrectas": [],
+   "sinSustento": [
+    {
+     "texto": "Porcentaje de conformidad",
+     "problema": "Indicador propio, no normativo; aceptable si no se presenta como calificación legal."
+    }
+   ]
+  },
+  {
+   "codigo": "INF-DIAG",
+   "nombre": "Informe de diagnóstico inicial (src/lib/diagnostico.ts, src/lib/informe-diagnostico.ts)",
+   "normasCitadas": [
+    "RES-0312-2019",
+    "DEC-1072-2015"
+   ],
+   "requisitos": [
+    {
+     "id": "DIAG-R1",
+     "requisito": "Puntaje con la tabla de valores; no aplica = valor máximo para menos de 50 trabajadores riesgo I-III",
+     "norma": "RES-0312-2019",
+     "articulo": "art. 27",
+     "fuente": "https://normograma.mintic.gov.co/mintic/compilacion/docs/resolucion_mtra_0312_2019.htm",
+     "seccionQueLoCubre": "## Resultado general",
+     "estado": "falta",
+     "detalle": "Usa calificar(): el mismo error de normalización que EVAL-R1 en nivel 7/21. El porcentaje por ciclo PHVA también se normaliza y no es una métrica de la norma (es válido como apoyo).",
+     "confianza": "alta"
+    },
+    {
+     "id": "DIAG-R2",
+     "requisito": "Valoración y acción según el resultado",
+     "norma": "RES-0312-2019",
+     "articulo": "art. 28",
+     "fuente": "https://normograma.mintic.gov.co/mintic/compilacion/docs/resolucion_mtra_0312_2019.htm",
+     "seccionQueLoCubre": "## Resultado general / ## Ruta",
+     "estado": "cumple",
+     "detalle": "Usa valorar(); la frase final solo cubre el caso crítico; el moderado (6 meses) sale en 'Qué implica'.",
+     "confianza": "alta"
+    },
+    {
+     "id": "DIAG-R3",
+     "requisito": "La evaluación inicial cubre los 8 aspectos y analiza estadísticas de 2 años",
+     "norma": "DEC-1072-2015",
+     "articulo": "art. 2.2.4.6.16 num. 1-8 y par. 1",
+     "fuente": "https://normativa.colpensiones.gov.co/colpensiones/docs/decreto_1072_2015_pr009.htm",
+     "seccionQueLoCubre": "## Objetivo y metodología",
+     "estado": "parcial",
+     "detalle": "Se presenta como 'evaluación inicial, art. 2.2.4.6.16' pero solo califica estándares; no reporta normatividad, matriz, vulnerabilidad, PVE, sociodemografía, estadísticas ni indicadores.",
+     "confianza": "alta"
+    },
+    {
+     "id": "DIAG-R4",
+     "requisito": "Realizada por el responsable del SG-SST o persona externa con licencia en SST",
+     "norma": "RES-0312-2019",
+     "articulo": "art. 16 est. 2.3.1",
+     "fuente": "https://normograma.mintic.gov.co/mintic/compilacion/docs/resolucion_mtra_0312_2019.htm",
+     "seccionQueLoCubre": "firma",
+     "estado": "parcial",
+     "detalle": "La licencia solo aparece si está registrada en la consultora; no se exige.",
+     "confianza": "alta"
+    },
+    {
+     "id": "DIAG-R5",
+     "requisito": "Contar a todos los trabajadores, sea cual sea su vinculación",
+     "norma": "RES-0312-2019",
+     "articulo": "art. 23 / art. 30 num. 1",
+     "fuente": "https://normograma.mintic.gov.co/mintic/compilacion/docs/resolucion_mtra_0312_2019.htm",
+     "seccionQueLoCubre": "Datos: Trabajadores",
+     "estado": "parcial",
+     "detalle": "Muestra planta + en misión, sin contratistas (decisión pendiente en docs/09 §5.1).",
+     "confianza": "media"
+    }
+   ],
+   "citasIncorrectas": [
+    {
+     "texto": "cada estándar que se cumple o no aplica (justificado) suma su peso",
+     "problema": "Correcto como frase, pero el cálculo real normaliza sobre los ítems aplicables y no da el valor máximo a los ítems que no aplican (art. 27).",
+     "correccion": "Calcular 100 − Σ(valor de ítems aplicables no cumplidos), o mostrar los 60 ítems con los no aplicables al máximo."
+    }
+   ],
+   "sinSustento": [
+    {
+     "texto": "Ruta de implementación: Mes 1 / Meses 2 y 3 / Meses 3 y 4",
+     "problema": "Plazos propuestos por la consultora, sin norma; solo el reporte a la ARL a los 3 o 6 meses es normativo."
+    }
+   ]
+  },
+  {
+   "codigo": "IND-0312",
+   "nombre": "Indicadores mínimos (src/lib/indicadores/index.ts) — estándares 3.3.1 a 3.3.6",
+   "normasCitadas": [
+    "RES-0312-2019",
+    "DEC-1072-2015"
+   ],
+   "requisitos": [
+    {
+     "id": "IND-R1",
+     "requisito": "Frecuencia = (N.º AT en el mes / N.º trabajadores en el mes) × 100, mensual",
+     "norma": "RES-0312-2019",
+     "articulo": "art. 30",
+     "fuente": "https://normograma.mintic.gov.co/mintic/compilacion/docs/resolucion_mtra_0312_2019.htm",
+     "seccionQueLoCubre": "calcularMensuales().frecuencia",
+     "estado": "cumple",
+     "detalle": "Fórmula correcta. Ver IND-R7 sobre el denominador.",
+     "confianza": "alta"
+    },
+    {
+     "id": "IND-R2",
+     "requisito": "Severidad = ((días de incapacidad por AT en el mes + días cargados en el mes) / N.º trabajadores en el mes) × 100, mensual",
+     "norma": "RES-0312-2019",
+     "articulo": "art. 30",
+     "fuente": "https://normograma.mintic.gov.co/mintic/compilacion/docs/resolucion_mtra_0312_2019.htm",
+     "seccionQueLoCubre": "calcularMensuales().severidad",
+     "estado": "parcial",
+     "detalle": "El cálculo es correcto, pero el texto de la fórmula pone mal los paréntesis: '(días AT + días cargados / trabajadores) × 100'. Además, todos los días de una incapacidad se cargan al mes del accidente, aunque abarque varios meses (la norma no lo regula).",
+     "confianza": "alta"
+    },
+    {
+     "id": "IND-R3",
+     "requisito": "Proporción de AT mortales = (AT mortales en el año / total AT en el año) × 100, anual",
+     "norma": "RES-0312-2019",
+     "articulo": "art. 30",
+     "fuente": "https://normograma.mintic.gov.co/mintic/compilacion/docs/resolucion_mtra_0312_2019.htm",
+     "seccionQueLoCubre": "calcularAnuales().mortalidad",
+     "estado": "cumple",
+     "detalle": "Devuelve 0 si no hubo AT (debería ser 'sin dato'). Usa el campo mortal, independiente de gravedad='mortal' (posible inconsistencia).",
+     "confianza": "alta"
+    },
+    {
+     "id": "IND-R4",
+     "requisito": "Prevalencia = (casos nuevos y antiguos de EL en el periodo / promedio de trabajadores en el periodo) × 100.000, anual",
+     "norma": "RES-0312-2019",
+     "articulo": "art. 30",
+     "fuente": "https://normograma.mintic.gov.co/mintic/compilacion/docs/resolucion_mtra_0312_2019.htm",
+     "seccionQueLoCubre": "calcularAnuales().prevalencia",
+     "estado": "falta",
+     "detalle": "ERROR DE FÓRMULA. Solo cuenta eventos EL con fecha dentro del año (el.length), así que deja fuera los casos antiguos de años anteriores que siguen vigentes; en la práctica calcula una incidencia. Tampoco filtra que la EL esté calificada como laboral (la norma cuenta enfermedades calificadas).",
+     "confianza": "alta"
+    },
+    {
+     "id": "IND-R5",
+     "requisito": "Incidencia = (casos nuevos de EL en el periodo / promedio de trabajadores en el periodo) × 100.000, anual",
+     "norma": "RES-0312-2019",
+     "articulo": "art. 30",
+     "fuente": "https://normograma.mintic.gov.co/mintic/compilacion/docs/resolucion_mtra_0312_2019.htm",
+     "seccionQueLoCubre": "calcularAnuales().incidencia",
+     "estado": "cumple",
+     "detalle": "Correcta. No verifica que la EL esté calificada como laboral (no hay campo).",
+     "confianza": "media"
+    },
+    {
+     "id": "IND-R6",
+     "requisito": "Ausentismo = (días de ausencia por incapacidad laboral o común en el mes / días de trabajo programados en el mes) × 100, con días programados = días programados por la empresa × N.º trabajadores",
+     "norma": "RES-0312-2019",
+     "articulo": "art. 30",
+     "fuente": "https://normograma.mintic.gov.co/mintic/compilacion/docs/resolucion_mtra_0312_2019.htm",
+     "seccionQueLoCubre": "calcularMensuales().ausentismo",
+     "estado": "parcial",
+     "detalle": "Si no se registran días programados usa n × 24, una suposición sin base normativa que no se marca como estimada. Atribuye toda la incapacidad al mes del evento.",
+     "confianza": "alta"
+    },
+    {
+     "id": "IND-R7",
+     "requisito": "Incluir en los indicadores a todos los trabajadores: dependientes, independientes, en misión, cooperados, estudiantes y cualquier vinculación",
+     "norma": "RES-0312-2019",
+     "articulo": "art. 30 num. 1",
+     "fuente": "https://normograma.mintic.gov.co/mintic/compilacion/docs/resolucion_mtra_0312_2019.htm",
+     "seccionQueLoCubre": "base = nTrabajadoresPlanta + nEnMision",
+     "estado": "parcial",
+     "detalle": "El denominador por defecto excluye contratistas e independientes, pero el numerador cuenta eventos de todos (vinculacion contratista, aprendiz, incluso visitante). Así se inflan los índices. Además, un AT de visitante no debería contar.",
+     "confianza": "alta"
+    },
+    {
+     "id": "IND-R8",
+     "requisito": "Reportar y contar en los indicadores toda incapacidad de 1 día o más",
+     "norma": "RES-0312-2019",
+     "articulo": "art. 30 num. 5",
+     "fuente": "https://normograma.mintic.gov.co/mintic/compilacion/docs/resolucion_mtra_0312_2019.htm",
+     "seccionQueLoCubre": null,
+     "estado": "cumple",
+     "detalle": "Los eventos se cuentan sin umbral mínimo de días.",
+     "confianza": "alta"
+    },
+    {
+     "id": "IND-R9",
+     "requisito": "Ficha técnica con definición, interpretación, límite, método de cálculo, fuente, periodicidad y quién debe conocer el resultado",
+     "norma": "DEC-1072-2015",
+     "articulo": "art. 2.2.4.6.19",
+     "fuente": "https://normativa.colpensiones.gov.co/colpensiones/docs/decreto_1072_2015_pr009.htm",
+     "seccionQueLoCubre": "INDICADORES[]",
+     "estado": "cumple",
+     "detalle": "Todos los campos presentes (meta = límite).",
+     "confianza": "alta"
+    },
+    {
+     "id": "IND-R10",
+     "requisito": "Interpretación por cada 100 trabajadores (frecuencia, severidad) y por 100.000 (EL)",
+     "norma": "RES-0312-2019",
+     "articulo": "art. 30",
+     "fuente": "https://normograma.mintic.gov.co/mintic/compilacion/docs/resolucion_mtra_0312_2019.htm",
+     "seccionQueLoCubre": "src/lib/informe-gestion.ts",
+     "estado": "parcial",
+     "detalle": "El informe de gestión rotula frecuencia y severidad como '(%)'; son tasas por 100 trabajadores (severidad en días), no porcentajes.",
+     "confianza": "alta"
+    }
+   ],
+   "citasIncorrectas": [
+    {
+     "texto": "formula: \"(N.º de días de incapacidad por AT en el mes + N.º de días cargados en el mes / N.º de trabajadores en el mes) × 100\"",
+     "problema": "Paréntesis mal puestos: así leída, solo los días cargados se dividen por trabajadores.",
+     "correccion": "((N.º de días de incapacidad por AT en el mes + N.º de días cargados en el mes) / N.º de trabajadores en el mes) × 100"
+    }
+   ],
+   "sinSustento": [
+    {
+     "texto": "diasProgramados por defecto = trabajadores × 24",
+     "problema": "Supuesto sin norma; el art. 30 define días programados = días de trabajo programados por la empresa × trabajadores. Pedir el dato o marcarlo como estimado."
+    }
+   ]
+  }
+ ],
+ "normasFaltantesCatalogo": [],
+ "estandaresSinArtefacto": [
+  {
+   "estandar": "3.3.1-3.3.6",
+   "propuesta": "Ficha e informe anual de indicadores mínimos (art. 30) generado desde src/lib/indicadores, con las 6 fórmulas, la serie mensual y el registro anual; hoy solo existe la pantalla de Indicadores y el informe mensual de gestión, sin plantilla con código/normas."
+  },
+  {
+   "estandar": "2.3.1 (empresas de 7 y 21)",
+   "propuesta": "Ninguno: el estándar es solo de nivel 60; DOC-05 ya aplica a todos por el Decreto 1072 art. 2.2.4.6.16."
+  },
+  {
+   "estandar": "6.1.3 (empresas de 7 estándares)",
+   "propuesta": "ACT-06 debería generarse para todo nivel: el art. 2.2.4.6.31 dice 'independiente del tamaño de la empresa'."
+  }
+ ],
+ "notas": "Textos oficiales leídos: Decreto 1072/2015 cap. 6 (Colpensiones pr009), arts. 2.2.4.6.11, .13, .16, .19-.22, .29-.34; Res. 0312/2019 (normograma MinTIC), arts. 25-30 (la tabla de valores del art. 27 es una imagen: los valores por ítem no se cotejaron uno a uno, solo que suman 100); Circular 027/2026 (normograma MinTIC). El art. 26 no exige firmas en la autoevaluación. Ninguna plantilla de este frente cita normas derogadas ni pide diagnósticos médicos. El hallazgo más grave es el cálculo del puntaje para nivel 7 y 21 (EVAL-R1/DIAG-R1), que cambia la valoración y los plazos de reporte. Le sigue la prevalencia, que no incluye casos antiguos. La extensión de PRG-10 (auditoría) a niveles 7/21 queda a decisión de la consultora (confianza media); la de ACT-06 la exige el texto expreso."
+}

@@ -1,17 +1,20 @@
 // Calificación de estándares mínimos — Resolución 0312 de 2019, arts. 27 y 28.
-// "No aplica" justificado otorga el puntaje máximo del ítem (art. 27).
+// Art. 27: los ítems que no aplican reciben el porcentaje máximo. Para las empresas de menos de 50 trabajadores
+// con riesgo I, II o III (7 y 21 estándares) los ítems que no les corresponden también son "no aplica", así que
+// el puntaje es 100 menos lo que se deja de cumplir en los ítems que sí les aplican.
 export type ItemEval = { codigo: string; puntaje: number; estado: string };
 
 export function calificar(items: ItemEval[], nivel: number) {
-  const aplicables = items;
-  const maximo = aplicables.reduce((s, i) => s + i.puntaje, 0);
-  const obtenido = aplicables.reduce((s, i) => s + (i.estado === "CUMPLE" || i.estado === "NO_APLICA" ? i.puntaje : 0), 0);
-  // Para nivel 60 el máximo es 100. Para 7/21 se normaliza sobre el máximo de los ítems aplicables.
+  const maximo = items.reduce((s, i) => s + i.puntaje, 0);
+  const obtenido = items.reduce((s, i) => s + (i.estado === "CUMPLE" || i.estado === "NO_APLICA" ? i.puntaje : 0), 0);
+  const perdido = maximo - obtenido;
+  // Puntos de los ítems evaluados (sin los que no le corresponden al nivel).
   const puntajeBruto = Math.round(obtenido * 100) / 100;
-  const puntajeAjustado = maximo ? Math.round((obtenido / maximo) * 10000) / 100 : 0;
+  // Puntaje del art. 27 sobre 100: los ítems que no le corresponden al nivel suman su máximo.
+  const puntajeAjustado = items.length ? Math.round((100 - perdido) * 100) / 100 : 0;
   const puntaje = nivel === 60 ? puntajeBruto : puntajeAjustado;
   const pendientes = items.filter((i) => i.estado === "PENDIENTE").length;
-  return { puntajeBruto, puntajeAjustado, puntaje, maximo, obtenido, pendientes, ...valorar(puntaje) };
+  return { puntajeBruto, puntajeAjustado, puntaje, maximo, obtenido, noAplicanPorNivel: Math.round((100 - maximo) * 100) / 100, pendientes, ...valorar(puntaje) };
 }
 
 export function valorar(p: number) {

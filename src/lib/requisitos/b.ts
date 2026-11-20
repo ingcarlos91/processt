@@ -1,0 +1,78 @@
+// Frente B — Evaluación, verificación y mejora. Verificado contra el texto oficial del Decreto 1072/2015 cap. 6,
+// la Res. 0312/2019 (arts. 16, 26-28 y 30) y la Circular 027/2026. Ver docs/requisitos/B-verificacion.json.
+import type { Requisito } from "./index";
+
+const D = "DEC-1072-2015", R = "RES-0312-2019", C = "CIR-027-2026";
+
+export const REQUISITOS_B: Record<string, Requisito[]> = {
+  "DOC-05": [
+    { id: "DOC-05-R1", texto: "Identificar la normatividad vigente en riesgos laborales, incluidos los estándares mínimos.", norma: D, articulo: "art. 2.2.4.6.16 num. 1", seccion: "Aspectos evaluados (art. 2.2.4.6.16)", clave: "normatividad vigente" },
+    { id: "DOC-05-R2", texto: "Verificar la identificación de peligros y valoración de riesgos, actualizada cada año.", norma: D, articulo: "art. 2.2.4.6.16 num. 2", seccion: "Aspectos evaluados (art. 2.2.4.6.16)", clave: "peligros" },
+    { id: "DOC-05-R3", texto: "Identificar las amenazas y evaluar la vulnerabilidad cada año.", norma: D, articulo: "art. 2.2.4.6.16 num. 3", seccion: "Aspectos evaluados (art. 2.2.4.6.16)", clave: "vulnerabilidad" },
+    { id: "DOC-05-R4", texto: "Evaluar la efectividad de las medidas de control, incluidos los reportes de los trabajadores.", norma: D, articulo: "art. 2.2.4.6.16 num. 4", seccion: "Aspectos evaluados (art. 2.2.4.6.16)", clave: "efectividad de las medidas" },
+    { id: "DOC-05-R5", texto: "Verificar el cumplimiento del programa de capacitación anual, con inducción y reinducción para todos los trabajadores.", norma: D, articulo: "art. 2.2.4.6.16 num. 5", seccion: "Aspectos evaluados (art. 2.2.4.6.16)", clave: "capacitacion anual" },
+    { id: "DOC-05-R6", texto: "Evaluar los puestos de trabajo dentro de los programas de vigilancia epidemiológica.", norma: D, articulo: "art. 2.2.4.6.16 num. 6", seccion: "Aspectos evaluados (art. 2.2.4.6.16)", clave: "vigilancia epidemiologica" },
+    { id: "DOC-05-R7", texto: "Hacer la descripción sociodemográfica y el diagnóstico de condiciones de salud.", norma: D, articulo: "art. 2.2.4.6.16 num. 7", seccion: "Aspectos evaluados (art. 2.2.4.6.16)", clave: "sociodemografica" },
+    { id: "DOC-05-R8", texto: "Registrar y hacer seguimiento a los indicadores del año inmediatamente anterior.", norma: D, articulo: "art. 2.2.4.6.16 num. 8", seccion: "Aspectos evaluados (art. 2.2.4.6.16)", clave: "ano inmediatamente anterior" },
+    { id: "DOC-05-R9", texto: "Analizar las estadísticas de enfermedad y accidentalidad de los dos últimos años como línea base.", norma: D, articulo: "art. 2.2.4.6.16 par. 1", seccion: "Estadísticas de accidentalidad y enfermedad laboral", clave: "dos ultimos anos" },
+    { id: "DOC-05-R10", texto: "Documentar la evaluación y usarla como base para la planificación del SG-SST.", norma: D, articulo: "art. 2.2.4.6.16 par. 2", seccion: "Conclusión", clave: "plan anual" },
+    { id: "DOC-05-R11", texto: "Contar con mecanismos de autorreporte de condiciones de trabajo y salud y usarlos como insumo.", norma: D, articulo: "art. 2.2.4.6.16 par. 3", seccion: "Autorreporte de condiciones de trabajo y salud", clave: "reportar" },
+    { id: "DOC-05-R12", texto: "La evaluación la hace el responsable del SG-SST o una persona externa con licencia en SST.", norma: R, articulo: "art. 16, estándar 2.3.1", seccion: "Objetivo", clave: "licencia" },
+    { id: "DOC-05-R13", texto: "Calificar con la tabla de valores; para menos de 50 trabajadores con riesgo I-III, los ítems que no aplican reciben el valor máximo.", norma: R, articulo: "art. 27", seccion: "Resultado de la tabla de valores", clave: "no aplica" },
+    { id: "DOC-05-R14", texto: "Valoración crítica (<60 %), moderadamente aceptable (60-85 %) o aceptable (>85 %), con su acción.", norma: R, articulo: "art. 28", seccion: "Resultado de la tabla de valores", clave: "valoracion" },
+  ],
+  "PLN-02": [
+    { id: "PLN-02-R1", texto: "El plan tiene actividades concretas, responsables, plazos, recursos y evidencias de efectividad.", norma: R, articulo: "art. 28", seccion: "Acciones de mejora", clave: "evidencia de efectividad" },
+    { id: "PLN-02-R2", texto: "Valoración crítica: plan de inmediato y reporte de avances a la ARL en máximo 3 meses.", norma: R, articulo: "art. 28", seccion: "Resultado de la evaluación", clave: "tres \\(3\\) meses" },
+    { id: "PLN-02-R3", texto: "Valoración moderadamente aceptable: reporte de avances a la ARL en máximo 6 meses.", norma: R, articulo: "art. 28", seccion: "Resultado de la evaluación", clave: "seis \\(6\\) meses" },
+    { id: "PLN-02-R4", texto: "Valoración aceptable: mantener la calificación y las evidencias a disposición del Ministerio e incluir las mejoras en el plan anual.", norma: R, articulo: "art. 28", seccion: "Resultado de la evaluación", clave: "a disposicion del ministerio" },
+    { id: "PLN-02-R5", texto: "Autoevaluación en diciembre; plan de mejora aprobado dentro del plan anual, que se ejecuta desde el 1 de enero.", norma: R, articulo: "art. 26", seccion: "Seguimiento y reporte", clave: "diciembre" },
+    { id: "PLN-02-R6", texto: "Enviar copia de la autoevaluación y del plan de mejoramiento a la ARL.", norma: R, articulo: "art. 28 par. 1", seccion: "Seguimiento y reporte", clave: "copia a la arl" },
+    { id: "PLN-02-R7", texto: "Registrar la autoevaluación y el plan en la aplicación del Fondo de Riesgos Laborales, hasta el 31 de julio de 2026 para la vigencia 2025.", norma: C, articulo: "nums. 1-2 (Res. 0312 art. 28 par. 2)", seccion: "Seguimiento y reporte", clave: "31 de julio" },
+    { id: "PLN-02-R8", texto: "Presentar el informe de avance en julio, con las recomendaciones de la ARL.", norma: R, articulo: "art. 28", seccion: "Seguimiento y reporte", clave: "informe de avance" },
+  ],
+  "PRG-10": [
+    { id: "PRG-10-R1", texto: "Auditoría de cumplimiento al menos una vez al año, para todo empleador.", norma: D, articulo: "art. 2.2.4.6.29", seccion: "Planificación", clave: "una vez al ano" },
+    { id: "PRG-10-R2", texto: "La auditoría se planifica con la participación del COPASST o Vigía.", norma: D, articulo: "art. 2.2.4.6.29", seccion: "Planificación", clave: "se planifica con" },
+    { id: "PRG-10-R3", texto: "Si el auditor es interno, debe ser independiente de lo auditado y no auditar su propio trabajo.", norma: D, articulo: "art. 2.2.4.6.29 y par.", seccion: "Planificación", clave: "independiente" },
+    { id: "PRG-10-R4", texto: "El programa define competencia del auditor, alcance, periodicidad, metodología e informes, y tiene en cuenta las auditorías previas.", norma: D, articulo: "art. 2.2.4.6.29 par.", seccion: "Planificación", clave: "auditorias previas" },
+    { id: "PRG-10-R5", texto: "La auditoría cubre como mínimo los 13 aspectos del alcance.", norma: D, articulo: "art. 2.2.4.6.30 nums. 1-13", seccion: "Alcance (art. 2.2.4.6.30)", clave: "evaluacion por parte de la alta direccion" },
+    { id: "PRG-10-R6", texto: "Los resultados se comunican a los responsables de las medidas preventivas, correctivas o de mejora.", norma: D, articulo: "art. 2.2.4.6.29", seccion: "Informe", clave: "se comunican" },
+    { id: "PRG-10-R7", texto: "Estándares 6.1.2 (auditoría anual) y 6.1.4 (planificada con el COPASST) para empresas de 60 estándares.", norma: R, articulo: "art. 16, estándares 6.1.2 y 6.1.4", seccion: "Objetivo", clave: "resolucion 0312" },
+  ],
+  "ACT-06": [
+    { id: "ACT-06-R1", texto: "Revisión por la alta dirección al menos una vez al año, cualquiera que sea el tamaño de la empresa.", norma: D, articulo: "art. 2.2.4.6.31", seccion: "Datos de la revisión", clave: "una vez al ano" },
+    { id: "ACT-06-R2", texto: "La revisión cubre los 24 aspectos del artículo.", norma: D, articulo: "art. 2.2.4.6.31 nums. 1-24", seccion: "Revisión (art. 2.2.4.6.31 del Decreto 1072 de 2015)", clave: "rehabilitacion" },
+    { id: "ACT-06-R3", texto: "Analizar los resultados de los indicadores y de las auditorías anteriores.", norma: D, articulo: "art. 2.2.4.6.31 num. 7", seccion: "Revisión (art. 2.2.4.6.31 del Decreto 1072 de 2015)", clave: "indicadores" },
+    { id: "ACT-06-R4", texto: "Identificar el ausentismo laboral por causas asociadas con SST (accidentes y enfermedades laborales).", norma: D, articulo: "art. 2.2.4.6.31 num. 21", seccion: "Revisión (art. 2.2.4.6.31 del Decreto 1072 de 2015)", clave: "enfermedad\\(es\\) laboral" },
+    { id: "ACT-06-R5", texto: "Revisar el cumplimiento del plan de trabajo anual y su cronograma.", norma: D, articulo: "art. 2.2.4.6.31 num. 2", seccion: "Revisión (art. 2.2.4.6.31 del Decreto 1072 de 2015)", clave: "plan de trabajo anual" },
+    { id: "ACT-06-R6", texto: "Documentar los resultados y divulgarlos al COPASST/Vigía y al responsable del SG-SST, quien define e implementa las acciones.", norma: D, articulo: "art. 2.2.4.6.31 par.", seccion: "Comunicación", clave: "responsable del sg-sst" },
+    { id: "ACT-06-R7", texto: "Estándar 6.1.3: revisión anual por la alta dirección, con resultados y alcance de la auditoría.", norma: R, articulo: "art. 16, estándar 6.1.3", seccion: "Revisión (art. 2.2.4.6.31 del Decreto 1072 de 2015)", clave: "auditoria" },
+  ],
+  "FOR-06": [
+    { id: "FOR-06-R1", texto: "Acciones basadas en la supervisión, la medición, las auditorías y la revisión por la dirección.", norma: D, articulo: "art. 2.2.4.6.33", seccion: "Registro", clave: "auditoria" },
+    { id: "FOR-06-R2", texto: "Identificar y analizar las causas fundamentales de las no conformidades.", norma: D, articulo: "art. 2.2.4.6.33 num. 1", seccion: "Instrucciones", clave: "causas fundamentales" },
+    { id: "FOR-06-R3", texto: "Adoptar, planificar, aplicar, comprobar la eficacia y documentar las medidas.", norma: D, articulo: "art. 2.2.4.6.33 num. 2", seccion: "Instrucciones", clave: "eficacia" },
+    { id: "FOR-06-R4", texto: "Evaluar y priorizar sin demora las medidas inadecuadas o que pueden dejar de ser eficaces.", norma: D, articulo: "art. 2.2.4.6.33 par. 1", seccion: "Instrucciones", clave: "sin demora" },
+    { id: "FOR-06-R5", texto: "Acciones documentadas, difundidas a los niveles pertinentes, con responsable y fecha de cumplimiento.", norma: D, articulo: "art. 2.2.4.6.33 par. 2", seccion: "Instrucciones", clave: "niveles pertinentes" },
+    { id: "FOR-06-R6", texto: "Implementar las acciones correctivas de autoridades administrativas y de la ARL.", norma: R, articulo: "art. 16, estándar 7.1.4", seccion: "Instrucciones", clave: "arl" },
+  ],
+  "PRG-01": [
+    { id: "PRG-01-R1", texto: "Definir los requisitos de conocimiento y práctica en SST que necesitan los trabajadores.", norma: D, articulo: "art. 2.2.4.6.11", seccion: "Necesidades de capacitación por cargo" },
+    { id: "PRG-01-R2", texto: "Programa de capacitación que llega a todos los niveles, incluidos contratistas, cooperados y trabajadores en misión.", norma: D, articulo: "art. 2.2.4.6.11", seccion: "Alcance", clave: "contratistas" },
+    { id: "PRG-01-R3", texto: "La capacitación la imparte personal idóneo.", norma: D, articulo: "art. 2.2.4.6.11", seccion: "Evaluación y registros", clave: "idoneo" },
+    { id: "PRG-01-R4", texto: "Revisar el programa mínimo una vez al año con el COPASST/Vigía y la alta dirección.", norma: D, articulo: "art. 2.2.4.6.11 par. 1", seccion: "Revisión", clave: "una vez al ano" },
+    { id: "PRG-01-R5", texto: "Inducción antes de iniciar labores, con aspectos generales y específicos y prevención de AT y EL.", norma: D, articulo: "art. 2.2.4.6.11 par. 2", seccion: "Inducción y reinducción", clave: "antes de iniciar labores" },
+    { id: "PRG-01-R6", texto: "Conservar los registros de capacitación al menos 20 años desde que termina la relación laboral.", norma: D, articulo: "art. 2.2.4.6.13", seccion: "Evaluación y registros", clave: "veinte \\(20\\) anos" },
+    { id: "PRG-01-R7", texto: "Programa anual de capacitación con soportes de ejecución e inducción y reinducción.", norma: R, articulo: "art. 16, estándares 1.2.1 y 1.2.2", seccion: "Ejecución" },
+  ],
+  "DOC-12": [
+    { id: "DOC-12-R1", texto: "Registro anual de frecuencia, severidad, mortalidad, prevalencia, incidencia y ausentismo.", norma: R, articulo: "art. 30", seccion: "Fórmulas (art. 30)", clave: "prevalencia" },
+    { id: "DOC-12-R2", texto: "Severidad = ((días de incapacidad por AT + días cargados) / trabajadores) × 100, mensual.", norma: R, articulo: "art. 30", seccion: "Fórmulas (art. 30)", clave: "dias cargados" },
+    { id: "DOC-12-R3", texto: "Prevalencia con casos nuevos y antiguos de enfermedad laboral por 100.000 trabajadores.", norma: R, articulo: "art. 30", seccion: "Fórmulas (art. 30)", clave: "nuevos y antiguos" },
+    { id: "DOC-12-R4", texto: "Días de trabajo programados = días programados por la empresa × número de trabajadores.", norma: R, articulo: "art. 30", seccion: "Fórmulas (art. 30)", clave: "dias de trabajo programados" },
+    { id: "DOC-12-R5", texto: "Incluir en los indicadores a todos los trabajadores, sea cual sea su vinculación.", norma: R, articulo: "art. 30 num. 1", seccion: "Población que se cuenta", clave: "independientes" },
+    { id: "DOC-12-R6", texto: "Reportar y contar toda incapacidad temporal de un día o más, sin desestimular el reporte.", norma: R, articulo: "art. 30 nums. 2, 3 y 5", seccion: "Población que se cuenta", clave: "un dia o mas" },
+    { id: "DOC-12-R7", texto: "Cada indicador cuenta con ficha técnica.", norma: D, articulo: "art. 2.2.4.6.19", seccion: "Análisis y acciones", clave: "ficha tecnica" },
+  ],
+};

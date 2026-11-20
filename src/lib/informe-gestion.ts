@@ -46,8 +46,8 @@ export async function informeGestion(empresaId: string, anio: number, mes: numbe
 
   // Accidentalidad
   const eventosMes = e.eventos.filter((x) => enMes(x.fecha));
-  const mensuales = calcularMensuales(e.eventos, e.trabajadoresMes, anio, e.nTrabajadoresPlanta + e.nEnMision);
-  const anuales = calcularAnuales(e.eventos, e.trabajadoresMes, anio, e.nTrabajadoresPlanta + e.nEnMision);
+  const mensuales = calcularMensuales(e.eventos, e.trabajadoresMes, anio, e.nTrabajadoresPlanta + e.nEnMision + e.nContratistas + e.nAprendices);
+  const anuales = calcularAnuales(e.eventos, e.trabajadoresMes, anio, e.nTrabajadoresPlanta + e.nEnMision + e.nContratistas + e.nAprendices);
   const m = mensuales[mes - 1];
 
   // Acciones

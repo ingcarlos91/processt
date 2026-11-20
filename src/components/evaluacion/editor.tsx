@@ -23,7 +23,7 @@ import * as A from "@/app/actions/sgsst";
 import { cn } from "@/lib/utils";
 
 type It = { id: string; codigo: string; ciclo: string; grupo: string; subgrupo: string; descripcion: string; puntaje: number; modo: string; soportes: ArchivoUI[]; estado: string; justificacion: string; observacion: string };
-type Cal = { puntaje: number; valoracion: string; accion: string; obtenido: number; maximo: number; pendientes: number };
+type Cal = { puntaje: number; valoracion: string; accion: string; obtenido: number; maximo: number; noAplicanPorNivel: number; pendientes: number };
 type Plan = { id: string; estandar: string; actividad: string; responsable: string; fecha: string; recursos: string; soporte: string; estado: string };
 
 const TONO: Record<string, "ok" | "warn" | "bad"> = { ACEPTABLE: "ok", "MODERADAMENTE ACEPTABLE": "warn", "CRÍTICO": "bad" };
@@ -79,7 +79,7 @@ export function EvaluacionEditor({ empresaId, nivel, evaluaciones, actual }: {
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <Stat label="Puntaje" porque={actual.nivel === 60 ? "Suma de los puntos de los ítems que cumplen o no aplican (con justificación). El total posible es 100." : `Suma de los puntos de los ítems que cumplen o no aplican, dividida entre los ${actual.cal.maximo} puntos posibles de los ${actual.items.length} ítems que aplican a este nivel, expresada en porcentaje. Los ítems sin evaluar cuentan como no cumplidos.`} normas={["Res. 0312/2019 art. 27"]} value={`${actual.cal.puntaje}%`} hint={actual.nivel === 60 ? "Sobre 100 puntos" : `Ajustado a los ${actual.items.length} ítems aplicables (${actual.cal.obtenido} de ${actual.cal.maximo})`} tone={TONO[actual.cal.valoracion]} />
+        <Stat label="Puntaje" porque={actual.nivel === 60 ? "Suma de los puntos de los ítems que cumplen o no aplican (con justificación). El total posible es 100." : `Los ${actual.items.length} ítems de este nivel suman ${actual.cal.maximo} puntos; los demás ítems no le corresponden a la empresa y reciben su porcentaje máximo (Res. 0312/2019 art. 27). Puntaje = 100 menos los puntos de los ítems que no cumple. Los ítems sin evaluar cuentan como no cumplidos.`} normas={["Res. 0312/2019 art. 27"]} value={`${actual.cal.puntaje}%`} hint={actual.nivel === 60 ? "Sobre 100 puntos" : `Sobre 100: ${actual.cal.obtenido} de ${actual.cal.maximo} puntos de los ${actual.items.length} ítems del nivel, más ${actual.cal.noAplicanPorNivel} de los que no le corresponden (art. 27)`} tone={TONO[actual.cal.valoracion]} />
         <Stat label="Valoración" porque="Menos de 60 %: crítico. Entre 60 % y 85 %: moderadamente aceptable. Más de 85 %: aceptable. Cada valoración trae acciones obligatorias distintas." normas={["Res. 0312/2019 art. 28"]} value={<span className="text-lg">{actual.cal.valoracion}</span>} tone={TONO[actual.cal.valoracion]} />
         <Stat label="Ítems evaluados" value={`${evaluados} / ${actual.items.length}`} hint={<Progress value={(evaluados / actual.items.length) * 100} className="w-full" />} />
         <Stat label="Estado" value={actual.cerrada ? "Cerrada" : "En curso"} hint={actual.tipo === "inicial" ? "Evaluación inicial" : `Autoevaluación ${actual.anio}`} />

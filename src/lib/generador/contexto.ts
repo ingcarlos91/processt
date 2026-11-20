@@ -1,4 +1,5 @@
 import { abrevDoc, docTexto, RE_DOC } from "@/lib/documento-identidad";
+import { CONCEPTOS_APTITUD } from "@/lib/examenes";
 import { ROLES_EQUIPO, TIPO_ACCIDENTE, rolesExigidos, type Integrante } from "@/lib/eventos";
 import { db, consultoraActual } from "@/lib/db";
 import { evaluarEmpresa, composicionCopasst, type ResultadoReglas } from "@/lib/reglas/motor";
@@ -471,7 +472,7 @@ export async function contextoEvento(eventoId: string) {
 
 
 const TIPO_EXAMEN: Record<string, string> = { ingreso: "Ingreso", periodico: "Periódico", retiro: "Retiro", post_incapacidad: "Post incapacidad", cambio_ocupacion: "Cambio de ocupación" };
-const CONCEPTO: Record<string, string> = { apto: "Apto", apto_restricciones: "Apto con restricciones", aplazado: "Aplazado", no_apto: "No apto" };
+const CONCEPTO: Record<string, string> = CONCEPTOS_APTITUD;
 
 /** Trabajadores, exámenes (solo conceptos), entregas de EPP, capacitaciones y perfil sociodemográfico consolidado. */
 export async function contextoNomina(empresaId: string) {

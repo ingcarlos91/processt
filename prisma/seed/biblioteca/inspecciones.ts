@@ -28,8 +28,8 @@ export const listas: { nombre: string; descripcion: string; frecuenciaDias: numb
     "Guardián para cortopunzantes en cada punto de uso, rotulado, rígido y con menos de 3/4 de su capacidad", "No se reencapsulan agujas ni se manipulan cortopunzantes con la mano",
     "Lavado de instrumental con guantes gruesos (de caucho o nitrilo) y cepillo de mango largo", "Uso de EPP según el procedimiento: guantes, tapabocas o respirador, gafas o careta y bata",
     "Lavamanos con jabón, toallas desechables y protocolo de higiene de manos visible", "Superficies y equipos limpiados y desinfectados según el protocolo",
-    "Residuos separados en recipientes con bolsa del color definido en el PGIRASA y rotulados", "Almacenamiento central de residuos señalizado, con acceso restringido y registro de entrega al gestor",
-    "Protocolo de atención de la exposición a riesgo biológico conocido por el personal (lavado, reporte inmediato, valoración médica)", "Trabajadores expuestos con esquema de vacunación registrado (hepatitis B, tétanos)",
+    "Residuos separados en recipientes y bolsas del color de la Tabla 6 de la Res. 0591/2024, rotulados", "Almacenamiento central de residuos señalizado, con acceso restringido y registro de entrega al gestor",
+    "Protocolo de atención de la exposición a riesgo biológico conocido por el personal (lavado, reporte inmediato, valoración médica)", "Los controles de la matriz para el riesgo biológico están vigentes (sin registrar datos de salud de personas)",
     "Derrames de fluidos atendidos con kit y procedimiento definido" ] },
 ];
 

@@ -1,7 +1,9 @@
+import { usuarioActual } from "@/lib/auth/sesion";
 import { construirContexto } from "@/lib/generador/contexto";
 import { evaluacionXlsx } from "@/lib/generador/excel";
 
 export async function GET(_: Request, { params }: RouteContext<"/api/empresas/[id]/evaluacion.xlsx">) {
+  await usuarioActual();
   const { id } = await params;
   const ctx = await construirContexto(id);
   const buf = await evaluacionXlsx(ctx);

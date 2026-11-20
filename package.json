@@ -9,7 +9,8 @@
     "lint": "eslint",
     "db:seed": "prisma db seed",
     "db:migrate": "prisma migrate dev",
-    "db:studio": "prisma studio"
+    "db:studio": "prisma studio",
+    "validar:requisitos": "tsx scripts/validar-requisitos.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",

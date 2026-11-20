@@ -1,7 +1,9 @@
+import { usuarioActual } from "@/lib/auth/sesion";
 import { db } from "@/lib/db";
 import { leerLogo } from "@/lib/logos";
 
 export async function GET(_: Request, { params }: RouteContext<"/api/empresas/[id]/logo">) {
+  await usuarioActual();
   const { id } = await params;
   const e = await db.empresa.findUnique({ where: { id }, select: { logoUrl: true } });
   const l = await leerLogo(e?.logoUrl);

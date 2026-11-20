@@ -1,3 +1,4 @@
+import { usuarioActual } from "@/lib/auth/sesion";
 import JSZip from "jszip";
 import { extname } from "node:path";
 import { db } from "@/lib/db";
@@ -11,6 +12,7 @@ const limpio = (t: string) => t.replace(/[\\/:*?"<>|]/g, "").replace(/\s+/g, " "
 
 /** Expediente para visitas del Ministerio o la ARL: una carpeta por estándar con documentos firmados y evidencias. */
 export async function GET(_: Request, { params }: RouteContext<"/api/empresas/[id]/expediente.zip">) {
+  await usuarioActual();
   const { id } = await params;
   const e = await db.empresa.findUniqueOrThrow({ where: { id }, select: { razonSocial: true } });
   const exp = await expedientePorEstandar(id);

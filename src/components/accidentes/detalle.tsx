@@ -113,7 +113,7 @@ export function EventoDetalle({ empresaId, ev, cargos, peligros, peligrosEnMatri
   const datosInv = (): A.DatosInvestigacion => ({ equipo, analisis: an, lecciones, peligroId: peligroId || null, invInicio: invDatos.inicio || undefined, invLugar: invDatos.lugar, invFechas: invDatos.fechas });
   const guardarInv = (msg = "Investigación guardada") => run(() => A.guardarInvestigacion(empresaId, ev.id, datosInv()), msg);
   // Lista de chequeo del cierre con lo que exige la Res. 1401/2007 (misma regla que aplica el servidor).
-  const faltas = faltasParaCerrar({ tipo: ev.tipo, gravedad: ev.gravedad, descripcion: datos.descripcion ?? null, equipo, analisis: an, acciones: ev.acciones.map((a) => ({ responsable: a.responsable, fechaLimite: a.fechaLimite ? new Date(a.fechaLimite) : null })) });
+  const faltas = faltasParaCerrar({ tipo: ev.tipo, gravedad: ev.gravedad, descripcion: datos.descripcion ?? null, equipo, analisis: an, invLugar: invDatos.lugar, invFechas: invDatos.fechas, acciones: ev.acciones.map((a) => ({ responsable: a.responsable, fechaLimite: a.fechaLimite ? new Date(a.fechaLimite) : null })) });
   const rolesFaltantes = rolesExigidos(ev.tipo, ev.gravedad).filter((r) => !equipo.some((x) => x.rol === r && x.nombre.trim()));
   const sugerir = () => startSug(async () => {
     try {

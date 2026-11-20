@@ -5,15 +5,19 @@ tipo: POL
 nivelMin: 7
 carpeta: 2. Gestión integral del SG-SST
 estandares: ["2.1.1"]
-normas: ["DEC-1072-2015","LEY-1562-2012","RES-0312-2019"]
+normas: ["DEC-1072-2015","RES-0312-2019"]
 ---
 ## Declaración
 
-**{{empresa.razonSocial}}**, identificada con NIT {{empresa.nit}}, dedicada a {{empresa.actividad}}, con domicilio en {{empresa.ciudad}}, se compromete desde su más alta dirección con la implementación, mantenimiento y mejora continua del Sistema de Gestión de la Seguridad y Salud en el Trabajo (SG-SST), con el fin de proteger la seguridad y la salud de todos sus trabajadores, independientemente de su forma de contratación o vinculación, incluidos contratistas, subcontratistas, trabajadores en misión, aprendices y visitantes, en todos sus centros de trabajo.
+**{{empresa.razonSocial}}**, identificada con NIT {{empresa.nit}}, dedicada a {{empresa.actividad}}, con domicilio en {{empresa.ciudad}}, se compromete desde su más alta dirección con la implementación, mantenimiento y mejora continua del Sistema de Gestión de la Seguridad y Salud en el Trabajo (SG-SST), con el fin de proteger la seguridad y la salud de todos sus trabajadores, independientemente de su forma de contratación o vinculación, incluidos contratistas, subcontratistas, trabajadores en misión, aprendices y visitantes, en todos sus centros de trabajo. Esta política hace parte de las políticas de gestión de la empresa (Decreto 1072 de 2015, art. 2.2.4.6.5) y es el marco de referencia para establecer y revisar los objetivos del SG-SST (art. 2.2.4.6.8 numeral 1).
 
 ## Alcance
 
 Esta política aplica a todos los centros de trabajo de la empresa{{#if sedes.length}} ({{#each sedes}}{{nombre}}{{#unless @last}}, {{/unless}}{{/each}}){{/if}} y a todas las personas que desarrollan actividades en ellos o en su nombre, en todos los procesos y turnos.
+
+## Peligros de la empresa
+
+Esta política es específica para {{empresa.razonSocial}} y apropiada para la naturaleza de sus peligros y su tamaño (Decreto 1072 de 2015, art. 2.2.4.6.6 numeral 2): una empresa de {{empresa.trabajadores}} trabajadores, clase de riesgo {{empresa.claseRiesgoRomano}}, que aplica {{empresa.nivel}} estándares mínimos.{{#if matriz.prioritarios.length}} Según la matriz de peligros, los peligros con riesgo prioritario (nivel I o II) son: {{#each matriz.porClasificacion}}{{#if prioritarios}}{{clasificacion}} ({{prioritarios}} prioritarios); {{/if}}{{/each}}a ellos se dirigen en primer lugar los controles y el plan anual de trabajo.{{else}} Los peligros prioritarios se definen en la matriz de identificación de peligros y valoración de riesgos, y a ellos se dirigen en primer lugar los controles y el plan anual de trabajo.{{/if}}{{#if dis.alturas}} Incluye trabajo en alturas.{{/if}}{{#if dis.quimicos}} Incluye manejo de sustancias químicas.{{/if}}{{#if pesv.aplica}} Incluye el riesgo vial, que se gestiona con el Plan Estratégico de Seguridad Vial.{{/if}}
 
 ## Compromisos
 

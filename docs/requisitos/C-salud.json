@@ -1,0 +1,1310 @@
+{
+  "frente": "C — Salud en el trabajo, salud mental y psicosocial",
+  "artefactos": [
+    {
+      "codigo": "PRG-02",
+      "nombre": "Programa de medicina preventiva y del trabajo",
+      "normasCitadas": [
+        "DEC-1072-2015",
+        "RES-0312-2019",
+        "RES-1843-2025",
+        "DEC-1477-2014",
+        "DEC-1072-2015-CAP13"
+      ],
+      "requisitos": [
+        {
+          "id": "PRG-02-R1",
+          "requisito": "Implementar actividades de prevención de AT/EL y de promoción de la salud dentro del SG-SST.",
+          "norma": "DEC-1072-2015",
+          "articulo": "art. 2.2.4.6.8 num. 8",
+          "fuente": "https://normativa.colpensiones.gov.co/colpensiones/docs/decreto_1072_2015_pr009.htm",
+          "seccionQueLoCubre": "## Objetivo",
+          "estado": "cumple",
+          "detalle": "Cita correcta.",
+          "confianza": "alta"
+        },
+        {
+          "id": "PRG-02-R2",
+          "requisito": "Diagnóstico de condiciones de salud con descripción sociodemográfica, caracterización de salud, estadísticas de enfermedad y accidentalidad (últimos 2 años como línea base).",
+          "norma": "DEC-1072-2015",
+          "articulo": "art. 2.2.4.6.16 num. 7 y par. 1",
+          "fuente": "https://normativa.colpensiones.gov.co/colpensiones/docs/decreto_1072_2015_pr009.htm",
+          "seccionQueLoCubre": "## Diagnóstico de condiciones de salud",
+          "estado": "parcial",
+          "detalle": "Enumera las fuentes pero no exige el análisis de los dos últimos años como línea base (par. 1) ni remite a un documento consolidado.",
+          "confianza": "alta"
+        },
+        {
+          "id": "PRG-02-R3",
+          "requisito": "El prestador entrega al empleador en diciembre de cada año, sin costo, un diagnóstico general de salud (no individualizado) con contenido mínimo: sociodemografía, exposición anterior y actual, síntomas, resultados paraclínicos generales, diagnósticos agregados, análisis y recomendaciones; es insumo del programa de medicina preventiva.",
+          "norma": "RES-1843-2025",
+          "articulo": "art. 4 lit. g y art. 20",
+          "fuente": "https://cancilleria.gov.co/normograma/compilacion/docs/resolucion_mtra_1843_2025.htm",
+          "seccionQueLoCubre": "## Diagnóstico de condiciones de salud",
+          "estado": "parcial",
+          "detalle": "Menciona 'informe de condiciones de salud que entrega la IPS' sin la fecha (diciembre), sin el contenido mínimo del art. 20 ni la regla de que no puede tener datos individualizados.",
+          "confianza": "alta"
+        },
+        {
+          "id": "PRG-02-R4",
+          "requisito": "Seis tipos mínimos de evaluación: pre-ingreso, periódicas (programadas o por cambio de ocupación), egreso, post-incapacidad, retorno laboral y seguimiento.",
+          "norma": "RES-1843-2025",
+          "articulo": "arts. 8 a 14",
+          "fuente": "https://cancilleria.gov.co/normograma/compilacion/docs/resolucion_mtra_1843_2025.htm",
+          "seccionQueLoCubre": "## Evaluaciones médicas ocupacionales",
+          "estado": "cumple",
+          "detalle": "Plazos verificados: egreso 5 días hábiles (art. 11), retorno ≥ 90 días calendario por causa no médica (art. 12), post-incapacidad ≥ 30 días calendario (art. 13). Conviene precisar 'calendario'.",
+          "confianza": "alta"
+        },
+        {
+          "id": "PRG-02-R5",
+          "requisito": "La empresa define en el SG-SST la periodicidad de las evaluaciones periódicas, justificada técnicamente según la exposición y la matriz; los criterios, métodos e interpretación deben estar definidos en los PVE. Máximo 3 años y solo 'en caso excepcional'.",
+          "norma": "RES-1843-2025",
+          "articulo": "art. 15 y art. 10 lit. A",
+          "fuente": "https://cancilleria.gov.co/normograma/compilacion/docs/resolucion_mtra_1843_2025.htm",
+          "seccionQueLoCubre": "## Evaluaciones médicas ocupacionales",
+          "estado": "falta",
+          "detalle": "El texto dice que la periodicidad 'la define la empresa en este programa', pero el programa no contiene ninguna tabla de periodicidad por cargo o exposición ni su justificación. Además presenta 3 años como tope general; el art. 15 lo admite solo 'en caso excepcional'. Res. 0312 estándar 3.1.4 (>50 trab.) exige el documento que define la frecuencia.",
+          "confianza": "alta"
+        },
+        {
+          "id": "PRG-02-R6",
+          "requisito": "Costo total de evaluaciones y pruebas complementarias a cargo del empleador; la ARL no puede pagarlas; viáticos si hay traslado intermunicipal; se realizan en la jornada.",
+          "norma": "RES-1843-2025",
+          "articulo": "art. 5 lits. a, b, c; art. 6 inc. final; art. 26 par. 2",
+          "fuente": "https://cancilleria.gov.co/normograma/compilacion/docs/resolucion_mtra_1843_2025.htm",
+          "seccionQueLoCubre": "## Evaluaciones médicas ocupacionales",
+          "estado": "parcial",
+          "detalle": "Falta el costo de desplazamiento y manutención por traslados intermunicipales (art. 5 lit. b) y la excepción de contratistas (art. 2.2.4.2.2.18 del Decreto 1072).",
+          "confianza": "alta"
+        },
+        {
+          "id": "PRG-02-R7",
+          "requisito": "El médico solo remite el concepto médico ocupacional; no usar 'no apto'; el concepto indica recomendaciones/restricciones, su temporalidad y si requiere seguimiento.",
+          "norma": "RES-1843-2025",
+          "articulo": "art. 19 y par.; art. 4 lit. i",
+          "fuente": "https://cancilleria.gov.co/normograma/compilacion/docs/resolucion_mtra_1843_2025.htm",
+          "seccionQueLoCubre": "## Evaluaciones médicas ocupacionales",
+          "estado": "parcial",
+          "detalle": "Las categorías 'apto, apto con recomendaciones, apto con restricciones, aplazado' no están en el art. 19 (ver sinSustento). Falta la temporalidad y la indicación de seguimiento que exige el parágrafo.",
+          "confianza": "alta"
+        },
+        {
+          "id": "PRG-02-R8",
+          "requisito": "Custodia de la historia clínica por el prestador; el empleador no conserva copia salvo autorización expresa y médico especialista vinculado; conservación mínima 20 años.",
+          "norma": "RES-1843-2025",
+          "articulo": "art. 30 lits. a, b, f",
+          "fuente": "https://cancilleria.gov.co/normograma/compilacion/docs/resolucion_mtra_1843_2025.htm",
+          "seccionQueLoCubre": "## Evaluaciones médicas ocupacionales",
+          "estado": "cumple",
+          "detalle": "Correcto en lo esencial; la excepción del lit. b (autorización + médico vinculado) no se menciona.",
+          "confianza": "alta"
+        },
+        {
+          "id": "PRG-02-R9",
+          "requisito": "Prohibido exigir pruebas de embarazo, VIH y VDRL para acceso o permanencia; excepciones con consentimiento cuando hay riesgo real (embarazo) o riesgo para el trabajador o terceros (VIH); el empleador deja constancia de que el pre-ingreso no incluye prueba de embarazo.",
+          "norma": "RES-1843-2025",
+          "articulo": "arts. 21, 22, 23",
+          "fuente": "https://cancilleria.gov.co/normograma/compilacion/docs/resolucion_mtra_1843_2025.htm",
+          "seccionQueLoCubre": "## Evaluaciones médicas ocupacionales",
+          "estado": "parcial",
+          "detalle": "Cita el art. 21; omite la constancia escrita del art. 22 y las excepciones de los arts. 22 y 23.",
+          "confianza": "alta"
+        },
+        {
+          "id": "PRG-02-R10",
+          "requisito": "Implementar y ejecutar un programa de pausas activas durante la jornada, respetando libertad de conciencia, credos, estados de salud, sin discriminación.",
+          "norma": "RES-1843-2025",
+          "articulo": "art. 5 lit. h",
+          "fuente": "https://cancilleria.gov.co/normograma/compilacion/docs/resolucion_mtra_1843_2025.htm",
+          "seccionQueLoCubre": "## Actividades de promoción y prevención",
+          "estado": "parcial",
+          "detalle": "Solo una fila 'Pausas activas – Diaria'; no hay programa (contenido, responsables, respeto a objeciones del trabajador, art. 7 lit. f). Además PRG-02 tiene nivelMin 21: las empresas de 7 estándares (≤10 trab.) no reciben ningún documento que cubra esta obligación, que aplica a todo empleador.",
+          "confianza": "alta"
+        },
+        {
+          "id": "PRG-02-R11",
+          "requisito": "Campañas específicas de prevención y control de farmacodependencia, alcoholismo y tabaquismo, con una política y un programa.",
+          "norma": "RES-1843-2025",
+          "articulo": "art. 5 lit. g; art. 25 inc. 3",
+          "fuente": "https://cancilleria.gov.co/normograma/compilacion/docs/resolucion_mtra_1843_2025.htm",
+          "seccionQueLoCubre": "## Actividades de promoción y prevención",
+          "estado": "cumple",
+          "detalle": "La política (POL-02) y el programa (PRG-03) existen; la periodicidad semestral es decisión de la empresa, no legal.",
+          "confianza": "alta"
+        },
+        {
+          "id": "PRG-02-R12",
+          "requisito": "Implementar los Sistemas de Vigilancia Epidemiológica según riesgos y diagnóstico de salud.",
+          "norma": "RES-1843-2025",
+          "articulo": "art. 5 lit. e",
+          "fuente": "https://cancilleria.gov.co/normograma/compilacion/docs/resolucion_mtra_1843_2025.htm",
+          "seccionQueLoCubre": "## Programas de vigilancia epidemiológica (PVE)",
+          "estado": "parcial",
+          "detalle": "La tabla lista PVE, pero no cita el art. 5 lit. e, que es la fuente de la obligación, ni el art. 28 (criterios BEI/ACGIH, IARC, OIT, CDC o protocolo propio).",
+          "confianza": "alta"
+        },
+        {
+          "id": "PRG-02-R13",
+          "requisito": "Adaptar condiciones de trabajo según recomendaciones/restricciones en máximo 20 días hábiles posteriores a la evaluación; comunicar por escrito el concepto a cada trabajador y conservar evidencia.",
+          "norma": "RES-1843-2025",
+          "articulo": "art. 5 lits. f e i",
+          "fuente": "https://cancilleria.gov.co/normograma/compilacion/docs/resolucion_mtra_1843_2025.htm",
+          "seccionQueLoCubre": "## Restricciones y recomendaciones médico-laborales",
+          "estado": "cumple",
+          "detalle": "",
+          "confianza": "alta"
+        },
+        {
+          "id": "PRG-02-R14",
+          "requisito": "Cumplir las recomendaciones y restricciones emitidas por EPS/ARL (médicos tratantes), adecuar, reubicar o readaptar, y entregar a quienes califican en primera oportunidad o a las Juntas los documentos a cargo del empleador.",
+          "norma": "RES-0312-2019",
+          "articulo": "art. 16 estándar 3.1.6 (tabla del art. 27 para >50)",
+          "fuente": "https://normograma.mintic.gov.co/mintic/compilacion/docs/resolucion_mtra_0312_2019.htm",
+          "seccionQueLoCubre": "## Restricciones y recomendaciones médico-laborales",
+          "estado": "parcial",
+          "detalle": "Solo trata las recomendaciones de la IPS ocupacional; omite las de EPS/ARL y la entrega de documentos para calificación de origen y pérdida de capacidad laboral.",
+          "confianza": "alta"
+        },
+        {
+          "id": "PRG-02-R15",
+          "requisito": "Si en la evaluación se sospecha patología, el médico remite a los servicios de salud para iniciar la determinación de origen.",
+          "norma": "RES-1843-2025",
+          "articulo": "art. 27",
+          "fuente": "https://cancilleria.gov.co/normograma/compilacion/docs/resolucion_mtra_1843_2025.htm",
+          "seccionQueLoCubre": null,
+          "estado": "falta",
+          "detalle": "No se menciona la ruta de remisión ni el papel de la empresa en la calificación de origen (Decreto 1477/2014 art. 2 y 3, citado en el frontmatter, tampoco aparece en el cuerpo).",
+          "confianza": "alta"
+        },
+        {
+          "id": "PRG-02-R16",
+          "requisito": "Programa de estilos de vida y entornos de trabajo saludables con campañas de farmacodependencia, alcoholismo y tabaquismo.",
+          "norma": "RES-0312-2019",
+          "articulo": "estándar 3.1.7 (tabla del art. 27)",
+          "fuente": "https://normograma.mintic.gov.co/mintic/compilacion/docs/resolucion_mtra_0312_2019.htm",
+          "seccionQueLoCubre": "## Actividades de promoción y prevención",
+          "estado": "cumple",
+          "detalle": "",
+          "confianza": "alta"
+        },
+        {
+          "id": "PRG-02-R17",
+          "requisito": "Agua potable, servicios sanitarios, disposición de excretas y basuras; eliminación de residuos.",
+          "norma": "RES-0312-2019",
+          "articulo": "estándares 3.1.8 y 3.1.9",
+          "fuente": "https://normograma.mintic.gov.co/mintic/compilacion/docs/resolucion_mtra_0312_2019.htm",
+          "seccionQueLoCubre": "## Servicios de higiene",
+          "estado": "cumple",
+          "detalle": "",
+          "confianza": "alta"
+        },
+        {
+          "id": "PRG-02-R18",
+          "requisito": "Indicadores mínimos anuales: prevalencia e incidencia de EL y ausentismo por causa médica (ausentismo medido al menos mensualmente).",
+          "norma": "RES-0312-2019",
+          "articulo": "art. 30",
+          "fuente": "https://normograma.mintic.gov.co/mintic/compilacion/docs/resolucion_mtra_0312_2019.htm",
+          "seccionQueLoCubre": "## Indicadores",
+          "estado": "cumple",
+          "detalle": "Cita correcta.",
+          "confianza": "alta"
+        }
+      ],
+      "citasIncorrectas": [
+        {
+          "texto": "se evita \"no apto\", art. 19",
+          "problema": "La prohibición está en el parágrafo del art. 19, no en el cuerpo; el cuerpo fija el contenido mínimo del concepto.",
+          "correccion": "Res. 1843/2025, art. 19 parágrafo."
+        },
+        {
+          "texto": "sin superar tres (3) años (art. 15)",
+          "problema": "El art. 15 dice 'sin que supere en caso excepcional tres (3) años'; presentado como tope ordinario induce a periodicidades de 3 años sin justificación.",
+          "correccion": "'como máximo tres (3) años y solo de forma excepcional, con justificación técnica según la exposición (art. 15)'."
+        }
+      ],
+      "sinSustento": [
+        {
+          "texto": "concepto de aptitud (apto, apto con recomendaciones, apto con restricciones o aplazado ... art. 19)",
+          "problema": "El art. 19 no define categorías de aptitud; solo prohíbe 'no apto' y exige recomendaciones/restricciones con temporalidad. Las cuatro categorías son práctica del sector y deben presentarse así, sin atribuirlas al art. 19."
+        },
+        {
+          "texto": "| Vacunación según riesgo | Según esquema | Responsable del SG-SST / EPS |",
+          "problema": "No cita norma (correcto que no la cite), pero en una tabla de actividades obligatorias puede leerse como obligación general. Según docs/09 §5 punto 9 es un control derivado de la matriz (Decreto 1072 art. 2.2.4.6.24). Redactar: 'Vacunación cuando la matriz de peligros la defina como control para riesgo biológico'."
+        },
+        {
+          "texto": "Semana de la salud (tamizajes con EPS/ARL) | Anual",
+          "problema": "Actividad de buena práctica sin norma que la exija; aceptable si no se presenta como obligación."
+        }
+      ]
+    },
+    {
+      "codigo": "PRG-05",
+      "nombre": "Programas de vigilancia epidemiológica",
+      "normasCitadas": [
+        "DEC-1072-2015",
+        "DEC-1477-2014",
+        "RES-0312-2019"
+      ],
+      "requisitos": [
+        {
+          "id": "PRG-05-R1",
+          "requisito": "El empleador implementa SVE en el SG-SST según los riesgos y el diagnóstico de salud.",
+          "norma": "RES-1843-2025",
+          "articulo": "art. 5 lit. e",
+          "fuente": "https://cancilleria.gov.co/normograma/compilacion/docs/resolucion_mtra_1843_2025.htm",
+          "seccionQueLoCubre": "## Objetivo",
+          "estado": "falta",
+          "detalle": "La norma que hoy obliga a los SVE (Res. 1843/2025) no está en el frontmatter ni en el texto. Además nivelMin 60: una empresa de 7 o 21 estándares con un peligro prioritario (ruido, carga) no recibe el PVE como documento, aunque la obligación aplica a todo empleador.",
+          "confianza": "alta"
+        },
+        {
+          "id": "PRG-05-R2",
+          "requisito": "Mantener documentados los PVE, incluidos resultados de mediciones ambientales y perfiles de salud de monitoreos biológicos.",
+          "norma": "DEC-1072-2015",
+          "articulo": "art. 2.2.4.6.12 num. 13",
+          "fuente": "https://normativa.colpensiones.gov.co/colpensiones/docs/decreto_1072_2015_pr009.htm",
+          "seccionQueLoCubre": "## Objetivo",
+          "estado": "parcial",
+          "detalle": "Cita correcta, pero ninguna sección del PVE prevé registrar resultados de mediciones ni monitoreo biológico; solo dice 'mediciones ambientales... según el peligro'.",
+          "confianza": "alta"
+        },
+        {
+          "id": "PRG-05-R3",
+          "requisito": "Los criterios, métodos y procedimientos de las evaluaciones periódicas y la interpretación de resultados deben estar definidos y justificados en los PVE; la periodicidad se define con justificación técnica.",
+          "norma": "RES-1843-2025",
+          "articulo": "art. 10 lit. A; art. 15",
+          "fuente": "https://cancilleria.gov.co/normograma/compilacion/docs/resolucion_mtra_1843_2025.htm",
+          "seccionQueLoCubre": "### PVE {{nombre}} — Evaluación de la salud",
+          "estado": "falta",
+          "detalle": "Solo enumera exámenes; no hay frecuencia, criterios de inclusión ni de interpretación por PVE.",
+          "confianza": "alta"
+        },
+        {
+          "id": "PRG-05-R4",
+          "requisito": "Evaluaciones específicas por factor de riesgo con BEI de la ACGIH, criterios IARC (cancerígenos), OIT (neumoconiosis) y CDC (biológicos); si no existen, protocolo propio con 8 elementos (agente/CAS, órgano blanco, criterios, frecuencia, antecedentes, contenido de HC, situaciones especiales, otros).",
+          "norma": "RES-1843-2025",
+          "articulo": "art. 28 y par.",
+          "fuente": "https://cancilleria.gov.co/normograma/compilacion/docs/resolucion_mtra_1843_2025.htm",
+          "seccionQueLoCubre": null,
+          "estado": "falta",
+          "detalle": "No se menciona.",
+          "confianza": "alta"
+        },
+        {
+          "id": "PRG-05-R5",
+          "requisito": "PVE orientados a los agentes de riesgo de la Tabla de Enfermedades Laborales (Sección I) y criterios de causalidad.",
+          "norma": "DEC-1477-2014",
+          "articulo": "arts. 1 a 3",
+          "fuente": "https://www.alcaldiabogota.gov.co/sisjur/normas/Norma1.jsp?i=58849",
+          "seccionQueLoCubre": null,
+          "estado": "parcial",
+          "detalle": "Citado en frontmatter pero sin uso en el cuerpo; conviene relacionar cada PVE con el agente de la Sección I.",
+          "confianza": "media"
+        },
+        {
+          "id": "PRG-05-R6",
+          "requisito": "PVE psicosocial obligatorio cuando hay riesgo alto o efectos en la salud, con componentes mínimos: método, objetivos, procedimiento (evaluación, grupos prioritarios, intervención con indicadores, seguimiento), sistema de información con reserva, evaluación anual y gestión administrativa (recursos).",
+          "norma": "RES-2646-2008",
+          "articulo": "arts. 16 y 17; Res. 2764/2022 art. 8",
+          "fuente": "https://www.alcaldiabogota.gov.co/sisjur/normas/Norma1.jsp?i=31607",
+          "seccionQueLoCubre": "## Programas definidos",
+          "estado": "parcial",
+          "detalle": "La estructura genérica no incluye objetivos específicos, sistema de información, evaluación anual del programa ni recursos; tampoco criterios de inclusión del art. 8 de la Res. 2764 (quejas de acoso, consumo problemático, accidentes reincidentes, etc.).",
+          "confianza": "alta"
+        },
+        {
+          "id": "PRG-05-R7",
+          "requisito": "Desarrollar actividades de medicina del trabajo y PVE según prioridades del diagnóstico y los peligros prioritarios.",
+          "norma": "RES-0312-2019",
+          "articulo": "estándar 3.1.2 (tabla del art. 27)",
+          "fuente": "https://normograma.mintic.gov.co/mintic/compilacion/docs/resolucion_mtra_0312_2019.htm",
+          "seccionQueLoCubre": "## Programas definidos",
+          "estado": "cumple",
+          "detalle": "",
+          "confianza": "alta"
+        }
+      ],
+      "citasIncorrectas": [],
+      "sinSustento": [
+        {
+          "texto": "Clasificación de casos: sanos, sospechosos, confirmados.",
+          "problema": "Clasificación de práctica (GATISO), no norma; aceptable, pero debería indicar que la define el médico del PVE."
+        }
+      ]
+    },
+    {
+      "codigo": "PRC-07",
+      "nombre": "Procedimiento de evaluaciones médicas ocupacionales",
+      "normasCitadas": [
+        "RES-1843-2025",
+        "DEC-1072-2015",
+        "RES-0312-2019",
+        "LEY-1581-2012"
+      ],
+      "requisitos": [
+        {
+          "id": "PRC-07-R1",
+          "requisito": "Seis tipos mínimos de evaluación con sus disparadores y plazos.",
+          "norma": "RES-1843-2025",
+          "articulo": "arts. 8 a 14",
+          "fuente": "https://cancilleria.gov.co/normograma/compilacion/docs/resolucion_mtra_1843_2025.htm",
+          "seccionQueLoCubre": "## Tipos de evaluación",
+          "estado": "cumple",
+          "detalle": "Precisar 'días calendario' en retorno (90) y post-incapacidad (30).",
+          "confianza": "alta"
+        },
+        {
+          "id": "PRC-07-R2",
+          "requisito": "Entregar al prestador como mínimo: perfil de cargo, indicadores epidemiológicos, matriz de peligros actualizada, estudios técnicos (higiene, psicosocial, biomecánico, cancerígenos) e indicadores biológicos; dejar evidencia de entrega y recibido.",
+          "norma": "RES-1843-2025",
+          "articulo": "art. 16 lits. a-e y par. 1; art. 5 lit. d",
+          "fuente": "https://cancilleria.gov.co/normograma/compilacion/docs/resolucion_mtra_1843_2025.htm",
+          "seccionQueLoCubre": "## Procedimiento (paso 1)",
+          "estado": "parcial",
+          "detalle": "Faltan estudios técnicos adicionales (lit. d) e indicadores biológicos (lit. e), y la evidencia de entrega y recibido (par. 1).",
+          "confianza": "alta"
+        },
+        {
+          "id": "PRC-07-R3",
+          "requisito": "Costo a cargo del empleador; prohibido cobrarlo al aspirante o trabajador, salvo contratistas según art. 2.2.4.2.2.18 del Decreto 1072; viáticos por traslados intermunicipales; realización en jornada.",
+          "norma": "RES-1843-2025",
+          "articulo": "art. 5 lits. a, b, c; art. 26 par. 2",
+          "fuente": "https://cancilleria.gov.co/normograma/compilacion/docs/resolucion_mtra_1843_2025.htm",
+          "seccionQueLoCubre": "## Procedimiento (paso 2)",
+          "estado": "parcial",
+          "detalle": "El alcance incluye contratistas pero el texto dice 'sin costo para él' sin la salvedad del art. 2.2.4.2.2.18; falta el lit. b (viáticos).",
+          "confianza": "alta"
+        },
+        {
+          "id": "PRC-07-R4",
+          "requisito": "Consentimiento informado libre, previo y escrito para pruebas complementarias; constancia de la negativa.",
+          "norma": "RES-1843-2025",
+          "articulo": "art. 18 par.; art. 8 par. 4",
+          "fuente": "https://cancilleria.gov.co/normograma/compilacion/docs/resolucion_mtra_1843_2025.htm",
+          "seccionQueLoCubre": null,
+          "estado": "falta",
+          "detalle": "No se menciona.",
+          "confianza": "alta"
+        },
+        {
+          "id": "PRC-07-R5",
+          "requisito": "El prestador remite solo el concepto médico ocupacional con contenido mínimo (incluye firma del trabajador en constancia de entrega, recomendaciones/restricciones con temporalidad y seguimiento); copia al trabajador.",
+          "norma": "RES-1843-2025",
+          "articulo": "art. 4 lits. d, i; art. 19 y par.",
+          "fuente": "https://cancilleria.gov.co/normograma/compilacion/docs/resolucion_mtra_1843_2025.htm",
+          "seccionQueLoCubre": "## Procedimiento (paso 3)",
+          "estado": "parcial",
+          "detalle": "Correcto en que no se recibe diagnóstico; falta verificar el contenido mínimo del concepto y la temporalidad.",
+          "confianza": "alta"
+        },
+        {
+          "id": "PRC-07-R6",
+          "requisito": "Comunicar por escrito el concepto a cada trabajador y conservar evidencia; adaptar condiciones en ≤ 20 días hábiles.",
+          "norma": "RES-1843-2025",
+          "articulo": "art. 5 lits. i, f",
+          "fuente": "https://cancilleria.gov.co/normograma/compilacion/docs/resolucion_mtra_1843_2025.htm",
+          "seccionQueLoCubre": "## Procedimiento (pasos 4 y 5)",
+          "estado": "cumple",
+          "detalle": "",
+          "confianza": "alta"
+        },
+        {
+          "id": "PRC-07-R7",
+          "requisito": "Egreso: informar al trabajador el proceso, realizarse dentro de 5 días hábiles posteriores a la terminación y dejar constancia de la notificación.",
+          "norma": "RES-1843-2025",
+          "articulo": "art. 11",
+          "fuente": "https://cancilleria.gov.co/normograma/compilacion/docs/resolucion_mtra_1843_2025.htm",
+          "seccionQueLoCubre": "## Procedimiento (paso 6)",
+          "estado": "parcial",
+          "detalle": "La frase 'si el trabajador no asiste ... la constancia hace las veces de evidencia' no está en el art. 11 (ver sinSustento).",
+          "confianza": "alta"
+        },
+        {
+          "id": "PRC-07-R8",
+          "requisito": "El prestador notifica por correo al empleador las inasistencias del trabajador; el trabajador debe asistir.",
+          "norma": "RES-1843-2025",
+          "articulo": "art. 4 lit. h; art. 7 lit. e",
+          "fuente": "https://cancilleria.gov.co/normograma/compilacion/docs/resolucion_mtra_1843_2025.htm",
+          "seccionQueLoCubre": null,
+          "estado": "falta",
+          "detalle": "No se prevé qué hace la empresa ante la inasistencia.",
+          "confianza": "alta"
+        },
+        {
+          "id": "PRC-07-R9",
+          "requisito": "Custodia de HC a cargo del prestador; conservación mínima 20 años; la empresa no conserva copia salvo autorización expresa y médico vinculado.",
+          "norma": "RES-1843-2025",
+          "articulo": "art. 30 lits. a, b, f",
+          "fuente": "https://cancilleria.gov.co/normograma/compilacion/docs/resolucion_mtra_1843_2025.htm",
+          "seccionQueLoCubre": "## Procedimiento (paso 7)",
+          "estado": "parcial",
+          "detalle": "Correcto en lo sustantivo, pero ver sinSustento: la constancia de custodia sí es evidencia exigida por el estándar 3.1.5.",
+          "confianza": "alta"
+        },
+        {
+          "id": "PRC-07-R10",
+          "requisito": "Evidenciar que la custodia de las HC está a cargo de una IPS en SST o del médico que practica las evaluaciones.",
+          "norma": "RES-0312-2019",
+          "articulo": "estándar 3.1.5 (tabla del art. 27)",
+          "fuente": "https://normograma.mintic.gov.co/mintic/compilacion/docs/resolucion_mtra_0312_2019.htm",
+          "seccionQueLoCubre": "## Procedimiento (paso 7)",
+          "estado": "parcial",
+          "detalle": "El texto dice que la constancia 'no es un requisito legal'; el modo de verificación del estándar pide 'los soportes que demuestren' la custodia (empresas >50 o riesgo IV-V).",
+          "confianza": "alta"
+        },
+        {
+          "id": "PRC-07-R11",
+          "requisito": "Diagnóstico general de salud entregado por el prestador en diciembre de cada año, sin datos individualizados.",
+          "norma": "RES-1843-2025",
+          "articulo": "art. 4 lit. g; art. 20",
+          "fuente": "https://cancilleria.gov.co/normograma/compilacion/docs/resolucion_mtra_1843_2025.htm",
+          "seccionQueLoCubre": "## Procedimiento (paso 8)",
+          "estado": "parcial",
+          "detalle": "Cita el art. 5 lit. e (SVE) en lugar del art. 4 lit. g y el art. 20; falta la fecha (diciembre).",
+          "confianza": "alta"
+        },
+        {
+          "id": "PRC-07-R12",
+          "requisito": "Prohibición de exigir embarazo, VIH, VDRL; constancia del empleador de que el pre-ingreso no incluye prueba de embarazo; la candidata puede elegir el laboratorio si hay exámenes de sangre.",
+          "norma": "RES-1843-2025",
+          "articulo": "arts. 21, 22, 23",
+          "fuente": "https://cancilleria.gov.co/normograma/compilacion/docs/resolucion_mtra_1843_2025.htm",
+          "seccionQueLoCubre": "## Prohibiciones",
+          "estado": "parcial",
+          "detalle": "Falta la constancia del art. 22 inc. 3 y la libre elección del laboratorio; no recoge las excepciones con consentimiento.",
+          "confianza": "alta"
+        },
+        {
+          "id": "PRC-07-R13",
+          "requisito": "Pruebas de alcohol y SPA solo para actividades de riesgo para terceros, justificadas en el SG-SST, conforme al programa de prevención, por personal médico con licencia y con aseguramiento de calidad; si es positiva, exhortar tratamiento por la EAPB; resultados confidenciales.",
+          "norma": "RES-1843-2025",
+          "articulo": "arts. 24 y par. 1-3; art. 25",
+          "fuente": "https://cancilleria.gov.co/normograma/compilacion/docs/resolucion_mtra_1843_2025.htm",
+          "seccionQueLoCubre": null,
+          "estado": "falta",
+          "detalle": "El procedimiento de evaluaciones no regula las pruebas de alcohol/SPA que POL-02 anuncia (lineamiento 6).",
+          "confianza": "alta"
+        },
+        {
+          "id": "PRC-07-R14",
+          "requisito": "Concepto de aptitud forma parte del expediente laboral; se conservan 20 años desde el retiro (si no hay médico especialista en la empresa).",
+          "norma": "DEC-1072-2015",
+          "articulo": "art. 2.2.4.6.13 num. 1; Res. 1843 art. 8 par. 1",
+          "fuente": "https://normativa.colpensiones.gov.co/colpensiones/docs/decreto_1072_2015_pr009.htm",
+          "seccionQueLoCubre": "## Confidencialidad",
+          "estado": "cumple",
+          "detalle": "",
+          "confianza": "alta"
+        },
+        {
+          "id": "PRC-07-R15",
+          "requisito": "Vigencia de las evaluaciones de contratistas según art. 2.2.4.2.2.18; vigencia de certificados de aptitud específicos (alturas, eléctrico, alimentos, confinados, armas, conducción) según su norma.",
+          "norma": "RES-1843-2025",
+          "articulo": "art. 9 par. 2; art. 15 pars. 1 y 2",
+          "fuente": "https://cancilleria.gov.co/normograma/compilacion/docs/resolucion_mtra_1843_2025.htm",
+          "seccionQueLoCubre": "## Alcance",
+          "estado": "falta",
+          "detalle": "No se menciona; relevante porque el alcance incluye contratistas.",
+          "confianza": "alta"
+        }
+      ],
+      "citasIncorrectas": [
+        {
+          "texto": "El prestador entrega el informe de condiciones de salud ... (art. 5 literal e)",
+          "problema": "El art. 5 lit. e obliga al empleador a implementar SVE; la entrega del diagnóstico de salud es del prestador (art. 4 lit. g) con contenido del art. 20.",
+          "correccion": "Res. 1843/2025, art. 4 lit. g y art. 20."
+        }
+      ],
+      "sinSustento": [
+        {
+          "texto": "La empresa puede solicitar al prestador una constancia de custodia como buena práctica; no es un requisito legal.",
+          "problema": "La Res. 0312 (estándar 3.1.5) verifica con 'soportes que demuestren' la custodia por la IPS o el médico. Decir que no es requisito puede dejar a la empresa sin evidencia en una auditoría."
+        },
+        {
+          "texto": "si el trabajador no asiste en el plazo, la constancia hace las veces de evidencia (art. 11)",
+          "problema": "El art. 11 solo exige dejar constancia de la notificación; el efecto probatorio ante la inasistencia es interpretación, no texto de la norma."
+        }
+      ]
+    },
+    {
+      "codigo": "DOC-07",
+      "nombre": "Perfil de cargo (profesiograma) para las evaluaciones médicas ocupacionales",
+      "normasCitadas": [
+        "RES-1843-2025",
+        "DEC-1072-2015",
+        "RES-0312-2019"
+      ],
+      "requisitos": [
+        {
+          "id": "DOC-07-R1",
+          "requisito": "Perfil de cargo con como mínimo: funciones, responsabilidades, habilidades, competencias, requisitos físicos, mentales y técnicos, riesgos laborales asociados a las tareas y medidas preventivas.",
+          "norma": "RES-1843-2025",
+          "articulo": "art. 16 lit. a; art. 3 lit. m",
+          "fuente": "https://cancilleria.gov.co/normograma/compilacion/docs/resolucion_mtra_1843_2025.htm",
+          "seccionQueLoCubre": "## Perfiles por cargo",
+          "estado": "parcial",
+          "detalle": "Solo tiene funciones, tareas, peligros y exámenes. Faltan responsabilidades, habilidades, competencias, requisitos físicos/mentales/técnicos y medidas preventivas (los controles de la matriz podrían inyectarse).",
+          "confianza": "alta"
+        },
+        {
+          "id": "DOC-07-R2",
+          "requisito": "Remitir los perfiles al prestador con descripción de tareas y medio; conservar evidencia documental de la remisión y del recibido.",
+          "norma": "RES-1843-2025",
+          "articulo": "art. 5 lit. d; art. 16 par. 1; Res. 0312 estándar 3.1.3",
+          "fuente": "https://cancilleria.gov.co/normograma/compilacion/docs/resolucion_mtra_1843_2025.htm",
+          "seccionQueLoCubre": "Firmas finales (Revisó: médico de la IPS)",
+          "estado": "parcial",
+          "detalle": "Hay firma de revisión del médico, pero no un campo de fecha de entrega y constancia de recibido. Además el rótulo 'Licencia' se llena con op.medicoIps.cedula (dato equivocado).",
+          "confianza": "alta"
+        },
+        {
+          "id": "DOC-07-R3",
+          "requisito": "Entregar también indicadores epidemiológicos, matriz de peligros, estudios técnicos adicionales e indicadores biológicos.",
+          "norma": "RES-1843-2025",
+          "articulo": "art. 16 lits. b-e",
+          "fuente": "https://cancilleria.gov.co/normograma/compilacion/docs/resolucion_mtra_1843_2025.htm",
+          "seccionQueLoCubre": "## Objetivo",
+          "estado": "parcial",
+          "detalle": "El objetivo menciona matriz e indicadores; no estudios técnicos (psicosocial, biomecánico, higiene) ni indicadores biológicos.",
+          "confianza": "alta"
+        },
+        {
+          "id": "DOC-07-R4",
+          "requisito": "Periodicidad de evaluaciones periódicas definida por la empresa con justificación técnica según exposición (máximo 3 años, solo excepcional).",
+          "norma": "RES-1843-2025",
+          "articulo": "art. 15; art. 10 lit. A",
+          "fuente": "https://cancilleria.gov.co/normograma/compilacion/docs/resolucion_mtra_1843_2025.htm",
+          "seccionQueLoCubre": "## Perfiles por cargo — tabla de exámenes",
+          "estado": "falta",
+          "detalle": "La tabla marca ✔ en pre-ingreso, periódica y egreso para todos los exámenes sin criterio y no tiene columna de frecuencia por cargo. Es justo donde debería quedar la periodicidad que exige el art. 15.",
+          "confianza": "alta"
+        },
+        {
+          "id": "DOC-07-R5",
+          "requisito": "Vigencia de certificados de aptitud específicos (alturas, eléctrico, alimentos, confinados, conducción) según su norma.",
+          "norma": "RES-1843-2025",
+          "articulo": "art. 15 par. 1",
+          "fuente": "https://cancilleria.gov.co/normograma/compilacion/docs/resolucion_mtra_1843_2025.htm",
+          "seccionQueLoCubre": "## Perfiles por cargo (Tareas de alto riesgo)",
+          "estado": "parcial",
+          "detalle": "El contenido es razonable pero está mal citado (art. 17).",
+          "confianza": "alta"
+        },
+        {
+          "id": "DOC-07-R6",
+          "requisito": "Al enlistar las evaluaciones de pre-ingreso, el empleador deja constancia de que no incluyen prueba de embarazo.",
+          "norma": "RES-1843-2025",
+          "articulo": "art. 22 inc. 3",
+          "fuente": "https://cancilleria.gov.co/normograma/compilacion/docs/resolucion_mtra_1843_2025.htm",
+          "seccionQueLoCubre": "## Tipos de evaluación, periodicidad y criterios",
+          "estado": "falta",
+          "detalle": "El perfil de cargo es el documento donde se enlistan los exámenes de pre-ingreso; debería llevar la constancia expresa.",
+          "confianza": "alta"
+        },
+        {
+          "id": "DOC-07-R7",
+          "requisito": "Evaluaciones realizadas por médicos especialistas en SST con licencia vigente (o médico con 2 años de experiencia si la secretaría certifica no disponibilidad).",
+          "norma": "RES-1843-2025",
+          "articulo": "art. 17; art. 26",
+          "fuente": "https://cancilleria.gov.co/normograma/compilacion/docs/resolucion_mtra_1843_2025.htm",
+          "seccionQueLoCubre": "## Objetivo (nota)",
+          "estado": "cumple",
+          "detalle": "",
+          "confianza": "alta"
+        },
+        {
+          "id": "DOC-07-R8",
+          "requisito": "Seis tipos, egreso 5 días hábiles, retorno 90 días, post-incapacidad 30 días, costo del empleador, prohibición de pruebas, custodia 20 años.",
+          "norma": "RES-1843-2025",
+          "articulo": "arts. 5, 6, 8-14, 21, 30",
+          "fuente": "https://cancilleria.gov.co/normograma/compilacion/docs/resolucion_mtra_1843_2025.htm",
+          "seccionQueLoCubre": "## Tipos de evaluación, periodicidad y criterios",
+          "estado": "cumple",
+          "detalle": "Mismas observaciones que PRG-02 sobre categorías de aptitud y 'caso excepcional'.",
+          "confianza": "alta"
+        }
+      ],
+      "citasIncorrectas": [
+        {
+          "texto": "requieren concepto de aptitud específico para la tarea (Resolución 1843 de 2025, art. 17)",
+          "problema": "El art. 17 regula quién realiza las evaluaciones (médico especialista con licencia). La referencia a certificados de aptitud específicos está en el art. 15 par. 1.",
+          "correccion": "Resolución 1843 de 2025, art. 15 parágrafo 1 (y la norma específica de cada tarea, p. ej. Res. 4272/2021)."
+        },
+        {
+          "texto": "Licencia: {{default op.medicoIps.cedula \"__________\"}}",
+          "problema": "El campo dice Licencia pero imprime la cédula del médico.",
+          "correccion": "Usar el número de licencia en SST del médico y dejar la cédula aparte."
+        }
+      ],
+      "sinSustento": [
+        {
+          "texto": "| {{this}} | ✔ | ✔ | ✔ |",
+          "problema": "Marcar todos los exámenes en pre-ingreso, periódica y egreso es una decisión técnica sin soporte; debe venir del médico o del PVE (art. 10 lit. A, art. 28)."
+        }
+      ]
+    },
+    {
+      "codigo": "FOR-01",
+      "nombre": "Encuesta de perfil sociodemográfico y morbilidad sentida",
+      "normasCitadas": [
+        "DEC-1072-2015",
+        "RES-0312-2019",
+        "LEY-1581-2012"
+      ],
+      "requisitos": [
+        {
+          "id": "FOR-01-R1",
+          "requisito": "Descripción sociodemográfica y caracterización de condiciones de salud en la evaluación inicial; informe de condiciones de salud con perfil sociodemográfico documentado.",
+          "norma": "DEC-1072-2015",
+          "articulo": "art. 2.2.4.6.16 num. 7; art. 2.2.4.6.12 num. 4",
+          "fuente": "https://normativa.colpensiones.gov.co/colpensiones/docs/decreto_1072_2015_pr009.htm",
+          "seccionQueLoCubre": "## Instrucciones",
+          "estado": "cumple",
+          "detalle": "Citas correctas.",
+          "confianza": "alta"
+        },
+        {
+          "id": "FOR-01-R2",
+          "requisito": "Información sociodemográfica actualizada del último año: edad, sexo, escolaridad, estado civil (>50 trab.); edad, sexo, cargos, antigüedad, escolaridad (11-50).",
+          "norma": "RES-0312-2019",
+          "articulo": "estándar 3.1.1 (tablas de los arts. 9 y 27)",
+          "fuente": "https://normograma.mintic.gov.co/mintic/compilacion/docs/resolucion_mtra_0312_2019.htm",
+          "seccionQueLoCubre": "## Resultados consolidados",
+          "estado": "parcial",
+          "detalle": "La encuesta pregunta estado civil, pero el consolidado automático no lo incluye (solo sexo, edad, escolaridad, vinculación, antigüedad y cargo). Para >50 trabajadores falta estado civil.",
+          "confianza": "alta"
+        },
+        {
+          "id": "FOR-01-R3",
+          "requisito": "Tratamiento de datos sensibles solo con autorización explícita.",
+          "norma": "LEY-1581-2012",
+          "articulo": "arts. 5 y 6 lit. a",
+          "fuente": "https://www.alcaldiabogota.gov.co/sisjur/normas/Norma1.jsp?i=49981",
+          "seccionQueLoCubre": "## Instrucciones (Autorización)",
+          "estado": "cumple",
+          "detalle": "",
+          "confianza": "alta"
+        },
+        {
+          "id": "FOR-01-R4",
+          "requisito": "Al pedir la autorización informar: finalidad, carácter facultativo de las respuestas sobre datos sensibles, derechos del titular e identificación, dirección física o electrónica y teléfono del responsable; conservar prueba.",
+          "norma": "LEY-1581-2012",
+          "articulo": "art. 12 lits. a-d y par.; Decreto 1377/2013 art. 6",
+          "fuente": "https://www.alcaldiabogota.gov.co/sisjur/normas/Norma1.jsp?i=49981",
+          "seccionQueLoCubre": "## Instrucciones (Autorización)",
+          "estado": "parcial",
+          "detalle": "Falta identificación completa del responsable (NIT, dirección y teléfono); si la empresa no tiene correo queda 'la empresa', que no cumple el lit. d.",
+          "confianza": "alta"
+        },
+        {
+          "id": "FOR-01-R5",
+          "requisito": "Datos de salud: solo conceptos de aptitud; nunca diagnósticos (regla del proyecto con base en la reserva de la HC y el dato sensible).",
+          "norma": "RES-1843-2025",
+          "articulo": "art. 30 lit. b; art. 31; Ley 1581 art. 5",
+          "fuente": "https://cancilleria.gov.co/normograma/compilacion/docs/resolucion_mtra_1843_2025.htm",
+          "seccionQueLoCubre": "## Morbilidad sentida (últimos 6 meses)",
+          "estado": "falta",
+          "detalle": "La encuesta es nominal (pide 'Nombre') y pide diagnósticos: 'Diabetes', 'Presión arterial alta', 'Gastritis' y '¿Ha sido diagnosticado con alguna enfermedad laboral?'. Son diagnósticos, no síntomas. La empresa queda guardando diagnósticos individualizados. Opciones: volverla anónima (sin nombre, solo cargo/área) o quitar los diagnósticos y dejar solo síntomas.",
+          "confianza": "alta"
+        }
+      ],
+      "citasIncorrectas": [],
+      "sinSustento": [
+        {
+          "texto": "Decreto 1377 de 2013, art. 6",
+          "problema": "Cita correcta (art. 6: autorización para datos sensibles, verificada en SISJUR), pero el Decreto 1377/2013 no está en el catálogo `norma`; o se agrega (compilado en el Decreto 1074/2015) o se quita la cita."
+        }
+      ]
+    },
+    {
+      "codigo": "FOR-02",
+      "nombre": "Registro y seguimiento de conceptos de aptitud, restricciones y recomendaciones médicas",
+      "normasCitadas": [
+        "RES-1843-2025",
+        "RES-0312-2019"
+      ],
+      "requisitos": [
+        {
+          "id": "FOR-02-R1",
+          "requisito": "Registrar solo el concepto médico ocupacional y las recomendaciones/restricciones; nunca diagnósticos.",
+          "norma": "RES-1843-2025",
+          "articulo": "art. 4 lit. i; art. 19",
+          "fuente": "https://cancilleria.gov.co/normograma/compilacion/docs/resolucion_mtra_1843_2025.htm",
+          "seccionQueLoCubre": "## Instrucciones",
+          "estado": "cumple",
+          "detalle": "La instrucción es correcta, pero el campo libre 'restricciones' no impide escribir diagnósticos (solo la ayuda del editor lo advierte).",
+          "confianza": "alta"
+        },
+        {
+          "id": "FOR-02-R2",
+          "requisito": "No usar la palabra 'no apto'.",
+          "norma": "RES-1843-2025",
+          "articulo": "art. 19 par.",
+          "fuente": "https://cancilleria.gov.co/normograma/compilacion/docs/resolucion_mtra_1843_2025.htm",
+          "seccionQueLoCubre": "## Registro (columna Concepto de aptitud)",
+          "estado": "falta",
+          "detalle": "El modelo de datos (prisma/schema.prisma ExamenMedico.concepto) y el editor (src/components/trabajadores/editor.tsx, src/lib/generador/contexto.ts CONCEPTO) ofrecen 'No apto' y no ofrecen 'Apto con recomendaciones', aunque la plantilla dice lo contrario. El documento puede imprimir 'No apto'.",
+          "confianza": "alta"
+        },
+        {
+          "id": "FOR-02-R3",
+          "requisito": "Tipos de evaluación: incluir retorno laboral y seguimiento o control.",
+          "norma": "RES-1843-2025",
+          "articulo": "art. 8 lits. e, f; arts. 12 y 14",
+          "fuente": "https://cancilleria.gov.co/normograma/compilacion/docs/resolucion_mtra_1843_2025.htm",
+          "seccionQueLoCubre": "## Registro (columna Tipo de evaluación)",
+          "estado": "parcial",
+          "detalle": "El código solo admite ingreso, periódico, retiro, post-incapacidad y cambio de ocupación; faltan 'retorno laboral' y 'seguimiento'.",
+          "confianza": "alta"
+        },
+        {
+          "id": "FOR-02-R4",
+          "requisito": "Registrar temporalidad de recomendaciones/restricciones y si requieren seguimiento.",
+          "norma": "RES-1843-2025",
+          "articulo": "art. 19 par.; art. 29 num. 11",
+          "fuente": "https://cancilleria.gov.co/normograma/compilacion/docs/resolucion_mtra_1843_2025.htm",
+          "seccionQueLoCubre": "## Registro",
+          "estado": "parcial",
+          "detalle": "Hay 'Próximo control' pero no vigencia (temporal/permanente, hasta cuándo).",
+          "confianza": "alta"
+        },
+        {
+          "id": "FOR-02-R5",
+          "requisito": "Adaptar condiciones en ≤ 20 días hábiles tras la evaluación.",
+          "norma": "RES-1843-2025",
+          "articulo": "art. 5 lit. f",
+          "fuente": "https://cancilleria.gov.co/normograma/compilacion/docs/resolucion_mtra_1843_2025.htm",
+          "seccionQueLoCubre": "## Instrucciones",
+          "estado": "parcial",
+          "detalle": "No hay columna de fecha límite (fecha + 20 días hábiles) ni fecha de adaptación; la columna 'Acciones implementadas' se llena con 'Ver seguimiento'.",
+          "confianza": "alta"
+        },
+        {
+          "id": "FOR-02-R6",
+          "requisito": "Comunicación escrita del concepto a cada trabajador con evidencia.",
+          "norma": "RES-1843-2025",
+          "articulo": "art. 5 lit. i",
+          "fuente": "https://cancilleria.gov.co/normograma/compilacion/docs/resolucion_mtra_1843_2025.htm",
+          "seccionQueLoCubre": "## Registro (Comunicado al trabajador)",
+          "estado": "cumple",
+          "detalle": "",
+          "confianza": "alta"
+        },
+        {
+          "id": "FOR-02-R7",
+          "requisito": "Cumplir recomendaciones de EPS/ARL, adecuar o reubicar, y entregar documentos para calificación de origen.",
+          "norma": "RES-0312-2019",
+          "articulo": "estándar 3.1.6",
+          "fuente": "https://normograma.mintic.gov.co/mintic/compilacion/docs/resolucion_mtra_0312_2019.htm",
+          "seccionQueLoCubre": "## Instrucciones",
+          "estado": "parcial",
+          "detalle": "El registro solo recoge conceptos de la IPS ocupacional; no hay filas para recomendaciones de médicos tratantes EPS/ARL ni para la entrega de documentos a calificadores.",
+          "confianza": "alta"
+        },
+        {
+          "id": "FOR-02-R8",
+          "requisito": "Conservar conceptos de exámenes de ingreso, periódicos y retiro por 20 años desde el retiro.",
+          "norma": "DEC-1072-2015",
+          "articulo": "art. 2.2.4.6.13 num. 1",
+          "fuente": "https://normativa.colpensiones.gov.co/colpensiones/docs/decreto_1072_2015_pr009.htm",
+          "seccionQueLoCubre": null,
+          "estado": "falta",
+          "detalle": "El formato no indica el tiempo de retención y el Decreto 1072 no está en su frontmatter; el borrado de exámenes en la app (eliminarExamen) no tiene control de retención.",
+          "confianza": "alta"
+        }
+      ],
+      "citasIncorrectas": [],
+      "sinSustento": [
+        {
+          "texto": "Comunicado al jefe (fecha)",
+          "problema": "No es requisito legal; aceptable como control interno siempre que solo se informe lo necesario para aplicar recomendaciones (reserva, art. 31)."
+        }
+      ]
+    },
+    {
+      "codigo": "POL-02",
+      "nombre": "Política de prevención del consumo de alcohol, tabaco y SPA y de promoción de la salud mental",
+      "normasCitadas": [
+        "DEC-1072-2015-CAP13",
+        "RES-1843-2025",
+        "LEY-1335-2009",
+        "LEY-2460-2025",
+        "LEY-1616-2013",
+        "LEY-2466-2025"
+      ],
+      "requisitos": [
+        {
+          "id": "POL-02-R1",
+          "requisito": "Los empleadores incluyen campañas de prevención y control de farmacodependencia, alcoholismo y tabaquismo 'con una política y programa al respecto'.",
+          "norma": "RES-1843-2025",
+          "articulo": "art. 25 inc. 3; art. 5 lit. g",
+          "fuente": "https://cancilleria.gov.co/normograma/compilacion/docs/resolucion_mtra_1843_2025.htm",
+          "seccionQueLoCubre": "## Declaración",
+          "estado": "cumple",
+          "detalle": "Es la base normativa directa de que exista una política. El Decreto 728/2025 no exige una política ni fija su contenido mínimo; la Ley 2460/2025 tampoco.",
+          "confianza": "alta"
+        },
+        {
+          "id": "POL-02-R2",
+          "requisito": "Acciones de prevención del consumo de SPA con asesoría de la ARL, en siete pasos: (1) establecer programa de sensibilización, (2) definir programa de intervención, (3) ejecutar el programa de sensibilización, (4) identificación activa de casos, (5) asistencia profesional, (6) seguimiento y evaluación, (7) mejora; conforme a la guía técnica general y los protocolos del Ministerio.",
+          "norma": "DEC-1072-2015-CAP13",
+          "articulo": "art. 2.2.4.13.3",
+          "fuente": "https://normograma.mintic.gov.co/mintic/compilacion/docs/decreto_0728_2025.htm",
+          "seccionQueLoCubre": "## Lineamientos (3)",
+          "estado": "parcial",
+          "detalle": "El paso 3 es 'ejecutar el programa de sensibilización', no 'ejecución' en general; falta la referencia a la guía técnica y los protocolos (Res. 2764/2022 art. 1).",
+          "confianza": "alta"
+        },
+        {
+          "id": "POL-02-R3",
+          "requisito": "Plan de intervención en salud mental según resultados de la evaluación de riesgo psicosocial; monitoreo permanente; ejecutar las estrategias diseñadas por la ARL; manejo ético y confidencial.",
+          "norma": "DEC-1072-2015-CAP13",
+          "articulo": "arts. 2.2.4.13.4 y 2.2.4.13.6",
+          "fuente": "https://normograma.mintic.gov.co/mintic/compilacion/docs/decreto_0728_2025.htm",
+          "seccionQueLoCubre": "## Lineamientos (3)",
+          "estado": "parcial",
+          "detalle": "Falta el compromiso de ejecutar las estrategias diseñadas por la ARL (art. 2.2.4.13.6 inc. 1).",
+          "confianza": "alta"
+        },
+        {
+          "id": "POL-02-R4",
+          "requisito": "Promover y armonizar con las acciones de la ARL de prevención, sensibilización, orientación y control de riesgos psicosociales para un ambiente laboral libre de acoso, e implementar medidas de bienestar y salud mental durante la jornada.",
+          "norma": "LEY-2460-2025",
+          "articulo": "art. 9 (parágrafo del art. 9 de la Ley 1616/2013)",
+          "fuente": "https://www.alcaldiabogota.gov.co/sisjur/normas/Norma1.jsp?i=180887",
+          "seccionQueLoCubre": "## Lineamientos (4)",
+          "estado": "parcial",
+          "detalle": "El lineamiento 4 atribuye a la Ley 2460 el facilitar acceso a EPS/ARL, que la ley no dice. Faltan los dos contenidos reales: ambiente libre de acoso articulado con la ARL y medidas de bienestar y salud mental durante la jornada.",
+          "confianza": "alta"
+        },
+        {
+          "id": "POL-02-R5",
+          "requisito": "Prohibición de despedir o presionar la renuncia por enfermedad o afectaciones a la salud mental.",
+          "norma": "LEY-2466-2025",
+          "articulo": "art. 17 (adiciona num. 15 al art. 59 CST)",
+          "fuente": "https://www.alcaldiabogota.gov.co/sisjur/normas/Norma1.jsp?i=181933",
+          "seccionQueLoCubre": "## Lineamientos (5)",
+          "estado": "cumple",
+          "detalle": "",
+          "confianza": "alta"
+        },
+        {
+          "id": "POL-02-R6",
+          "requisito": "Prohibición de fumar en áreas cerradas de lugares de trabajo (incluidos vehículos de trabajo); avisos visibles y medidas disuasorias.",
+          "norma": "LEY-1335-2009",
+          "articulo": "arts. 19, 20, 21",
+          "fuente": "https://www.alcaldiabogota.gov.co/sisjur/normas/Norma1.jsp?i=36878",
+          "seccionQueLoCubre": "## Lineamientos (2)",
+          "estado": "cumple",
+          "detalle": "La extensión a cigarrillos electrónicos viene de la Ley 2354/2024 art. 4 (ver citasIncorrectas).",
+          "confianza": "alta"
+        },
+        {
+          "id": "POL-02-R7",
+          "requisito": "Pruebas de alcohol/SPA solo para actividades que implican riesgo para terceros, justificadas técnicamente en el SG-SST y aplicadas conforme al programa; por personal médico con licencia; no requieren autorización del trabajador en las actividades del par. 1 (conductores, operarios, clase de riesgo IV y V, etc.); articuladas con la Res. 40595/2022 (PESV); si son positivas, exhortar tratamiento por la EAPB; resultados confidenciales.",
+          "norma": "RES-1843-2025",
+          "articulo": "art. 24 y pars. 1-3; art. 25",
+          "fuente": "https://cancilleria.gov.co/normograma/compilacion/docs/resolucion_mtra_1843_2025.htm",
+          "seccionQueLoCubre": "## Lineamientos (6)",
+          "estado": "parcial",
+          "detalle": "Habla de 'verificaciones de aptitud ... con su consentimiento informado' sin citar los arts. 24-25, sin exigir justificación técnica, personal con licencia ni la ruta ante un positivo. El caso genérico ('indicios razonables') no tiene base en el art. 24.",
+          "confianza": "alta"
+        },
+        {
+          "id": "POL-02-R8",
+          "requisito": "Información anual sobre planeación, implementación, seguimiento, evaluación y ajustes, discriminada por actividad económica, número de trabajadores, ocupación, sexo y edad, a disposición del inspector (puede pedirse en diciembre).",
+          "norma": "DEC-1072-2015-CAP13",
+          "articulo": "art. 2.2.4.13.10",
+          "fuente": "https://normograma.mintic.gov.co/mintic/compilacion/docs/decreto_0728_2025.htm",
+          "seccionQueLoCubre": "## Lineamientos (7)",
+          "estado": "cumple",
+          "detalle": "Agregar 'evaluación', que está en la norma.",
+          "confianza": "alta"
+        },
+        {
+          "id": "POL-02-R9",
+          "requisito": "Responsabilidades de trabajadores y contratistas: cuidado integral de la salud, participar en la identificación del riesgo, asistir a actividades, participar en estrategias de salud mental, seguir recomendaciones médicas.",
+          "norma": "DEC-1072-2015-CAP13",
+          "articulo": "art. 2.2.4.13.9",
+          "fuente": "https://normograma.mintic.gov.co/mintic/compilacion/docs/decreto_0728_2025.htm",
+          "seccionQueLoCubre": "## Responsabilidades",
+          "estado": "parcial",
+          "detalle": "Solo 'cumplir la política y participar'; faltan los numerales 1, 2 y 5.",
+          "confianza": "alta"
+        },
+        {
+          "id": "POL-02-R10",
+          "requisito": "Protección especial al personal que trabaja en salud mental (urgencias, consulta, hospitalización, violencia, atención psicosocial en emergencias).",
+          "norma": "DEC-1072-2015-CAP13",
+          "articulo": "art. 2.2.4.13.5",
+          "fuente": "https://normograma.mintic.gov.co/mintic/compilacion/docs/decreto_0728_2025.htm",
+          "seccionQueLoCubre": null,
+          "estado": "falta",
+          "detalle": "Condicional al sector salud; la plantilla no lo prevé ni siquiera como bloque condicional.",
+          "confianza": "alta"
+        }
+      ],
+      "citasIncorrectas": [
+        {
+          "texto": "Está prohibido fumar (incluidos cigarrillos electrónicos y vapeadores) ... (Ley 1335 de 2009, arts. 19 y 21)",
+          "problema": "La Ley 1335 regula productos de tabaco; la extensión a SEAN/SSSN (vapeadores) y a 'humo y aerosoles' la hace la Ley 2354/2024 arts. 1 y 4, que no está en el catálogo.",
+          "correccion": "Agregar LEY-2354-2024 al catálogo y citar 'Ley 1335 de 2009 arts. 19-21, modificada por la Ley 2354 de 2024 arts. 1 y 4'."
+        },
+        {
+          "texto": "facilitará el acceso ... a los servicios de salud mental a través de la EPS y la ARL ... (Ley 1616 de 2013, modificada por la Ley 2460 de 2025)",
+          "problema": "La Ley 2460 art. 9 no impone eso; la atención integral es de la EPS (Decreto 1072 art. 2.2.4.13.8) y la línea de soporte en crisis es de la ARL (art. 2.2.4.13.7).",
+          "correccion": "Citar arts. 2.2.4.13.7 y 2.2.4.13.8 para las rutas, y usar la Ley 2460 art. 9 solo para armonizar con la ARL, ambiente libre de acoso y medidas de bienestar en la jornada."
+        }
+      ],
+      "sinSustento": [
+        {
+          "texto": "La empresa podrá realizar verificaciones de aptitud cuando existan indicios razonables de afectación de la seguridad",
+          "problema": "El art. 24 de la Res. 1843 limita las pruebas a actividades de riesgo para terceros con justificación técnica en el SG-SST; 'indicios razonables' es un criterio no normativo."
+        },
+        {
+          "texto": "Se revisará anualmente.",
+          "problema": "No hay norma que fije revisión anual de esta política; es buena práctica (no presentarla como obligación)."
+        }
+      ]
+    },
+    {
+      "codigo": "PRG-03",
+      "nombre": "Programa de promoción de la salud mental y prevención del consumo de sustancias psicoactivas",
+      "normasCitadas": [
+        "DEC-1072-2015-CAP13",
+        "LEY-2460-2025",
+        "LEY-1616-2013",
+        "RES-1843-2025",
+        "LEY-1335-2009",
+        "RES-2646-2008",
+        "RES-2764-2022"
+      ],
+      "requisitos": [
+        {
+          "id": "PRG-03-R1",
+          "requisito": "Programa de prevención de SPA en siete pasos con asesoría de la ARL y según la guía técnica general y los protocolos del Ministerio.",
+          "norma": "DEC-1072-2015-CAP13",
+          "articulo": "art. 2.2.4.13.3",
+          "fuente": "https://normograma.mintic.gov.co/mintic/compilacion/docs/decreto_0728_2025.htm",
+          "seccionQueLoCubre": "## Integración con el SG-SST (1)",
+          "estado": "parcial",
+          "detalle": "Pasos 3 y 6 parafraseados de forma imprecisa ('ejecución' en vez de 'ejecutar el programa de sensibilización'; 'seguimiento' sin 'evaluar resultados'). No se desarrolla cada paso con actividades, responsables y fechas.",
+          "confianza": "alta"
+        },
+        {
+          "id": "PRG-03-R2",
+          "requisito": "Plan de intervención en salud mental con acciones específicas según los resultados de la batería: A) intervención de factores psicosociales (promoción de protectores, intervención primaria y secundaria) y B) intervención sobre efectos en la salud (promoción, prevención primaria, secundaria y terciaria, incluida atención en crisis y primeros auxilios psicológicos).",
+          "norma": "DEC-1072-2015-CAP13",
+          "articulo": "art. 2.2.4.13.4",
+          "fuente": "https://normograma.mintic.gov.co/mintic/compilacion/docs/decreto_0728_2025.htm",
+          "seccionQueLoCubre": "## Componentes",
+          "estado": "parcial",
+          "detalle": "La tabla de componentes es genérica y no sigue la estructura A/B del artículo ni vincula las acciones a los resultados de la batería. Falta atención en crisis y primeros auxilios psicológicos (B.3.5; también Res. 2646 art. 13 num. 9).",
+          "confianza": "alta"
+        },
+        {
+          "id": "PRG-03-R3",
+          "requisito": "Ejecutar las estrategias de la ARL y monitorear permanentemente la exposición a factores psicosociales en el SG-SST, con confidencialidad.",
+          "norma": "DEC-1072-2015-CAP13",
+          "articulo": "art. 2.2.4.13.6; Ley 1616 art. 9",
+          "fuente": "https://normograma.mintic.gov.co/mintic/compilacion/docs/decreto_0728_2025.htm",
+          "seccionQueLoCubre": "## Integración con el SG-SST (3)",
+          "estado": "parcial",
+          "detalle": "Falta ejecutar las estrategias diseñadas por la ARL.",
+          "confianza": "alta"
+        },
+        {
+          "id": "PRG-03-R4",
+          "requisito": "Armonizar con la ARL la prevención de riesgos psicosociales para un ambiente libre de acoso e implementar medidas de bienestar y salud mental durante la jornada.",
+          "norma": "LEY-2460-2025",
+          "articulo": "art. 9",
+          "fuente": "https://www.alcaldiabogota.gov.co/sisjur/normas/Norma1.jsp?i=180887",
+          "seccionQueLoCubre": "## Objetivo",
+          "estado": "parcial",
+          "detalle": "Se cita la ley, pero ningún componente aborda expresamente el ambiente libre de acoso ni medidas durante la jornada.",
+          "confianza": "alta"
+        },
+        {
+          "id": "PRG-03-R5",
+          "requisito": "Información anual discriminada (actividad, número de trabajadores, ocupación, sexo, edad) sobre planeación, implementación, seguimiento, evaluación y ajustes.",
+          "norma": "DEC-1072-2015-CAP13",
+          "articulo": "art. 2.2.4.13.10",
+          "fuente": "https://normograma.mintic.gov.co/mintic/compilacion/docs/decreto_0728_2025.htm",
+          "seccionQueLoCubre": "## Indicadores y registros",
+          "estado": "cumple",
+          "detalle": "",
+          "confianza": "alta"
+        },
+        {
+          "id": "PRG-03-R6",
+          "requisito": "Campañas de prevención de farmacodependencia, alcoholismo y tabaquismo con política y programa.",
+          "norma": "RES-1843-2025",
+          "articulo": "art. 25 inc. 3; art. 5 lit. g",
+          "fuente": "https://cancilleria.gov.co/normograma/compilacion/docs/resolucion_mtra_1843_2025.htm",
+          "seccionQueLoCubre": "## Integración con el SG-SST (4)",
+          "estado": "cumple",
+          "detalle": "",
+          "confianza": "alta"
+        },
+        {
+          "id": "PRG-03-R7",
+          "requisito": "Evaluación periódica con la batería según el nivel de riesgo e intervención con los protocolos adoptados.",
+          "norma": "RES-2764-2022",
+          "articulo": "arts. 1, 3, 6",
+          "fuente": "https://www.alcaldiabogota.gov.co/sisjur/normas/Norma1.jsp?i=127124",
+          "seccionQueLoCubre": "## Componentes (Detección temprana)",
+          "estado": "parcial",
+          "detalle": "Cita 'art. 7' para los protocolos; el art. 7 trata de emergencias. Los protocolos están en los arts. 1 y 6.",
+          "confianza": "alta"
+        },
+        {
+          "id": "PRG-03-R8",
+          "requisito": "PVE psicosocial cuando el riesgo es alto o hay efectos en la salud.",
+          "norma": "RES-2646-2008",
+          "articulo": "art. 16; Res. 2764/2022 art. 8",
+          "fuente": "https://www.alcaldiabogota.gov.co/sisjur/normas/Norma1.jsp?i=31607",
+          "seccionQueLoCubre": "## Integración con el SG-SST (3)",
+          "estado": "cumple",
+          "detalle": "Agregar Res. 2764 art. 8 (criterios de inclusión).",
+          "confianza": "alta"
+        },
+        {
+          "id": "PRG-03-R9",
+          "requisito": "Protección especial al personal que trabaja en salud mental.",
+          "norma": "DEC-1072-2015-CAP13",
+          "articulo": "art. 2.2.4.13.5",
+          "fuente": "https://normograma.mintic.gov.co/mintic/compilacion/docs/decreto_0728_2025.htm",
+          "seccionQueLoCubre": null,
+          "estado": "falta",
+          "detalle": "Condicional al sector salud; sin bloque condicional.",
+          "confianza": "alta"
+        },
+        {
+          "id": "PRG-03-R10",
+          "requisito": "Programa de estilos de vida y entornos saludables con campañas de SPA, alcohol y tabaco.",
+          "norma": "RES-0312-2019",
+          "articulo": "estándar 3.1.7",
+          "fuente": "https://normograma.mintic.gov.co/mintic/compilacion/docs/resolucion_mtra_0312_2019.htm",
+          "seccionQueLoCubre": "## Componentes",
+          "estado": "cumple",
+          "detalle": "",
+          "confianza": "alta"
+        }
+      ],
+      "citasIncorrectas": [
+        {
+          "texto": "con la batería (Res. 2764 de 2022) y sus protocolos de intervención (art. 7)",
+          "problema": "El art. 7 de la Res. 2764/2022 regula la intervención en emergencias sanitarias, ambientales y sociales.",
+          "correccion": "Res. 2764/2022 arts. 1 (nums. 2-15) y 6."
+        }
+      ],
+      "sinSustento": [
+        {
+          "texto": "Línea 106 / línea nacional de salud mental (según departamento).",
+          "problema": "Ninguna norma del catálogo establece esa línea; la 106 es una línea territorial. La línea de soporte en crisis que la norma obliga es la de la ARL (Decreto 1072 art. 2.2.4.13.7 inc. 2). Citarla y poner las demás líneas como dato de contacto, sin atribuirles norma."
+        },
+        {
+          "texto": "Periodicidad: Semestral / Trimestral",
+          "problema": "Las periodicidades de sensibilización y prevención no las fija ninguna norma; son decisión del programa."
+        }
+      ]
+    },
+    {
+      "codigo": "PRG-04",
+      "nombre": "Programa de gestión del riesgo psicosocial",
+      "normasCitadas": [
+        "RES-2646-2008",
+        "RES-2764-2022",
+        "RES-0312-2019",
+        "LEY-1010-2006",
+        "DEC-1072-2015-CAP13"
+      ],
+      "requisitos": [
+        {
+          "id": "PRG-04-R1",
+          "requisito": "La batería y las guías son referente mínimo obligatorio para todo empleador, sin umbral; los estándares mínimos no eximen de otras normas.",
+          "norma": "RES-2764-2022",
+          "articulo": "arts. 1, 2 y par.; Res. 0312 art. 23 inc. 2",
+          "fuente": "https://www.alcaldiabogota.gov.co/sisjur/normas/Norma1.jsp?i=127124",
+          "seccionQueLoCubre": "## Objetivo",
+          "estado": "cumple",
+          "detalle": "Citas verificadas.",
+          "confianza": "alta"
+        },
+        {
+          "id": "PRG-04-R2",
+          "requisito": "Instrumentos: cuestionario intralaboral (formas A y B), extralaboral, estrés y ficha de datos generales; sin modificar los cuestionarios; con reserva y confidencialidad; guías de análisis a profundidad.",
+          "norma": "RES-2764-2022",
+          "articulo": "art. 4 num. 1 y 2",
+          "fuente": "https://www.alcaldiabogota.gov.co/sisjur/normas/Norma1.jsp?i=127124",
+          "seccionQueLoCubre": "## Evaluación",
+          "estado": "parcial",
+          "detalle": "Falta la prohibición de modificar los cuestionarios y la mención de las guías de análisis a profundidad (puesto, entrevistas, grupos focales).",
+          "confianza": "alta"
+        },
+        {
+          "id": "PRG-04-R3",
+          "requisito": "Aplicación por experto: psicólogo con posgrado en salud ocupacional y licencia vigente (o 100 horas de capacitación si la secretaría certifica no disponibilidad); compromiso escrito de reserva; consentimiento informado.",
+          "norma": "RES-2646-2008",
+          "articulo": "art. 3 lit. p; art. 11",
+          "fuente": "https://www.alcaldiabogota.gov.co/sisjur/normas/Norma1.jsp?i=31607",
+          "seccionQueLoCubre": "## Evaluación",
+          "estado": "parcial",
+          "detalle": "Falta el compromiso escrito del evaluador (art. 11 inc. 1) y la cita del art. 11 para el consentimiento.",
+          "confianza": "alta"
+        },
+        {
+          "id": "PRG-04-R4",
+          "requisito": "Aplicación virtual solo con la herramienta del Ministerio.",
+          "norma": "RES-2764-2022",
+          "articulo": "art. 4 par.",
+          "fuente": "https://www.alcaldiabogota.gov.co/sisjur/normas/Norma1.jsp?i=127124",
+          "seccionQueLoCubre": "## Evaluación",
+          "estado": "cumple",
+          "detalle": "",
+          "confianza": "alta"
+        },
+        {
+          "id": "PRG-04-R5",
+          "requisito": "Periodicidad: anual si hay factores intralaborales de riesgo alto (o muy alto) o efectos negativos en la salud, dentro del SVE y con intervención inmediata en la fuente; cada 2 años si es medio o bajo, con intervención en la fuente y en el trabajador; nivel calculado por separado para forma A y forma B; la periodicidad se cuenta desde el inicio de la intervención.",
+          "norma": "RES-2764-2022",
+          "articulo": "art. 3 y par.",
+          "fuente": "https://www.alcaldiabogota.gov.co/sisjur/normas/Norma1.jsp?i=127124",
+          "seccionQueLoCubre": "## Evaluación",
+          "estado": "parcial",
+          "detalle": "Falta: (a) la evaluación anual también cuando hay efectos negativos en la salud aunque el nivel no sea alto; (b) el cálculo separado A/B (basta que una sea alta); (c) que el plazo corre desde el inicio de la intervención; (d) la intervención inmediata en la fuente.",
+          "confianza": "alta"
+        },
+        {
+          "id": "PRG-04-R6",
+          "requisito": "Custodia de instrumentos por la IPS o el psicólogo; el empleador no conserva copias ni las anexa a la hoja de vida; los informes consolidados reposan en el SG-SST solo para intervención.",
+          "norma": "RES-2764-2022",
+          "articulo": "art. 5 y par.",
+          "fuente": "https://www.alcaldiabogota.gov.co/sisjur/normas/Norma1.jsp?i=127124",
+          "seccionQueLoCubre": "## Evaluación",
+          "estado": "cumple",
+          "detalle": "",
+          "confianza": "alta"
+        },
+        {
+          "id": "PRG-04-R7",
+          "requisito": "Intervención con la guía técnica general y los protocolos específicos (acoso, burnout, depresión, estrés postraumático, estrés agudo, duelo y protocolos sectoriales); intervención primaria en la fuente y secundaria en el trabajador.",
+          "norma": "RES-2764-2022",
+          "articulo": "arts. 1 y 6",
+          "fuente": "https://www.alcaldiabogota.gov.co/sisjur/normas/Norma1.jsp?i=127124",
+          "seccionQueLoCubre": "## Intervención",
+          "estado": "parcial",
+          "detalle": "Cita 'art. 7', que es de emergencias. No menciona los protocolos de actuación ni los sectoriales que aplican según la actividad (salud, transporte, educación, financiero, administración pública).",
+          "confianza": "alta"
+        },
+        {
+          "id": "PRG-04-R8",
+          "requisito": "Criterios mínimos de intervención: compromiso de la gerencia y de los trabajadores, participación de los afectados, priorización por asociación estadística y literatura, educación continua, enfoque interdisciplinario, integración al SG-SST, intervención en crisis.",
+          "norma": "RES-2646-2008",
+          "articulo": "art. 13",
+          "fuente": "https://www.alcaldiabogota.gov.co/sisjur/normas/Norma1.jsp?i=31607",
+          "seccionQueLoCubre": "## Intervención",
+          "estado": "falta",
+          "detalle": "No se mencionan.",
+          "confianza": "alta"
+        },
+        {
+          "id": "PRG-04-R9",
+          "requisito": "Actualizar anualmente la información psicosocial, discriminada por actividad económica, número de trabajadores, ocupación, sexo y edad.",
+          "norma": "RES-2646-2008",
+          "articulo": "art. 12 inc. 2",
+          "fuente": "https://www.alcaldiabogota.gov.co/sisjur/normas/Norma1.jsp?i=31607",
+          "seccionQueLoCubre": null,
+          "estado": "falta",
+          "detalle": "No figura en PRG-04 (PRG-03 lo cubre por el Decreto 728, pero la obligación de la Res. 2646 es independiente y debe citarse aquí).",
+          "confianza": "alta"
+        },
+        {
+          "id": "PRG-04-R10",
+          "requisito": "PVE psicosocial con componentes mínimos y criterios de inclusión cuando el riesgo es alto o hay efectos.",
+          "norma": "RES-2646-2008",
+          "articulo": "arts. 16 y 17; Res. 2764 art. 8",
+          "fuente": "https://www.alcaldiabogota.gov.co/sisjur/normas/Norma1.jsp?i=31607",
+          "seccionQueLoCubre": "## Articulación",
+          "estado": "parcial",
+          "detalle": "Solo menciona 'el PVE psicosocial'; no lo desarrolla ni remite a un documento que lo contenga (PRG-05 es genérico y desde 60 estándares).",
+          "confianza": "alta"
+        },
+        {
+          "id": "PRG-04-R11",
+          "requisito": "Medidas preventivas y correctivas del acoso laboral y articulación con el CCL.",
+          "norma": "RES-2646-2008",
+          "articulo": "art. 14; Res. 3461/2025",
+          "fuente": "https://www.alcaldiabogota.gov.co/sisjur/normas/Norma1.jsp?i=31607",
+          "seccionQueLoCubre": "## Articulación",
+          "estado": "cumple",
+          "detalle": "",
+          "confianza": "alta"
+        },
+        {
+          "id": "PRG-04-R12",
+          "requisito": "Plan de intervención en salud mental a partir de la evaluación psicosocial y monitoreo permanente.",
+          "norma": "DEC-1072-2015-CAP13",
+          "articulo": "arts. 2.2.4.13.4 y 2.2.4.13.6",
+          "fuente": "https://normograma.mintic.gov.co/mintic/compilacion/docs/decreto_0728_2025.htm",
+          "seccionQueLoCubre": "## Articulación",
+          "estado": "cumple",
+          "detalle": "",
+          "confianza": "alta"
+        },
+        {
+          "id": "PRG-04-R13",
+          "requisito": "Prestar asistencia psicológica remota y acciones de salud mental durante emergencias declaradas.",
+          "norma": "RES-2764-2022",
+          "articulo": "art. 7",
+          "fuente": "https://www.alcaldiabogota.gov.co/sisjur/normas/Norma1.jsp?i=127124",
+          "seccionQueLoCubre": null,
+          "estado": "falta",
+          "detalle": "Es lo que realmente dice el art. 7; podría quedar como bloque 'en situación de emergencia declarada'.",
+          "confianza": "alta"
+        }
+      ],
+      "citasIncorrectas": [
+        {
+          "texto": "con los protocolos de intervención adoptados por la Resolución 2764 de 2022 (art. 7)",
+          "problema": "El art. 7 trata la intervención durante emergencias sanitarias, ambientales y sociales; los protocolos se adoptan en el art. 1 y se describen en el art. 6.",
+          "correccion": "Resolución 2764 de 2022, arts. 1 y 6."
+        }
+      ],
+      "sinSustento": [
+        {
+          "texto": "Cronograma (tabla vacía)",
+          "problema": "Sin fechas no hay evidencia de la periodicidad del art. 3; conviene precargar la próxima aplicación según el último nivel de riesgo."
+        }
+      ]
+    }
+  ],
+  "normasFaltantesCatalogo": [
+    {
+      "norma": "Ley 2354 de 2024 (modifica el art. 1 de la Ley 1335/2009; extiende sus medidas de control a SEAN, SSSN, tabaco calentado y nicotina oral; 'libre de humo' = 'libre de humo y aerosoles')",
+      "url": "http://www.secretariasenado.gov.co/senado/basedoc/ley_2354_2024.html",
+      "porque": "POL-02 y PRG-03 prohíben vapeadores y cigarrillos electrónicos citando solo la Ley 1335, que no los cubre en su texto original (arts. 1 y 4 de la Ley 2354)."
+    },
+    {
+      "norma": "Decreto 1377 de 2013 (compilado en el Decreto 1074/2015, arts. 2.2.2.25.2.x), art. 6: autorización para datos sensibles",
+      "url": "https://www.alcaldiabogota.gov.co/sisjur/normas/Norma1.jsp?i=53646",
+      "porque": "FOR-01 lo cita expresamente y no está en el catálogo; el resumen de LEY-1581-2012 también lo menciona."
+    }
+  ],
+  "estandaresSinArtefacto": [
+    {
+      "estandar": "3.1.6",
+      "propuesta": "Ningún artefacto cubre la parte del estándar sobre recomendaciones de médicos tratantes EPS/ARL ni la entrega de documentos a quienes califican en primera oportunidad o a las Juntas. Agregar una sección en FOR-02 (o un formato) para registrar la recomendación de EPS/ARL, la acción de reubicación/readaptación y la constancia de entrega de documentos para calificación."
+    },
+    {
+      "estandar": "3.1.2 (pausas activas, Res. 1843 art. 5 lit. h) en empresas de 7 estándares",
+      "propuesta": "PRG-02 tiene nivelMin 21: las empresas de ≤10 trabajadores no reciben el programa de pausas activas ni los PVE, que la Res. 1843 exige a todo empleador. Bajar PRG-02 a nivelMin 7, o crear un programa breve de pausas activas y SVE."
+    },
+    {
+      "estandar": "3.1.4 (definición documentada de la frecuencia de las evaluaciones periódicas)",
+      "propuesta": "Agregar en DOC-07 una columna de periodicidad por cargo y examen, con justificación técnica (Res. 1843 art. 15), y usarla para calcular 'próximo' en FOR-02 en vez del valor por defecto de 1 año."
+    }
+  ],
+  "notas": "Textos oficiales leídos completos: Res. 1843/2025 (Cancillería), Decreto 728/2025 (MinTIC), Ley 2460/2025, Ley 1616/2013 art. 9, Res. 2764/2022, Res. 2646/2008, Ley 1335/2009 arts. 19-21, Ley 2466/2025 art. 17, Ley 1581/2012 arts. 5, 6 y 12, Decreto 1477/2014 (articulado, sin anexo técnico), Decreto 1377/2013 art. 6 (SISJUR), Ley 2354/2024 (Secretaría del Senado), Decreto 1072/2015 cap. 6 (Colpensiones) y Res. 0312/2019 (MinTIC). Confianza media solo en PRG-05-R5, porque el anexo técnico del Decreto 1477 no se leyó. Hallazgos que no están en las plantillas sino en el código: el modelo ExamenMedico y el editor ofrecen 'No apto' (prohibido por la Res. 1843 art. 19 par.), no ofrecen 'Apto con recomendaciones', y no tienen los tipos 'retorno laboral' ni 'seguimiento'. Sobre el contenido mínimo de la política y del programa de salud mental: ni el Decreto 728/2025 ni la Ley 2460/2025 fijan contenido mínimo para una 'política'. La política se sostiene en la Res. 1843 art. 25 inc. 3 ('con una política y programa'). El programa tiene contenido mínimo verificable en los arts. 2.2.4.13.3 (7 pasos), 2.2.4.13.4 (acciones A/B según la batería), 2.2.4.13.6 (estrategias de la ARL y monitoreo), 2.2.4.13.9 (deberes de los trabajadores) y 2.2.4.13.10 (información anual discriminada). La batería es obligatoria para todo empleador (Res. 2764 art. 2). Sobre vacunación: en estas plantillas solo aparece en PRG-02, sin norma; se sugiere redactarla como control de la matriz. No se editó ningún archivo del proyecto."
+}
