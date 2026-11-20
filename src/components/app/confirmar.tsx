@@ -11,8 +11,8 @@ export function Confirmar({ trigger, children, titulo, descripcion, accion = "Co
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger render={trigger}>{children}</DialogTrigger>
-      <DialogContent>
-        <DialogHeader><DialogTitle>{titulo}</DialogTitle>{descripcion && <DialogDescription>{descripcion}</DialogDescription>}</DialogHeader>
+      <DialogContent className={extra ? "sm:max-w-xl" : "sm:max-w-md"}>
+        <DialogHeader><DialogTitle>{titulo}</DialogTitle>{descripcion && <DialogDescription className="text-pretty">{descripcion}</DialogDescription>}</DialogHeader>
         {extra}
         <DialogFooter>
           <DialogClose render={<Button variant="outline" />}>Cancelar</DialogClose>
@@ -30,8 +30,8 @@ export function Pedir({ trigger, children, titulo, descripcion, label, inicial =
   return (
     <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (o) setV(inicial); }}>
       <DialogTrigger render={trigger}>{children}</DialogTrigger>
-      <DialogContent>
-        <DialogHeader><DialogTitle>{titulo}</DialogTitle>{descripcion && <DialogDescription>{descripcion}</DialogDescription>}</DialogHeader>
+      <DialogContent className={extra ? "sm:max-w-xl" : "sm:max-w-md"}>
+        <DialogHeader><DialogTitle>{titulo}</DialogTitle>{descripcion && <DialogDescription className="text-pretty">{descripcion}</DialogDescription>}</DialogHeader>
         <Field><FieldLabel htmlFor="pedir">{label}</FieldLabel><Input id="pedir" type={tipo} placeholder={tipo === "date" ? undefined : placeholder} className={tipo === "date" ? "w-48" : undefined} value={v} onChange={(e) => setV(e.target.value)} /></Field>
         {extra?.(v)}
         <DialogFooter>

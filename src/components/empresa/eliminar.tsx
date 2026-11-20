@@ -13,7 +13,7 @@ export function BotonEliminarEmpresa({ id, nombre }: { id: string; nombre: strin
   return (
     <Dialog>
       <DialogTrigger render={<Button variant="destructive" className="w-fit" />}><Trash2 /> Eliminar empresa</DialogTrigger>
-      <DialogContent>
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Eliminar {nombre}</DialogTitle>
           <DialogDescription>Se eliminarán la empresa y todo su SG-SST: matriz, evaluaciones, documentos y plan. No se puede deshacer.</DialogDescription>

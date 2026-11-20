@@ -39,7 +39,7 @@ export function FilaAccion({ empresaId, a, conHallazgo }: { empresaId: string; a
             onConfirm={(v) => start(async () => { const r = await actualizarCausaAccion(empresaId, a.id, v); if ("error" in r) toast.error(r.error); else { toast.success("Causa raíz guardada"); router.refresh(); } })}><SearchCheck /> Causa</Pedir>
           <Dialog open={abierto} onOpenChange={setAbierto}>
             <DialogTrigger render={<Button size="xs" variant="outline" disabled={pend} />}><CheckCircle2 /> Cerrar</DialogTrigger>
-            <DialogContent>
+            <DialogContent className="sm:max-w-md">
               <DialogHeader><DialogTitle>Cerrar acción</DialogTitle><DialogDescription>Registre cuándo se cerró y cómo se verificó que la acción fue eficaz.</DialogDescription></DialogHeader>
               <Field><FieldLabel htmlFor={`c-${a.id}`}>Fecha de cierre</FieldLabel><Input id={`c-${a.id}`} type="date" className="w-48" value={cierre} onChange={(e) => setCierre(e.target.value)} /></Field>
               <Field><FieldLabel htmlFor={`e-${a.id}`}>Verificación de eficacia</FieldLabel><Textarea id={`e-${a.id}`} rows={3} value={eficacia} placeholder="Ej.: inspección de seguimiento del 10/12 sin hallazgos repetidos." onChange={(e) => setEficacia(e.target.value)} /></Field>

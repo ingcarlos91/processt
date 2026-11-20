@@ -71,7 +71,7 @@ function SectorCard({ s, tareas, zonas, iaActiva, run, pend }: { s: S; tareas: I
           <CardAction className="flex gap-2">
             <Dialog>
               <DialogTrigger render={<Button size="sm" variant="secondary" disabled={!iaActiva} />}><Sparkles /> Ampliar con IA</DialogTrigger>
-              <DialogContent>
+              <DialogContent className="sm:max-w-md">
                 <DialogHeader><DialogTitle>Ampliar “{s.nombre}” con IA</DialogTitle><DialogDescription>La IA propone cargos nuevos con sus tareas y peligros (GTC 45), reutilizando lo que ya existe. Todo queda “sin validar” para que usted lo revise.</DialogDescription></DialogHeader>
                 <Field><FieldLabel>¿Cuántos cargos nuevos?</FieldLabel><NativeSelect className="w-full" value={ia.cantidad} onChange={(e) => setIa({ ...ia, cantidad: Number(e.target.value) })}>{[4, 8, 12, 16].map((n) => <NativeSelectOption key={n} value={n}>{n}</NativeSelectOption>)}</NativeSelect></Field>
                 <Field><FieldLabel>Indicaciones (opcional)</FieldLabel><Textarea value={ia.instrucciones} onChange={(e) => setIa({ ...ia, instrucciones: e.target.value })} placeholder="Ej: incluir cargos de mantenimiento y de bodega de agroquímicos" /></Field>
