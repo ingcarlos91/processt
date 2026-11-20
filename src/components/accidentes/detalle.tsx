@@ -30,6 +30,7 @@ import * as A from "@/app/actions/eventos";
 import type { SugerenciaInvestigacion } from "@/lib/ia/investigacion";
 import type { CatalogoAccidentes } from "@/lib/catalogo-accidentes";
 import { Combo } from "@/components/app/combo";
+import { textoAccionPropuesta } from "@/lib/plazos";
 
 type Accion = { id: string; hallazgo: string; causa: string; tipo: string; jerarquia: string; dirigidaA: string; descripcion: string; responsable: string; fechaLimite: string; estado: string; fechaCierre: string; eficacia: string; enPlan: string };
 type Ev = {
@@ -78,14 +79,14 @@ function ListaTexto({ items, onChange, placeholder, numerada, sugeridos }: { ite
   );
 }
 
-export function EventoDetalle({ empresaId, ev, cargos, peligros, peligrosEnMatriz, equipoSugerido, responsable, iaActiva, cat, lugares, sedes, personas, avisoMatriz, direccionEmpresa }: {
+export function EventoDetalle({ diasAccionDefecto, empresaId, ev, cargos, peligros, peligrosEnMatriz, equipoSugerido, responsable, iaActiva, cat, lugares, sedes, personas, avisoMatriz, direccionEmpresa }: { diasAccionDefecto?: number;
   empresaId: string; ev: Ev; cargos: CargoOpcion[]; peligros: OpcionBuscador[]; peligrosEnMatriz: string[]; equipoSugerido: Integrante[]; responsable: string; iaActiva: boolean; cat: CatalogoAccidentes; lugares: string[]; sedes: string[]; personas: string[]; avisoMatriz: "obligatorio" | "recomendado" | null; direccionEmpresa: string;
 }) {
   const router = useRouter();
   const [pend, start] = useTransition();
-  const run = (fn: () => Promise<Res>, ok: string, despues?: () => void) => start(async () => {
+  const run = (fn: () => Promise<Res>, ok: string, despues?: () => void, descripcion?: string) => start(async () => {
     const r = await fn();
-    if ("error" in r && r.error) toast.error(r.error); else { toast.success(ok); despues?.(); router.refresh(); }
+    if ("error" in r && r.error) toast.error(r.error); else { toast.success(ok, descripcion ? { description: descripcion, duration: 10000 } : undefined); despues?.(); router.refresh(); }
   });
   const t = TIPOS_EVENTO[ev.tipo];
   const grave = ev.tipo === "AT" && ev.gravedad !== "leve";
@@ -111,7 +112,7 @@ export function EventoDetalle({ empresaId, ev, cargos, peligros, peligrosEnMatri
   const [sug, setSug] = useState<{ fuente: string; s: SugerenciaInvestigacion } | null>(null);
   const [sugiriendo, startSug] = useTransition();
   // 4. Acciones
-  const en30 = () => hoyLocal(30);
+  const en30 = () => hoyLocal(diasAccionDefecto ?? 30); // plazo "accion_limite" (src/lib/plazos.ts)
   const vacia = () => ({ id: "", hallazgo: "", causa: "", tipo: "correctiva", jerarquia: "administrativo", dirigidaA: "", descripcion: "", responsable, fechaLimite: en30() });
   const [acc, setAcc] = useState<ReturnType<typeof vacia> | null>(null);
 
@@ -375,12 +376,12 @@ export function EventoDetalle({ empresaId, ev, cargos, peligros, peligrosEnMatri
                 <FieldDescription>Fuente: el equipo, la máquina o el material que genera el peligro. Medio: el entorno entre la fuente y la persona. Trabajador: capacitación, procedimiento o EPP (Res. 1401/2007 art. 12).</FieldDescription>
               </Field>
               <Field><FieldLabel htmlFor="a-r">Responsable</FieldLabel><Combo id="a-r" placeholder="Seleccione o escriba el responsable" value={acc.responsable} onChange={(v) => setAcc({ ...acc, responsable: v })} grupos={[{ titulo: "Personas registradas", opciones: personas.map((p) => ({ valor: p })) }]} /></Field>
-              <Field><FieldLabel htmlFor="a-f">Fecha límite</FieldLabel><Input id="a-f" type="date" value={acc.fechaLimite} onChange={(e) => setAcc({ ...acc, fechaLimite: e.target.value })} /></Field>
+              <Field><FieldLabel htmlFor="a-f">Fecha límite</FieldLabel><Input id="a-f" type="date" value={acc.fechaLimite} onChange={(e) => setAcc({ ...acc, fechaLimite: e.target.value })} /><FieldDescription>{textoAccionPropuesta(diasAccionDefecto)}</FieldDescription></Field>
             </div>
           )}
           <DialogFooter>
             <Button variant="outline" onClick={() => setAcc(null)}>Cancelar</Button>
-            <Button disabled={pend || !acc?.descripcion.trim()} onClick={() => acc && run(() => A.guardarAccion(empresaId, { ...acc, id: acc.id || undefined, eventoId: ev.id }), acc.id ? "Acción actualizada" : "Acción agregada", () => setAcc(null))}>{pend ? <Spinner /> : <Save />} Guardar</Button>
+            <Button disabled={pend || !acc?.descripcion.trim()} onClick={() => acc && run(() => A.guardarAccion(empresaId, { ...acc, id: acc.id || undefined, eventoId: ev.id }), acc.id ? "Acción actualizada" : "Acción agregada", () => setAcc(null), acc.fechaLimite ? `Queda en FOR-06 y en el planeador con fecha límite el ${fechaLarga(acc.fechaLimite)}.` : undefined)}>{pend ? <Spinner /> : <Save />} Guardar</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

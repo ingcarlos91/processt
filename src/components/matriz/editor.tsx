@@ -19,6 +19,9 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Item as UiItem, ItemActions, ItemContent, ItemDescription, ItemGroup, ItemTitle } from "@/components/ui/item";
 import { Confirmar, Pedir } from "@/components/app/confirmar";
+import { AvisoTareas } from "@/components/plazos/aviso-tareas";
+import { toastTareas } from "@/components/plazos/toast-tareas";
+import { avisoPlazo, deInput } from "@/lib/plazos";
 import { GuardarEnBiblioteca } from "@/components/app/guardar-biblioteca";
 import { Buscador, type OpcionBuscador, type Relevancia } from "@/components/app/buscador";
 import { ND, NE, NC, CLASIFICACIONES, CLASIFICACION_ETIQUETA, calcular, COLOR_NIVEL, explicarRiesgo } from "@/lib/gtc45";
@@ -26,7 +29,7 @@ import { Tip } from "@/components/app/tip";
 import { Ayuda } from "@/components/app/ayuda";
 import * as A from "@/app/actions/matriz";
 import type { Sugerencia } from "@/lib/ia";
-import { cn } from "@/lib/utils";
+import { cn, hoyLocal } from "@/lib/utils";
 import { avisoPeriodicidad } from "@/lib/examenes";
 import { ESTADOS_MEDIDA, EFICAZ, type Seguimiento } from "@/lib/matriz/seguimiento";
 
@@ -88,7 +91,8 @@ export function MatrizEditor(props: {
         <BotonDescarga href={`/api/empresas/${empresaId}/matriz.xlsx`} variant="outline" tooltip="Descargar la matriz de peligros en Excel con el formato de la GTC 45"><Download /> Excel GTC 45</BotonDescarga>
         <Link href={`/empresas/${empresaId}/matriz/versiones`} className={buttonVariants({ variant: "outline" })}><History /> Versiones{props.nVersiones ? ` (${props.nVersiones})` : ""}</Link>
         <Pedir trigger={<Button variant="outline" disabled={pend} tooltip="Congela la matriz actual como una versión consultable y descargable" />} titulo="Cerrar versión de la matriz" descripcion="Se guarda una copia completa de la matriz como está hoy, con fecha, motivo y quién la cerró; queda en el historial de versiones y el MTZ-02 se actualiza. La matriz se actualiza mínimo una vez al año, ante cambios en procesos o instalaciones y siempre que ocurra un accidente mortal o un evento catastrófico (Decreto 1072/2015 art. 2.2.4.6.15; Res. 0312/2019 estándar 4.1.2)." label="Motivo (por ejemplo: inicial, actualización anual 2026, cambio de proceso, accidente)" placeholder="Ej.: Actualización anual" inicial={props.version ? `Actualización anual ${new Date().getFullYear()}` : "Versión inicial"} accion="Cerrar versión"
-          onConfirm={(m) => start(async () => { const r = await A.cerrarVersionMatriz(empresaId, m); if ("error" in r) toast.error(r.error); else toast.success(`Versión v${r.numero} cerrada${r.pendientes ? `. Atención: ${r.pendientes} peligro(s) sugerido(s) sin aprobar no quedaron en la versión` : ""}.`); })}><Lock /> Cerrar versión</Pedir>
+          extra={() => <AvisoTareas titulo="Al cerrar se programa en el planeador" tareas={[avisoPlazo("matriz_anual", deInput(hoyLocal()))]} />}
+          onConfirm={(m) => start(async () => { const r = await A.cerrarVersionMatriz(empresaId, m); if ("error" in r) toast.error(r.error); else toastTareas(`Versión v${r.numero} cerrada${r.pendientes ? `. Atención: ${r.pendientes} peligro(s) sugerido(s) sin aprobar no quedaron en la versión` : ""}.`, [avisoPlazo("matriz_anual", deInput(hoyLocal()))]); })}><Lock /> Cerrar versión</Pedir>
       </div>
       {props.version && <p className="text-xs text-muted-foreground -mt-4">Última versión cerrada: v{props.version.numero} ({props.version.motivo}) el {new Date(props.version.fecha).toLocaleDateString("es-CO")}. <Link className="underline underline-offset-2" href={`/empresas/${empresaId}/matriz/versiones`}>Ver historial</Link></p>}
       {props.avisos.map((a, i) => (

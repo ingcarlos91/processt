@@ -1,3 +1,5 @@
+import { parametrosPlazos } from "@/lib/plazos-servidor";
+import { valorPlazo } from "@/lib/plazos";
 import { db } from "@/lib/db";
 import { aArchivoUI } from "@/lib/archivos-ui";
 import { InspeccionesEditor } from "@/components/inspecciones/editor";
@@ -18,7 +20,7 @@ export default async function Inspecciones({ params }: PageProps<"/empresas/[id]
   const pertinente = (l: (typeof listas)[number]) => l.normas.some((n) => n !== "RES-0312-2019" && aplican.has(n));
   listas.sort((x, y) => Number(pertinente(y)) - Number(pertinente(x)));
   return (
-    <InspeccionesEditor
+    <InspeccionesEditor diasAccionDefecto={valorPlazo("accion_limite", await parametrosPlazos())}
       empresaId={id}
       listas={listas.map((l) => { const d = (l.detalle ?? {}) as { items?: string[]; frecuenciaDias?: number }; return { nombre: l.nombre, descripcion: l.descripcion ?? "", items: d.items ?? [], frecuenciaDias: d.frecuenciaDias ?? 0 }; })}
       lugares={[...new Set([...e.zonas, ...e.sedes].map((x) => x.nombre))]}

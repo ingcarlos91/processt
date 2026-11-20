@@ -1,4 +1,5 @@
 "use server";
+import { valorPlazo } from "@/lib/plazos";
 import { MAPA_ESTADO_ACTUAL, noAplicaInvalidos } from "@/lib/diagnostico";
 import { actualizarDocumentosExistentes } from "@/lib/generador/documentos";
 import { requiereUsuario } from "@/lib/auth/sesion";
@@ -202,7 +203,7 @@ export async function crearComite(empresaId: string, tipo: string, periodoInicio
   const existentes = await db.comite.findMany({ where: { empresaId, tipo }, select: { sede: true } });
   if (existentes.some((x) => (x.sede ?? null) === sede)) throw new Error(sede ? `Ya hay un Comité de Convivencia para la sede ${sede}.` : "Ese comité ya está registrado.");
   const ini = new Date(periodoInicio);
-  const fin = new Date(ini); fin.setFullYear(fin.getFullYear() + 2);
+  const fin = new Date(ini); fin.setFullYear(fin.getFullYear() + valorPlazo("comite_periodo"));
   const n = opciones.trabajadores && opciones.trabajadores > 0 ? Math.round(opciones.trabajadores) : (await recalcularEmpresa(empresaId)).trabajadores;
   const composicion = calcularComposicion(tipo, n, periodoInicio, sede);
   await db.comite.create({ data: { empresaId, tipo, sede, periodoInicio: ini, periodoFin: tipo === "BRIGADA" ? null : fin, normaRef: NR_COMITE[tipo], datos: composicion ? { composicion: { ...composicion, origen: "conformacion" } } : {} } });

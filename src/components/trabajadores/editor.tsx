@@ -28,6 +28,9 @@ import { Tip } from "@/components/app/tip";
 import { abrevDoc } from "@/lib/documento-identidad";
 import * as A from "@/app/actions/trabajadores";
 import { cn, hoyLocal } from "@/lib/utils";
+import { AvisoTareas, type TareaAviso } from "@/components/plazos/aviso-tareas";
+import { toastTareas } from "@/components/plazos/toast-tareas";
+import { avisoFecha, avisoPlazo, deInput } from "@/lib/plazos";
 
 type Examen = { id: string; tipo: string; fecha: string; ips: string; concepto: string; regimen?: string; restricciones: string; restriccionHasta: string; restriccionPermanente: boolean; adaptacionFecha: string; comunicadoTrabajador: string; proximo: string; borrable?: boolean };
 type Entrega = { id: string; fecha: string; elemento: string; cantidad: number; tipo: string; capacitado: boolean; proximaReposicion: string };
@@ -49,7 +52,7 @@ export function TrabajadoresEditor({ empresaId, trabajadores, cargos, sugeridos,
   catalogoEpp: string[]; catalogoCapacitaciones: string[]; actividades: { id: string; nombre: string; anio: number; periodo: string }[]; capacitaciones: Cap[]; entidades: Entidades;
 }) {
   const [pend, start] = useTransition();
-  const run = (fn: () => Promise<Res>, ok: string, despues?: () => void) => start(async () => { const r = await fn(); if ("error" in r && r.error) toast.error(r.error); else { toast.success(ok); despues?.(); } });
+  const run = (fn: () => Promise<Res>, ok: string, despues?: () => void, tareas?: TareaAviso[]) => start(async () => { const r = await fn(); if ("error" in r && r.error) toast.error(r.error); else { if (tareas?.length) toastTareas(ok, tareas); else toast.success(ok); despues?.(); } });
   const [q, setQ] = useState("");
   const [verRetirados, setVerRetirados] = useState(false);
   const [form, setForm] = useState<ReturnType<typeof vacioT> | null>(null);
@@ -73,6 +76,17 @@ export function TrabajadoresEditor({ empresaId, trabajadores, cargos, sugeridos,
   const periodicidadDe = (trabajadorId: string) => cargos.find((c) => c.id === trabajadores.find((t) => t.id === trabajadorId)?.cargoId)?.periodicidadMeses ?? null;
   const proximoPara = (trabajadorId: string, f: string, tipo: string) => { const m = periodicidadDe(trabajadorId); return tipo === "retiro" || !m || !f ? "" : sumarMeses(f, m); };
   const abrirExamen = (trabajadorId: string, x?: Examen) => setExamen(x ? { ...x, trabajadorId } : { trabajadorId, tipo: "periodico", fecha: hoy(), ips: ipsPorDefecto, concepto: "apto", restricciones: "", restriccionHasta: "", restriccionPermanente: false, adaptacionFecha: "", comunicadoTrabajador: "", proximo: proximoPara(trabajadorId, hoy(), "periodico") });
+  // Tareas que se programan al guardar (catálogo src/lib/plazos.ts).
+  const tareasExamen = (x: { fecha: string; concepto: string; restricciones: string; adaptacionFecha: string; proximo: string }): TareaAviso[] => [
+    ...(requiereAdaptacion(x.concepto, x.restricciones) && !x.adaptacionFecha && x.fecha ? [avisoPlazo("adaptacion", deInput(x.fecha))] : []),
+    ...(x.proximo ? [avisoFecha("examen_periodico", "Examen médico periódico", x.proximo, "fecha de próximo examen, según la periodicidad del cargo")] : []),
+  ];
+  const tareasEntrega = (e: { proximaReposicion: string }): TareaAviso[] => (e.proximaReposicion ? [avisoFecha("epp_reposicion", "Reposición de EPP", e.proximaReposicion, "fecha de próxima reposición, según la vida útil del elemento")] : []);
+  const tareasCap = (c: { tema: string; fecha: string; asistentes: string[] }): TareaAviso[] => {
+    if (!c.asistentes.length) return [];
+    const f = deInput(c.fecha);
+    return [...(/altura/i.test(c.tema) ? [avisoPlazo("alturas_reentrenamiento", f)] : []), ...(/confinad/i.test(c.tema) ? [avisoPlazo("confinados_actualizacion", f)] : [])];
+  };
   const limite = (f: string) => (f ? limiteAdaptacion(new Date(f + "T12:00:00Z")).toISOString().slice(0, 10) : "");
   const abrirEntrega = (ids: string[]) => {
     const t = trabajadores.find((x) => x.id === ids[0]);
@@ -242,7 +256,7 @@ export function TrabajadoresEditor({ empresaId, trabajadores, cargos, sugeridos,
                 <div className="flex flex-wrap gap-2 pt-2">
                   <Button size="sm" variant="outline" onClick={() => setForm({ ...tFicha })}><Pencil /> Editar datos</Button>
                   {tFicha.activo
-                    ? <Pedir trigger={<Button size="sm" variant="outline" />} titulo="Retirar trabajador" descripcion="Queda en el historial (sus registros se conservan) y deja de contar como activo. Recuerde el examen de retiro." label="Fecha de retiro" tipo="date" inicial={hoy()} accion="Retirar" onConfirm={(f) => run(() => A.retirarTrabajador(empresaId, tFicha.id, f), "Trabajador retirado")}><UserMinus /> Retirar</Pedir>
+                    ? <Pedir trigger={<Button size="sm" variant="outline" />} titulo="Retirar trabajador" descripcion="Queda en el historial (sus registros se conservan) y deja de contar como activo. Recuerde el examen de retiro." label="Fecha de retiro" tipo="date" inicial={hoy()} accion="Retirar" extra={(f) => <AvisoTareas tareas={f ? [avisoPlazo("egreso", deInput(f))] : []} />} onConfirm={(f) => run(() => A.retirarTrabajador(empresaId, tFicha.id, f), "Trabajador retirado", undefined, [avisoPlazo("egreso", deInput(f))])}><UserMinus /> Retirar</Pedir>
                     : <Button size="sm" variant="outline" onClick={() => run(() => A.reactivarTrabajador(empresaId, tFicha.id), "Trabajador reactivado")}><UserCheck /> Reactivar</Button>}
                   <Confirmar trigger={<Button size="sm" variant="ghost" />} titulo="Eliminar trabajador" descripcion="Se borran sus exámenes, entregas y asistencias. Si solo dejó la empresa, mejor use Retirar." accion="Eliminar" destructivo onConfirm={() => run(() => A.eliminarTrabajador(empresaId, tFicha.id), "Trabajador eliminado", () => setFicha(null))}><Trash2 /> Eliminar</Confirmar>
                 </div>
@@ -351,9 +365,10 @@ export function TrabajadoresEditor({ empresaId, trabajadores, cargos, sugeridos,
                   <Field><FieldLabel htmlFor="x-p">Próximo examen</FieldLabel><Input id="x-p" type="date" value={examen.proximo} onChange={(e) => setExamen({ ...examen, proximo: e.target.value })} /><FieldDescription className={cn(!periodicidadDe(examen.trabajadorId) && examen.tipo !== "retiro" && "text-amber-700")}>{periodicidadDe(examen.trabajadorId) ? `${textoPeriodicidad(periodicidadDe(examen.trabajadorId))}, según la periodicidad del cargo (Res. 1843/2025 art. 15).` : "Defina la periodicidad del cargo en la matriz de peligros (Cargos) para calcularlo; la define la empresa con justificación técnica (Res. 1843/2025 art. 15)."}</FieldDescription></Field>
                 </SeccionFormulario>
               </SeccionesFormulario>
+              <AvisoTareas className="mt-4" tareas={tareasExamen(examen)} />
             </DialogBody>
           )}
-          <DialogFooter><Button variant="outline" onClick={() => setExamen(null)}>Cancelar</Button><Button disabled={pend} onClick={() => examen && run(() => A.guardarExamen(empresaId, examen), "Examen guardado", () => setExamen(null))}>{pend && <Spinner />} Guardar</Button></DialogFooter>
+          <DialogFooter><Button variant="outline" onClick={() => setExamen(null)}>Cancelar</Button><Button disabled={pend} onClick={() => examen && run(() => A.guardarExamen(empresaId, examen), "Examen guardado", () => setExamen(null), tareasExamen(examen))}>{pend && <Spinner />} Guardar</Button></DialogFooter>
         </DialogContent>
       </Dialog>
 
@@ -384,9 +399,10 @@ export function TrabajadoresEditor({ empresaId, trabajadores, cargos, sugeridos,
                   <label className="flex cursor-pointer items-center gap-2 text-sm sm:col-span-4"><Checkbox checked={entrega.capacitado} onCheckedChange={(v) => setEntrega({ ...entrega, capacitado: !!v })} /> Se capacitó en el uso y mantenimiento</label>
                 </SeccionFormulario>
               </SeccionesFormulario>
+              <AvisoTareas className="mt-4" tareas={tareasEntrega(entrega)} />
             </DialogBody>
           )}
-          <DialogFooter><Button variant="outline" onClick={() => setEntrega(null)}>Cancelar</Button><Button disabled={pend || !entrega?.trabajadorIds.length || !entrega?.elementos.length} tooltip={entrega && (!entrega.trabajadorIds.length || !entrega.elementos.length) ? "Marque al menos un trabajador y un elemento" : undefined} onClick={() => entrega && start(async () => { const r = await A.guardarEntregas(empresaId, entrega); if ("error" in r) toast.error(r.error); else { toast.success(`${r.n} entrega(s) registradas`); setEntrega(null); } })}>{pend && <Spinner />} Registrar</Button></DialogFooter>
+          <DialogFooter><Button variant="outline" onClick={() => setEntrega(null)}>Cancelar</Button><Button disabled={pend || !entrega?.trabajadorIds.length || !entrega?.elementos.length} tooltip={entrega && (!entrega.trabajadorIds.length || !entrega.elementos.length) ? "Marque al menos un trabajador y un elemento" : undefined} onClick={() => entrega && start(async () => { const r = await A.guardarEntregas(empresaId, entrega); if ("error" in r) toast.error(r.error); else { toastTareas(`${r.n} entrega(s) registradas`, tareasEntrega(entrega)); setEntrega(null); } })}>{pend && <Spinner />} Registrar</Button></DialogFooter>
         </DialogContent>
       </Dialog>
 
@@ -414,9 +430,10 @@ export function TrabajadoresEditor({ empresaId, trabajadores, cargos, sugeridos,
                   </div>
                 </SeccionFormulario>
               </SeccionesFormulario>
+              <AvisoTareas className="mt-4" titulo="Al guardar se programa en el planeador (si la empresa tiene este riesgo)" tareas={tareasCap(cap)} />
             </DialogBody>
           )}
-          <DialogFooter><Button variant="outline" onClick={() => setCap(null)}>Cancelar</Button><Button disabled={pend || !cap?.tema.trim()} tooltip={!cap?.tema.trim() ? "Indique el tema" : undefined} onClick={() => cap && run(() => A.guardarCapacitacion(empresaId, cap), "Capacitación guardada", () => setCap(null))}>{pend && <Spinner />} Guardar</Button></DialogFooter>
+          <DialogFooter><Button variant="outline" onClick={() => setCap(null)}>Cancelar</Button><Button disabled={pend || !cap?.tema.trim()} tooltip={!cap?.tema.trim() ? "Indique el tema" : undefined} onClick={() => cap && run(() => A.guardarCapacitacion(empresaId, cap), "Capacitación guardada", () => setCap(null), tareasCap(cap))}>{pend && <Spinner />} Guardar</Button></DialogFooter>
         </DialogContent>
       </Dialog>
     </Tabs>

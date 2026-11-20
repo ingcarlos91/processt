@@ -1,3 +1,5 @@
+import { parametrosPlazos } from "@/lib/plazos-servidor";
+import { valorPlazo } from "@/lib/plazos";
 import Link from "next/link";
 import { AlertTriangle, ArrowRight, CalendarClock, Plus } from "lucide-react";
 import { Page, PageHeader, Section, Stat } from "@/components/app/ui";
@@ -19,9 +21,10 @@ const corta = (s: string) => new Date(s).toLocaleDateString("es-CO", { day: "num
 
 export default async function Home() {
   const hoy = new Date();
+  const diasAtencion = valorPlazo("aviso_tablero", await parametrosPlazos());
   const [{ filas, cartera, prioridad }, fechas] = await Promise.all([
     tableroConsultora(hoy),
-    fechasPlaneador({ desde: hoy, hasta: new Date(hoy.getTime() + 14 * 864e5), hoy }),
+    fechasPlaneador({ desde: hoy, hasta: new Date(hoy.getTime() + diasAtencion * 864e5), hoy }),
   ]);
   const atencion = fechas.filter((f) => f.estado !== "hecho" && !f.mesCompleto).slice(0, 10);
   const vencidosPlaneador = fechas.filter((f) => f.estado === "vencido").length;
@@ -45,8 +48,8 @@ export default async function Home() {
           </div>
 
           <div className="grid gap-6 lg:grid-cols-5">
-            <Section className="lg:col-span-3" title={<span className="flex items-center gap-2"><CalendarClock className="size-4" /> Atención: vencidos y próximos 14 días</span>} actions={<Link href="/planeador" className={buttonVariants({ size: "sm", variant: "ghost" })}>Planeador <ArrowRight /></Link>} contentClassName="px-0">
-              {atencion.length === 0 ? <p className="px-6 py-4 text-sm text-muted-foreground">Nada vencido ni con fecha en los próximos 14 días.</p> : (
+            <Section className="lg:col-span-3" title={<span className="flex items-center gap-2"><CalendarClock className="size-4" /> Atención: vencidos y próximos {diasAtencion} días</span>} actions={<Link href="/planeador" className={buttonVariants({ size: "sm", variant: "ghost" })}>Planeador <ArrowRight /></Link>} contentClassName="px-0">
+              {atencion.length === 0 ? <p className="px-6 py-4 text-sm text-muted-foreground">Nada vencido ni con fecha en los próximos {diasAtencion} días.</p> : (
                 <ul className="divide-y">
                   {atencion.map((f) => (
                     <li key={f.id}>

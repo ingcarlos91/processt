@@ -26,6 +26,9 @@ import { crearDiagnostico } from "@/app/actions/diagnostico";
 import { crearEmpresa, actualizarEmpresa, subirLogo, quitarLogo, type IntakeData } from "@/app/actions/empresas";
 import { DISPARADORES } from "@/lib/reglas/condicion";
 import { cn } from "@/lib/utils";
+import { AvisoTareas, type TareaAviso } from "@/components/plazos/aviso-tareas";
+import { toastTareas } from "@/components/plazos/toast-tareas";
+import { avisoPlazo, deInput } from "@/lib/plazos";
 
 type Sector = { id: string; nombre: string; ciius: string[] };
 type CargoTipo = { id: string; nombre: string; sectorTipoId: string | null };
@@ -157,11 +160,17 @@ export function IntakeWizard({ sectores, cargosTipo, ciius, inicial, empresaId, 
     setBusq("");
   }
 
+  // Actualización del curso de 20 horas del responsable: el planeador la cuenta desde la fecha del curso de 50 horas (Res. 4927/2016 art. 16).
+  // Desde el último certificado (50 h o actualización de 20 h), igual que el planeador (Res. 4927/2016 art. 16).
+  const ultimoCurso = [d.responsableSst.curso50hFecha, d.responsableSst.curso20hFecha].filter((x): x is string => /^\d{4}-\d{2}-\d{2}$/.test(x ?? "")).sort().pop();
+  const tareasCurso: TareaAviso[] = d.responsableSst.curso50h && ultimoCurso
+    ? [{ ...avisoPlazo("curso_20h", deInput(ultimoCurso)), tarea: `Actualización del curso virtual de 20 horas${d.responsableSst.nombre ? ` — ${d.responsableSst.nombre}` : ""}` }] : [];
+
   function guardar(modo: "completo" | "diagnostico" = "completo") {
     start(async () => {
       if (empresaId) {
         const r = await actualizarEmpresa(empresaId, d);
-        if (r?.ok) toast.success("Datos guardados. Se recalcularon el nivel, los comités y las normas.");
+        if (r?.ok) { if (tareasCurso.length) toastTareas("Datos guardados. Se recalcularon el nivel, los comités y las normas.", tareasCurso); else toast.success("Datos guardados. Se recalcularon el nivel, los comités y las normas."); }
       } else {
         const r = await crearEmpresa(d, modo);
         if ("error" in r) return void toast.error(r.error);
@@ -385,6 +394,7 @@ export function IntakeWizard({ sectores, cargosTipo, ciius, inicial, empresaId, 
               <Opcion id="c50" checked={!!d.responsableSst.curso50h} onChange={(v) => setR("curso50h", v)} extra={<><NormaRef>Decreto 1072 art. 2.2.4.6.35</NormaRef><Ayuda k="curso50h" /></>}>Tiene el curso virtual de 50 horas</Opcion>
               <Campo id="c50f" ayuda="curso50h" label="Fecha del curso de 50 horas" desc="Se actualiza cada 3 años con el curso de 20 horas"><Input id="c50f" type="date" value={d.responsableSst.curso50hFecha ?? ""} onChange={(e) => setR("curso50hFecha", e.target.value)} /></Campo>
               <Campo id="c20f" ayuda="curso20h" label="Fecha del último curso de 20 horas"><Input id="c20f" type="date" value={d.responsableSst.curso20hFecha ?? ""} onChange={(e) => setR("curso20hFecha", e.target.value)} /></Campo>
+              <AvisoTareas className="md:col-span-2" tareas={tareasCurso} />
               <Campo id="rrol" ayuda="rolResponsable" label="Rol frente al SG-SST" desc="Quien diseña necesita licencia; quien solo ejecuta en empresas de 10 o menos trabajadores (riesgo I-III) no (Res. 4927/2016 art. 14)">
                 <Selector id="rrol" value={d.responsableSst.rol ?? "disenador"} onChange={(v) => setR("rol", v)} opciones={[{ valor: "disenador", etiqueta: "Diseña y firma el SG-SST" }, { valor: "ejecutor", etiqueta: "Solo administra y ejecuta (diseña la consultora)" }]} />
               </Campo>

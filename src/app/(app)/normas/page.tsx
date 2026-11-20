@@ -1,3 +1,6 @@
+import { TablaPlazos } from "@/components/plazos/tabla-plazos";
+import { PLAZOS } from "@/lib/plazos";
+import { parametrosPlazos } from "@/lib/plazos-servidor";
 import { db } from "@/lib/db";
 import { Page, PageHeader, Section } from "@/components/app/ui";
 import { Badge } from "@/components/ui/badge";
@@ -18,7 +21,8 @@ function cond(c: unknown) {
   return p.join(", ") || "Según condición";
 }
 
-export default async function Normas() {
+export default async function Normas({ searchParams }: PageProps<"/normas">) {
+  const tab = (await searchParams).tab;
   const [normas, estandares, reglas] = await Promise.all([
     db.norma.findMany({ orderBy: [{ vigente: "desc" }, { anio: "desc" }] }),
     db.estandar.findMany({ orderBy: { orden: "asc" } }),
@@ -27,8 +31,9 @@ export default async function Normas() {
   return (
     <Page>
       <PageHeader title="Normas y estándares" description="Base normativa del sistema. Toda conclusión, documento y actividad cita una de estas normas. Corte: noviembre de 2026." />
-      <Tabs defaultValue="normas">
-        <TabsList><TabsTrigger value="normas">Normas ({normas.length})</TabsTrigger><TabsTrigger value="estandares">Estándares mínimos (60)</TabsTrigger><TabsTrigger value="reglas">Reglas de aplicabilidad ({reglas.length})</TabsTrigger></TabsList>
+      <Tabs defaultValue={tab === "plazos" ? "plazos" : "normas"}>
+        <TabsList><TabsTrigger value="normas">Normas ({normas.length})</TabsTrigger><TabsTrigger value="estandares">Estándares mínimos (60)</TabsTrigger><TabsTrigger value="reglas">Reglas de aplicabilidad ({reglas.length})</TabsTrigger><TabsTrigger value="plazos">Plazos y tareas automáticas ({PLAZOS.length})</TabsTrigger></TabsList>
+        <TabsContent value="plazos" className="mt-4"><TablaPlazos parametros={await parametrosPlazos()} /></TabsContent>
         <TabsContent value="normas" className="mt-4">
           <Section contentClassName="px-0">
             <Table className="[&_td]:whitespace-normal [&_td]:align-top">

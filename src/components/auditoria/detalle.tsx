@@ -21,6 +21,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import * as A from "@/app/actions/auditoria";
 import { cn, hoyLocal } from "@/lib/utils";
+import { AvisoTareas, type TareaAviso } from "@/components/plazos/aviso-tareas";
+import { toastTareas } from "@/components/plazos/toast-tareas";
+import { avisoPlazo, deInput, fechaLarga, reglaPlazo, textoAccionPropuesta } from "@/lib/plazos";
 
 type Aud = { id: string; anio: number; fechaInicio: string; fechaCierre: string; auditor: string; auditorPerfil: string; independiente: boolean; comunicadoA: string; comunicadoFecha: string; participantes: string; alcance: string; estado: string; conclusiones: string; items: ItemAuditoria[]; acciones: AccionUI[]; archivos: ArchivoUI[] };
 const RES: Record<Exclude<ResultadoAud, "">, { t: string; c: string; i: typeof Check }> = {
@@ -29,10 +32,12 @@ const RES: Record<Exclude<ResultadoAud, "">, { t: string; c: string; i: typeof C
   no_conforme: { t: "No conforme", c: "border-red-500 bg-red-500 text-white", i: X },
   na: { t: "N. A.", c: "border-slate-400 bg-slate-400 text-white", i: Minus },
 };
-const en30 = () => hoyLocal(30);
 const fecha = (f: string) => (f ? new Date(f + "T12:00:00Z").toLocaleDateString("es-CO", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" }) : "");
 
-export function AuditoriaDetalle({ empresaId, a, sistema, responsables, responsableSst }: { empresaId: string; a: Aud; sistema: Record<number, string>; responsables: string[]; responsableSst: string }) {
+export function AuditoriaDetalle({ empresaId, a, sistema, responsables, responsableSst, diasAccionDefecto }: { diasAccionDefecto?: number; empresaId: string; a: Aud; sistema: Record<number, string>; responsables: string[]; responsableSst: string }) {
+  // Fecha límite propuesta para las acciones: plazo "accion_limite" de la consultora (src/lib/plazos.ts).
+  const diasAccion = diasAccionDefecto || 30;
+  const en30 = () => hoyLocal(diasAccion);
   const router = useRouter();
   const [pend, start] = useTransition();
   const [items, setItems] = useState(a.items);
@@ -44,6 +49,14 @@ export function AuditoriaDetalle({ empresaId, a, sistema, responsables, responsa
   const r = resumenAuditoria(items);
   const calificados = items.filter((i) => i.resultado).length;
   const set = (n: number, x: Partial<ItemAuditoria>) => setItems((items) => items.map((i) => (i.n === n ? { ...i, ...x } : i)));
+  // Lo que se programa al cerrar: la próxima auditoría anual y las acciones de las no conformidades en FOR-06.
+  const tareasCierre = (): TareaAviso[] => [
+    avisoPlazo("auditoria_anual", deInput(a.fechaInicio)),
+    ...items.filter((i) => i.resultado === "no_conforme" && i.accion?.descripcion?.trim()).map((i) => {
+      const fl = deInput(i.accion!.fechaLimite);
+      return { tarea: `Acción correctiva (FOR-06): ${i.accion!.descripcion.trim()}`, plazo: "fecha límite de la acción", fecha: fl ? fechaLarga(fl) : undefined, norma: reglaPlazo("accion_limite")?.norma, tipo: "empresa" as const };
+    }),
+  ];
   const cambio = JSON.stringify(items) !== JSON.stringify(a.items) || conclusiones !== a.conclusiones || independiente !== a.independiente;
   const guardar = (msg = "Auditoría guardada", despues?: () => Promise<void>) => start(async () => {
     const res = await A.guardarAuditoria(empresaId, a.id, { items, conclusiones, independiente });
@@ -60,8 +73,8 @@ export function AuditoriaDetalle({ empresaId, a, sistema, responsables, responsa
         <BotonDescarga href={`/api/empresas/${empresaId}/auditorias/${a.id}/informe`} variant="outline" tooltip="Informe de auditoría en Word, para firmar"><Download /> Informe Word</BotonDescarga>
         <BotonDescarga href={`/api/empresas/${empresaId}/auditorias/${a.id}/informe?formato=pdf`} variant="outline" texto="Generando PDF…" tooltip="Informe de auditoría en PDF"><FileDown /> PDF</BotonDescarga>
         {!cerrada && <Button disabled={pend || !cambio} onClick={() => guardar()}>{pend ? <Spinner /> : <Save />} Guardar</Button>}
-        {!cerrada && <Pedir trigger={<Button variant="outline" disabled={pend} tooltip="Exige todos los aspectos calificados; crea las acciones de las no conformidades en FOR-06" />} titulo="Cerrar auditoría" descripcion="Se verifican los aspectos y se crean las acciones de las no conformidades. Elija la fecha de cierre." label="Fecha de cierre" tipo="date" inicial={hoyLocal()} accion="Cerrar"
-          onConfirm={(f) => guardar("", async () => { const res = await A.cerrarAuditoria(empresaId, a.id, f); if ("error" in res) toast.error(res.error); else toast.success(`Auditoría cerrada${res.acciones ? ` y ${res.acciones} acción(es) creadas en FOR-06` : ""}. Descargue el informe para firmarlo.`); })}><Lock /> Cerrar auditoría</Pedir>}
+        {!cerrada && <Pedir trigger={<Button variant="outline" disabled={pend} tooltip="Exige todos los aspectos calificados; crea las acciones de las no conformidades en FOR-06" />} titulo="Cerrar auditoría" descripcion="Se verifican los aspectos y se crean las acciones de las no conformidades. Elija la fecha de cierre." label="Fecha de cierre" tipo="date" inicial={hoyLocal()} accion="Cerrar" extra={() => <AvisoTareas titulo="Al cerrar se programa" tareas={tareasCierre()} />}
+          onConfirm={(f) => { const tareas = tareasCierre(); guardar("", async () => { const res = await A.cerrarAuditoria(empresaId, a.id, f); if ("error" in res) toast.error(res.error); else toastTareas(`Auditoría cerrada${res.acciones ? ` y ${res.acciones} acción(es) creadas en FOR-06` : ""}. Descargue el informe para firmarlo.`, tareas); }); }}><Lock /> Cerrar auditoría</Pedir>}
         {cerrada && <Button variant="outline" disabled={pend} onClick={() => start(async () => { await A.reabrirAuditoria(empresaId, a.id); toast.success("Auditoría reabierta"); router.refresh(); })}><LockOpen /> Reabrir</Button>}
       </div>
 
@@ -113,7 +126,8 @@ export function AuditoriaDetalle({ empresaId, a, sistema, responsables, responsa
                 <Input className="sm:col-span-3" placeholder="Causa raíz: por qué ocurre la no conformidad" value={it.accion.causa ?? ""} onChange={(e) => set(it.n, { accion: { ...it.accion!, causa: e.target.value } })} />
                 <Input placeholder="Acción correctiva (se crea en FOR-06 al cerrar)" value={it.accion.descripcion} onChange={(e) => set(it.n, { accion: { ...it.accion!, descripcion: e.target.value } })} />
                 <Input placeholder="Responsable" value={it.accion.responsable ?? ""} onChange={(e) => set(it.n, { accion: { ...it.accion!, responsable: e.target.value } })} />
-                <Input type="date" value={it.accion.fechaLimite ?? ""} onChange={(e) => set(it.n, { accion: { ...it.accion!, fechaLimite: e.target.value } })} />
+                <Input type="date" aria-label="Fecha límite" value={it.accion.fechaLimite ?? ""} onChange={(e) => set(it.n, { accion: { ...it.accion!, fechaLimite: e.target.value } })} />
+                <p className="text-xs text-muted-foreground sm:col-span-3 sm:text-right">{textoAccionPropuesta(diasAccion)}</p>
               </div>
             )}
           </div>

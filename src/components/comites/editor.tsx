@@ -24,6 +24,9 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import * as A from "@/app/actions/sgsst";
 import { Buscador } from "@/components/app/buscador";
 import { validarConformacion, type Composicion } from "@/lib/comites";
+import { AvisoTareas, type TareaAviso } from "@/components/plazos/aviso-tareas";
+import { toastTareas } from "@/components/plazos/toast-tareas";
+import { avisoPlazo, deInput } from "@/lib/plazos";
 
 type Miembro = { id: string; nombre: string; tipoDoc: string; cedula: string; cargo: string; rol: string; calidad: string; cargoComite: string; representa: string };
 type Comite = { id: string; tipo: string; sede: string; inicio: string; fin: string; normaRef: string; datos: Record<string, unknown>; composicion: Composicion | null; congelada: boolean; actas: ArchivoUI[]; miembros: Miembro[] };
@@ -42,9 +45,15 @@ const calidadTxt = (tipo: string, c: string) => (tipo === "VIGIA" ? (c === "supl
 /** El rol guardado es el cargo en el comité (presidente o secretario) o, si no tiene, la calidad. */
 const rolDe = (tipo: string, m: { rol: string; calidad: string; cargoComite: string }) => (tipo === "BRIGADA" ? m.rol : tipo === "VIGIA" ? "vigia" : m.cargoComite || m.calidad || "principal");
 
+/** Lo que se programa al registrar el comité: fin del periodo (no la brigada) y, en COPASST y CCL, la reunión mensual. */
+const tareasComite = (tipo: string, inicio: string): TareaAviso[] => [
+  ...(tipo !== "BRIGADA" && inicio ? [{ ...avisoPlazo("comite_periodo", deInput(inicio)), tarea: "Fin del periodo del comité: conformar el nuevo" }] : []),
+  ...(tipo === "COPASST" || tipo === "CCL" ? [{ ...avisoPlazo("comite_reunion"), tarea: "Reunión mensual del comité (en el plan anual)" }] : []),
+];
+
 export function ComitesEditor({ empresaId, requeridos, comites, composicionNueva, refs, porques, trabajadores = [], sedes = [], trabajadoresEmpresa }: { empresaId: string; requeridos: string[]; comites: Comite[]; composicionNueva: Record<string, Composicion | null>; trabajadores?: TrabajadorOpcion[]; sedes?: SedeOpcion[]; trabajadoresEmpresa: number; refs: Record<string, string>; porques: Record<string, string> }) {
   const [, start] = useTransition();
-  const run = (fn: () => Promise<unknown>, ok?: string) => start(async () => { try { await fn(); if (ok) toast.success(ok); } catch (e) { toast.error(e instanceof Error ? e.message : "No se pudo guardar."); } });
+  const run = (fn: () => Promise<unknown>, ok?: string, tareas?: TareaAviso[]) => start(async () => { try { await fn(); if (ok) { if (tareas?.length) toastTareas(ok, tareas); else toast.success(ok); } } catch (e) { toast.error(e instanceof Error ? e.message : "No se pudo guardar."); } });
   const tarjeta = (tipo: string, c: Comite | undefined, sede?: string) => (
     <TarjetaComite key={c?.id ?? `${tipo}-${sede ?? ""}`} tipo={tipo} c={c} sede={sede} empresaId={empresaId} run={run} trabajadores={trabajadores}
       composicionNueva={composicionNueva[tipo] ?? null} refNorma={refs[tipo === "VIGIA" ? "COPASST" : tipo]} porque={porques[tipo === "VIGIA" ? "COPASST" : tipo]} />
@@ -62,7 +71,7 @@ export function ComitesEditor({ empresaId, requeridos, comites, composicionNueva
           <div key="CCL" className="grid gap-6">
             {tarjeta("CCL", central)}
             {porSede.map((c) => tarjeta("CCL", c, c.sede))}
-            {sedes.length > 1 && libres.length > 0 && <NuevoCclSede sedes={libres} trabajadoresEmpresa={trabajadoresEmpresa} onCrear={(f, sede, n) => run(() => A.crearComite(empresaId, "CCL", f, { sede, trabajadores: n }), `Comité de Convivencia de ${sede} registrado`)} />}
+            {sedes.length > 1 && libres.length > 0 && <NuevoCclSede sedes={libres} trabajadoresEmpresa={trabajadoresEmpresa} onCrear={(f, sede, n) => run(() => A.crearComite(empresaId, "CCL", f, { sede, trabajadores: n }), `Comité de Convivencia de ${sede} registrado`, tareasComite("CCL", f))} />}
           </div>
         );
       })}
@@ -70,7 +79,7 @@ export function ComitesEditor({ empresaId, requeridos, comites, composicionNueva
   );
 }
 
-function TarjetaComite({ tipo, c, sede, empresaId, run, trabajadores, composicionNueva, refNorma, porque }: { tipo: string; c?: Comite; sede?: string; empresaId: string; run: (fn: () => Promise<unknown>, ok?: string) => void; trabajadores: TrabajadorOpcion[]; composicionNueva: Composicion | null; refNorma?: string; porque?: string }) {
+function TarjetaComite({ tipo, c, sede, empresaId, run, trabajadores, composicionNueva, refNorma, porque }: { tipo: string; c?: Comite; sede?: string; empresaId: string; run: (fn: () => Promise<unknown>, ok?: string, tareas?: TareaAviso[]) => void; trabajadores: TrabajadorOpcion[]; composicionNueva: Composicion | null; refNorma?: string; porque?: string }) {
   const [editando, setEditando] = useState<Miembro | null>(null);
   const [periodo, setPeriodo] = useState<{ inicio: string; fin: string; trabajadores: string } | null>(null);
   const hoy = hoyLocal();
@@ -89,7 +98,7 @@ function TarjetaComite({ tipo, c, sede, empresaId, run, trabajadores, composicio
       <CardContent>
         {!c ? (
           <EstadoVacio ilustracion="comites" compacto titulo={<>No registrado</>} descripcion={<>Registre la fecha de conformación para controlar el periodo.{composicionNueva && <> Al registrarlo se fija la composición con los trabajadores de hoy ({composicionNueva.trabajadores}): {composicionNueva.texto}.</>}</>}>
-            <NuevoComite onCrear={(f) => run(() => A.crearComite(empresaId, tipo, f), "Comité registrado")} />
+            <NuevoComite tipo={tipo} onCrear={(f) => run(() => A.crearComite(empresaId, tipo, f), "Comité registrado", tareasComite(tipo, f))} />
           </EstadoVacio>
         ) : (
           <div className="space-y-3">
@@ -228,9 +237,14 @@ function SelectorRepresenta({ m, onChange }: { m: { representa: string }; onChan
   );
 }
 
-function NuevoComite({ onCrear }: { onCrear: (fecha: string) => void }) {
+function NuevoComite({ tipo, onCrear }: { tipo: string; onCrear: (fecha: string) => void }) {
   const [f, setF] = useState(hoyLocal());
-  return <div className="flex gap-2"><Input type="date" placeholder="AAAA-MM-DD" value={f} onChange={(e) => setF(e.target.value)} /><Button title="Registrar el comité con esta fecha de conformación" disabled={!f} onClick={() => onCrear(f)}><Plus /> Registrar</Button></div>;
+  return (
+    <div className="space-y-3">
+      <div className="flex gap-2"><Input type="date" placeholder="AAAA-MM-DD" value={f} onChange={(e) => setF(e.target.value)} /><Button title="Registrar el comité con esta fecha de conformación" disabled={!f} onClick={() => onCrear(f)}><Plus /> Registrar</Button></div>
+      <AvisoTareas className="text-left" tareas={tareasComite(tipo, f)} />
+    </div>
+  );
 }
 
 /** CCL adicional por centro de trabajo (Res. 3461/2025 art. 3). Su composición se calcula con los trabajadores de la sede. */
@@ -249,6 +263,7 @@ function NuevoCclSede({ sedes, trabajadoresEmpresa, onCrear }: { sedes: SedeOpci
           <Field><FieldLabel className="text-xs">Trabajadores de la sede</FieldLabel><Input type="number" min={1} placeholder={`Ej.: ${Math.max(1, Math.round(trabajadoresEmpresa / 2))}`} value={d.n} onChange={(e) => setD({ ...d, n: e.target.value })} /></Field>
           <Button className="w-fit" title="Registrar el comité de convivencia de esta sede" disabled={!d.sede || !d.fecha || !(Number(d.n) > 0)} onClick={() => onCrear(d.fecha, d.sede, Number(d.n))}><Plus /> Registrar comité de la sede</Button>
         </div>
+        <AvisoTareas className="mt-3" tareas={tareasComite("CCL", d.fecha)} />
         <p className="mt-2 text-xs text-muted-foreground">El número de trabajadores se precarga con los registrados en cargos de la sede; corríjalo si no están todos registrados. Los documentos (ACT-04) se generan para el comité de nivel central.</p>
       </CardContent>
     </Card>

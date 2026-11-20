@@ -1,3 +1,5 @@
+import { valorPlazo } from "@/lib/plazos";
+import { parametrosPlazos } from "@/lib/plazos-servidor";
 import { abrevDoc } from "@/lib/documento-identidad";
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
@@ -43,7 +45,7 @@ export default async function Evento({ params }: PageProps<"/empresas/[id]/accid
   ];
   const idsMatriz = new Set(enMatriz.map((p) => p.peligroId));
   return (
-    <EventoDetalle
+    <EventoDetalle diasAccionDefecto={valorPlazo("accion_limite", await parametrosPlazos())}
       empresaId={id} iaActiva={iaDisponible()}
       ev={{
         id: ev.id, tipo: ev.tipo, gravedad: ev.gravedad, vinculacion: ev.vinculacion ?? "",
@@ -60,7 +62,7 @@ export default async function Evento({ params }: PageProps<"/empresas/[id]/accid
         inv: { estado: ev.invEstado, inicio: iso(ev.invInicio), cierre: iso(ev.invCierre), lugar: ev.invLugar ?? "", fechas: ev.invFechas ?? "", equipo: (ev.equipo as Integrante[]) ?? [], analisis: (ev.analisis ?? {}) as Analisis, lecciones: ev.lecciones ?? "", peligroId: ev.peligroId ?? "" },
         acciones: ev.acciones.map((a) => ({ id: a.id, hallazgo: a.hallazgo, causa: a.causa ?? "", tipo: a.tipo, jerarquia: a.jerarquia ?? "", dirigidaA: a.dirigidaA ?? "", descripcion: a.descripcion, responsable: a.responsable ?? "", fechaLimite: iso(a.fechaLimite), estado: a.estado, fechaCierre: iso(a.fechaCierre), eficacia: a.eficacia ?? "", enPlan: a.actividad ? `${a.actividad.mes}/${a.actividad.anio}` : "" })),
         archivos: ev.archivos.map(aArchivoUI),
-        plazos: plazosUI(ev),
+        plazos: plazosUI(ev, new Date(), await parametrosPlazos()),
       }}
       cargos={cargos.map((c) => ({ id: c.id, nombre: c.nombre, sede: c.sede?.nombre, tareas: c.tareas.map((t) => t.tarea.nombre), personas: c.trabajadores.map((t) => ({ nombre: t.nombres, tipoDoc: t.tipoDoc, documento: t.documento ?? "", vinculacion: t.vinculacion, ingreso: t.fechaIngreso?.toISOString().slice(0, 10) ?? "", sexo: t.sexo ?? "", nacimiento: t.fechaNacimiento?.toISOString().slice(0, 10) ?? "", eps: t.eps ?? "", afp: t.afp ?? "" })) }))}
       peligros={peligros.map((p) => ({ valor: p.id, etiqueta: p.descripcion, detalle: [p.clasificacion, p.subclasificacion].filter(Boolean).join(" · "), grupo: idsMatriz.has(p.id) ? "En la matriz de este cargo" : p.clasificacion, relevancia: idsMatriz.has(p.id) ? "propio" : "otro" }))}

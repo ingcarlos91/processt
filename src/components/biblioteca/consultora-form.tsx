@@ -13,6 +13,9 @@ import { Field, FieldDescription, FieldGroup, FieldLabel, FieldSeparator } from 
 import { NormaRef } from "@/components/app/ui";
 import { Ayuda } from "@/components/app/ayuda";
 import { guardarConsultora, type DatosConsultora } from "@/app/actions/empresas";
+import { AvisoTareas, type TareaAviso } from "@/components/plazos/aviso-tareas";
+import { toastTareas } from "@/components/plazos/toast-tareas";
+import { avisoPlazo, deInput } from "@/lib/plazos";
 
 type D = Required<Omit<DatosConsultora, "curso50h">> & { curso50h: boolean };
 
@@ -20,6 +23,9 @@ export function ConsultoraForm({ inicial, ia }: { inicial: D; ia: { activa: bool
   const [d, setD] = useState(inicial);
   const [pend, start] = useTransition();
   const set = <K extends keyof D>(k: K, v: D[K]) => setD((x) => ({ ...x, [k]: v }));
+  // Próxima actualización con el curso de 20 horas: 3 años desde el último certificado (Res. 4927/2016 art. 16).
+  const ultimoCurso = [d.curso50hFecha, d.curso20hFecha].filter((f) => /^\d{4}-\d{2}-\d{2}$/.test(f ?? "")).sort().pop();
+  const tareasCurso: TareaAviso[] = d.curso50h && ultimoCurso ? [{ ...avisoPlazo("curso_20h", deInput(ultimoCurso)), tarea: "Próxima actualización con el curso virtual de 20 horas" }] : [];
   const AY: Partial<Record<keyof D, string>> = { profesional: "respNombre", cargo: "cargoProfesional", licenciaSst: "licencia", licenciaFecha: "licenciaFecha", curso50hFecha: "curso50h", curso20hFecha: "curso20h" };
   const campo = (k: keyof D, l: string, opts?: { tipo?: string; desc?: string; ph?: string }) => (
     <Field><FieldLabel htmlFor={k} className="gap-1">{l}{AY[k] && <Ayuda k={AY[k]} />}</FieldLabel><Input id={k} type={opts?.tipo} placeholder={opts?.ph} value={String(d[k] ?? "")} onChange={(e) => set(k, e.target.value as never)} />{opts?.desc && <FieldDescription>{opts.desc}</FieldDescription>}</Field>
@@ -58,12 +64,13 @@ export function ConsultoraForm({ inicial, ia }: { inicial: D; ia: { activa: bool
             </Field>
             {campo("curso50hFecha", "Fecha del curso de 50 horas", { tipo: "date", desc: "Se actualiza cada 3 años con el curso de 20 horas" })}
             {campo("curso20hFecha", "Fecha del último curso de 20 horas", { tipo: "date" })}
+            <AvisoTareas className="md:col-span-2" titulo="Fecha que se deriva de estos datos" tareas={tareasCurso} />
             <FieldSeparator className="md:col-span-2">Contacto</FieldSeparator>
             {campo("telefono", "Teléfono", { ph: "Ej.: 300 123 4567" })}
             {campo("correo", "Correo", { tipo: "email", ph: "nombre@empresa.com" })}
           </FieldGroup>
         </CardContent>
-        <CardFooter className="border-t"><Button disabled={pend} onClick={() => start(async () => { await guardarConsultora(d); toast.success("Datos guardados. Los documentos de todas las empresas se actualizaron."); })}><Save /> Guardar</Button></CardFooter>
+        <CardFooter className="border-t"><Button disabled={pend} onClick={() => start(async () => { await guardarConsultora(d); if (tareasCurso.length) toastTareas("Datos guardados. Los documentos de todas las empresas se actualizaron.", tareasCurso); else toast.success("Datos guardados. Los documentos de todas las empresas se actualizaron."); })}><Save /> Guardar</Button></CardFooter>
       </Card>
       <Card>
         <CardHeader><CardTitle className="flex items-center gap-2"><Sparkles className="size-4" /> Asistente de IA</CardTitle><CardDescription>Sugiere tareas y peligros por cargo según la GTC 45, priorizando la biblioteca.</CardDescription></CardHeader>

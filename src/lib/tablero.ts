@@ -1,3 +1,4 @@
+import { parametrosPlazos } from "@/lib/plazos-servidor";
 // Tablero de la consultora: indicadores por empresa y de toda la cartera, con una prioridad
 // para decidir a qué cliente atender primero.
 import { db } from "@/lib/db";
@@ -16,6 +17,7 @@ export type FilaEmpresa = {
 };
 
 export async function tableroConsultora(hoy = new Date()) {
+  const params = await parametrosPlazos();
   const anio = hoy.getUTCFullYear();
   const empresas = await db.empresa.findMany({
     orderBy: { razonSocial: "asc" },
@@ -42,7 +44,7 @@ export async function tableroConsultora(hoy = new Date()) {
     const vencidas = e.actividades.filter((a) => a.estado === "PENDIENTE" && finMes(a) < hoy).length;
     const estados = e.documentos.map((d) => estadoDocumento({ estado: d.estado, version: d.version, firmadoVersion: d.archivos[0]?.documentoVersion, revisar: d.secciones.some((s) => s.requiereRevision) }));
     const aplicables = ((e.resultadoReglas as { documentos?: unknown[] } | null)?.documentos ?? []).length || e.documentos.length;
-    const plazosVencidos = e.eventos.flatMap((x) => plazos(x, hoy)).filter((p) => !p.hecho && (p.estado === "vencido" || p.estado === "por_vencer")).length;
+    const plazosVencidos = e.eventos.flatMap((x) => plazos(x, hoy, params)).filter((p) => !p.hecho && (p.estado === "vencido" || p.estado === "por_vencer")).length;
     const aprobados = e.peligros.filter((p) => p.estado === "aprobado");
     const prioritarios = aprobados.filter((p) => p.nd * p.ne * p.nc >= 150).length; // NR ≥ 150: niveles I y II (GTC 45)
     const ultimaV = e.matrizVersiones[0];

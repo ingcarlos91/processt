@@ -122,3 +122,22 @@ export async function guardarConsultora(d: DatosConsultora) {
   revalidatePath("/", "layout");
   return { ok: true };
 }
+
+/** Plazos de criterio de la empresa (src/lib/plazos.ts): solo los editables y dentro de sus límites. */
+export async function guardarParametrosPlazos(valores: Record<string, number>) {
+  await requiereUsuario();
+  const { PLAZOS } = await import("@/lib/plazos");
+  const c = await consultoraActual();
+  const actuales = ((c as { parametros?: unknown }).parametros ?? {}) as Record<string, number>;
+  const nuevos: Record<string, number> = { ...actuales };
+  for (const [k, v] of Object.entries(valores)) {
+    const r = PLAZOS.find((p) => p.clave === k);
+    if (!r?.editable) return { error: "Ese plazo es legal y no se puede cambiar." };
+    const n = Math.round(Number(v));
+    if (!Number.isFinite(n) || n < r.editable.min || n > r.editable.max) return { error: `"${r.tarea}": use un valor entre ${r.editable.min} y ${r.editable.max}.` };
+    nuevos[k] = n;
+  }
+  await db.consultora.update({ where: { id: c.id }, data: { parametros: nuevos } });
+  revalidatePath("/", "layout");
+  return { ok: true as const };
+}

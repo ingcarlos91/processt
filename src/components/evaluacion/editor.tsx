@@ -22,6 +22,9 @@ import { Popover, PopoverContent, PopoverDescription, PopoverHeader, PopoverTitl
 import * as A from "@/app/actions/sgsst";
 import { cn } from "@/lib/utils";
 import { permiteNoAplica, sumaPuntos } from "@/lib/evaluacion";
+import { AvisoTareas, type TareaAviso } from "@/components/plazos/aviso-tareas";
+import { toastTareas } from "@/components/plazos/toast-tareas";
+import { avisoPlazo, reglaPlazo } from "@/lib/plazos";
 
 type It = { id: string; codigo: string; ciclo: string; grupo: string; subgrupo: string; descripcion: string; puntaje: number; modo: string; soportes: ArchivoUI[]; estado: string; justificacion: string; observacion: string };
 type Cal = { puntaje: number; valoracion: string; accion: string; obtenido: number; maximo: number; noAplicanPorNivel: number; pendientes: number; noAplicaInvalidos: string[] };
@@ -58,6 +61,14 @@ export function EvaluacionEditor({ empresaId, nivel, evaluaciones, actual }: {
     <EstadoVacio ilustracion="evaluacion" titulo={<>Sin evaluación de estándares mínimos</>} descripcion={<>Aplican {nivel} estándares. La evaluación inicial se precarga con lo marcado en “Estado actual” del cuestionario (Decreto 1072/2015 art. 2.2.4.6.16; Res. 0312/2019 art. 27).</>}>{nueva}</EstadoVacio>
   );
 
+  // Lo que se programa al cerrar: reporte de avances a la ARL según la valoración (art. 28) y la próxima autoevaluación en diciembre (art. 26).
+  const fechaEv = evaluaciones.find((e) => e.id === actual.id)?.fecha;
+  const desdeEv = fechaEv ? new Date(fechaEv) : new Date();
+  const anioProxima = actual.tipo === "inicial" && desdeEv.getUTCMonth() < 11 ? desdeEv.getUTCFullYear() : Math.max(actual.anio, desdeEv.getUTCFullYear()) + 1;
+  const tareasCierre: TareaAviso[] = [
+    ...(actual.cal.valoracion === "CRÍTICO" ? [avisoPlazo("arl_critico", desdeEv)] : actual.cal.valoracion === "MODERADAMENTE ACEPTABLE" ? [avisoPlazo("arl_moderado", desdeEv)] : []),
+    { tarea: "Próxima autoevaluación anual de estándares mínimos", plazo: `diciembre de ${anioProxima}; se repite cada año`, norma: reglaPlazo("autoevaluacion")?.norma, tipo: "legal" },
+  ];
   const grupos = [...new Set(actual.items.map((i) => i.grupo))];
   const evaluados = actual.items.filter((i) => i.estado !== "PENDIENTE").length;
 
@@ -75,7 +86,9 @@ export function EvaluacionEditor({ empresaId, nivel, evaluaciones, actual }: {
           ? <Button variant="outline" disabled={pend} onClick={() => run(() => A.reabrirEvaluacion(empresaId, actual.id))}><LockOpen /> Reabrir</Button>
           : actual.cal.pendientes > 0 || actual.cal.noAplicaInvalidos.length > 0
             ? <Button variant="outline" disabled={pend} onClick={() => run(() => A.cerrarEvaluacion(empresaId, actual.id))} tooltip={actual.cal.pendientes > 0 ? `Faltan ${actual.cal.pendientes} ítem(s) por calificar: la autoevaluación se cierra con todos los estándares calificados (Res. 0312/2019 art. 27)` : `Recalifique los ítems marcados «No aplica» (${actual.cal.noAplicaInvalidos.join(", ")}): en 60 estándares no existe esa opción (Res. 0312/2019 arts. 16 y 27)`}><Lock /> Cerrar y generar plan de mejoramiento</Button>
-            : <Button disabled={pend} onClick={() => run(() => A.cerrarEvaluacion(empresaId, actual.id), "Evaluación cerrada: se generó el plan de mejoramiento y se actualizaron DOC-05 y PLN-02")}><Lock /> Cerrar y generar plan de mejoramiento</Button>}
+            : <Confirmar trigger={<Button disabled={pend} />} titulo="Cerrar la evaluación" descripcion={`Valoración: ${actual.cal.valoracion} (${actual.cal.puntaje} %). Se genera el plan de mejoramiento y se actualizan DOC-05 y PLN-02.`} accion="Cerrar y generar plan"
+                extra={<AvisoTareas titulo="Al cerrar se programa en el planeador" tareas={tareasCierre} />}
+                onConfirm={() => start(async () => { const r = await A.cerrarEvaluacion(empresaId, actual.id); if (r && typeof r === "object" && "error" in r) toast.error(String((r as { error: string }).error)); else toastTareas("Evaluación cerrada: se generó el plan de mejoramiento y se actualizaron DOC-05 y PLN-02", tareasCierre); })}><Lock /> Cerrar y generar plan de mejoramiento</Confirmar>}
         <Confirmar trigger={<Button variant="ghost" size="icon" aria-label="Eliminar evaluación" />} titulo="Eliminar esta evaluación" descripcion="Se eliminan sus calificaciones y su plan de mejoramiento." destructivo accion="Eliminar" onConfirm={() => run(() => A.eliminarEvaluacion(empresaId, actual.id))}><Trash2 /></Confirmar>
       </div>
 

@@ -1,3 +1,4 @@
+import { valorPlazo } from "@/lib/plazos";
 // Evaluaciones médicas ocupacionales — Resolución 1843 de 2025.
 import { sumarHabiles } from "@/lib/eventos";
 // Tipos: art. 8. Concepto: art. 19 (el parágrafo prohíbe "no apto" salvo en los regímenes especiales del art. 2).
@@ -24,7 +25,7 @@ export const conceptosPermitidos = (regimen?: string | null) => Object.keys(CONC
  * Plazo para adaptar las condiciones de trabajo según las recomendaciones o restricciones:
  * máximo veinte (20) días hábiles después de la evaluación (Res. 1843/2025 art. 5 lit. f).
  */
-export const DIAS_ADAPTACION = 20;
+export const DIAS_ADAPTACION = valorPlazo("adaptacion"); // catálogo src/lib/plazos.ts (Res. 1843/2025 art. 5 lit. f)
 export const requiereAdaptacion = (concepto: string, restricciones?: string | null) =>
   concepto === "apto_recomendaciones" || concepto === "apto_restricciones" || (concepto !== "apto" && !!restricciones?.trim());
 export const limiteAdaptacion = (fecha: Date) => sumarHabiles(fecha, DIAS_ADAPTACION);

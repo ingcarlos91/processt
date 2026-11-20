@@ -1,4 +1,6 @@
 "use server";
+import { valorPlazo } from "@/lib/plazos";
+import { parametrosPlazos } from "@/lib/plazos-servidor";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { requiereUsuario } from "@/lib/auth/sesion";
@@ -205,7 +207,7 @@ export async function enviarAccionAlPlan(empresaId: string, id: string) {
   const a = await db.accion.findUniqueOrThrow({ where: { id }, include: { evento: true } });
   if (a.empresaId !== empresaId) return { error: "Acción no encontrada." };
   if (a.actividadId) return { error: "Esta acción ya está en el plan anual." };
-  const f = a.fechaLimite ?? new Date(Date.now() + 30 * 864e5);
+  const f = a.fechaLimite ?? new Date(Date.now() + valorPlazo("accion_limite", await parametrosPlazos()) * 864e5);
   const act = await db.actividadPlan.create({ data: {
     empresaId, anio: f.getUTCFullYear(), mes: f.getUTCMonth() + 1, nombre: `Acción ${a.tipo}: ${a.descripcion}`.slice(0, 250),
     descripcion: a.evento ? `Derivada de la investigación del evento del ${a.evento.fecha.toISOString().slice(0, 10)}` : a.hallazgo,

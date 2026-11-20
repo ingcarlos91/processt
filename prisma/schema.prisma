@@ -26,6 +26,8 @@ model Consultora {
   curso50h      Boolean   @default(false) @map("curso_50h")
   curso50hFecha String?   @map("curso_50h_fecha")
   curso20hFecha String?   @map("curso_20h_fecha")
+  // Parámetros de criterio de la empresa (plazos editables de src/lib/plazos.ts): { clave: valor }.
+  parametros    Json      @default("{}")
   tipoDoc       String    @default("CC") @map("tipo_doc") // CC | CE | PA | PPT | PEP | TI
   cedula        String?
   telefono      String?

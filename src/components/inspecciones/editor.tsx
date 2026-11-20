@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
 import { Spinner } from "@/components/ui/spinner";
-import { Field, FieldLabel } from "@/components/ui/field";
+import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogBody, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { SeccionFormulario, SeccionesFormulario } from "@/components/app/formulario-largo";
@@ -23,18 +23,23 @@ import { SubirArchivo, ListaArchivos, type ArchivoUI } from "@/components/app/ad
 import * as A from "@/app/actions/inspecciones";
 import type { ItemInspeccion } from "@/app/actions/inspecciones";
 import { cn, hoyLocal } from "@/lib/utils";
+import { AvisoTareas, type TareaAviso } from "@/components/plazos/aviso-tareas";
+import { toastTareas } from "@/components/plazos/toast-tareas";
+import { deInput, fechaLarga, reglaPlazo, textoAccionPropuesta } from "@/lib/plazos";
 
 type Lista = { nombre: string; descripcion: string; items: string[]; frecuenciaDias: number };
 type Item = { pregunta: string; resultado: "cumple" | "no_cumple" | "na"; observacion: string };
 type Ins = { id: string; lista: string; fecha: string; lugar: string; responsable: string; participantes: string; observaciones: string; items: Item[]; acciones: AccionUI[]; archivos: ArchivoUI[] };
 
 const hoy = () => hoyLocal();
-const en30 = () => hoyLocal(30);
 const fecha = (f: string) => (f ? new Date(f + "T12:00:00Z").toLocaleDateString("es-CO", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" }) : "—");
 const cumplimiento = (items: { resultado: string }[]) => { const ap = items.filter((i) => i.resultado !== "na"); return ap.length ? Math.round((ap.filter((i) => i.resultado === "cumple").length / ap.length) * 100) : 100; };
 const RES = { cumple: { t: "Cumple", c: "border-emerald-500 bg-emerald-500 text-white", i: Check }, no_cumple: { t: "No cumple", c: "border-red-500 bg-red-500 text-white", i: X }, na: { t: "N. A.", c: "border-slate-400 bg-slate-400 text-white", i: Minus } } as const;
 
-export function InspeccionesEditor({ empresaId, inspecciones, listas, lugares, personas, responsable }: { empresaId: string; inspecciones: Ins[]; listas: Lista[]; lugares: string[]; personas: string[]; responsable: string }) {
+export function InspeccionesEditor({ empresaId, inspecciones, listas, lugares, personas, responsable, diasAccionDefecto }: { diasAccionDefecto?: number; empresaId: string; inspecciones: Ins[]; listas: Lista[]; lugares: string[]; personas: string[]; responsable: string }) {
+  // Fecha límite propuesta para las acciones: plazo "accion_limite" de la consultora (src/lib/plazos.ts).
+  const diasAccion = diasAccionDefecto || 30;
+  const en30 = () => hoyLocal(diasAccion);
   const [pend, start] = useTransition();
   const [nueva, setNueva] = useState<{ lista: string; fecha: string; lugar: string; responsable: string; participantes: string; observaciones: string; items: ItemInspeccion[] } | null>(null);
   const [ver, setVer] = useState<string | null>(null);
@@ -43,6 +48,18 @@ export function InspeccionesEditor({ empresaId, inspecciones, listas, lugares, p
   const abrir = (nombre: string) => { const l = listas.find((x) => x.nombre === nombre); setNueva({ lista: nombre, fecha: hoy(), lugar: "", responsable, participantes: "", observaciones: "", items: (l?.items ?? []).map((pregunta) => ({ pregunta, resultado: "", observacion: "", accion: null })) }); };
   const setItem = (i: number, x: Partial<ItemInspeccion>) => nueva && setNueva({ ...nueva, items: nueva.items.map((it, j) => (j === i ? { ...it, ...x } : it)) });
   const calificados = nueva?.items.filter((i) => i.resultado).length ?? 0;
+  // Lo que se programa al guardar: la próxima inspección de la lista (según su frecuencia) y las acciones en FOR-06.
+  const tareasInspeccion = (): TareaAviso[] => {
+    if (!nueva) return [];
+    const ts: TareaAviso[] = [];
+    const f = deInput(nueva.fecha);
+    if (f && lista?.frecuenciaDias) ts.push({ tarea: `Próxima ${nueva.lista.toLowerCase()}`, plazo: `cada ${lista.frecuenciaDias} días, según la frecuencia de la lista`, fecha: fechaLarga(new Date(f.getTime() + lista.frecuenciaDias * 86400000)), norma: reglaPlazo("inspeccion_frecuencia")?.norma, tipo: "empresa" });
+    for (const it of nueva.items) if (it.resultado === "no_cumple" && it.accion?.descripcion.trim()) {
+      const fl = deInput(it.accion.fechaLimite);
+      ts.push({ tarea: `Acción correctiva (FOR-06): ${it.accion.descripcion.trim()}`, plazo: "fecha límite de la acción", fecha: fl ? fechaLarga(fl) : undefined, norma: reglaPlazo("accion_limite")?.norma, tipo: "empresa" });
+    }
+    return ts;
+  };
   const anio = new Date().getFullYear();
   const delAnio = inspecciones.filter((i) => i.fecha.startsWith(String(anio)));
   const abiertas = inspecciones.flatMap((i) => i.acciones).filter((a) => a.estado === "abierta").length;
@@ -122,7 +139,8 @@ export function InspeccionesEditor({ empresaId, inspecciones, listas, lugares, p
                             <Input className="sm:col-span-3" placeholder="Causa raíz: por qué ocurre (opcional; también se puede agregar después)" value={it.accion.causa ?? ""} onChange={(e) => setItem(i, { accion: { ...it.accion!, causa: e.target.value } })} />
                             <Input placeholder="Acción correctiva (deje vacío para no crearla)" value={it.accion.descripcion} onChange={(e) => setItem(i, { accion: { ...it.accion!, descripcion: e.target.value } })} />
                             <Input placeholder="Responsable" value={it.accion.responsable ?? ""} onChange={(e) => setItem(i, { accion: { ...it.accion!, responsable: e.target.value } })} />
-                            <Input type="date" value={it.accion.fechaLimite ?? ""} onChange={(e) => setItem(i, { accion: { ...it.accion!, fechaLimite: e.target.value } })} />
+                            <Input type="date" aria-label="Fecha límite" value={it.accion.fechaLimite ?? ""} onChange={(e) => setItem(i, { accion: { ...it.accion!, fechaLimite: e.target.value } })} />
+                            <FieldDescription className="text-xs sm:col-span-3 sm:text-right">{textoAccionPropuesta(diasAccion)}</FieldDescription>
                           </div>
                         )}
                       </li>
@@ -133,14 +151,16 @@ export function InspeccionesEditor({ empresaId, inspecciones, listas, lugares, p
                   <Field><FieldLabel htmlFor="i-o" className="sr-only">Observaciones generales</FieldLabel><Textarea id="i-o" rows={3} placeholder="Describa lo más relevante que se encontró" value={nueva.observaciones} onChange={(e) => setNueva({ ...nueva, observaciones: e.target.value })} /></Field>
                 </SeccionFormulario>
               </SeccionesFormulario>
+              <AvisoTareas className="mt-4" tareas={tareasInspeccion()} />
             </DialogBody>
           )}
           <DialogFooter>
             <Button variant="outline" onClick={() => setNueva(null)}>Cancelar</Button>
             <Button disabled={pend || calificados < (nueva?.items.length ?? 0)} tooltip={nueva && calificados < nueva.items.length ? `Faltan ${nueva.items.length - calificados} ítems por calificar` : undefined} onClick={() => nueva && start(async () => {
+              const tareas = tareasInspeccion();
               const r = await A.guardarInspeccion(empresaId, nueva);
               if ("error" in r) { toast.error(r.error); return; }
-              toast.success(`Inspección guardada${r.acciones ? ` y ${r.acciones} acción(es) creadas en FOR-06` : ""}. Agregue fotos desde el detalle.`);
+              toastTareas(`Inspección guardada${r.acciones ? ` y ${r.acciones} acción(es) creadas en FOR-06` : ""}. Agregue fotos desde el detalle.`, tareas);
               setNueva(null); setVer(r.id);
             })}>{pend ? <Spinner /> : <ClipboardCheck />} Guardar inspección</Button>
           </DialogFooter>

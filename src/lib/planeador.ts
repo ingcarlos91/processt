@@ -1,3 +1,5 @@
+import { valorPlazo } from "@/lib/plazos";
+import { parametrosPlazos } from "@/lib/plazos-servidor";
 // Planeador: reúne en un solo calendario todas las fechas que la consultora debe tener en cuenta,
 // por empresa. Cada fecha cita la norma que la origina y enlaza a donde se gestiona.
 import { db } from "@/lib/db";
@@ -33,17 +35,20 @@ const finDeMes = (anio: number, mes: number) => new Date(Date.UTC(anio, mes, 0, 
 const masAnios = (d: Date, n: number) => { const r = new Date(d); r.setUTCFullYear(r.getUTCFullYear() + n); return r; };
 const iso = (d: Date) => d.toISOString();
 
+let ventanaProximo = 14; // días de anticipación para "próximo" (plazo aviso_proximo de src/lib/plazos.ts)
 function estadoDe(fecha: Date, hecho: boolean, hoy: Date): EstadoFecha {
   if (hecho) return "hecho";
   const d0 = Date.UTC(hoy.getUTCFullYear(), hoy.getUTCMonth(), hoy.getUTCDate());
   const f0 = Date.UTC(fecha.getUTCFullYear(), fecha.getUTCMonth(), fecha.getUTCDate());
   if (f0 < d0) return "vencido";
   if (f0 === d0) return "hoy";
-  return f0 - d0 <= 14 * DIA ? "proximo" : "pendiente";
+  return f0 - d0 <= ventanaProximo * DIA ? "proximo" : "pendiente";
 }
 
 /** Todas las fechas de una empresa (o de todas) entre `desde` y `hasta`. Los vencidos sin cumplir se incluyen siempre. */
 export async function fechasPlaneador({ empresaId, desde, hasta, hoy = new Date() }: { empresaId?: string; desde: Date; hasta: Date; hoy?: Date }): Promise<Fecha[]> {
+  const params = await parametrosPlazos();
+  ventanaProximo = valorPlazo("aviso_proximo", params);
   const where = empresaId ? { id: empresaId } : {};
   const empresas = await db.empresa.findMany({
     where, select: {
@@ -81,7 +86,7 @@ export async function fechasPlaneador({ empresaId, desde, hasta, hoy = new Date(
       if (dentro(c.periodoFin, false)) add({ id: `comite-${c.id}`, fecha: iso(c.periodoFin), titulo: `Termina el periodo del ${NOMBRE_COMITE[c.tipo] ?? c.tipo}: conformar el nuevo`, detalle: "El periodo es de dos años. Programe la convocatoria y la elección o designación antes de esta fecha.", categoria: "comite", estado: estadoDe(c.periodoFin, false, hoy), normaRef: c.normaRef ?? undefined, href: `${base}/comites` });
     }
     for (const ev of e.eventos) {
-      for (const p of plazos(ev, hoy)) {
+      for (const p of plazos(ev, hoy, params)) {
         if (p.hecho) continue;
         if (dentro(p.vence, false)) add({ id: `ev-${ev.id}-${p.clave}`, fecha: iso(p.vence), titulo: `${p.t}${ev.trabajadorNombre ? ` — ${ev.trabajadorNombre}` : ""}`, detalle: p.porque, categoria: "accidente", estado: estadoDe(p.vence, false, hoy), normaRef: p.normaRef, href: `${base}/accidentes/${ev.id}` });
       }
@@ -92,12 +97,12 @@ export async function fechasPlaneador({ empresaId, desde, hasta, hoy = new Date(
     }
     const v = e.matrizVersiones[0];
     if (v) {
-      const f = masAnios(v.fecha, 1);
+      const f = masAnios(v.fecha, valorPlazo("matriz_anual"));
       if (dentro(f, false)) add({ id: `matriz-${e.id}`, fecha: iso(f), titulo: `Actualización anual de la matriz de peligros (última: v${v.numero})`, categoria: "matriz", estado: estadoDe(f, false, hoy), normaRef: "Decreto 1072/2015 art. 2.2.4.6.15", href: `${base}/matriz` });
     }
     // Reporte de avance del plan de mejoramiento a la ARL según la valoración de la última evaluación cerrada (Res. 0312/2019 art. 28).
     const evCerrada = e.evaluaciones.find((x) => x.cerrada);
-    const mesesArl = evCerrada?.valoracion === "CRÍTICO" ? 3 : evCerrada?.valoracion === "MODERADAMENTE ACEPTABLE" ? 6 : 0;
+    const mesesArl = evCerrada?.valoracion === "CRÍTICO" ? valorPlazo("arl_critico") : evCerrada?.valoracion === "MODERADAMENTE ACEPTABLE" ? valorPlazo("arl_moderado") : 0;
     if (evCerrada && mesesArl) {
       const f = new Date(evCerrada.fecha); f.setUTCMonth(f.getUTCMonth() + mesesArl);
       const hecho = e.evaluaciones.some((x) => x.cerrada && x.fecha > evCerrada.fecha);
@@ -121,12 +126,14 @@ export async function fechasPlaneador({ empresaId, desde, hasta, hoy = new Date(
           if (dentro(f, false)) add({ id: `${clave}-${e.id}`, fecha: iso(f), titulo, detalle: `${detalle} Última formación registrada: ${caps[0].fecha.toISOString().slice(0, 10)} (${caps[0].tema}); registre los asistentes para programarlo por trabajador.`, categoria: "legal", estado: estadoDe(f, false, hoy), normaRef, href: `${base}/trabajadores` });
         }
       };
-      if (rrN.has("RES-4272-2021")) tareaFormacion("alturas-reent", /altura/i, 18, "Reentrenamiento de actualización en trabajo en alturas", "El trabajador autorizado que lleva 18 meses en la empresa sin cambiar de actividad hace un reentrenamiento de mínimo 8 horas (20 % teoría, 80 % práctica), presencial y a cargo del empleador; se reporta a la ARL.", "Res. 4272/2021 art. 27 num. 4 lit. b");
-      if (rrN.has("RES-0491-2020")) tareaFormacion("confinado-act", /confinad/i, 36, "Actualización de la formación en espacios confinados", "La formación para trabajo en espacios confinados se actualiza cada tres (3) años, a cargo del empleador.", "Res. 0491/2020 art. 30 par. (adicionado por la Res. 2605/2020 art. 3)");
+      if (rrN.has("RES-4272-2021")) tareaFormacion("alturas-reent", /altura/i, valorPlazo("alturas_reentrenamiento"), "Reentrenamiento de actualización en trabajo en alturas", "El trabajador autorizado que lleva 18 meses en la empresa sin cambiar de actividad hace un reentrenamiento de mínimo 8 horas (20 % teoría, 80 % práctica), presencial y a cargo del empleador; se reporta a la ARL.", "Res. 4272/2021 art. 27 num. 4 lit. b");
+      if (rrN.has("RES-0491-2020")) tareaFormacion("confinado-act", /confinad/i, valorPlazo("confinados_actualizacion") * 12, "Actualización de la formación en espacios confinados", "La formación para trabajo en espacios confinados se actualiza cada tres (3) años, a cargo del empleador.", "Res. 0491/2020 art. 30 par. (adicionado por la Res. 2605/2020 art. 3)");
     }
-    const r = (e.responsableSst ?? {}) as { nombre?: string; curso50h?: boolean; curso50hFecha?: string };
-    if (r.curso50h && /^\d{4}-\d{2}-\d{2}$/.test(r.curso50hFecha ?? "")) {
-      const f = masAnios(new Date(r.curso50hFecha + "T12:00:00Z"), 3);
+    const r = (e.responsableSst ?? {}) as { nombre?: string; curso50h?: boolean; curso50hFecha?: string; curso20hFecha?: string };
+    // Desde el último certificado: el de 50 horas o la última actualización de 20 horas (Res. 4927/2016 art. 16).
+    const ultimoCurso = [r.curso50hFecha, r.curso20hFecha].filter((x): x is string => /^\d{4}-\d{2}-\d{2}$/.test(x ?? "")).sort().pop();
+    if (r.curso50h && ultimoCurso) {
+      const f = masAnios(new Date(ultimoCurso + "T12:00:00Z"), valorPlazo("curso_20h"));
       if (dentro(f, false)) add({ id: `curso-${e.id}`, fecha: iso(f), titulo: `Actualización del curso virtual de 20 horas${r.nombre ? ` — ${r.nombre}` : ""}`, detalle: "El responsable del SG-SST actualiza el curso de 50 horas con un curso de 20 horas cada tres años.", categoria: "responsable", estado: estadoDe(f, false, hoy), normaRef: "Res. 4927/2016", href: `${base}/datos` });
     }
     // Próxima inspección de cada lista usada, según su frecuencia en la biblioteca.
@@ -142,13 +149,13 @@ export async function fechasPlaneador({ empresaId, desde, hasta, hoy = new Date(
       // Res. 1843/2025 art. 11: evaluación de egreso dentro de los 5 días hábiles siguientes al retiro.
       if (!t.activo && t.fechaRetiro) {
         const hecho = t.examenes.find((x) => /retiro|egreso/i.test(x.tipo) && x.fecha >= t.fechaRetiro!);
-        const f = sumarHabiles(t.fechaRetiro, 5);
+        const f = sumarHabiles(t.fechaRetiro, valorPlazo("egreso"));
         if (dentro(f, !!hecho)) add({ id: `egr-${t.id}`, fecha: iso(f), titulo: `Evaluación médica de egreso — ${t.nombres}`, detalle: "Al terminar el contrato, la empresa ordena la evaluación de egreso dentro de los 5 días hábiles siguientes y conserva la constancia de haberla notificado al trabajador.", categoria: "examen", estado: estadoDe(f, !!hecho, hoy), normaRef: "Res. 1843/2025 art. 11", href: `${base}/trabajadores` });
       }
       // Res. 1843/2025 art. 5 lit. f: adaptar las condiciones de trabajo a las restricciones en máximo 20 días hábiles.
       const conRestr = t.activo ? t.examenes.find((x) => x.concepto === "apto_restricciones") : undefined;
       if (conRestr) {
-        const f = sumarHabiles(conRestr.fecha, 20);
+        const f = sumarHabiles(conRestr.fecha, valorPlazo("adaptacion"));
         const hecho = conRestr.adaptacionFecha ?? null;
         if (dentro(f, !!hecho) && f.getTime() > hoy.getTime() - 60 * DIA) add({ id: `adapt-${conRestr.id}`, fecha: iso(f), titulo: `Adaptar el puesto a las restricciones médicas — ${t.nombres}`, detalle: "Implementar las restricciones o recomendaciones del concepto médico y dejar constancia (reubicación, ajuste de tareas o de jornada).", categoria: "examen", estado: estadoDe(f, !!hecho, hoy), normaRef: "Res. 1843/2025 art. 5 lit. f; Ley 776/2002 arts. 4 y 8", href: `${base}/trabajadores` });
       }
@@ -186,7 +193,7 @@ export async function fechasPlaneador({ empresaId, desde, hasta, hoy = new Date(
     }
     const au = e.auditorias[0];
     if (au) {
-      const f = au.estado === "cerrada" ? masAnios(au.fechaInicio, 1) : au.fechaInicio;
+      const f = au.estado === "cerrada" ? masAnios(au.fechaInicio, valorPlazo("auditoria_anual")) : au.fechaInicio;
       if (dentro(f, false)) add({ id: `aud-${au.id}`, fecha: iso(f), titulo: au.estado === "cerrada" ? `Auditoría interna anual ${au.anio + 1}` : `Cerrar la auditoría interna ${au.anio}`, detalle: "Planifíquela con el COPASST o Vigía y con un auditor idóneo e independiente.", categoria: "auditoria", estado: estadoDe(f, false, hoy), normaRef: "Decreto 1072/2015 art. 2.2.4.6.29", href: au.estado === "cerrada" ? `${base}/auditoria` : `${base}/auditoria/${au.id}` });
     }
     for (const v of e.visitas) add({ id: `vis-${v.id}`, fecha: iso(v.fecha), titulo: `Visita (${v.horas} h): ${v.actividades.split("\n")[0]}`, detalle: v.actividades, categoria: "visita", estado: "hecho", href: `${base}/planeador` });

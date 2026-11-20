@@ -1,3 +1,4 @@
+import { parametrosPlazos } from "@/lib/plazos-servidor";
 import Link from "next/link";
 import { anioPlanVigente } from "@/lib/plan/generar";
 import { comparativoDiagnostico } from "@/lib/diagnostico";
@@ -56,7 +57,8 @@ export default async function Resumen({ params }: PageProps<"/empresas/[id]">) {
   const eventosAbiertos = await db.evento.findMany({ where: { empresaId: id, OR: [{ invEstado: { in: ["pendiente", "en_curso"] } }, { reportadoArl: false, tipo: { in: ["AT", "EL"] } }] } });
   const datosDocs = await completitud(id);
   const [etapa, comparativo] = await Promise.all([db.empresa.findUniqueOrThrow({ where: { id }, select: { etapa: true } }).then((x) => x.etapa), comparativoDiagnostico(id)]);
-  const alertasEventos = eventosAbiertos.flatMap((ev) => plazos(ev).filter((p) => p.estado === "vencido" || p.estado === "por_vencer").map((p) => ({ ev, p })));
+  const parPlazos = await parametrosPlazos();
+  const alertasEventos = eventosAbiertos.flatMap((ev) => plazos(ev, new Date(), parPlazos).filter((p) => p.estado === "vencido" || p.estado === "por_vencer").map((p) => ({ ev, p })));
   return (
     <>
       {/* 1. Alertas: lo que requiere atención hoy */}

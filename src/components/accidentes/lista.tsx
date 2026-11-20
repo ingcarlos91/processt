@@ -17,6 +17,9 @@ import { EventoForm, type CargoOpcion } from "@/components/accidentes/evento-for
 import { TIPOS_EVENTO, GRAVEDAD, COLOR_PLAZO } from "@/lib/eventos";
 import type { PlazoUI } from "@/lib/eventos-ui";
 import { crearEvento, type DatosEvento } from "@/app/actions/eventos";
+import { AvisoTareas } from "@/components/plazos/aviso-tareas";
+import { tareasDeEvento } from "@/lib/eventos-ui";
+import type { ParametrosPlazos } from "@/lib/plazos";
 import type { CatalogoAccidentes } from "@/lib/catalogo-accidentes";
 import { cn, hoyLocal } from "@/lib/utils";
 
@@ -30,7 +33,7 @@ export function Semaforo({ p, compacto }: { p: PlazoUI; compacto?: boolean }) {
   return <Badge variant={c.v} className={cn("font-normal", c.c)} title={`${p.t} · vence ${fechaCorta(p.vence)} · ${p.normaRef}`}>{compacto ? p.t.split(" ")[0] : p.t}: {c.t}{!p.hecho && p.estado !== "vencido" ? ` (${fechaCorta(p.vence)})` : ""}</Badge>;
 }
 
-export function EventosLista({ empresaId, anio, anios, eventos, cargos, acciones, cat, lugares, sedes }: { empresaId: string; anio: number; anios: number[]; eventos: Ev[]; cargos: CargoOpcion[]; acciones: { abiertas: number; vencidas: number }; cat: CatalogoAccidentes; lugares: string[]; sedes: string[] }) {
+export function EventosLista({ empresaId, anio, anios, eventos, cargos, acciones, cat, lugares, sedes, parametros }: { parametros?: ParametrosPlazos; empresaId: string; anio: number; anios: number[]; eventos: Ev[]; cargos: CargoOpcion[]; acciones: { abiertas: number; vencidas: number }; cat: CatalogoAccidentes; lugares: string[]; sedes: string[] }) {
   const router = useRouter();
   const [abierto, setAbierto] = useState(false);
   const [d, setD] = useState<DatosEvento>(nuevo);
@@ -45,7 +48,8 @@ export function EventosLista({ empresaId, anio, anios, eventos, cargos, acciones
   const crear = () => start(async () => {
     const r = await crearEvento(empresaId, d);
     if ("error" in r) { toast.error(r.error); return; }
-    toast.success("Evento registrado. Ahora complete el reporte y la investigación.");
+    const tareas = tareasDeEvento(d, parametros);
+    toast.success("Evento registrado", { description: tareas.length ? `Se programaron ${tareas.length} plazo(s) en el planeador: ${tareas.map((t) => `${t.tarea} (vence el ${t.fecha})`).join("; ")}.` : "No genera plazos de reporte.", duration: 12000 });
     setAbierto(false); setD(nuevo());
     router.push(`/empresas/${empresaId}/accidentes/${r.id}`);
   });
@@ -121,6 +125,7 @@ export function EventosLista({ empresaId, anio, anios, eventos, cargos, acciones
             <DialogDescription>Lo que sepa ahora; puede completarlo después. Al guardar, el sistema calcula los plazos de reporte e investigación.</DialogDescription>
           </DialogHeader>
           <EventoForm d={d} set={setD} cargos={cargos} cat={cat} lugares={lugares} sedes={sedes} />
+          <AvisoTareas tareas={tareasDeEvento(d, parametros)} />
           <DialogFooter>
             <Button variant="outline" onClick={() => setAbierto(false)}>Cancelar</Button>
             <Button disabled={pend || !d.fecha} onClick={crear}>{pend ? <Spinner /> : <Plus />} Registrar</Button>
