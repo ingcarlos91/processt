@@ -402,19 +402,15 @@ function NuevoCargo({ empresaId, cargosTipo, run, pend }: { empresaId: string; c
   const [n, setN] = useState(1);
   const [tipo, setTipo] = useState("");
   return (
-    <Card size="sm" className="border-dashed ring-0 border">
-      <CardHeader><CardTitle className="text-sm flex items-center gap-1">Nuevo cargo <Ayuda k="cargos" /></CardTitle></CardHeader>
-      <CardContent className="space-y-2">
-        <div className="grid grid-cols-[1fr_72px] gap-2">
-          <Input placeholder="Nombre" value={nombre} onChange={(e) => setNombre(e.target.value)} />
-          <Input type="number" min={1} aria-label="Personas" placeholder="Ej.: 4" value={n} onChange={(e) => setN(Number(e.target.value))} />
-        </div>
-        <Buscador className="w-full" value={tipo || undefined} placeholder="Buscar cargo tipo…" textoBoton="Tipo de cargo (opcional)" opciones={opcCargos(cargosTipo)} onSelect={(v) => { setTipo(v); if (!nombre) setNombre(cargosTipo.find((t) => t.id === v)?.nombre.split(" / ")[0] ?? ""); }} />
-      </CardContent>
-      <CardFooter>
-        <Button size="sm" disabled={!nombre || pend} onClick={() => { run(() => A.agregarCargo(empresaId, { nombre, nPersonas: n, cargoTipoId: tipo || undefined }), "Cargo agregado"); setNombre(""); setN(1); setTipo(""); }}><Plus /> Agregar cargo</Button>
-      </CardFooter>
-    </Card>
+    <div className="mb-1 rounded-lg border border-dashed bg-muted/20 p-4">
+      <div className="mb-3 flex items-center gap-1 text-sm font-medium">Nuevo cargo <Ayuda k="cargos" /></div>
+      <div className="grid gap-3 sm:grid-cols-[1fr_6rem]">
+        <label className="space-y-1"><span className="text-xs text-muted-foreground">Nombre del cargo</span><Input className="bg-background" placeholder="Ej.: Auxiliar de bodega" value={nombre} onChange={(e) => setNombre(e.target.value)} /></label>
+        <label className="space-y-1"><span className="text-xs text-muted-foreground">Personas</span><Input className="bg-background" type="number" min={1} placeholder="Ej.: 4" value={n} onChange={(e) => setN(Number(e.target.value))} /></label>
+        <div className="space-y-1 sm:col-span-2"><span className="text-xs text-muted-foreground">Tipo de cargo de la biblioteca (opcional: trae sus tareas y peligros)</span><Buscador className="w-full" value={tipo || undefined} placeholder="Buscar cargo tipo…" textoBoton="Tipo de cargo (opcional)" opciones={opcCargos(cargosTipo)} onSelect={(v) => { setTipo(v); if (!nombre) setNombre(cargosTipo.find((t) => t.id === v)?.nombre.split(" / ")[0] ?? ""); }} /></div>
+      </div>
+      <div className="mt-3 flex justify-end"><Button size="sm" disabled={!nombre || pend} onClick={() => { run(() => A.agregarCargo(empresaId, { nombre, nPersonas: n, cargoTipoId: tipo || undefined }), "Cargo agregado"); setNombre(""); setN(1); setTipo(""); }}><Plus /> Agregar cargo</Button></div>
+    </div>
   );
 }
 
