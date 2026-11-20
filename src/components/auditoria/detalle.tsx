@@ -1,4 +1,6 @@
 "use client";
+import { sugerirAccionHallazgo } from "@/app/actions/ia";
+import { BotonIA } from "@/components/app/boton-ia";
 import { CampoHallazgo } from "@/components/app/campo-hallazgo";
 import { FilaAccion, type AccionUI } from "@/components/acciones/fila-accion";
 import { useState, useTransition } from "react";
@@ -128,7 +130,12 @@ export function AuditoriaDetalle({ empresaId, a, sistema, responsables, responsa
                 <label className="space-y-1"><span className="text-xs font-medium">Acción correctiva <span className="font-normal text-muted-foreground">(se crea en FOR-06 al cerrar)</span></span><Input className="bg-background" placeholder="Ej.: Firmar y divulgar la política de SST" value={it.accion.descripcion} onChange={(e) => set(it.n, { accion: { ...it.accion!, descripcion: e.target.value } })} /></label>
                 <label className="space-y-1"><span className="text-xs font-medium">Responsable</span><Input className="bg-background" placeholder="Ej.: Gerente" value={it.accion.responsable ?? ""} onChange={(e) => set(it.n, { accion: { ...it.accion!, responsable: e.target.value } })} /></label>
                 <label className="space-y-1"><span className="text-xs font-medium">Fecha límite</span><Input className="bg-background" type="date" value={it.accion.fechaLimite ?? ""} onChange={(e) => set(it.n, { accion: { ...it.accion!, fechaLimite: e.target.value } })} /></label>
-                <p className="text-xs text-muted-foreground sm:col-span-3 sm:text-right">{textoAccionPropuesta(diasAccion)}</p>
+                <div className="flex flex-wrap items-center justify-between gap-2 sm:col-span-3">
+                  <BotonIA disabled={!it.hallazgo.trim()} tooltip={it.hallazgo.trim() ? undefined : "Escriba primero el hallazgo"}
+                    accion={() => sugerirAccionHallazgo(empresaId, { origen: "auditoria", contexto: `${it.aspecto}. Criterio: ${it.criterio}`, hallazgo: it.hallazgo, observacion: it.evidencia })}
+                    onPropuesta={(r) => set(it.n, { accion: { ...it.accion!, causa: r.causa, descripcion: r.descripcion } })} />
+                  <p className="text-xs text-muted-foreground sm:text-right">{textoAccionPropuesta(diasAccion)}</p>
+                </div>
               </div>
             )}
           </div>

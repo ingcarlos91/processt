@@ -16,7 +16,7 @@ npm run dev                 # http://localhost:3000 → pide login
 
 `.env` debe tener `DATABASE_URL` y `AUTH_SECRET` (secreto para firmar sesiones; genérelo con `openssl rand -base64 48`).
 
-IA opcional: agregar `AI_GATEWAY_API_KEY=...` en `.env`. Sin clave, “Sugerir tareas y peligros” busca por palabras clave en la biblioteca.
+IA opcional: agregar `ANTHROPIC_API_KEY=...` en `.env` (y en Vercel). Modelos: `IA_MODELO_BASICO` (por defecto claude-haiku-5-5) e `IA_MODELO_TECNICO` (por defecto claude-haiku-5-5; poner claude-sonnet-5-5 si hace falta más criterio técnico). Sin clave, las sugerencias salen de la biblioteca.
 
 ## Hecho (19 nov 2026)
 
@@ -42,7 +42,7 @@ IA opcional: agregar `AI_GATEWAY_API_KEY=...` en `.env`. Sin clave, “Sugerir t
 
 - Biblioteca ampliada: 25 sectores, 177 cargos tipo, 115 tareas, 89 peligros, 29 zonas y 166 elementos de catálogo (43 exámenes, 59 EPP, 64 capacitaciones). Semilla aditiva: `npx prisma db seed` agrega lo nuevo sin tocar lo validado.
 - Biblioteca editable desde la app: crear sectores, cargos tipo, tareas tipo (con peligros y zonas) y peligros; catálogos de exámenes, EPP y capacitaciones.
-- “Ampliar con IA” por sector (requiere AI_GATEWAY_API_KEY): la IA crea cargos, tareas y peligros sin validar.
+- “Ampliar con IA” por sector (requiere ANTHROPIC_API_KEY): la IA crea cargos, tareas y peligros sin validar.
 
 - Biblioteca en dos niveles: general (todas las empresas) y propia de cada empresa (pestaña “Biblioteca propia”). Lo propio no aparece en otras empresas; “Publicar en general” lo comparte. Al guardar desde la matriz se elige el nivel.
 
@@ -100,6 +100,8 @@ IA opcional: agregar `AI_GATEWAY_API_KEY=...` en `.env`. Sin clave, “Sugerir t
   - Plantillas: base PROCESST (se actualiza en cada despliegue) + versión propia por consultora (PlantillaConsultora) con aviso si la base cambió y "Volver a la base".
   - Biblioteca en tres niveles (base PROCESST de solo lectura, consultora, empresa); los sectores son de la base y solo los cambia el super administrador.
   - Datos existentes: quedan en la consultora original; sus plantillas editadas pasaron a su versión propia.
+
+- IA (src/lib/ia/motor.ts): llamada directa a la API de Anthropic con la llave de la organización; Haiku 5.5 en todo para el piloto (en accidentes, misma calidad que Sonnet a 1/16 del costo); Sonnet 5.5 configurable para lo técnico. Registro de consumo por consultora (UsoIa) con costo en USD, tope mensual por consultora fijado por el super administrador, caché de la biblioteca en la matriz (~USD 0,04 por cargo después de la primera consulta), anonimizado de nombres y documentos antes de enviar (Ley 1581/2012). Nuevo: proponer causa y acción correctiva de hallazgos de inspección y auditoría, y borrador de observaciones del informe de gestión.
 
 ## Pendiente
 

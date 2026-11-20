@@ -154,9 +154,9 @@ export async function reabrirInvestigacion(empresaId: string, eventoId: string) 
 }
 
 export async function sugerirAnalisis(empresaId: string, eventoId: string) {
-  await requiereEmpresa(empresaId);
+  const u = await requiereEmpresa(empresaId);
   await delaEmpresa(empresaId, eventoId);
-  return sugerirInvestigacion(eventoId);
+  return sugerirInvestigacion(eventoId, u.id);
 }
 
 /** Agrega el peligro identificado a la matriz del cargo (retroalimentación de la investigación, GTC 45). */

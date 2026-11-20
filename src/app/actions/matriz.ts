@@ -206,11 +206,11 @@ export async function completarDesdeSector(empresaId: string) {
 }
 
 export async function sugerirConIA(empresaId: string, cargoId: string, funciones: string) {
-  await requiereEmpresa(empresaId);
+  const u = await requiereEmpresa(empresaId);
   await requiereRegistro("cargo", cargoId, empresaId);
   await db.cargo.update({ where: { id: cargoId }, data: { descripcionFunciones: funciones } });
   try {
-    return await sugerirTareasYPeligros(empresaId, cargoId, funciones);
+    return await sugerirTareasYPeligros(empresaId, cargoId, funciones, u.id);
   } catch (e) {
     console.error("sugerirConIA:", e);
     return { error: "No fue posible generar la sugerencia. Agregue tareas desde la biblioteca o intente de nuevo." };

@@ -15,36 +15,39 @@ datasource db {
 // ─────────────────────────── Consultora y usuarios ───────────────────────────
 
 model Consultora {
-  id            String                @id @default(cuid())
-  nombre        String
-  nit           String?
-  licenciaSst   String?               @map("licencia_sst")
-  licenciaFecha DateTime?             @map("licencia_fecha")
-  profesional   String? // nombre de la profesional que firma
-  perfil        String? // tecnico | tecnologo | profesional | especialista
-  cargo         String? // p. ej. "Asesora externa en SST"
-  curso50h      Boolean               @default(false) @map("curso_50h")
-  curso50hFecha String?               @map("curso_50h_fecha")
-  curso20hFecha String?               @map("curso_20h_fecha")
+  id               String                @id @default(cuid())
+  nombre           String
+  nit              String?
+  licenciaSst      String?               @map("licencia_sst")
+  licenciaFecha    DateTime?             @map("licencia_fecha")
+  profesional      String? // nombre de la profesional que firma
+  perfil           String? // tecnico | tecnologo | profesional | especialista
+  cargo            String? // p. ej. "Asesora externa en SST"
+  curso50h         Boolean               @default(false) @map("curso_50h")
+  curso50hFecha    String?               @map("curso_50h_fecha")
+  curso20hFecha    String?               @map("curso_20h_fecha")
   // Parámetros de criterio de la empresa (plazos editables de src/lib/plazos.ts): { clave: valor }.
-  parametros    Json                  @default("{}")
-  tipoDoc       String                @default("CC") @map("tipo_doc") // CC | CE | PA | PPT | PEP | TI
-  cedula        String?
-  telefono      String?
-  correo        String?
-  firmaUrl      String?               @map("firma_url")
-  logoUrl       String?               @map("logo_url")
-  creadoEn      DateTime              @default(now()) @map("creado_en")
+  parametros       Json                  @default("{}")
+  tipoDoc          String                @default("CC") @map("tipo_doc") // CC | CE | PA | PPT | PEP | TI
+  cedula           String?
+  telefono         String?
+  correo           String?
+  firmaUrl         String?               @map("firma_url")
+  logoUrl          String?               @map("logo_url")
+  creadoEn         DateTime              @default(now()) @map("creado_en")
   // La desactiva el super administrador: sus usuarios no pueden ingresar (los datos se conservan).
-  activa        Boolean               @default(true)
-  empresas      Empresa[]
-  usuarios      Usuario[]
-  plantillas    PlantillaConsultora[]
-  peligros      PeligroCatalogo[]
-  tareasTipo    TareaTipo[]
-  cargosTipo    CargoTipo[]
-  catalogo      CatalogoItem[]
-  recordatorios Recordatorio[]
+  activa           Boolean               @default(true)
+  empresas         Empresa[]
+  usuarios         Usuario[]
+  plantillas       PlantillaConsultora[]
+  peligros         PeligroCatalogo[]
+  tareasTipo       TareaTipo[]
+  cargosTipo       CargoTipo[]
+  catalogo         CatalogoItem[]
+  recordatorios    Recordatorio[]
+  // Tope de gasto de IA en USD por mes calendario (null = sin tope). Lo fija el super administrador.
+  iaTopeMensualUsd Float?                @map("ia_tope_mensual_usd")
+  usosIa           UsoIa[]
 
   @@map("consultora")
 }
@@ -1154,4 +1157,22 @@ model CatalogoItem {
 
   @@unique([tipo, nombre, empresaId, consultoraId])
   @@map("catalogo_item")
+}
+
+/// Cada llamada a la IA: quién la usó, para qué, con qué modelo y cuánto costó (control de gasto por consultora).
+model UsoIa {
+  id            String     @id @default(cuid())
+  consultoraId  String     @map("consultora_id")
+  consultora    Consultora @relation(fields: [consultoraId], references: [id], onDelete: Cascade)
+  usuarioId     String?    @map("usuario_id")
+  tarea         String // matriz | accidente | accion | observaciones | biblioteca
+  modelo        String
+  tokensEntrada Int        @default(0) @map("tokens_entrada")
+  tokensSalida  Int        @default(0) @map("tokens_salida")
+  costoUsd      Float      @default(0) @map("costo_usd")
+  ok            Boolean    @default(true)
+  creadoEn      DateTime   @default(now()) @map("creado_en")
+
+  @@index([consultoraId, creadoEn])
+  @@map("uso_ia")
 }

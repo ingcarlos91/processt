@@ -13,6 +13,7 @@
     "validar:requisitos": "tsx scripts/validar-requisitos.ts"
   },
   "dependencies": {
+    "@ai-sdk/anthropic": "^4.0.107",
     "@base-ui/react": "^1.9.0",
     "@prisma/client": "^6.19.3",
     "@sparticuz/chromium": "^153.0.0",

@@ -3,10 +3,9 @@ import { solo } from "@/lib/campos";
 import { requiereSesion, requiereUsuario } from "@/lib/auth/sesion";
 import { alcanceBiblioteca, bibliotecaPropia, requiereBibliotecaVisible, requiereEmpresa } from "@/lib/auth/acceso";
 import { revalidatePath } from "next/cache";
-import { generateText, Output } from "ai";
 import { z } from "zod";
 import { db } from "@/lib/db";
-import { iaDisponible, MODELO } from "@/lib/ia";
+import { generarConIA, iaDisponible } from "@/lib/ia/motor";
 
 const rv = (empresaId?: string | null) => { revalidatePath("/biblioteca", "layout"); if (empresaId) revalidatePath(`/empresas/${empresaId}`, "layout"); };
 const CLASIF = ["Biologico", "Fisico", "Quimico", "Psicosocial", "Biomecanico", "Condiciones de seguridad", "Fenomenos naturales"] as const;
@@ -189,7 +188,7 @@ const esquemaAmpliacion = z.object({
 /** La IA propone cargos, tareas y peligros nuevos para un sector y los guarda en la biblioteca sin validar. */
 export async function ampliarSectorConIA(sectorTipoId: string, instrucciones: string, cantidad = 8) {
   const u = await requiereUsuario();
-  if (!iaDisponible()) return { error: "La IA no está configurada: agregue AI_GATEWAY_API_KEY en el archivo .env y reinicie." };
+  if (!iaDisponible()) return { error: "La IA no está configurada (falta ANTHROPIC_API_KEY)." };
   const sector = await db.sectorTipo.findUniqueOrThrow({ where: { id: sectorTipoId }, include: { cargos: { where: alcanceBiblioteca(u.consultoraId) }, procesos: true } });
   const [tareas, peligros, catalogo] = await Promise.all([
     db.tareaTipo.findMany({ where: alcanceBiblioteca(u.consultoraId), select: { id: true, nombre: true } }),
@@ -197,9 +196,8 @@ export async function ampliarSectorConIA(sectorTipoId: string, instrucciones: st
     db.catalogoItem.findMany({ where: alcanceBiblioteca(u.consultoraId), select: { tipo: true, nombre: true } }),
   ]);
   try {
-    const { output } = await generateText({
-      model: MODELO,
-      output: Output.object({ schema: esquemaAmpliacion }),
+    const output = await generarConIA({
+      consultoraId: u.consultoraId, usuarioId: u.id, tarea: "biblioteca", nivel: "tecnico", schema: esquemaAmpliacion,
       system: "Eres especialista en Seguridad y Salud en el Trabajo en Colombia. Usas solo la clasificación y escalas de la GTC 45. Reutilizas tareas y peligros existentes (por id) siempre que coincidan. Para EPP, exámenes y capacitaciones usas preferiblemente los nombres exactos del catálogo. No inventas normas. Respondes en español de Colombia.",
       prompt: [
         `Sector: ${sector.nombre}. ${sector.descripcion ?? ""} CIIU: ${sector.ciius.join(", ")}.`,

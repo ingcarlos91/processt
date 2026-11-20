@@ -393,7 +393,7 @@ export const MANUAL: SeccionManual[] = [
     resumen: "Datos de la consultora y de la profesional que firma. Se precargan como responsable del SG-SST en cada empresa nueva. Solo el administrador de la consultora los cambia.",
     partes: [
       { titulo: "Consultora y profesional", que: "Nombre, NIT, profesional, cédula, perfil, licencia y curso de 50 horas.", botones: [{ nombre: "Guardar", hace: "Guarda; las empresas nuevas los toman y las existentes pueden copiarlos en Datos." }] },
-      { titulo: "Asistente de IA", que: "Estado de la IA. Sin IA, las sugerencias usan la biblioteca." },
+      { titulo: "Asistente de IA", que: "Estado de la IA, modelos que usa y gasto del mes de su consultora. La IA solo propone (matriz por cargo, análisis de accidentes, acciones de hallazgos de inspecciones y auditorías, observaciones del informe de gestión); usted revisa y aprueba. No se le envían nombres, documentos ni datos de salud de los trabajadores. Sin IA o al llegar al tope del mes, las sugerencias usan la biblioteca." },
     ],
   },
   {

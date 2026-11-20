@@ -1,24 +1,23 @@
-import { generateText, Output } from "ai";
 import { alcanceBiblioteca } from "@/lib/alcance-biblioteca";
 import { z } from "zod";
 import { db } from "@/lib/db";
 
-export const MODELO = process.env.IA_MODELO ?? "anthropic/claude-sonnet-5-5";
-export const iaDisponible = () => !!(process.env.AI_GATEWAY_API_KEY || process.env.VERCEL_OIDC_TOKEN);
+import { ErrorIA, generarConIA, iaDisponible } from "@/lib/ia/motor";
+export { iaDisponible, MODELOS, proveedorIA } from "@/lib/ia/motor";
 
 const CLASIF = ["Biologico", "Fisico", "Quimico", "Psicosocial", "Biomecanico", "Condiciones de seguridad", "Fenomenos naturales"] as const;
 
 const schema = z.object({
   tareas: z.array(z.object({
     nombre: z.string().describe("Nombre de la tarea, verbo en infinitivo o sustantivo de acción"),
-    tareaTipoId: z.string().nullable().describe("id de la tarea de la biblioteca si coincide; null si es nueva"),
+    tareaTipoId: z.string().nullable().describe("código de la tarea de la biblioteca (T…) si coincide; null si es nueva"),
     proceso: z.string().describe("Proceso de la empresa al que pertenece (usar uno de los existentes si aplica)"),
     zona: z.string().describe("Zona o lugar donde se ejecuta (usar una de las existentes si aplica)"),
     actividad: z.string(),
     rutinaria: z.boolean(),
     altoRiesgo: z.enum(["alturas", "confinado", "electrico", "izaje", "caliente"]).nullable(),
     peligros: z.array(z.object({
-      peligroId: z.string().nullable().describe("id del peligro del catálogo si coincide; null si es nuevo"),
+      peligroId: z.string().nullable().describe("código del peligro del catálogo (P…) si coincide; null si es nuevo"),
       clasificacion: z.enum(CLASIF),
       descripcion: z.string(),
       efectos: z.string(),
@@ -33,12 +32,12 @@ const schema = z.object({
 });
 export type Sugerencia = z.infer<typeof schema>;
 
-export async function sugerirTareasYPeligros(empresaId: string, cargoId: string, funciones: string): Promise<{ fuente: "ia" | "biblioteca"; sugerencia: Sugerencia; aviso?: string }> {
+export async function sugerirTareasYPeligros(empresaId: string, cargoId: string, funciones: string, usuarioId?: string): Promise<{ fuente: "ia" | "biblioteca"; sugerencia: Sugerencia; aviso?: string }> {
   const e = await db.empresa.findUniqueOrThrow({ where: { id: empresaId }, include: { procesos: true, zonas: true, sectorTipo: true } });
   const cargo = await db.cargo.findUniqueOrThrow({ where: { id: cargoId } });
   const alcance = alcanceBiblioteca(e.consultoraId, empresaId);
-  const tareasTipo = await db.tareaTipo.findMany({ where: alcance, include: { peligros: { include: { peligro: true } } } });
-  const catalogo = await db.peligroCatalogo.findMany({ where: alcance });
+  const tareasTipo = await db.tareaTipo.findMany({ where: alcance, orderBy: { nombre: "asc" }, include: { peligros: { include: { peligro: true } } } });
+  const catalogo = await db.peligroCatalogo.findMany({ where: alcance, orderBy: [{ clasificacion: "asc" }, { descripcion: "asc" }] });
 
   if (!iaDisponible()) return { fuente: "biblioteca", sugerencia: porPalabrasClave(funciones, tareasTipo, e.procesos[0]?.nombre ?? "", e.zonas[0]?.nombre ?? "") };
 
@@ -46,44 +45,48 @@ export async function sugerirTareasYPeligros(empresaId: string, cargoId: string,
   try {
     output = await consultarIA();
   } catch (err) {
-    console.error("IA no disponible, se usa la biblioteca:", err instanceof Error ? err.message : err);
     return {
       fuente: "biblioteca",
       sugerencia: porPalabrasClave(funciones, tareasTipo, e.procesos[0]?.nombre ?? "", e.zonas[0]?.nombre ?? ""),
-      aviso: "La IA no respondió (revise la configuración de AI Gateway). Se muestran coincidencias de la biblioteca.",
+      aviso: `${err instanceof ErrorIA ? err.message : "La IA no respondió."} Se muestran coincidencias de la biblioteca.`,
     };
   }
   return { fuente: "ia", sugerencia: output };
 
-  async function consultarIA() {
-  const { output } = await generateText({
-    model: MODELO,
-    output: Output.object({ schema }),
+  async function consultarIA(): Promise<Sugerencia> {
+  // Códigos cortos (T1, P1) en lugar de los id largos: menos tokens. La biblioteca va como contexto en caché.
+  const codT = new Map(tareasTipo.map((t, i) => [`T${i + 1}`, t.id]));
+  const codP = new Map(catalogo.map((p, i) => [`P${i + 1}`, p.id]));
+  const r = await generarConIA({
+    consultoraId: e.consultoraId, usuarioId, tarea: "matriz", nivel: "tecnico", schema,
     system: [
       "Eres un profesional especialista en Seguridad y Salud en el Trabajo en Colombia.",
       "Identificas peligros y valoras riesgos exclusivamente con la metodología de la GTC 45 (2012): clasificación de peligros del Anexo A, escalas ND (0,2,6,10), NE (1-4), NC (10,25,60,100).",
-      "Siempre prefieres tareas y peligros de la biblioteca recibida; usa su id cuando coincidan. Solo propones nuevos cuando nada de la biblioteca aplica.",
+      "Siempre prefieres tareas y peligros de la biblioteca recibida; usa su código (T… o P…) como id cuando coincidan. Solo propones nuevos (id null) cuando nada de la biblioteca aplica.",
       "No inventes normas ni artículos. No incluyas peligros de lugar (sismo, incendio, locativo general) porque se gestionan por zona.",
       "Responde en español de Colombia.",
     ].join(" "),
+    contexto: [
+      "Biblioteca de tareas (código | nombre | actividad):",
+      ...tareasTipo.map((t, i) => `T${i + 1} | ${t.nombre} | ${t.actividad ?? ""}`),
+      "",
+      "Catálogo de peligros (código | clasificación | descripción):",
+      ...catalogo.map((p, i) => `P${i + 1} | ${p.clasificacion} | ${p.descripcion}`),
+    ].join("\n"),
     prompt: [
-      `Empresa: ${e.razonSocial}. Actividad (CIIU ${e.ciiu}): ${e.descripcionActividad}. Sector: ${e.sectorTipo?.nombre ?? "no definido"}.`,
+      `Actividad de la empresa (CIIU ${e.ciiu}): ${e.descripcionActividad}. Sector: ${e.sectorTipo?.nombre ?? "no definido"}.`,
       `Procesos existentes: ${e.procesos.map((p) => p.nombre).join("; ") || "ninguno"}.`,
       `Zonas existentes: ${e.zonas.map((z) => z.nombre).join("; ") || "ninguna"}.`,
       `Cargo: ${cargo.nombre} (${cargo.nPersonas} personas).`,
       `Funciones descritas por la consultora: ${funciones}`,
       "",
-      "Biblioteca de tareas (id | nombre | actividad):",
-      ...tareasTipo.map((t) => `${t.id} | ${t.nombre} | ${t.actividad ?? ""}`),
-      "",
-      "Catálogo de peligros (id | clasificación | descripción):",
-      ...catalogo.map((p) => `${p.id} | ${p.clasificacion} | ${p.descripcion}`),
-      "",
       "Devuelve las tareas que realiza este cargo y, para cada una, sus peligros con valoración GTC 45 sugerida.",
     ].join("\n"),
   });
-  return output;
+  // De vuelta a los id reales (un código desconocido se trata como nuevo).
+  return { tareas: r.tareas.map((t) => ({ ...t, tareaTipoId: (t.tareaTipoId && codT.get(t.tareaTipoId)) || null, peligros: t.peligros.map((p) => ({ ...p, peligroId: (p.peligroId && codP.get(p.peligroId)) || null })) })) };
   }
+
 }
 
 function norm(s: string) { return s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, ""); }

@@ -1,4 +1,6 @@
 "use client";
+import { sugerirAccionHallazgo } from "@/app/actions/ia";
+import { BotonIA } from "@/components/app/boton-ia";
 import { FilaAccion, type AccionUI } from "@/components/acciones/fila-accion";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
@@ -140,7 +142,11 @@ export function InspeccionesEditor({ empresaId, inspecciones, listas, lugares, p
                             <Input placeholder="Acción correctiva (deje vacío para no crearla)" value={it.accion.descripcion} onChange={(e) => setItem(i, { accion: { ...it.accion!, descripcion: e.target.value } })} />
                             <Input placeholder="Responsable" value={it.accion.responsable ?? ""} onChange={(e) => setItem(i, { accion: { ...it.accion!, responsable: e.target.value } })} />
                             <Input type="date" aria-label="Fecha límite" value={it.accion.fechaLimite ?? ""} onChange={(e) => setItem(i, { accion: { ...it.accion!, fechaLimite: e.target.value } })} />
-                            <FieldDescription className="text-xs sm:col-span-3 sm:text-right">{textoAccionPropuesta(diasAccion)}</FieldDescription>
+                            <div className="flex flex-wrap items-center justify-between gap-2 sm:col-span-3">
+                              <BotonIA accion={() => sugerirAccionHallazgo(empresaId, { origen: "inspeccion", contexto: `${nueva.lista}${nueva.lugar ? ` en ${nueva.lugar}` : ""}`, hallazgo: it.pregunta, observacion: it.observacion })}
+                                onPropuesta={(r) => setItem(i, { accion: { ...it.accion!, causa: r.causa, descripcion: r.descripcion } })} />
+                              <FieldDescription className="text-xs sm:text-right">{textoAccionPropuesta(diasAccion)}</FieldDescription>
+                            </div>
                           </div>
                         )}
                       </li>

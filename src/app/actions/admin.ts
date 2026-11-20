@@ -103,3 +103,12 @@ export async function cambiarRolUsuarioConsultora(id: string, rol: string): Prom
   rv();
   return { ok: true };
 }
+
+/** Tope mensual de gasto de IA de la consultora en USD (vacío = sin tope). Al alcanzarlo, se usan las sugerencias de la biblioteca. */
+export async function fijarTopeIA(id: string, tope: number | null): Promise<Res> {
+  await requiereSuperadmin();
+  if (tope != null && (!Number.isFinite(tope) || tope < 0)) return { error: "Escriba un valor en USD mayor o igual a cero, o déjelo vacío para no tener tope." };
+  await db.consultora.update({ where: { id }, data: { iaTopeMensualUsd: tope == null ? null : Math.round(tope * 100) / 100 } });
+  rv();
+  return { ok: true };
+}

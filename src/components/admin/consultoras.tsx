@@ -1,7 +1,7 @@
 "use client";
 import { useMemo, useState, useTransition } from "react";
 import { toast } from "sonner";
-import { Building2, KeyRound, MoreHorizontal, Pencil, Plus, Power, Search, UserCheck, UserPlus, Users, UserX } from "lucide-react";
+import { Building2, KeyRound, Sparkles, MoreHorizontal, Pencil, Plus, Power, Search, UserCheck, UserPlus, Users, UserX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -19,16 +19,16 @@ import { CampoClave } from "@/components/app/usuarios-editor";
 import * as A from "@/app/actions/admin";
 
 type Usuario = { id: string; nombre: string; email: string; rol: string; activo: boolean; ultimoAcceso: string | null };
-type Consultora = { id: string; nombre: string; nit: string; activa: boolean; creadoEn: string; empresas: number; usuarios: Usuario[] };
+type Consultora = { id: string; nombre: string; nit: string; activa: boolean; creadoEn: string; empresas: number; iaUsd: number; iaUsos: number; iaTope: number | null; usuarios: Usuario[] };
 type Res = { ok: true } | { error: string };
 type Modal =
   | { tipo: "nueva" } | { tipo: "editar"; c: Consultora } | { tipo: "estado"; c: Consultora }
-  | { tipo: "usuario"; c: Consultora } | { tipo: "clave"; u: Usuario } | null;
+  | { tipo: "usuario"; c: Consultora } | { tipo: "clave"; u: Usuario } | { tipo: "ia"; c: Consultora } | null;
 
 const ROLES = [{ valor: "admin", etiqueta: "Administrador" }, { valor: "consultor", etiqueta: "Consultor" }];
 const fecha = (f: string | null) => (f ? new Date(f).toLocaleString("es-CO", { dateStyle: "medium", timeStyle: "short" }) : "Nunca");
 const ultimo = (us: Usuario[]) => us.map((u) => u.ultimoAcceso).filter(Boolean).sort().at(-1) ?? null;
-const vacio = { nombre: "", nit: "", aNombre: "", aEmail: "", aPassword: "", rol: "admin" };
+const vacio = { nombre: "", nit: "", aNombre: "", aEmail: "", aPassword: "", rol: "admin", tope: "" };
 
 export function ConsultorasAdmin({ consultoras }: { consultoras: Consultora[] }) {
   const [pend, start] = useTransition();
@@ -43,7 +43,7 @@ export function ConsultorasAdmin({ consultoras }: { consultoras: Consultora[] })
   const actual = consultoras.find((c) => c.id === verUsuarios) ?? null;
 
   const abrir = (m: Modal) => {
-    setF(m && "c" in m ? { ...vacio, nombre: m.c.nombre, nit: m.c.nit } : vacio);
+    setF(m && "c" in m ? { ...vacio, nombre: m.c.nombre, nit: m.c.nit, tope: m.c.iaTope != null ? String(m.c.iaTope) : "" } : vacio);
     setModal(m);
   };
   const run = (fn: () => Promise<Res>, ok: string, cerrar = true) => start(async () => {
@@ -67,7 +67,7 @@ export function ConsultorasAdmin({ consultoras }: { consultoras: Consultora[] })
           <TableHeader>
             <TableRow>
               <TableHead className="pl-6">Consultora</TableHead><TableHead>Administradores</TableHead><TableHead className="text-right">Empresas</TableHead>
-              <TableHead className="text-right">Usuarios</TableHead><TableHead>Último acceso</TableHead><TableHead>Estado</TableHead><TableHead className="w-12 pr-6" />
+              <TableHead className="text-right">Usuarios</TableHead><TableHead className="text-right">IA este mes</TableHead><TableHead>Último acceso</TableHead><TableHead>Estado</TableHead><TableHead className="w-12 pr-6" />
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -84,6 +84,7 @@ export function ConsultorasAdmin({ consultoras }: { consultoras: Consultora[] })
                   <TableCell className="max-w-64 text-sm">{admins.length ? admins.map((u) => <div key={u.id} className="truncate" title={u.email}>{u.nombre} <span className="text-xs text-muted-foreground">{u.email}</span></div>) : <span className="text-muted-foreground">Sin administrador</span>}</TableCell>
                   <TableCell className="text-right tabular-nums">{c.empresas}</TableCell>
                   <TableCell className="text-right tabular-nums">{c.usuarios.filter((u) => u.activo).length}/{c.usuarios.length}</TableCell>
+                  <TableCell className="text-right text-sm tabular-nums">USD {c.iaUsd.toFixed(2)}<div className="text-xs text-muted-foreground">{c.iaTope != null ? `tope ${c.iaTope.toFixed(2)}` : "sin tope"} · {c.iaUsos} uso(s)</div></TableCell>
                   <TableCell className="text-xs text-muted-foreground">{fecha(ultimo(c.usuarios))}</TableCell>
                   <TableCell>{c.activa ? <Badge variant="secondary">Activa</Badge> : <Badge variant="outline">Desactivada</Badge>}</TableCell>
                   <TableCell className="pr-6">
@@ -94,6 +95,7 @@ export function ConsultorasAdmin({ consultoras }: { consultoras: Consultora[] })
                           <DropdownMenuItem onClick={() => setVerUsuarios(c.id)}><Users /> Usuarios</DropdownMenuItem>
                           <DropdownMenuItem onClick={() => abrir({ tipo: "usuario", c })}><UserPlus /> Agregar usuario</DropdownMenuItem>
                           <DropdownMenuItem onClick={() => abrir({ tipo: "editar", c })}><Pencil /> Editar nombre y NIT</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => abrir({ tipo: "ia", c })}><Sparkles /> Tope de IA</DropdownMenuItem>
                         </DropdownMenuGroup>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem variant={c.activa ? "destructive" : "default"} onClick={() => abrir({ tipo: "estado", c })}><Power /> {c.activa ? "Desactivar" : "Activar"}</DropdownMenuItem>
@@ -103,7 +105,7 @@ export function ConsultorasAdmin({ consultoras }: { consultoras: Consultora[] })
                 </TableRow>
               );
             })}
-            {lista.length === 0 && <TableRow><TableCell colSpan={7} className="py-8 pl-6 text-center text-muted-foreground">{consultoras.length ? "No hay consultoras que coincidan." : "Aún no hay consultoras. Cree la primera."}</TableCell></TableRow>}
+            {lista.length === 0 && <TableRow><TableCell colSpan={8} className="py-8 pl-6 text-center text-muted-foreground">{consultoras.length ? "No hay consultoras que coincidan." : "Aún no hay consultoras. Cree la primera."}</TableCell></TableRow>}
           </TableBody>
         </Table>
       </Section>
@@ -219,6 +221,16 @@ export function ConsultorasAdmin({ consultoras }: { consultoras: Consultora[] })
               <DialogFooter>
                 <Button variant="outline" onClick={() => setModal(null)}>Cancelar</Button>
                 <Button disabled={pend} onClick={() => run(() => A.agregarUsuarioConsultora(modal.c.id, { nombre: f.aNombre, email: f.aEmail, password: f.aPassword, rol: f.rol }), "Usuario creado")}>{pend && <Spinner />} Crear usuario</Button>
+              </DialogFooter>
+            </>
+          )}
+          {modal?.tipo === "ia" && (
+            <>
+              <DialogHeader><DialogTitle>Tope de IA de {modal.c.nombre}</DialogTitle><DialogDescription>Gasto máximo de IA por mes calendario, en USD, con la llave de PROCESST. Al alcanzarlo, la consultora sigue trabajando con las sugerencias de la biblioteca. Este mes lleva USD {modal.c.iaUsd.toFixed(2)} en {modal.c.iaUsos} uso(s).</DialogDescription></DialogHeader>
+              <Field><FieldLabel htmlFor="t-ia">Tope mensual (USD)</FieldLabel><Input id="t-ia" inputMode="decimal" placeholder="Vacío = sin tope" value={f.tope} onChange={(e) => setF({ ...f, tope: e.target.value })} /><FieldDescription>Referencia con Haiku: un análisis de accidente cuesta cerca de USD 0,002 y la matriz de un cargo cerca de USD 0,01 (con Sonnet, unas 15 veces más).</FieldDescription></Field>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setModal(null)}>Cancelar</Button>
+                <Button disabled={pend} onClick={() => run(() => A.fijarTopeIA(modal.c.id, f.tope.trim() === "" ? null : Number(f.tope.replace(",", "."))), "Tope de IA guardado")}>{pend && <Spinner />} Guardar</Button>
               </DialogFooter>
             </>
           )}

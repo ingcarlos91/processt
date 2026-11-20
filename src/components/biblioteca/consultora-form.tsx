@@ -19,7 +19,7 @@ import { avisoPlazo, deInput } from "@/lib/plazos";
 
 type D = Required<Omit<DatosConsultora, "curso50h">> & { curso50h: boolean };
 
-export function ConsultoraForm({ inicial, ia }: { inicial: D; ia: { activa: boolean; modelo: string } }) {
+export function ConsultoraForm({ inicial, ia }: { inicial: D; ia: { activa: boolean; proveedor: string; basico: string; tecnico: string; gasto: number; usos: number; tope: number | null } }) {
   const [d, setD] = useState(inicial);
   const [pend, start] = useTransition();
   const set = <K extends keyof D>(k: K, v: D[K]) => setD((x) => ({ ...x, [k]: v }));
@@ -75,8 +75,14 @@ export function ConsultoraForm({ inicial, ia }: { inicial: D; ia: { activa: bool
       <Card>
         <CardHeader><CardTitle className="flex items-center gap-2"><Sparkles className="size-4" /> Asistente de IA</CardTitle><CardDescription>Sugiere tareas y peligros por cargo según la GTC 45, priorizando la biblioteca.</CardDescription></CardHeader>
         <CardContent className="space-y-2 text-sm">
-          {ia.activa ? <Badge>Activo · {ia.modelo}</Badge> : <Badge variant="outline">No configurado</Badge>}
-          {!ia.activa && <p className="text-muted-foreground text-xs">Sin IA, “Sugerir tareas y peligros” busca por palabras clave en la biblioteca. Para activarla, agregue AI_GATEWAY_API_KEY al archivo .env y reinicie.</p>}
+          {ia.activa ? <Badge>Activo · {ia.proveedor}</Badge> : <Badge variant="outline">No configurado</Badge>}
+          {ia.activa && (
+            <div className="grid gap-1 text-xs text-muted-foreground">
+              <p>Redacción y propuestas sencillas: <span className="font-medium text-foreground">{ia.basico}</span>. Matriz de peligros y análisis de accidentes: <span className="font-medium text-foreground">{ia.tecnico}</span>.</p>
+              <p>Este mes: {ia.usos} uso(s), USD {ia.gasto.toFixed(2)}{ia.tope != null ? ` de un tope de USD ${ia.tope.toFixed(2)}` : " (sin tope)"}. La IA solo propone: usted revisa y aprueba. No se le envían nombres, documentos ni datos de salud de los trabajadores.</p>
+            </div>
+          )}
+          {!ia.activa && <p className="text-muted-foreground text-xs">Sin IA, “Sugerir tareas y peligros” busca por palabras clave en la biblioteca y el análisis de accidentes usa las guías de la biblioteca.</p>}
         </CardContent>
       </Card>
     </div>

@@ -1,4 +1,6 @@
 "use client";
+import { sugerirObservacionesInforme } from "@/app/actions/ia";
+import { BotonIA } from "@/components/app/boton-ia";
 import { useState } from "react";
 import { FileBarChart, FileDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -45,7 +47,10 @@ export function BotonInformeGestion({ empresaId, observaciones }: { empresaId: s
           {tipo !== "inicio" ? <Field><FieldLabel>Cuál</FieldLabel><Selector value={valor} onChange={elegir} opciones={opcionesPeriodo(tipo)} /></Field> : <Field><FieldLabel>Cuál</FieldLabel><p className="py-2 text-sm text-muted-foreground">Desde el inicio del SG-SST hasta hoy</p></Field>}
         </div>
         <Field>
-          <FieldLabel htmlFor="ig-obs">Observaciones de la consultora</FieldLabel>
+          <div className="flex items-center justify-between gap-2">
+            <FieldLabel htmlFor="ig-obs">Observaciones de la consultora</FieldLabel>
+            <BotonIA accion={() => sugerirObservacionesInforme(empresaId, valor)} onPropuesta={(r) => setTexto(r.texto)} tooltip="La IA redacta un borrador con los datos del periodo; revíselo y ajústelo">Borrador con IA</BotonIA>
+          </div>
           <Textarea id="ig-obs" rows={6} className="bg-background" value={texto} onChange={(e) => setTexto(e.target.value)}
             placeholder="Ej.: Se avanzó en la conformación de comités y la inducción del personal. Para el próximo periodo es prioritario firmar la política y programar los exámenes médicos pendientes. Se recomienda a la gerencia asignar el presupuesto del SG-SST." />
           <FieldDescription>Salen impresas en el informe. Se guardan para este periodo; si lo deja vacío, el informe trae líneas para escribirlas a mano.</FieldDescription>

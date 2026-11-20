@@ -128,6 +128,7 @@ export function EventoDetalle({ diasAccionDefecto, empresaId, ev, cargos, peligr
       if (r.sugerencia.peligro?.id && !peligroId) setPeligroId(r.sugerencia.peligro.id);
       if (!an.porques?.filter(Boolean).length && r.sugerencia.porques.length) setAn((x) => ({ ...x, porques: r.sugerencia.porques }));
       if (!lecciones && r.sugerencia.lecciones) setLecciones(r.sugerencia.lecciones);
+      if (r.aviso) toast.info(r.aviso);
       toast.success(r.fuente === "ia" ? "La IA propuso causas y medidas: revíselas y agregue las que apliquen." : "Se propusieron causas y medidas a partir de la matriz del cargo y la forma del evento: revíselas.");
     } catch (e) { toast.error(e instanceof Error ? e.message : "No se pudo sugerir."); }
   });

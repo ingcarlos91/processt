@@ -1,8 +1,7 @@
-import { generateText, Output } from "ai";
 import { alcanceBiblioteca } from "@/lib/alcance-biblioteca";
 import { z } from "zod";
 import { db } from "@/lib/db";
-import { MODELO, iaDisponible } from "@/lib/ia";
+import { anonimizar, generarConIA, iaDisponible } from "@/lib/ia/motor";
 import { cargarEmpresa, filasMatriz } from "@/lib/generador/contexto";
 import { cargarCatalogoAccidentes } from "@/lib/catalogo-accidentes";
 
@@ -24,7 +23,7 @@ export type SugerenciaInvestigacion = z.infer<typeof schema> & { peligro?: { id:
 
 const palabras = (t: string) => t.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").split(/[^a-z0-9ñ]+/).filter((w) => w.length > 3);
 
-export async function sugerirInvestigacion(eventoId: string): Promise<{ fuente: "ia" | "biblioteca"; sugerencia: SugerenciaInvestigacion }> {
+export async function sugerirInvestigacion(eventoId: string, usuarioId?: string): Promise<{ fuente: "ia" | "biblioteca"; sugerencia: SugerenciaInvestigacion; aviso?: string }> {
   const ev = await db.evento.findUniqueOrThrow({ where: { id: eventoId } });
   const e = await cargarEmpresa(ev.empresaId);
   const filas = filasMatriz(e);
@@ -33,21 +32,26 @@ export async function sugerirInvestigacion(eventoId: string): Promise<{ fuente: 
   // Biblioteca global (Biblioteca → Accidentes): causas, medidas y palabras clave por forma del evento.
   const forma = (await cargarCatalogoAccidentes((await db.empresa.findUniqueOrThrow({ where: { id: ev.empresaId }, select: { consultoraId: true } })).consultoraId)).formas.find((f) => f.nombre === ev.mecanismo);
 
+  let aviso: string | undefined;
   if (iaDisponible()) {
     try {
-      const { output } = await generateText({
-        model: MODELO,
-        output: Output.object({ schema }),
+      // Sin datos personales (Ley 1581/2012): se quitan nombres y documentos del trabajador, testigos, equipo investigador y demás trabajadores.
+      const equipo = ((ev.equipo ?? []) as { nombre?: string; documento?: string }[]);
+      const trab = await db.trabajador.findMany({ where: { empresaId: ev.empresaId }, select: { nombres: true, documento: true } });
+      const personas = [ev.trabajadorNombre, ev.testigos, ...equipo.map((x) => x.nombre), ...trab.map((t) => t.nombres)];
+      const docs = [ev.trabajadorCedula, ...equipo.map((x) => x.documento), ...trab.map((t) => t.documento)];
+      const output = await generarConIA({
+        consultoraId: e.consultoraId, usuarioId, tarea: "accidente", nivel: "tecnico", schema,
         system: "Eres profesional en Seguridad y Salud en el Trabajo en Colombia. Analizas incidentes y accidentes según la Resolución 1401 de 2007 (causas inmediatas y básicas) y propones controles con la jerarquía del Decreto 1072 de 2015 art. 2.2.4.6.24. No inventes hechos que no estén en el relato; si falta información, formula la causa como hipótesis a verificar. Nunca incluyas diagnósticos médicos. Responde en español de Colombia.",
         prompt: JSON.stringify({
-          evento: { tipo: ev.tipo, gravedad: ev.gravedad, relato, cargo: ev.cargo, lugar: ev.lugar },
+          evento: { tipo: ev.tipo, gravedad: ev.gravedad, relato: anonimizar(relato, personas, docs), cargo: ev.cargo, lugar: ev.lugar },
           guiaDeLaBiblioteca: forma ? { forma: forma.nombre, causasTipicas: { actos: forma.actos, condiciones: forma.condiciones, personales: forma.personales, trabajo: forma.trabajo }, medidasTipicas: forma.medidas } : null,
           matrizDelCargo: delCargo.slice(0, 40).map((f) => ({ id: f.id, peligro: f.descripcion, clasificacion: f.clasificacion, tarea: f.tarea, nivel: f.nivelRiesgo, controles: { ingenieria: f.ingenieria, administrativa: f.administrativa, epp: f.epp } })),
         }),
       });
       const fila = output.peligroMatrizId ? filas.find((f) => f.id === output.peligroMatrizId) : null;
       return { fuente: "ia", sugerencia: { ...output, peligro: fila ? { id: fila.catalogo?.id ?? null, descripcion: fila.descripcion, clasificacion: fila.clasificacion, enMatriz: true } : null } };
-    } catch { /* si la IA falla, se usa la sugerencia por reglas */ }
+    } catch (err) { aviso = `${err instanceof Error ? err.message : "La IA no respondió."} Se muestra la sugerencia de la biblioteca.`; }
   }
 
   // Sin IA: la forma del evento orienta la clasificación y las palabras clave del peligro;
@@ -79,6 +83,7 @@ export async function sugerirInvestigacion(eventoId: string): Promise<{ fuente: 
   acciones.push({ descripcion: `Socializar la lección aprendida del evento con los trabajadores del cargo ${ev.cargo ?? "afectado"}`, jerarquia: "administrativo", tipo: "preventiva" });
   return {
     fuente: "biblioteca",
+    aviso,
     sugerencia: {
       porques: [],
       actos: guia.actos ?? [], condiciones: guia.condiciones ?? [], personales: guia.personales ?? [], trabajo: guia.trabajo ?? [],
