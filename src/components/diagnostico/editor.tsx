@@ -1,4 +1,5 @@
 "use client";
+import { CampoHallazgo } from "@/components/app/campo-hallazgo";
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -110,8 +111,11 @@ export function DiagnosticoEditor({ empresaId, d, etapa, profesional, licencia =
                   </div>
                 </div>
                 {!permiteNoAplica(d.nivel) && it.estado === "no_aplica" && <p className="mt-2 text-xs text-destructive">En 60 estándares no existe «no aplica» (Res. 0312/2019 arts. 16 y 27): cuenta como no cumplido. Márquelo «cumple» o «no cumple».</p>}
-                {(it.estado && it.estado !== "cumple" || it.observacion) && (
-                  <Input className="mt-2" disabled={cerrado} value={it.observacion} placeholder={it.estado === "no_aplica" ? "Justificación (obligatoria para “no aplica”)" : "Qué se encontró (aparece en el informe)"} onChange={(e) => set(it.codigo, { observacion: e.target.value })} />
+                {(it.estado || it.observacion) && (
+                  <CampoHallazgo className="mt-3" soloLectura={cerrado} value={it.observacion} onChange={(v) => set(it.codigo, { observacion: v })}
+                    etiqueta={it.estado === "no_aplica" ? "Por qué no aplica (justificación)" : it.estado === "no_cumple" ? "Qué se encontró (va en el informe)" : "Evidencia revisada (opcional)"}
+                    obligatorio={it.estado === "no_aplica" || it.estado === "no_cumple"}
+                    placeholder={it.estado === "no_aplica" ? "Ej.: La empresa no tiene contratistas ni subcontratistas" : it.estado === "no_cumple" ? "Ej.: No existe documento de designación; el gerente asume las funciones sin soporte" : "Ej.: Acta de designación del 10/03/2026 firmada por el representante legal"} />
                 )}
               </div>
             ))}

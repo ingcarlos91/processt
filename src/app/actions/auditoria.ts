@@ -58,6 +58,11 @@ export async function cerrarAuditoria(empresaId: string, id: string, fechaCierre
   const faltan = items.filter((i) => !i.resultado).map((i) => i.n);
   if (faltan.length) return { error: `Falta calificar los aspectos ${faltan.join(", ")}.` };
   if (items.some((i) => i.resultado === "no_conforme" && !i.hallazgo?.trim())) return { error: "Describa el hallazgo de cada no conformidad." };
+  // La auditoría se soporta en la evidencia revisada de cada aspecto (Decreto 1072/2015 art. 2.2.4.6.29).
+  const sinEvidencia = items.filter((i) => i.resultado !== "na" && !i.evidencia?.trim()).map((i) => i.n);
+  if (sinEvidencia.length) return { error: `Escriba la evidencia revisada de los aspectos ${sinEvidencia.join(", ")}.` };
+  const naSinMotivo = items.filter((i) => i.resultado === "na" && !i.hallazgo?.trim()).map((i) => i.n);
+  if (naSinMotivo.length) return { error: `Explique por qué no aplican los aspectos ${naSinMotivo.join(", ")}.` };
   if (!a.independiente) return { error: "Registre la declaración de independencia del auditor: no puede auditar su propio trabajo (Decreto 1072/2015 art. 2.2.4.6.29)." };
   const fecha = dia(fechaCierre) ?? new Date();
   let n = 0;

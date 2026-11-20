@@ -61,7 +61,7 @@ Establecer el estado actual del Sistema de Gestión de la Seguridad y Salud en e
 
 **Alcance:** este es un diagnóstico de cumplimiento de estándares mínimos. No reemplaza la evaluación inicial del SG-SST del Decreto 1072 de 2015 (art. 2.2.4.6.16), que además revisa la normatividad aplicable, la identificación de peligros y la valoración de riesgos, las amenazas y la vulnerabilidad, la efectividad de los controles, la capacitación, los programas de vigilancia epidemiológica, la descripción sociodemográfica y las condiciones de salud, y las estadísticas de accidentalidad y enfermedad de los dos últimos años. Esa evaluación se completa al iniciar el SG-SST.
 
-Se verificó cada estándar mediante revisión de documentos, entrevistas y observación. La calificación usa la tabla de valores de la Resolución 0312 de 2019 (arts. 27 y 28): cada estándar que se cumple suma su valor.${dg.nivel === 60 ? " En 60 estándares todos los ítems aplican: no se usa «no aplica» (arts. 16 y 27)." : ` En las empresas de ${dg.nivel} estándares, los ítems que no les corresponden por su tamaño y clase de riesgo, y los que no aplican con justificación, reciben su valor máximo (art. 27), así que el puntaje es 100 menos lo que se deja de cumplir.`}
+Se verificó cada estándar mediante revisión de documentos, entrevistas y observación. La calificación usa la tabla de valores de la Resolución 0312 de 2019 (arts. 27 y 28): cada estándar que se cumple suma su valor.${dg.nivel === 60 ? " En 60 estándares todos los ítems aplican: no se usa «no aplica» (arts. 16 y 27)." : ` En las empresas de ${dg.nivel} estándares se califica sobre los ítems de su nivel: puntos obtenidos sobre el valor de esos ítems, llevado a 100; un ítem que no aplica, con justificación, suma su valor (art. 27).`}
 
 ## Resultado general
 
@@ -73,7 +73,7 @@ Se verificó cada estándar mediante revisión de documentos, entrevistas y obse
 | Cumplen | ${cumple.length} |
 | No cumplen | ${brechas.length} |
 | No aplican | ${items.filter((i) => i.estado === "no_aplica").length}${dg.nivel === 60 && noAplica.length ? " (en 60 estándares cuentan como no cumplidos)" : ""} |${dg.nivel !== 60 ? `
-| Ítems que no le corresponden al nivel (valor máximo, art. 27) | ${cal.noAplicanPorNivel} puntos |` : ""}
+| Valor de los ítems del nivel | ${cal.maximo} puntos (el puntaje se lleva a 100) |` : ""}
 | Puntaje | ${cal.puntaje} % |
 | Valoración | ${cal.valoracion} |
 

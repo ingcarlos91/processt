@@ -65,7 +65,7 @@ Reportes recibidos en el periodo evaluado: ______. Principales temas: __________
 
 ## Resultado de la tabla de valores
 
-La calificación usa la tabla de valores de la Resolución 0312 de 2019 (art. 27). Cada ítem que se cumple suma su valor. En las empresas de menos de 50 trabajadores con riesgo I, II o III, los ítems que no les corresponden se califican con el valor máximo en la columna "No aplica", así que el puntaje es 100 menos lo que se deja de cumplir.
+La calificación usa la tabla de valores de la Resolución 0312 de 2019 (art. 27). Cada ítem que se cumple suma su valor. En las empresas de 7 y 21 estándares se califica sobre los ítems de su nivel (puntos obtenidos sobre el valor de esos ítems, llevado a 100); un ítem del nivel que no aplica, con justificación, suma su valor máximo.
 
 {{#if evaluacionInicial.existe}}
 | Ítem | Estándar | Valor | Estado | Puntaje obtenido | Observación o justificación |
@@ -73,8 +73,6 @@ La calificación usa la tabla de valores de la Resolución 0312 de 2019 (art. 27
 {{#each evaluacionInicial.items}}
 | {{codigo}} | {{celda descripcion}} | {{puntaje}} | {{estado}} | {{obtenido}} | {{#if justificacion}}{{celda justificacion}}{{else}}{{celda observacion}}{{/if}} |
 {{/each}}
-{{#if evaluacionInicial.noCorresponden.length}}| Demás ítems | {{len evaluacionInicial.noCorresponden}} ítems que no le corresponden a la empresa por su tamaño y riesgo | {{evaluacionInicial.puntajeNoCorresponden}} | No aplica (art. 27) | {{evaluacionInicial.puntajeNoCorresponden}} | Reciben el porcentaje máximo |
-{{/if}}
 
 **Puntaje total: {{evaluacionInicial.puntaje}} %** — Valoración: **{{evaluacionInicial.valoracion}}**
 

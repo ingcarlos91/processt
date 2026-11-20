@@ -1,4 +1,5 @@
 "use client";
+import { CampoHallazgo } from "@/components/app/campo-hallazgo";
 import { FilaAccion, type AccionUI } from "@/components/acciones/fila-accion";
 import { useState, useTransition } from "react";
 import Link from "next/link";
@@ -117,16 +118,16 @@ export function AuditoriaDetalle({ empresaId, a, sistema, responsables, responsa
             </div>
             {it.resultado && (
               <div className="mt-3 grid gap-2 sm:grid-cols-2">
-                <Textarea rows={2} disabled={cerrada} placeholder="Evidencia revisada (documentos, registros, entrevistas, observación)" value={it.evidencia} onChange={(e) => set(it.n, { evidencia: e.target.value })} />
-                {it.resultado !== "conforme" && it.resultado !== "na" && <Textarea rows={2} disabled={cerrada} placeholder={it.resultado === "no_conforme" ? "Hallazgo: qué requisito no se cumple y por qué" : "Observación u oportunidad de mejora"} value={it.hallazgo} onChange={(e) => set(it.n, { hallazgo: e.target.value })} />}
+                <CampoHallazgo soloLectura={cerrada} etiqueta="Evidencia revisada" obligatorio={it.resultado !== "na"} placeholder="Ej.: Política POL-01 firmada el 10/02/2026; entrevista con 3 trabajadores; cartelera de la sede" value={it.evidencia} onChange={(v) => set(it.n, { evidencia: v })} />
+                {it.resultado !== "conforme" && <CampoHallazgo soloLectura={cerrada} etiqueta={it.resultado === "no_conforme" ? "Hallazgo: qué requisito no se cumple y por qué" : it.resultado === "na" ? "Por qué no aplica" : "Observación u oportunidad de mejora"} obligatorio={it.resultado === "no_conforme" || it.resultado === "na"} placeholder={it.resultado === "no_conforme" ? "Ej.: La política no está firmada ni divulgada (Decreto 1072 art. 2.2.4.6.6)" : it.resultado === "na" ? "Ej.: La empresa no tiene contratistas" : "Ej.: Conviene publicar la política también en el canal digital"} value={it.hallazgo} onChange={(v) => set(it.n, { hallazgo: v })} />}
               </div>
             )}
             {it.resultado === "no_conforme" && it.accion && !cerrada && (
               <div className="mt-2 grid gap-2 sm:grid-cols-[1fr_12rem_9rem]">
-                <Input className="sm:col-span-3" placeholder="Causa raíz: por qué ocurre la no conformidad" value={it.accion.causa ?? ""} onChange={(e) => set(it.n, { accion: { ...it.accion!, causa: e.target.value } })} />
-                <Input placeholder="Acción correctiva (se crea en FOR-06 al cerrar)" value={it.accion.descripcion} onChange={(e) => set(it.n, { accion: { ...it.accion!, descripcion: e.target.value } })} />
-                <Input placeholder="Responsable" value={it.accion.responsable ?? ""} onChange={(e) => set(it.n, { accion: { ...it.accion!, responsable: e.target.value } })} />
-                <Input type="date" aria-label="Fecha límite" value={it.accion.fechaLimite ?? ""} onChange={(e) => set(it.n, { accion: { ...it.accion!, fechaLimite: e.target.value } })} />
+                <label className="space-y-1 sm:col-span-3"><span className="text-xs font-medium">Causa raíz</span><Input className="bg-background" placeholder="Por qué ocurre la no conformidad" value={it.accion.causa ?? ""} onChange={(e) => set(it.n, { accion: { ...it.accion!, causa: e.target.value } })} /></label>
+                <label className="space-y-1"><span className="text-xs font-medium">Acción correctiva <span className="font-normal text-muted-foreground">(se crea en FOR-06 al cerrar)</span></span><Input className="bg-background" placeholder="Ej.: Firmar y divulgar la política de SST" value={it.accion.descripcion} onChange={(e) => set(it.n, { accion: { ...it.accion!, descripcion: e.target.value } })} /></label>
+                <label className="space-y-1"><span className="text-xs font-medium">Responsable</span><Input className="bg-background" placeholder="Ej.: Gerente" value={it.accion.responsable ?? ""} onChange={(e) => set(it.n, { accion: { ...it.accion!, responsable: e.target.value } })} /></label>
+                <label className="space-y-1"><span className="text-xs font-medium">Fecha límite</span><Input className="bg-background" type="date" value={it.accion.fechaLimite ?? ""} onChange={(e) => set(it.n, { accion: { ...it.accion!, fechaLimite: e.target.value } })} /></label>
                 <p className="text-xs text-muted-foreground sm:col-span-3 sm:text-right">{textoAccionPropuesta(diasAccion)}</p>
               </div>
             )}

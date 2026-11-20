@@ -1,4 +1,5 @@
 "use client";
+import { CampoHallazgo } from "@/components/app/campo-hallazgo";
 import { BotonDescarga } from "@/components/app/boton-descarga";
 import Link from "next/link";
 import { useTransition } from "react";
@@ -27,7 +28,7 @@ import { toastTareas } from "@/components/plazos/toast-tareas";
 import { avisoPlazo, reglaPlazo } from "@/lib/plazos";
 
 type It = { id: string; codigo: string; ciclo: string; grupo: string; subgrupo: string; descripcion: string; puntaje: number; modo: string; soportes: ArchivoUI[]; estado: string; justificacion: string; observacion: string };
-type Cal = { puntaje: number; valoracion: string; accion: string; obtenido: number; maximo: number; noAplicanPorNivel: number; pendientes: number; noAplicaInvalidos: string[] };
+type Cal = { puntaje: number; valoracion: string; accion: string; obtenido: number; maximo: number; pendientes: number; noAplicaInvalidos: string[] };
 type Plan = { id: string; estandar: string; actividad: string; responsable: string; fecha: string; recursos: string; soporte: string; estado: string };
 
 const TONO: Record<string, "ok" | "warn" | "bad"> = { ACEPTABLE: "ok", "MODERADAMENTE ACEPTABLE": "warn", "CRÍTICO": "bad" };
@@ -93,7 +94,7 @@ export function EvaluacionEditor({ empresaId, nivel, evaluaciones, actual }: {
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <Stat label="Puntaje" porque={actual.nivel === 60 ? "Suma de los puntos de los ítems que cumplen. El total posible es 100. En 60 estándares todos los ítems aplican: no existe «No aplica» (Res. 0312/2019 arts. 16 y 27)." : `Los ${actual.items.length} ítems de este nivel suman ${actual.cal.maximo} puntos; los demás ítems no le corresponden a la empresa y reciben su porcentaje máximo (Res. 0312/2019 art. 27). Puntaje = 100 menos los puntos de los ítems que no cumple. Los ítems sin evaluar cuentan como no cumplidos.`} normas={["Res. 0312/2019 art. 27"]} value={`${actual.cal.puntaje}%`} hint={actual.nivel === 60 ? "Sobre 100 puntos" : `Sobre 100: ${actual.cal.obtenido} de ${actual.cal.maximo} puntos de los ${actual.items.length} ítems del nivel, más ${actual.cal.noAplicanPorNivel} de los que no le corresponden (art. 27)`} tone={TONO[actual.cal.valoracion]} />
+        <Stat label="Puntaje" porque={actual.nivel === 60 ? "Suma de los puntos de los ítems que cumplen. El total posible es 100. En 60 estándares todos los ítems aplican: no existe «No aplica» (Res. 0312/2019 arts. 16 y 27)." : `Se califica sobre los ${actual.items.length} ítems de este nivel, que valen ${actual.cal.maximo} puntos: puntos obtenidos ÷ ${actual.cal.maximo} × 100. Un ítem que no aplica, con justificación, suma su valor (Res. 0312/2019 art. 27). Los ítems sin evaluar cuentan como no cumplidos.`} normas={["Res. 0312/2019 art. 27"]} value={`${actual.cal.puntaje}%`} hint={actual.nivel === 60 ? "Sobre 100 puntos" : `${actual.cal.obtenido} de ${actual.cal.maximo} puntos de los ${actual.items.length} ítems del nivel`} tone={TONO[actual.cal.valoracion]} />
         <Stat label="Valoración" porque="Menos de 60 %: crítico. Entre 60 % y 85 %: moderadamente aceptable. Más de 85 %: aceptable. Cada valoración trae acciones obligatorias distintas." normas={["Res. 0312/2019 art. 28"]} value={<span className="text-lg">{actual.cal.valoracion}</span>} tone={TONO[actual.cal.valoracion]} />
         <Stat label="Ítems evaluados" value={`${evaluados} / ${actual.items.length}`} hint={<Progress value={(evaluados / actual.items.length) * 100} className="w-full" />} />
         <Stat label="Estado" value={actual.cerrada ? "Cerrada" : "En curso"} hint={actual.tipo === "inicial" ? "Evaluación inicial" : `Autoevaluación ${actual.anio}`} />
@@ -140,15 +141,18 @@ export function EvaluacionEditor({ empresaId, nivel, evaluaciones, actual }: {
                       <div className="flex gap-1">
                         {([["CUMPLE", "Cumple", "bg-emerald-600 text-white hover:bg-emerald-600/90"], ["NO_CUMPLE", "No cumple", "bg-destructive text-white hover:bg-destructive/90"], ["NO_APLICA", "No aplica", ""]] as const).filter(([v]) => v !== "NO_APLICA" || permiteNoAplica(actual.nivel) || i.estado === "NO_APLICA").map(([v, l, on]) => (
                           <Button key={v} size="xs" variant={i.estado === v ? (v === "NO_APLICA" ? "secondary" : "default") : "outline"} className={cn(i.estado === v && on, v === "NO_APLICA" && !permiteNoAplica(actual.nivel) && "line-through")} disabled={actual.cerrada || pend}
-                            tooltip={v === "NO_APLICA" ? (permiteNoAplica(actual.nivel) ? "El ítem no corresponde a la empresa: suma su valor máximo y exige justificación escrita (Res. 0312/2019 art. 27)" : "En 60 estándares no existe «No aplica»: quítelo y califique «Cumple» o «No cumple» (Res. 0312/2019 arts. 16 y 27)") : undefined}
+                            tooltip={v === "NO_APLICA" ? (permiteNoAplica(actual.nivel) ? "El ítem de su nivel no aplica a esta empresa (p. ej. no tiene contratistas): suma su valor máximo y exige justificación escrita (Res. 0312/2019 art. 27)" : "En 60 estándares no existe «No aplica»: quítelo y califique «Cumple» o «No cumple» (Res. 0312/2019 arts. 16 y 27)") : undefined}
                             onClick={() => run(() => A.actualizarItemEvaluacion(empresaId, i.id, { estado: i.estado === v ? "PENDIENTE" : v }))}>{l}</Button>
                         ))}
                       </div>
                     </TableCell>
                     <TableCell className="pr-6">
-                      <Textarea className="min-h-9 text-xs" disabled={actual.cerrada} placeholder={i.estado === "NO_APLICA" ? "Justificación obligatoria: por qué el ítem no corresponde a la empresa" : "Observación"} aria-invalid={i.estado === "NO_APLICA" && !i.justificacion}
+                      <CampoHallazgo key={`${i.id}-${i.estado}`} className="min-w-64" soloLectura={actual.cerrada}
+                        etiqueta={i.estado === "NO_APLICA" ? "Por qué no aplica (justificación)" : i.estado === "NO_CUMPLE" ? "Qué falta" : i.estado === "CUMPLE" ? "Evidencia revisada" : "Observación"}
+                        obligatorio={i.estado === "NO_APLICA"}
+                        placeholder={i.estado === "NO_APLICA" ? "Ej.: La empresa no tiene contratistas" : i.estado === "NO_CUMPLE" ? "Ej.: No hay acta de conformación del COPASST" : i.estado === "CUMPLE" ? "Ej.: Política firmada el 10/02/2026, publicada en cartelera" : "Notas de la verificación"}
                         defaultValue={i.estado === "NO_APLICA" ? i.justificacion : i.observacion}
-                        onBlur={(e) => run(() => A.actualizarItemEvaluacion(empresaId, i.id, i.estado === "NO_APLICA" ? { justificacion: e.target.value } : { observacion: e.target.value }))} />
+                        onBlur={(v) => v !== (i.estado === "NO_APLICA" ? i.justificacion : i.observacion) && run(() => A.actualizarItemEvaluacion(empresaId, i.id, i.estado === "NO_APLICA" ? { justificacion: v } : { observacion: v }))} />
                     </TableCell>
                   </TableRow>
                 ))}

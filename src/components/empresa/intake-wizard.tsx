@@ -41,30 +41,9 @@ const PASOS = [
   { t: "Personas y cargos", d: "El número de trabajadores y la clase de riesgo definen los estándares mínimos aplicables." },
   { t: "Sedes", d: "Centros de trabajo. El Comité de Convivencia se conforma por centro de trabajo (Res. 3461/2025)." },
   { t: "Peligros especiales", d: "Cada opción activa normas, programas, documentos y capacitaciones específicas." },
-  { t: "Estado actual", d: "Lo que la empresa ya tiene. Precarga la evaluación inicial; luego se verifica ítem por ítem." },
   { t: "Responsable del SG-SST", d: "Perfil exigido: nivel 7 técnico, 21 tecnólogo, 60 profesional (Res. 0312/2019 arts. 4, 10, 17)." },
 ];
 
-const ESTADO_ACTUAL: { k: string; t: string; e: string }[] = [
-  { k: "responsable", t: "Tiene responsable del SG-SST designado por escrito", e: "1.1.1" },
-  { k: "afiliacion", t: "Todos los trabajadores afiliados a salud, pensión y ARL", e: "1.1.4" },
-  { k: "copasst", t: "COPASST o Vigía conformado y vigente", e: "1.1.6" },
-  { k: "convivencia", t: "Comité de Convivencia Laboral conformado", e: "1.1.8" },
-  { k: "capacitacion", t: "Programa de capacitación en SST ejecutado", e: "1.2.1" },
-  { k: "induccion", t: "Hace inducción en SST a todo trabajador nuevo", e: "1.2.2" },
-  { k: "curso50h", t: "El responsable tiene el curso de 50 horas", e: "1.2.3" },
-  { k: "politica", t: "Política de SST firmada y divulgada", e: "2.1.1" },
-  { k: "planAnual", t: "Plan anual de trabajo firmado", e: "2.4.1" },
-  { k: "examenes", t: "Realiza exámenes médicos ocupacionales", e: "3.1.4" },
-  { k: "reporteAT", t: "Reporta accidentes a la ARL en 2 días hábiles", e: "3.2.1" },
-  { k: "investigacion", t: "Investiga incidentes y accidentes", e: "3.2.2" },
-  { k: "matriz", t: "Tiene matriz de peligros actualizada", e: "4.1.2" },
-  { k: "mantenimiento", t: "Hace mantenimiento de instalaciones y equipos", e: "4.2.5" },
-  { k: "epp", t: "Entrega EPP con registro", e: "4.2.6" },
-  { k: "emergencias", t: "Tiene plan de emergencias y hace simulacro", e: "5.1.1" },
-  { k: "brigada", t: "Tiene brigada conformada y capacitada", e: "5.1.2" },
-  { k: "revision", t: "La gerencia revisa el SG-SST anualmente", e: "6.1.3" },
-];
 
 const ARLS = ["ARL SURA", "Positiva Compañía de Seguros", "Colmena Seguros", "Seguros Bolívar", "AXA Colpatria", "Seguros de Vida Alfa", "La Equidad Seguros", "Liberty / HDI Seguros"];
 
@@ -137,7 +116,7 @@ export function IntakeWizard({ sectores, cargosTipo, ciius, inicial, empresaId, 
     if (empresaId) return;
     // El borrador vive en localStorage: se lee después de montar para no romper la hidratación.
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    try { const g = localStorage.getItem(CLAVE_BORRADOR); if (g) { const b = JSON.parse(g) as { d: IntakeData; paso: number }; if (b?.d?.razonSocial || b?.d?.nit) { setD(b.d); setPaso(b.paso ?? 0); } } } catch { /* ignorar */ }
+    try { const g = localStorage.getItem(CLAVE_BORRADOR); if (g) { const b = JSON.parse(g) as { d: IntakeData; paso: number }; if (b?.d?.razonSocial || b?.d?.nit) { setD(b.d); setPaso(Math.min(b.paso ?? 0, PASOS.length - 1)); } } } catch { /* ignorar */ }
     setBorradorCargado(true);
   }, [empresaId]);
   useEffect(() => {
@@ -361,15 +340,6 @@ export function IntakeWizard({ sectores, cargosTipo, ciius, inicial, empresaId, 
           )}
 
           {paso === 5 && (
-            <div className="grid md:grid-cols-2 gap-2">
-              <p className="md:col-span-2 flex items-center gap-1 text-sm font-medium">Marque lo que la empresa ya tiene funcionando <Ayuda k="estadoActual" /></p>
-              {ESTADO_ACTUAL.map((x) => (
-                <Opcion key={x.k} id={`ea-${x.k}`} checked={!!d.estadoActual[x.k]} onChange={(v) => set("estadoActual", { ...d.estadoActual, [x.k]: v })} extra={<NormaRef>{x.e}</NormaRef>}>{x.t}</Opcion>
-              ))}
-            </div>
-          )}
-
-          {paso === 6 && (
             <FieldGroup className="grid md:grid-cols-2 gap-4">
               <div className="md:col-span-2 flex flex-wrap items-center gap-2 rounded-lg border bg-muted/40 p-3 text-sm">
                 <span className="flex-1">En una empresa nueva se precargan sus datos de “Mi consultora”. Cámbielos solo si en esta empresa la responsable es otra persona. Aparecen en la designación (DOC-03), las firmas y el “Elaboró” de cada formato.</span>
@@ -410,8 +380,8 @@ export function IntakeWizard({ sectores, cargosTipo, ciius, inicial, empresaId, 
               <Button onClick={() => setPaso(paso + 1)}>Siguiente <ChevronRight /></Button>
             ) : !empresaId ? (
               <>
-              <Button variant="outline" disabled={pend || !d.razonSocial || !d.nit} onClick={() => guardar("diagnostico")} tooltip="Primero evalúa el estado actual de la empresa y entrega el informe de diagnóstico; el SG-SST se monta después, desde el diagnóstico"><ClipboardList /> Empezar con diagnóstico</Button>
-              <Button disabled={pend || !d.razonSocial || !d.nit} onClick={() => guardar()} tooltip="Crea la empresa y arma de una vez la matriz por cargos; luego genere documentos y plan">{pend ? <><Spinner /> Creando y generando…</> : <><Check /> Crear SG-SST completo</>}</Button>
+              <Button variant="outline" disabled={pend || !d.razonSocial || !d.nit} onClick={() => guardar()} tooltip="Solo si la empresa ya tiene su evaluación inicial hecha (por ejemplo, por otra consultora): crea la empresa y arma de una vez la matriz, sin diagnóstico">Crear sin diagnóstico</Button>
+              <Button disabled={pend || !d.razonSocial || !d.nit} onClick={() => guardar("diagnostico")} tooltip="Crea la empresa y abre el diagnóstico de estándares mínimos: se califica cada estándar con su evidencia y se entrega el informe; el SG-SST se monta después, desde el diagnóstico (Decreto 1072/2015 art. 2.2.4.6.16)">{pend ? <><Spinner /> Creando…</> : <><ClipboardList /> Crear y empezar el diagnóstico</>}</Button>
               </>
             ) : null}
           </div>

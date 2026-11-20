@@ -127,7 +127,6 @@ export async function evaluacionXlsx(ctx: Contexto, ev: Contexto["evaluacion"] =
   const orden = (c: string) => c.split(".").map((x) => x.padStart(3, "0")).join(".");
   const filas = [
     ...ev.items.map((i) => ({ ...i, calif: CALIF[i.estado] ?? i.estado, just: i.justificacion, obs: i.observacion, gris: false })),
-    ...ev.noCorresponden.map((i) => ({ ...i, calif: "No aplica (art. 27)", obtenido: i.puntaje, just: `No le corresponde a la empresa: ${ev.nivel} estándares por su número de trabajadores y clase de riesgo; recibe el valor máximo (Res. 0312/2019 art. 27).`, obs: "", gris: true })),
   ].sort((a, b) => orden(a.codigo).localeCompare(orden(b.codigo)));
   for (const f of filas) {
     const row = ws.addRow([CICLO[f.ciclo] ?? f.ciclo, f.grupo, f.subgrupo, f.codigo, f.descripcion, f.puntaje, f.calif, f.obtenido, f.just, f.obs]);
@@ -145,7 +144,7 @@ export async function evaluacionXlsx(ctx: Contexto, ev: Contexto["evaluacion"] =
   };
   if (ev.existe) {
     const sumaItems = Math.round(ev.items.reduce((s, i) => s + i.puntaje, 0) * 100) / 100;
-    fila("Valor de los ítems evaluados", `${sumaItems}${ev.noCorresponden.length ? ` + ${ev.puntajeNoCorresponden} de los ${ev.noCorresponden.length} ítems que no le corresponden = 100` : " (total posible 100)"}`, false);
+    fila("Valor de los ítems evaluados", ev.nivel === 60 ? `${sumaItems} (total posible 100)` : `${sumaItems} puntos de los ítems del nivel; el puntaje se lleva a 100 (puntos obtenidos ÷ ${sumaItems} × 100)`, false);
     fila("PUNTAJE TOTAL (sobre 100 %)", ev.puntaje);
     fila("VALORACIÓN (Res. 0312/2019 art. 28)", ev.valoracion);
     fila("ACCIÓN EXIGIDA (Res. 0312/2019 art. 28)", ev.accion, false).height = 45;

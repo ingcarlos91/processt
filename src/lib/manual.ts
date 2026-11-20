@@ -25,7 +25,7 @@ export const MANUAL: SeccionManual[] = [
   },
   {
     id: "nueva", titulo: "Nueva empresa / Datos de la empresa", ruta: new RegExp(`^(/empresas/nueva|${E}/datos)$`),
-    resumen: "Cuestionario con los datos que definen todo el SG-SST: actividad, riesgo, trabajadores, sedes, peligros especiales, estado actual y responsable. En “Datos” se edita lo mismo después de creada.",
+    resumen: "Cuestionario con los datos que definen todo el SG-SST: actividad, riesgo, trabajadores, sedes, peligros especiales y responsable. En “Datos” se edita lo mismo después de creada.",
     partes: [
       { titulo: "Responsable del SG-SST", que: "Nombre, documento, perfil, licencia, curso de 50 horas y su fecha, fecha del último curso de 20 horas, rol (diseña y firma, o solo administra y ejecuta) y años de experiencia certificada. El sistema avisa si el perfil no alcanza para el nivel (técnico: 1 año de experiencia para 7 estándares; tecnólogo: 2 años para 21), si falta licencia a quien diseña y si el curso de 50 horas tiene más de 3 años sin actualización de 20 horas." },
       { titulo: "Personas y vehículos", que: "Planta, en misión, contratistas, aprendices, vehículos y conductores. Cada campo indica el umbral que dispara una obligación (10 o más: COPASST y reglamento; 11 a 50: 21 estándares; más de 10 vehículos o 2 o más conductores: PESV; contratistas: afiliación a ARL por el contratante; aprendices: ARL desde la fase lectiva). Las marcas por persona en Trabajadores complementan estos números." },
@@ -34,11 +34,10 @@ export const MANUAL: SeccionManual[] = [
       { titulo: "3. Personas y cargos", que: "Número de trabajadores, contratistas, aprendices y en misión, horario y turnos, y los cargos con cuántas personas tiene cada uno.", botones: [{ nombre: "Agregar cargo", hace: "Agrega un cargo; si coincide con un cargo tipo de la biblioteca, trae sus tareas y peligros." }] },
       { titulo: "4. Sedes", que: "Centros de trabajo. El Comité de Convivencia se conforma por centro de trabajo.", botones: [{ nombre: "Agregar sede", hace: "Agrega otro centro de trabajo." }] },
       { titulo: "5. Peligros especiales", que: "Alturas, espacios confinados, químicos, trabajo nocturno, vehículos… Cada opción activa normas, programas, documentos y capacitaciones." },
-      { titulo: "6. Estado actual", que: "Lo que la empresa ya tiene (responsable designado, COPASST, afiliaciones…). Precarga la evaluación inicial." },
-      { titulo: "7. Responsable del SG-SST", que: "Nombre, cédula, licencia y curso de 50 horas. Se precarga con sus datos de “Mi consultora”; cámbielos si es otra persona.", botones: [{ nombre: "Copiar mis datos", hace: "Copia los datos de la profesional registrados en Mi consultora." }] },
+      { titulo: "6. Responsable del SG-SST", que: "Nombre, cédula, licencia y curso de 50 horas. Se precarga con sus datos de “Mi consultora”; cámbielos si es otra persona.", botones: [{ nombre: "Copiar mis datos", hace: "Copia los datos de la profesional registrados en Mi consultora." }] },
       { titulo: "Datos para los documentos (solo en Datos)", que: "Contactos, emergencias, inventarios y presupuesto que el sistema no puede adivinar. Cada campo dice en qué documentos se usa.", botones: [{ nombre: "Guardar datos", hace: "Guarda y actualiza solos los documentos ya generados." }] },
     ],
-    pasos: ["Llene los 7 pasos con lo que tenga; todo se puede completar después.", "Al guardar, revise el Resumen: el sistema explica cada decisión en “¿Por qué? Decisiones”.", "Complete “Datos para los documentos” para que los documentos salgan sin espacios en blanco."],
+    pasos: ["Llene los 6 pasos con lo que tenga; todo se puede completar después.", "Termine con «Crear y empezar el diagnóstico»: lo que la empresa ya tiene se califica ahí, estándar por estándar y con su evidencia. «Crear sin diagnóstico» es solo para empresas que ya traen su evaluación inicial.", "Al guardar, revise el Resumen: el sistema explica cada decisión en “¿Por qué? Decisiones”.", "Complete “Datos para los documentos” para que los documentos salgan sin espacios en blanco."],
     consejos: ["Los cambios en Datos actualizan solos los documentos ya generados; sus ediciones manuales se conservan.", "Cada campo tiene su ayuda (?) con qué es, de dónde sacarlo y sus opciones."],
     normas: ["Res. 0312/2019 arts. 3, 9 y 16", "Decreto 1072/2015 cap. 6"],
     relacionadas: ["resumen", "documentos"],
@@ -124,7 +123,7 @@ export const MANUAL: SeccionManual[] = [
   },
   {
     id: "diagnostico", titulo: "Diagnóstico inicial", ruta: new RegExp(`^${E}/diagnostico(/[^/]+)?$`),
-    resumen: "Paso opcional antes de montar el SG-SST: evalúa el estado actual de la empresa frente a los estándares mínimos que le aplican, entrega un informe en PDF con el membrete de la consultora y su firma, y queda como línea base para medir el avance. Se activa al crear la empresa con «Empezar con diagnóstico».",
+    resumen: "Primer paso antes de montar el SG-SST: evalúa el estado actual de la empresa frente a los estándares mínimos que le aplican, entrega un informe en PDF con el membrete de la consultora y su firma, y queda como línea base para medir el avance. Se abre al crear la empresa con «Crear y empezar el diagnóstico».",
     partes: [
       { titulo: "Indicadores", que: "Puntaje con la tabla de valores de la Res. 0312/2019 y su valoración (crítico, moderadamente aceptable, aceptable), estándares evaluados y cumplimiento por ciclo Planear, Hacer, Verificar y Actuar." },
       { titulo: "Lista de chequeo", que: "Los estándares agrupados por ciclo, con qué verificar y su peso.", botones: [
@@ -197,7 +196,7 @@ export const MANUAL: SeccionManual[] = [
         { nombre: "Soportes", hace: "Muestra los documentos firmados, evidencias y actas que respaldan el ítem, y permite subir más." },
       ] },
       { titulo: "Acciones", que: "Sobre toda la evaluación.", botones: [
-        { nombre: "Evaluación inicial", hace: "Crea la evaluación precargada con el “Estado actual” del cuestionario." },
+        { nombre: "Evaluación inicial", hace: "Crea la evaluación inicial; si la empresa tiene diagnóstico, se precarga con sus calificaciones." },
         { nombre: "Cerrar y generar plan de mejoramiento", hace: "Cierra la evaluación y crea el plan de mejoramiento con lo que no cumple (DOC-05 y PLN-02)." },
         { nombre: "Reabrir", hace: "Permite volver a editar una evaluación cerrada." },
         { nombre: "Excel", hace: "Descarga la autoevaluación en el formato de la norma." },

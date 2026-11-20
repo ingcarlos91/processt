@@ -56,6 +56,9 @@ export async function cerrarDiagnostico(empresaId: string, id: string) {
   }
   const sinJust = items.filter((i) => i.estado === "no_aplica" && !i.observacion.trim()).map((i) => i.codigo);
   if (sinJust.length) return { error: `Justifique los “no aplica”: ${sinJust.join(", ")}.` };
+  // Lo que se encontró en cada brecha es lo que lee el cliente en el informe.
+  const sinHallazgo = items.filter((i) => i.estado === "no_cumple" && !i.observacion.trim()).map((i) => i.codigo);
+  if (sinHallazgo.length) return { error: `Escriba qué se encontró en los estándares que no cumplen (va en el informe): ${sinHallazgo.join(", ")}.` };
   const emp = await db.empresa.findUniqueOrThrow({ where: { id: empresaId }, select: { resultadoReglas: true } });
   const invalidos = noAplicaInvalidos(items, ((emp.resultadoReglas as { comites?: string[] } | null)?.comites ?? []));
   if (invalidos.length) return { error: `${invalidos.join(", ")} no puede ser «no aplica»: la norma exige ese comité a esta empresa. Márquelo «cumple» o «no cumple».` };

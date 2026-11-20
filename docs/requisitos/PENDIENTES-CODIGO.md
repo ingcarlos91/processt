@@ -3,7 +3,7 @@
 Marcados [x] los hechos. Cada uno cita la norma que lo exige. Fuente: reportes de los frentes A–F (docs/requisitos/*.json).
 
 ## Hechos
-- [x] Puntaje de autoevaluación 7/21: ítems que no aplican suman su máximo (Res. 0312 art. 27).
+- [x] Puntaje de autoevaluación 7/21: se califica sobre los ítems del nivel (llevado a 100); un ítem del nivel que no aplica, justificado, suma su máximo (Res. 0312 art. 27). CORREGIDO el 20 nov 2026: la lectura inicial (sumar el máximo de los ítems que no le corresponden al nivel) daba 87,5 % "aceptable" a una empresa de 7 estándares sin ningún cumplimiento.
 - [x] "No apto" solo en regímenes especiales; tipos de evaluación del art. 8; campo `regimen` (Res. 1843 arts. 2, 8, 19).
 - [x] Definición de incidente (Res. 1401 art. 3).
 - [x] Días hábiles sin festivos de Colombia (plazos FURAT y Dirección Territorial).
