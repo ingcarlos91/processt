@@ -1,3 +1,5 @@
+import { rutaEmpresa } from "@/lib/ruta";
+import { AvisoPasoRuta } from "@/components/empresa/ruta";
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import { EmpresaTabs } from "@/components/empresa/tabs";
@@ -10,7 +12,7 @@ export default async function EmpresaLayout({ children, params }: LayoutProps<"/
   const { id } = await params;
   const e = await db.empresa.findUnique({ where: { id }, select: { etapa: true, _count: { select: { diagnosticos: true } }, logoUrl: true, razonSocial: true, nit: true, digitoVerificacion: true, nivelEstandares: true, claseRiesgo: true, ciudad: true, nTrabajadoresPlanta: true, nEnMision: true } });
   if (!e) notFound();
-  const decisiones = await construirDecisiones(id);
+  const [decisiones, ruta] = await Promise.all([construirDecisiones(id), rutaEmpresa(id)]);
   return (
     <div className="flex flex-1 flex-col">
       <div className="border-b bg-background px-4 pt-3 md:px-6 md:pt-4 print:hidden">
@@ -33,7 +35,7 @@ export default async function EmpresaLayout({ children, params }: LayoutProps<"/
           <EmpresaTabs id={id} conDiagnostico={e.etapa === "diagnostico" || e._count.diagnosticos > 0} />
         </div>
       </div>
-      <div className="flex flex-1 flex-col gap-6 p-4 md:p-6">{children}</div>
+      <div className="flex flex-1 flex-col gap-6 p-4 md:p-6"><AvisoPasoRuta ruta={ruta} empresaId={id} empresa={e.razonSocial} />{children}</div>
     </div>
   );
 }

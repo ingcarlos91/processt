@@ -44,8 +44,9 @@ export const MANUAL: SeccionManual[] = [
   },
   {
     id: "resumen", titulo: "Resumen de la empresa", ruta: new RegExp(`^${E}$`),
-    resumen: "Tablero de la empresa: qué le exige la norma, su avance y las alertas.",
+    resumen: "Tablero de la empresa: la ruta de implementación con el siguiente paso, qué le exige la norma, su avance y las alertas.",
     partes: [
+      { titulo: "Ruta de implementación", que: "Los 10 pasos para montar y operar el SG-SST en orden (diagnóstico, datos, matriz, trabajadores, comités, documentos, plan anual, inducción y exámenes, operación y cierre del año). Cada paso se cumple solo con lo que se registra; la tarjeta muestra el siguiente paso, lo que falta y un botón para ir. Es orientativa: se puede trabajar en cualquier pestaña. En la pestaña del paso actual aparece una línea con lo que falta.", botones: [{ nombre: "Ver ruta completa", hace: "Abre el panel con los 10 pasos, su estado y lo que falta en cada uno." }, { nombre: "Ir a …", hace: "Lleva a la pantalla donde se trabaja el siguiente paso." }] },
       { titulo: "¿Por qué? Decisiones → 9. Qué dato dispara cada condición", que: "Lista todas las reglas y normas condicionadas: si aplican o no, cómo se lee la condición, qué valor tiene hoy la empresa (vehículos, conductores, contratistas, aprendices, trabajadoras, sedes, peligros especiales), qué la activaría y en qué pantalla se registra ese dato. Úselo para explicar al cliente por qué le exigen algo o por qué todavía no." },
       { titulo: "Encabezado", que: "Nombre, NIT, nivel de estándares, clase de riesgo, trabajadores y ciudad. Las pestañas de abajo llevan a cada parte del SG-SST.", botones: [{ nombre: "¿Por qué? Decisiones", hace: "Abre el panel con cada decisión que tomó el sistema (nivel, comités, normas, documentos) y la norma que la define." }] },
       { titulo: "Indicadores", que: "Estándares mínimos, última evaluación, riesgos prioritarios (I y II), documentos y avance del plan anual. Pase el mouse para ver de dónde sale cada dato." },

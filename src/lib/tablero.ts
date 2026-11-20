@@ -1,3 +1,4 @@
+import { rutaEmpresa } from "@/lib/ruta";
 import { parametrosPlazos } from "@/lib/plazos-servidor";
 // Tablero de la consultora: indicadores por empresa y de toda la cartera, con una prioridad
 // para decidir a qué cliente atender primero.
@@ -8,6 +9,8 @@ import { estadoDocumento } from "@/lib/estado-documento";
 
 export type FilaEmpresa = {
   id: string; nombre: string; nit: string; claseRiesgo: number; trabajadores: number; nivel: number;
+  /** Ruta de implementación: paso actual y avance. */
+  ruta?: { n: number; total: number; titulo: string; pct: number; operacion: boolean };
   puntaje: number | null; valoracion: string | null; evaluacionFecha: string | null;
   planTotal: number; planEjecutadas: number; planVencidas: number;
   docsAplicables: number; docsGenerados: number; docsFirmados: number; docsVolverFirmar: number;
@@ -74,6 +77,11 @@ export async function tableroConsultora(hoy = new Date()) {
     return f;
   });
 
+  // Paso de la ruta de implementación de cada empresa.
+  await Promise.all(filas.map(async (f) => {
+    const r = await rutaEmpresa(f.id, hoy);
+    f.ruta = { n: r.actual?.n ?? r.pasos.length, total: r.pasos.length, titulo: r.actual?.titulo ?? "Implementación completa", pct: r.pct, operacion: r.actual?.estado !== "actual" };
+  }));
   const conEval = filas.filter((f) => f.puntaje != null);
   const cartera = {
     empresas: filas.length,

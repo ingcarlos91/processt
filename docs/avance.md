@@ -88,6 +88,8 @@ IA opcional: agregar `AI_GATEWAY_API_KEY=...` en `.env`. Sin clave, “Sugerir t
 
 - Plazos y tareas automáticas: catálogo único (src/lib/plazos.ts) con los 29 plazos que el sistema programa solo (qué los genera, cuánto, desde cuándo, legal o criterio de la empresa, norma); todo el código lee de ahí. Pantalla Normas y estándares → Plazos y tareas automáticas (legales de solo lectura; los de la empresa se editan y se guardan en Consultora.parametros). Cada formulario que crea tareas lo avisa antes de guardar ("Al guardar se programa en el planeador", con fecha y norma) y confirma después con un mensaje: accidentes, exámenes, retiro, EPP, capacitación, acciones, comités, inspecciones, autoevaluación, matriz, auditoría y cursos del responsable. Días hábiles en src/lib/fechas.ts (festivos de Colombia).
 
+- Ruta de implementación (src/lib/ruta.ts): 10 pasos en el orden del Decreto 1072 y la Res. 0312 (diagnóstico e inicio, datos, matriz, trabajadores, comités, documentos, plan anual, inducción/exámenes/EPP, operación, cierre del año) que se cumplen solos con los datos. Tarjeta en el Resumen con el siguiente paso, panel con la ruta completa, una línea en la pestaña del paso actual y columna "Ruta" en el tablero. Reemplaza los avisos de etapa y de datos faltantes del Resumen.
+
 ## Pendiente
 
 - PDF directo (hoy: Word; PDF desde Word o imprimir).
