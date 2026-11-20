@@ -3,6 +3,7 @@ import { useTransition } from "react";
 import { toast } from "sonner";
 import { Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 import { generarTodo } from "@/app/actions/sgsst";
 
 export function BotonGenerarTodo({ empresaId, label = "Generar / actualizar todos los documentos" }: { empresaId: string; label?: string }) {
@@ -12,7 +13,7 @@ export function BotonGenerarTodo({ empresaId, label = "Generar / actualizar todo
       const r = await generarTodo(empresaId);
       toast.success(`${r.total} documentos generados${r.revisar ? `; ${r.revisar} secciones editadas requieren revisión` : ""}.`);
     })}>
-      <Sparkles /> {pend ? "Generando…" : label}
+      {pend ? <><Spinner /> Generando los documentos…</> : <><Sparkles /> {label}</>}
     </Button>
   );
 }

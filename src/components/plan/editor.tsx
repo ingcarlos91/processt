@@ -1,4 +1,5 @@
 "use client";
+import { Spinner } from "@/components/ui/spinner";
 import { BotonDescarga } from "@/components/app/boton-descarga";
 import { useMemo, useState, useTransition } from "react";
 import { toast } from "sonner";
@@ -43,7 +44,7 @@ export function PlanEditor({ empresaId, anio, actividades }: { empresaId: string
   const ej = actividades.filter((a) => a.estado === "EJECUTADA").length;
   const venc = actividades.filter((a) => a.estado === "PENDIENTE" && a.mes < mesActual).length;
 
-  const generar = <Button tooltip="Crea las actividades del año a partir de los estándares, la matriz de peligros y los comités; no borra las que usted agregó" disabled={pend} onClick={() => run(async () => { const n = await A.generarPlanAnual(empresaId, anio); toast.success(`${n} actividades generadas; PLN-01 actualizado`); })}><Sparkles /> {actividades.length ? "Regenerar pendientes" : `Generar plan anual ${anio}`}</Button>;
+  const generar = <Button tooltip="Crea las actividades del año a partir de los estándares, la matriz de peligros y los comités; no borra las que usted agregó" disabled={pend} onClick={() => run(async () => { const n = await A.generarPlanAnual(empresaId, anio); toast.success(`${n} actividades generadas; PLN-01 actualizado`); })}>{pend ? <><Spinner /> Generando el plan…</> : <><Sparkles /> {actividades.length ? "Regenerar pendientes" : `Generar plan anual ${anio}`}</>}</Button>;
 
   if (!actividades.length) return (
     <EstadoVacio ilustracion="plan" titulo={<>Sin plan anual {anio}</>} descripcion={<>Se genera desde el nivel de estándares, los comités, la matriz de peligros, el plan de mejoramiento y las obligaciones periódicas. Cada actividad cita su norma (Decreto 1072/2015 art. 2.2.4.6.17; Res. 0312/2019 art. 26).</>}>{generar}</EstadoVacio>

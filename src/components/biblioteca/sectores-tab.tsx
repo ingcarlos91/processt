@@ -85,7 +85,7 @@ function SectorCard({ s, tareas, zonas, iaActiva, run, pend }: { s: S; tareas: I
                 </DialogFooter>
               </DialogContent>
             </Dialog>
-            {cargandoIA && <Spinner />}
+            {cargandoIA && <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground"><Spinner /> La IA está ampliando el sector…</span>}
             <CollapsibleTrigger render={<Button size="sm" variant="outline" />}>{abierto ? "Cerrar" : "Ver y editar"} <ChevronDown className={abierto ? "rotate-180" : ""} /></CollapsibleTrigger>
           </CardAction>
         </CardHeader>

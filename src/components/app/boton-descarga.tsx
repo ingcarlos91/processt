@@ -16,10 +16,12 @@ function nombreArchivo(cd: string | null, url: string) {
  * Botón de descarga: pide el archivo en segundo plano y muestra el isotipo girando
  * mientras el servidor lo prepara (los ZIP y los Word pueden tardar varios segundos).
  */
-export function BotonDescarga({ href, children, tooltip, variant = "outline", size = "default", className, "aria-label": ariaLabel, texto = "Preparando…" }: {
+export function BotonDescarga({ href, children, tooltip, variant = "outline", size = "default", className, "aria-label": ariaLabel, texto }: {
   href: string; children: ReactNode; tooltip?: ReactNode; className?: string; "aria-label"?: string; texto?: string;
 } & VariantProps<typeof buttonVariants>) {
   const [cargando, setCargando] = useState(false);
+  // Texto del proceso según lo que se genera (si no se indica): PDF, Excel, ZIP o Word.
+  const proceso = texto ?? (/formato=pdf/.test(href) ? "Generando PDF…" : /\.xlsx/.test(href) ? "Generando Excel…" : /\.zip/.test(href) ? "Armando el ZIP…" : /\/api\/archivos\//.test(href) ? "Descargando…" : "Generando Word…");
   const soloIcono = String(size).startsWith("icon");
   const descargar = async () => {
     if (cargando) return;
@@ -42,7 +44,7 @@ export function BotonDescarga({ href, children, tooltip, variant = "outline", si
   return (
     <Button type="button" variant={variant} size={size} className={className} aria-label={ariaLabel} aria-busy={cargando}
       tooltip={cargando ? false : tooltip} onClick={descargar}>
-      {cargando ? (soloIcono ? <Spinner /> : <><Spinner /> {texto}</>) : children}
+      {cargando ? (soloIcono ? <Spinner /> : <><Spinner /> {proceso}</>) : children}
     </Button>
   );
 }

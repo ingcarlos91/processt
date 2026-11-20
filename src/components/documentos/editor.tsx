@@ -1,4 +1,5 @@
 "use client";
+import { Spinner } from "@/components/ui/spinner";
 import { EstadoDocumento } from "@/components/documentos/estado-documento";
 import { estadoDocumento } from "@/lib/estado-documento";
 import { BotonDescarga } from "@/components/app/boton-descarga";
@@ -34,7 +35,7 @@ export function DocumentoEditor({ empresaId, doc, normas, secciones, firmados }:
         <EstadoDocumento estado={estadoEf} version={doc.version} firmadoVersion={ultimoFirmado?.documentoVersion} />
         {(estadoEf === "borrador" || estadoEf === "por_revisar") && <Button variant="outline" disabled={pend || estadoEf === "por_revisar"} tooltip={estadoEf === "por_revisar" ? "Primero revise las secciones marcadas" : "Confirma que usted revisó el documento y está listo para firmar"} onClick={() => run(() => A.cambiarEstadoDocumento(empresaId, doc.id, "APROBADO"), "Documento aprobado: descárguelo, hágalo firmar y súbalo")}><CheckCheck /> Marcar como aprobado</Button>}
         {estadoEf === "aprobado" && <Button variant="ghost" disabled={pend} tooltip="Vuelve a dejarlo en borrador para seguir revisándolo" onClick={() => run(() => A.cambiarEstadoDocumento(empresaId, doc.id, "BORRADOR"), "El documento volvió a borrador")}>Volver a borrador</Button>}
-        <Button variant="outline" tooltip="Vuelve a llenar el documento con los datos actuales de la empresa; sus ediciones manuales se conservan" disabled={pend} onClick={() => run(() => A.regenerarDocumento(empresaId, doc.codigo), "Documento regenerado con los datos actuales")}><RefreshCw /> Regenerar</Button>
+        <Button variant="outline" tooltip="Vuelve a llenar el documento con los datos actuales de la empresa; sus ediciones manuales se conservan" disabled={pend} onClick={() => run(() => A.regenerarDocumento(empresaId, doc.codigo), "Documento regenerado con los datos actuales")}>{pend ? <><Spinner /> Regenerando…</> : <><RefreshCw /> Regenerar</>}</Button>
         <BotonDescarga href={`/api/empresas/${empresaId}/documentos/${doc.codigo}`} variant="outline" tooltip="Descargar en Word con logo, encabezado y pie, para imprimir y firmar"><Download /> Word</BotonDescarga>
         <BotonDescarga href={`/api/empresas/${empresaId}/documentos/${doc.codigo}?formato=pdf`} variant="outline" texto="Generando PDF…" tooltip="Descargar en PDF, listo para imprimir o enviar"><FileDown /> PDF</BotonDescarga>
         <SubirArchivo empresaId={empresaId} ctx={{ tipo: "DOCUMENTO_FIRMADO", documentoId: doc.id }} titulo="Subir firmado" trigger={<Button tooltip="Suba el PDF o la foto del documento ya firmado; queda en estado Firmado y en el expediente"><Upload /> Subir firmado</Button>} ayuda="Escanee o fotografíe el documento firmado y súbalo. El documento quedará en estado Firmado y entrará al expediente de la empresa." descripcionInicial={`${doc.codigo} ${doc.nombre} firmado`} />

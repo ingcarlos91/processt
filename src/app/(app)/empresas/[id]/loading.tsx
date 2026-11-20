@@ -1,5 +1,6 @@
-import { Cargando } from "@/components/app/isotipo";
+import { EsqueletoContenido, EsqueletoTablero } from "@/components/app/esqueletos";
 
+// Esqueleto con la forma de la pantalla mientras cargan los datos.
 export default function Loading() {
-  return <Cargando texto="Preparando la información de la empresa…" className="min-h-[40vh]" />;
+  return <EsqueletoContenido texto="Cargando la empresa…"><EsqueletoTablero /></EsqueletoContenido>;
 }

@@ -336,7 +336,7 @@ export function TrabajadoresEditor({ empresaId, trabajadores, cargos, sugeridos,
           <Textarea rows={10} className="font-mono text-xs" placeholder={"Ana Pérez\t1061234567\tVendedor\t2024-03-01\tplanta\nLuis Gómez\t1062345678\tAuxiliar de bodega"} value={importar ?? ""} onChange={(e) => setImportar(e.target.value)} />
           <FieldDescription>{(importar ?? "").split(/\r?\n/).filter((l) => l.trim()).length} fila(s). Los cargos deben llamarse igual que en Cargos y matriz: {cargos.map((c) => c.nombre).join(", ") || "aún no hay cargos"}.</FieldDescription>
           <DialogFooter><Button variant="outline" onClick={() => setImportar(null)}>Cancelar</Button>
-            <Button disabled={pend || !importar?.trim()} onClick={() => start(async () => { const r = await A.importarTrabajadores(empresaId, importar ?? ""); toast.success(`${r.creados} agregados y ${r.actualizados} actualizados${r.sinCargo.length ? `. Cargos no encontrados: ${r.sinCargo.join(", ")}` : ""}`); setImportar(null); })}>{pend && <Spinner />} Importar</Button></DialogFooter>
+            <Button disabled={pend || !importar?.trim()} onClick={() => start(async () => { const r = await A.importarTrabajadores(empresaId, importar ?? ""); toast.success(`${r.creados} agregados y ${r.actualizados} actualizados${r.sinCargo.length ? `. Cargos no encontrados: ${r.sinCargo.join(", ")}` : ""}`); setImportar(null); })}>{pend ? <><Spinner /> Importando…</> : "Importar"}</Button></DialogFooter>
         </DialogContent>
       </Dialog>
 
