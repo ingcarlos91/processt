@@ -119,7 +119,7 @@ export function EventosLista({ empresaId, anio, anios, eventos, cargos, acciones
       <p className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground"><FileText className="size-3.5" /> Procedimientos: PRC-08 (reporte) y PRC-09 (investigación). <NormaRef>Decreto Ley 1295/1994 art. 62</NormaRef><NormaRef>Res. 1401/2007</NormaRef><NormaRef>Decreto 1072/2015 art. 2.2.4.6.32</NormaRef><NormaRef>Res. 0312/2019 estándares 3.2.1-3.2.3</NormaRef></p>
 
       <Dialog open={abierto} onOpenChange={setAbierto}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-3xl">
+        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-5xl">
           <DialogHeader>
             <DialogTitle>Registrar evento</DialogTitle>
             <DialogDescription>Lo que sepa ahora; puede completarlo después. Al guardar, el sistema calcula los plazos de reporte e investigación.</DialogDescription>
