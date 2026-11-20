@@ -92,6 +92,8 @@ IA opcional: agregar `AI_GATEWAY_API_KEY=...` en `.env`. Sin clave, “Sugerir t
 
 - Plan anual según la Res. 0312/2019 art. 26 (docs/requisitos/plan-anual.md): de enero a diciembre; el año de inicio del SG-SST (fechaInicioSgsst) va desde ese mes hasta diciembre, sin actividades en meses anteriores (lo periódico arranca en el mes de inicio, lo anual se reparte en los meses que quedan; con dos meses o menos pasa al plan del año siguiente) y el plan de mejoramiento en los tres primeros meses. Al iniciar en noviembre se generan el plan corto y el del año siguiente; en diciembre, solo el del siguiente. PLN-01 dice el periodo real.
 
+- Informe de gestión gerencial (src/lib/informe-gestion.ts): periodo mensual, trimestral, semestral, anual o acumulado desde el inicio; resumen ejecutivo con estado general y mensajes clave, en qué punto va la implementación (ruta y PHVA), logros del periodo con fechas, trabajo de la consultora (visitas y horas frente a lo pactado), plan, accidentalidad, qué sigue (60 días) y compromisos de la empresa. PDF con membrete de la consultora o Word editable.
+
 ## Pendiente
 
 - PDF directo (hoy: Word; PDF desde Word o imprimir).
