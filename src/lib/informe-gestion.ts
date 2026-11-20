@@ -50,6 +50,12 @@ function mesesDe(p: Periodo) {
 const NOMBRE_COMITE: Record<string, string> = { COPASST: "COPASST", VIGIA: "Vigía de SST", CCL: "Comité de Convivencia Laboral", BRIGADA: "Brigada de emergencias" };
 const TIPO_EV: Record<string, string> = { AT: "Accidente de trabajo", INCIDENTE: "Incidente", EL: "Enfermedad laboral", AUSENTISMO: "Ausentismo" };
 
+/** Observaciones guardadas para un periodo (para precargar el campo antes de descargar). */
+export async function observacionesInforme(empresaId: string) {
+  const e = await db.empresa.findUniqueOrThrow({ where: { id: empresaId }, select: { datosComplementarios: true } });
+  return (((e.datosComplementarios ?? {}) as { observacionesInforme?: Record<string, string> }).observacionesInforme ?? {});
+}
+
 export async function informeGestion(empresaId: string, p: string) {
   const base = await db.empresa.findUniqueOrThrow({ where: { id: empresaId }, select: { fechaInicioSgsst: true } });
   const per = periodoDe(p, base.fechaInicioSgsst);
@@ -77,6 +83,7 @@ export async function informeGestion(empresaId: string, p: string) {
     },
   });
   const r = (e.responsableSst ?? {}) as { nombre?: string; tipoDoc?: string; cedula?: string };
+  const obsConsultora = (((e.datosComplementarios ?? {}) as { observacionesInforme?: Record<string, string> }).observacionesInforme ?? {})[per.clave] ?? "";
   const consultora = e.consultora?.profesional || r.nombre || "la consultora";
   const [comparativo, ruta] = await Promise.all([comparativoDiagnostico(empresaId), rutaEmpresa(empresaId)]);
   // Estado actual: la última autoevaluación anual cerrada; si no hay, la evaluación inicial (mismo criterio del comparativo).
@@ -272,9 +279,7 @@ ${compromisos.length ? compromisos.map((x, i) => `${i + 1}. ${x}`).join("\n") : 
 
 ## Observaciones de la consultora
 
-______________________________________________________________________________
-
-______________________________________________________________________________
+${obsConsultora ? obsConsultora.split(/\n+/).map((l) => c(l)).filter(Boolean).join("\n\n") : "______________________________________________________________________________\n\n______________________________________________________________________________"}
 
 ______________________________________
 **${c(consultora)}** — ${c(e.consultora?.cargo || "Consultora en SST")}${e.consultora?.licenciaSst ? `, licencia SST ${c(e.consultora.licenciaSst)}` : ""} — ${docTexto(e.consultora?.tipoDoc, e.consultora?.cedula)}

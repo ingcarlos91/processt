@@ -1,3 +1,4 @@
+import { observacionesInforme } from "@/lib/informe-gestion";
 import { rutaEmpresa } from "@/lib/ruta";
 import { TarjetaRuta } from "@/components/empresa/ruta";
 import { parametrosPlazos } from "@/lib/plazos-servidor";
@@ -117,7 +118,7 @@ export default async function Resumen({ params }: PageProps<"/empresas/[id]">) {
         <Link href={`/empresas/${id}/documentos`} className={buttonVariants({ variant: "outline" })}><FileText /> Documentos</Link>
         <Link href={`/empresas/${id}/plan`} className={buttonVariants({ variant: "outline" })}><CalendarDays /> Plan anual</Link>
         <div className="flex-1" />
-        <BotonInformeGestion empresaId={id} />
+        <BotonInformeGestion empresaId={id} observaciones={await observacionesInforme(id)} />
       </div>
 
       {/* 4. Qué exige la norma, próximas actividades y documentos aplicables */}

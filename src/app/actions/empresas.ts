@@ -141,3 +141,13 @@ export async function guardarParametrosPlazos(valores: Record<string, number>) {
   revalidatePath("/", "layout");
   return { ok: true as const };
 }
+
+/** Observaciones de la consultora para el informe de gestión de un periodo (se guardan por empresa y periodo). */
+export async function guardarObservacionesInforme(empresaId: string, periodo: string, texto: string) {
+  await requiereUsuario();
+  const e = await db.empresa.findUniqueOrThrow({ where: { id: empresaId }, select: { datosComplementarios: true } });
+  const dc = (e.datosComplementarios ?? {}) as Record<string, unknown>;
+  const obs = { ...((dc.observacionesInforme ?? {}) as Record<string, string>), [periodo]: texto.trim() };
+  await db.empresa.update({ where: { id: empresaId }, data: { datosComplementarios: { ...dc, observacionesInforme: obs } } });
+  return { ok: true as const };
+}

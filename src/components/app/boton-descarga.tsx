@@ -16,8 +16,10 @@ function nombreArchivo(cd: string | null, url: string) {
  * Botón de descarga: pide el archivo en segundo plano y muestra el isotipo girando
  * mientras el servidor lo prepara (los ZIP y los Word pueden tardar varios segundos).
  */
-export function BotonDescarga({ href, children, tooltip, variant = "outline", size = "default", className, "aria-label": ariaLabel, texto }: {
+export function BotonDescarga({ href, children, tooltip, variant = "outline", size = "default", className, "aria-label": ariaLabel, texto, antes }: {
   href: string; children: ReactNode; tooltip?: ReactNode; className?: string; "aria-label"?: string; texto?: string;
+  /** Se ejecuta antes de pedir el archivo (p. ej. guardar datos que el archivo usa). */
+  antes?: () => Promise<unknown>;
 } & VariantProps<typeof buttonVariants>) {
   const [cargando, setCargando] = useState(false);
   // Texto del proceso según lo que se genera (si no se indica): PDF, Excel, ZIP o Word.
@@ -27,6 +29,7 @@ export function BotonDescarga({ href, children, tooltip, variant = "outline", si
     if (cargando) return;
     setCargando(true);
     try {
+      if (antes) await antes();
       const r = await fetch(href);
       if (!r.ok) throw new Error(r.status === 401 ? "Su sesión expiró; inicie sesión de nuevo." : `No se pudo generar el archivo (error ${r.status}).`);
       const blob = await r.blob();
