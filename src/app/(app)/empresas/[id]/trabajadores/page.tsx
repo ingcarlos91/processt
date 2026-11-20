@@ -18,13 +18,16 @@ export default async function Trabajadores({ params }: PageProps<"/empresas/[id]
   // EPP y capacitaciones sugeridos por cargo, según los peligros de su matriz.
   const filas = filasMatriz(e);
   const sugeridos = Object.fromEntries(e.cargos.map((c) => {
-    const cat = filas.filter((f) => f.cargos.includes(c.nombre)).map((f) => f.catalogo).filter(Boolean);
-    return [c.id, { epp: [...new Set(cat.flatMap((p) => p!.eppSugerido))], capacitaciones: [...new Set(cat.flatMap((p) => p!.capacitacionesSugeridas))] }];
+    // Solo peligros de las tareas y del cargo: los de lugar (zona) se controlan colectivamente y no definen la dotación personal.
+    const cat = filas.filter((f) => f.origen !== "zona" && f.cargos.includes(c.nombre)).map((f) => f.catalogo).filter(Boolean);
+    const sinNoAplica = (xs: string[]) => [...new Set(xs)].filter((x) => !/^no aplica/i.test(x.trim()));
+    return [c.id, { epp: sinNoAplica(cat.flatMap((p) => p!.eppSugerido)), capacitaciones: sinNoAplica(cat.flatMap((p) => p!.capacitacionesSugeridas)) }];
   }));
   return (
     <TrabajadoresEditor
       empresaId={id}
       entidades={await cargarEntidades()}
+      ipsPorDefecto={String(((e.datosComplementarios ?? {}) as Record<string, unknown>).ips ?? "")}
       cargos={e.cargos.map((c) => ({ id: c.id, nombre: c.nombre, nPersonas: c.nPersonas }))}
       sugeridos={sugeridos}
       catalogoEpp={catalogo.filter((c) => c.tipo === "EPP").map((c) => c.nombre)}

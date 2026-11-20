@@ -26,7 +26,7 @@ import { EstadoVacio } from "@/components/app/ilustraciones";
 import { Tip } from "@/components/app/tip";
 import { abrevDoc } from "@/lib/documento-identidad";
 import * as A from "@/app/actions/trabajadores";
-import { cn } from "@/lib/utils";
+import { cn, hoyLocal } from "@/lib/utils";
 
 type Examen = { id: string; tipo: string; fecha: string; ips: string; concepto: string; restricciones: string; comunicadoTrabajador: string; proximo: string };
 type Entrega = { id: string; fecha: string; elemento: string; cantidad: number; tipo: string; capacitado: boolean; proximaReposicion: string };
@@ -38,12 +38,13 @@ const VINC: Record<string, string> = { planta: "Planta", contratista: "Contratis
 const TIPO_EX: Record<string, string> = { ingreso: "Ingreso", periodico: "Periódico", retiro: "Retiro", post_incapacidad: "Post incapacidad", cambio_ocupacion: "Cambio de ocupación" };
 const CONCEPTO: Record<string, { t: string; c: string }> = { apto: { t: "Apto", c: "border-emerald-300 bg-emerald-50 text-emerald-700" }, apto_restricciones: { t: "Apto con restricciones", c: "border-amber-300 bg-amber-50 text-amber-800" }, aplazado: { t: "Aplazado", c: "border-slate-300 text-slate-700" }, no_apto: { t: "No apto", c: "border-red-300 bg-red-50 text-red-700" } };
 const ESCOLARIDAD = ["Primaria", "Bachillerato", "Técnico", "Tecnólogo", "Profesional", "Posgrado", "Ninguna"];
-const hoy = () => new Date().toISOString().slice(0, 10);
+const hoy = () => hoyLocal();
 const enAnios = (f: string, n: number) => { const d = new Date(f + "T12:00:00Z"); d.setUTCFullYear(d.getUTCFullYear() + n); return d.toISOString().slice(0, 10); };
 const fecha = (f: string) => (f ? new Date(f + "T12:00:00Z").toLocaleDateString("es-CO", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" }) : "—");
 const vacioT = (): Omit<T, "id" | "examenes" | "entregas" | "capacitaciones" | "cargo" | "activo" | "fechaRetiro"> & { id?: string } => ({ nombres: "", tipoDoc: "CC", documento: "", cargoId: "", vinculacion: "planta", fechaIngreso: "", sexo: "", fechaNacimiento: "", escolaridad: "", telefono: "", correo: "", eps: "", afp: "", conduce: false, modalidad: "presencial", turnoNocturno: false, altoRiesgoPension: false, manipulaAlimentos: false });
 
-export function TrabajadoresEditor({ empresaId, trabajadores, cargos, sugeridos, catalogoEpp, catalogoCapacitaciones, actividades, capacitaciones, entidades }: {
+export function TrabajadoresEditor({ empresaId, trabajadores, cargos, sugeridos, catalogoEpp, catalogoCapacitaciones, actividades, capacitaciones, entidades, ipsPorDefecto = "" }: {
+  ipsPorDefecto?: string;
   empresaId: string; trabajadores: T[]; cargos: { id: string; nombre: string; nPersonas: number }[]; sugeridos: Record<string, { epp: string[]; capacitaciones: string[] }>;
   catalogoEpp: string[]; catalogoCapacitaciones: string[]; actividades: { id: string; nombre: string; anio: number; periodo: string }[]; capacitaciones: Cap[]; entidades: Entidades;
 }) {
@@ -68,7 +69,7 @@ export function TrabajadoresEditor({ empresaId, trabajadores, cargos, sugeridos,
   const nombre = (id: string) => trabajadores.find((t) => t.id === id)?.nombres ?? "";
   const totalCargos = cargos.reduce((s, c) => s + c.nPersonas, 0);
 
-  const abrirExamen = (trabajadorId: string, x?: Examen) => setExamen(x ? { ...x, trabajadorId } : { trabajadorId, tipo: "periodico", fecha: hoy(), ips: "", concepto: "apto", restricciones: "", comunicadoTrabajador: "", proximo: enAnios(hoy(), 1) });
+  const abrirExamen = (trabajadorId: string, x?: Examen) => setExamen(x ? { ...x, trabajadorId } : { trabajadorId, tipo: "periodico", fecha: hoy(), ips: ipsPorDefecto, concepto: "apto", restricciones: "", comunicadoTrabajador: "", proximo: enAnios(hoy(), 1) });
   const abrirEntrega = (ids: string[]) => {
     const t = trabajadores.find((x) => x.id === ids[0]);
     setEntrega({ trabajadorIds: ids, fecha: hoy(), elementos: ids.length === 1 && t?.cargoId ? sugeridos[t.cargoId]?.epp ?? [] : [], cantidad: 1, tipo: "dotacion", capacitado: true, proximaReposicion: "" });
@@ -392,7 +393,7 @@ export function TrabajadoresEditor({ empresaId, trabajadores, cargos, sugeridos,
                   <Field><FieldLabel htmlFor="c-fa">Facilitador</FieldLabel><Input id="c-fa" placeholder="Ej.: Instructor de la ARL" value={cap.facilitador} onChange={(e) => setCap({ ...cap, facilitador: e.target.value })} /></Field>
                 </SeccionFormulario>
                 <SeccionFormulario titulo="Plan anual" descripcion="Opcional. Al guardar, la actividad ligada queda ejecutada.">
-                  <Field><FieldLabel>Actividad del plan anual</FieldLabel><Selector value={cap.actividadId} onChange={(v) => setCap({ ...cap, actividadId: v })} placeholder="Sin ligar a una actividad" opciones={[{ valor: "", etiqueta: "Sin ligar a una actividad" }, ...actividades.filter((a) => a.id === cap.actividadId || a.anio === Number(cap.fecha.slice(0, 4))).map((a) => ({ valor: a.id, etiqueta: `${a.periodo} · ${a.nombre}` }))]} /></Field>
+                  <Field><FieldLabel>Actividad del plan anual</FieldLabel><Selector value={cap.actividadId} onChange={(v) => setCap({ ...cap, actividadId: v })} placeholder="Sin ligar a una actividad" opciones={[{ valor: "", etiqueta: "Sin ligar a una actividad" }, ...[...actividades].sort((x, y) => Number(y.anio === Number(cap.fecha.slice(0, 4))) - Number(x.anio === Number(cap.fecha.slice(0, 4))) || x.anio - y.anio).map((a) => ({ valor: a.id, etiqueta: `${a.periodo} · ${a.nombre}` }))]} /></Field>
                 </SeccionFormulario>
                 <SeccionFormulario titulo={`Asistentes (${cap.asistentes.length} de ${activos.length})`} descripcion="Cada asistente queda con la capacitación en su ficha."
                   acciones={<><Button type="button" size="xs" variant="ghost" onClick={() => setCap({ ...cap, asistentes: activos.map((t) => t.id) })}>Todos</Button><Button type="button" size="xs" variant="ghost" onClick={() => setCap({ ...cap, asistentes: [] })}>Ninguno</Button></>}>

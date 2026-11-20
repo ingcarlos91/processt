@@ -22,14 +22,14 @@ import { EstadoVacio } from "@/components/app/ilustraciones";
 import { SubirArchivo, ListaArchivos, type ArchivoUI } from "@/components/app/adjuntos";
 import * as A from "@/app/actions/inspecciones";
 import type { ItemInspeccion } from "@/app/actions/inspecciones";
-import { cn } from "@/lib/utils";
+import { cn, hoyLocal } from "@/lib/utils";
 
 type Lista = { nombre: string; descripcion: string; items: string[]; frecuenciaDias: number };
 type Item = { pregunta: string; resultado: "cumple" | "no_cumple" | "na"; observacion: string };
 type Ins = { id: string; lista: string; fecha: string; lugar: string; responsable: string; participantes: string; observaciones: string; items: Item[]; acciones: AccionUI[]; archivos: ArchivoUI[] };
 
-const hoy = () => new Date().toISOString().slice(0, 10);
-const en30 = () => new Date(Date.now() + 30 * 864e5).toISOString().slice(0, 10);
+const hoy = () => hoyLocal();
+const en30 = () => hoyLocal(30);
 const fecha = (f: string) => (f ? new Date(f + "T12:00:00Z").toLocaleDateString("es-CO", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" }) : "—");
 const cumplimiento = (items: { resultado: string }[]) => { const ap = items.filter((i) => i.resultado !== "na"); return ap.length ? Math.round((ap.filter((i) => i.resultado === "cumple").length / ap.length) * 100) : 100; };
 const RES = { cumple: { t: "Cumple", c: "border-emerald-500 bg-emerald-500 text-white", i: Check }, no_cumple: { t: "No cumple", c: "border-red-500 bg-red-500 text-white", i: X }, na: { t: "N. A.", c: "border-slate-400 bg-slate-400 text-white", i: Minus } } as const;

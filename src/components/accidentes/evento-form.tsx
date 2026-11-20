@@ -7,11 +7,25 @@ import { Field, FieldDescription, FieldGroup, FieldLabel, FieldLegend, FieldSet 
 import { Ayuda } from "@/components/app/ayuda";
 import { TIPOS_EVENTO, GRAVEDAD, VINCULACION, TIPO_ACCIDENTE, TURNOS } from "@/lib/eventos";
 import { Combo, type GrupoCombo } from "@/components/app/combo";
+import { Buscador } from "@/components/app/buscador";
 import { Button } from "@/components/ui/button";
 import type { CatalogoAccidentes, ItemSimple } from "@/lib/catalogo-accidentes";
 import type { DatosEvento } from "@/app/actions/eventos";
 
-export type CargoOpcion = { id: string; nombre: string; tareas: string[] };
+export type PersonaOpcion = { nombre: string; tipoDoc: string; documento: string; vinculacion: string; ingreso: string };
+export type CargoOpcion = { id: string; nombre: string; tareas: string[]; personas?: PersonaOpcion[] };
+
+/** Tiempo entre dos fechas en texto ("2 años y 3 meses"), para la antigüedad que pide el FURAT. */
+function antiguedadTexto(desde: string, hasta: string) {
+  if (!desde || !hasta) return "";
+  const a = new Date(desde), b = new Date(hasta);
+  let m = (b.getFullYear() - a.getFullYear()) * 12 + (b.getMonth() - a.getMonth());
+  if (b.getDate() < a.getDate()) m--;
+  if (m < 0) return "";
+  const y = Math.floor(m / 12), r = m % 12;
+  if (!y && !r) return "Menos de 1 mes";
+  return [y ? `${y} año${y > 1 ? "s" : ""}` : "", r ? `${r} mes${r > 1 ? "es" : ""}` : ""].filter(Boolean).join(" y ");
+}
 
 /** Opciones de la biblioteca, con las típicas para la forma del evento primero. */
 function grupos(items: (ItemSimple | string)[], tipicos: string[] = [], titulo = "Típicas para esta forma de evento"): GrupoCombo[] {
@@ -86,6 +100,19 @@ export function EventoForm({ d, set, cargos, cat, lugares }: { d: DatosEvento; s
 
       <FieldSet>
         <Encabezado k="evTrabajador" nota={esAus ? undefined : "Identificación del trabajador como la pide el FURAT: nombre, documento, vinculación, cargo y antigüedad en el cargo y en la empresa."}>Persona afectada</Encabezado>
+        {cargos.some((c) => c.personas?.length) && (
+          <Field>
+            <FieldLabel>Elegir de los trabajadores registrados</FieldLabel>
+            <Buscador className="w-full" placeholder="Buscar por nombre, documento o cargo…" textoBoton="Buscar trabajador" ancho="w-[30rem]"
+              opciones={cargos.flatMap((c) => (c.personas ?? []).map((p) => ({ valor: `${c.id}|${p.documento || p.nombre}`, etiqueta: p.nombre, detalle: [p.documento, c.nombre].filter(Boolean).join(" · "), grupo: c.nombre })))}
+              onSelect={(v) => {
+                const [cid, clave] = v.split("|");
+                const c = cargos.find((x) => x.id === cid); const p = c?.personas?.find((x) => (x.documento || x.nombre) === clave);
+                if (c && p) set({ ...d, trabajadorNombre: p.nombre, trabajadorTipoDoc: p.tipoDoc, trabajadorCedula: p.documento, vinculacion: p.vinculacion, cargoId: c.id, cargo: c.nombre, tiempoEmpresa: antiguedadTexto(p.ingreso, d.fecha) || d.tiempoEmpresa });
+              }} />
+            <FieldDescription>Llena nombre, documento, vinculación, cargo y antigüedad en la empresa.</FieldDescription>
+          </Field>
+        )}
         <div className="grid gap-4 sm:grid-cols-3">
           <Field><Etiqueta htmlFor="ev-n">Nombre</Etiqueta><Input id="ev-n" placeholder="Nombres y apellidos" value={d.trabajadorNombre ?? ""} onChange={(e) => u("trabajadorNombre", e.target.value)} /></Field>
           <Field><Etiqueta htmlFor="ev-c" k="documentoIdentidad">Documento</Etiqueta><CampoDocumento id="ev-c" tipo={d.trabajadorTipoDoc} numero={d.trabajadorCedula} onTipo={(v) => u("trabajadorTipoDoc", v)} onNumero={(v) => u("trabajadorCedula", v)} /></Field>

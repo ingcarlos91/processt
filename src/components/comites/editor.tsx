@@ -1,4 +1,5 @@
 "use client";
+import { hoyLocal } from "@/lib/utils";
 import Link from "next/link";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
@@ -20,6 +21,7 @@ import { Ayuda } from "@/components/app/ayuda";
 import { SubirArchivo, ListaArchivos, type ArchivoUI } from "@/components/app/adjuntos";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import * as A from "@/app/actions/sgsst";
+import { Buscador } from "@/components/app/buscador";
 
 type Miembro = { id: string; nombre: string; tipoDoc: string; cedula: string; cargo: string; rol: string; representa: string };
 type Comite = { id: string; tipo: string; inicio: string; fin: string; normaRef: string; datos: Record<string, unknown>; actas: ArchivoUI[]; miembros: Miembro[] };
@@ -32,11 +34,13 @@ const INFO: Record<string, { nombre: string; doc: string; desc: string }> = {
 };
 const ROLES = [["presidente", "Presidente"], ["secretario", "Secretario"], ["principal", "Principal"], ["suplente", "Suplente"], ["vigia", "Vigía"], ["jefe_brigada", "Jefe de brigada"], ["brigadista", "Brigadista"]];
 
-export function ComitesEditor({ empresaId, requeridos, comites, composicion, refs, porques }: { empresaId: string; requeridos: string[]; comites: Comite[]; composicion: string; refs: Record<string, string>; porques: Record<string, string> }) {
+type TrabajadorOpcion = { nombre: string; tipoDoc: string; documento: string; cargo: string };
+
+export function ComitesEditor({ empresaId, requeridos, comites, composicion, refs, porques, trabajadores = [] }: { empresaId: string; requeridos: string[]; comites: Comite[]; composicion: string; trabajadores?: TrabajadorOpcion[]; refs: Record<string, string>; porques: Record<string, string> }) {
   const [, start] = useTransition();
   const run = (fn: () => Promise<unknown>, ok?: string) => start(async () => { await fn(); if (ok) toast.success(ok); });
   const [editando, setEditando] = useState<{ id: string; nombre: string; tipoDoc: string; cedula: string; cargo: string } | null>(null);
-  const hoy = new Date().toISOString().slice(0, 10);
+  const hoy = hoyLocal();
   return (
     <div className="grid gap-6">
       {requeridos.map((tipo) => {
@@ -102,7 +106,7 @@ export function ComitesEditor({ empresaId, requeridos, comites, composicion, ref
                 </div>
               )}
             </CardContent>
-            {c && <CardFooter className="border-t flex-col items-stretch gap-4"><NuevoMiembro tipo={tipo} onAgregar={(m) => run(() => A.agregarMiembro(empresaId, c.id, m), "Integrante agregado")} />{tipo === "COPASST" && <DatosEleccion inicial={c.datos} onGuardar={(d) => run(() => A.guardarDatosComite(empresaId, c.id, d), "Datos de la elección guardados")} />}</CardFooter>}
+            {c && <CardFooter className="border-t flex-col items-stretch gap-4"><NuevoMiembro tipo={tipo} trabajadores={trabajadores} onAgregar={(m) => run(() => A.agregarMiembro(empresaId, c.id, m), "Integrante agregado")} />{tipo === "COPASST" && <DatosEleccion inicial={c.datos} onGuardar={(d) => run(() => A.guardarDatosComite(empresaId, c.id, d), "Datos de la elección guardados")} />}</CardFooter>}
           </Card>
         );
       })}
@@ -111,14 +115,22 @@ export function ComitesEditor({ empresaId, requeridos, comites, composicion, ref
 }
 
 function NuevoComite({ onCrear }: { onCrear: (fecha: string) => void }) {
-  const [f, setF] = useState(new Date().toISOString().slice(0, 10));
+  const [f, setF] = useState(hoyLocal());
   return <div className="flex gap-2"><Input type="date" value={f} onChange={(e) => setF(e.target.value)} /><Button onClick={() => onCrear(f)}><Plus /> Registrar</Button></div>;
 }
 
-function NuevoMiembro({ tipo, onAgregar }: { tipo: string; onAgregar: (m: { nombre: string; tipoDoc?: string; cedula?: string; cargo?: string; rol: string; representa?: string }) => void }) {
+function NuevoMiembro({ tipo, trabajadores = [], onAgregar }: { tipo: string; trabajadores?: TrabajadorOpcion[]; onAgregar: (m: { nombre: string; tipoDoc?: string; cedula?: string; cargo?: string; rol: string; representa?: string }) => void }) {
   const [m, setM] = useState({ nombre: "", tipoDoc: "CC", cedula: "", cargo: "", rol: tipo === "BRIGADA" ? "brigadista" : tipo === "VIGIA" ? "vigia" : "principal", representa: tipo === "BRIGADA" ? "" : "trabajadores" });
   return (
     <div className="grid grid-cols-2 md:grid-cols-7 gap-2 w-full items-end">
+      {trabajadores.length > 0 && (
+        <Field className="col-span-2 md:col-span-7">
+          <FieldLabel className="text-xs">Elegir de los trabajadores registrados</FieldLabel>
+          <Buscador className="w-full md:w-96" placeholder="Buscar por nombre, documento o cargo…" textoBoton="Buscar trabajador" ancho="w-[32rem]"
+            opciones={trabajadores.map((t) => ({ valor: t.documento || t.nombre, etiqueta: t.nombre, detalle: [t.documento, t.cargo].filter(Boolean).join(" · ") }))}
+            onSelect={(v) => { const t = trabajadores.find((x) => (x.documento || x.nombre) === v); if (t) setM({ ...m, nombre: t.nombre, tipoDoc: t.tipoDoc || "CC", cedula: t.documento, cargo: t.cargo }); }} />
+        </Field>
+      )}
       <Field className="md:col-span-2"><FieldLabel className="text-xs">Nombre</FieldLabel><Input value={m.nombre} placeholder="Nombres y apellidos" onChange={(e) => setM({ ...m, nombre: e.target.value })} /></Field>
       <Field className="col-span-2 md:col-span-2"><FieldLabel className="text-xs gap-1">Documento <Ayuda k="documentoIdentidad" /></FieldLabel><CampoDocumento tipo={m.tipoDoc} numero={m.cedula} onTipo={(v) => setM({ ...m, tipoDoc: v })} onNumero={(v) => setM({ ...m, cedula: v })} /></Field>
       <Field><FieldLabel className="text-xs">Cargo</FieldLabel><Input value={m.cargo} placeholder="Ej.: Auxiliar de bodega" onChange={(e) => setM({ ...m, cargo: e.target.value })} /></Field>

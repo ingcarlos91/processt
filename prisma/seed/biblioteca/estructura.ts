@@ -70,6 +70,8 @@ export const tareas: Record<string, { nombre: string; actividad: string; rutinar
   procedimientos_cortopunzantes: { nombre: "Procedimientos con elementos cortopunzantes", actividad: "Atención asistencial", peligros: ["biologico_fluidos", "postura_forzada"] },
   movilizacion_pacientes: { nombre: "Movilización de pacientes", actividad: "Atención asistencial", peligros: ["manipulacion_cargas", "postura_forzada", "biologico_fluidos"] },
   esterilizacion: { nombre: "Lavado y esterilización de instrumental", actividad: "Apoyo asistencial", peligros: ["biologico_fluidos", "quimico_limpieza", "superficies_calientes"] },
+  odontologia_procedimientos: { nombre: "Procedimientos odontológicos con pieza de mano y aerosoles", actividad: "Atención asistencial", peligros: ["bio_odontologia_aerosoles", "biom_postura_precision_cuello_flexionado", "ruido", "biologico_fluidos"] },
+  radiografia_odontologica: { nombre: "Toma de radiografías odontológicas (periapical, panorámica)", actividad: "Atención asistencial", peligros: [{ p: "radiacion_ionizante", ne: 2 }, "biologico_fluidos"] },
   // Educación
   docencia: { nombre: "Docencia en aula", actividad: "Formación", peligros: ["postura_bipeda", "psico_carga_mental", "biologico_virus_bacterias_publico", "psico_atencion_publico"] },
   // Mantenimiento general
@@ -110,9 +112,10 @@ export const cargos: Record<string, { nombre: string; descripcion: string; tarea
   auxiliar_transporte: { nombre: "Auxiliar de cargue / ayudante de transporte", descripcion: "Cargue y descargue de mercancía.", tareas: ["cargue_descargue", "recibo_mercancia"] },
   despachador: { nombre: "Despachador / Coordinador logístico", descripcion: "Programa rutas y despachos.", tareas: ["trabajo_computador", "atencion_telefonica"], peligros: ["psico_carga_mental"] },
   medico: { nombre: "Médico(a) general", descripcion: "Valoración y atención de pacientes.", tareas: ["atencion_pacientes", "procedimientos_cortopunzantes", "trabajo_computador"] },
+  auxiliar_esterilizacion: { nombre: "Auxiliar de esterilización", descripcion: "Lava, empaca y esteriliza instrumental; segrega residuos de atención en salud.", tareas: ["esterilizacion", "manejo_residuos", "procedimientos_cortopunzantes"], peligros: ["biologico_residuos"] },
   enfermero: { nombre: "Enfermero(a) / Auxiliar de enfermería", descripcion: "Atención y cuidado de pacientes.", tareas: ["atencion_pacientes", "procedimientos_cortopunzantes", "movilizacion_pacientes"] },
-  odontologo: { nombre: "Odontólogo(a)", descripcion: "Atención odontológica.", tareas: ["atencion_pacientes", "procedimientos_cortopunzantes"], peligros: ["postura_forzada", "ruido"] },
-  auxiliar_odontologia: { nombre: "Auxiliar de odontología", descripcion: "Apoyo en consulta y esterilización.", tareas: ["procedimientos_cortopunzantes", "esterilizacion"] },
+  odontologo: { nombre: "Odontólogo(a)", descripcion: "Atención odontológica.", tareas: ["atencion_pacientes", "procedimientos_cortopunzantes", "odontologia_procedimientos", "radiografia_odontologica"], peligros: ["postura_forzada", "ruido"] },
+  auxiliar_odontologia: { nombre: "Auxiliar de odontología", descripcion: "Apoyo en consulta y esterilización.", tareas: ["procedimientos_cortopunzantes", "odontologia_procedimientos", "radiografia_odontologica", "esterilizacion"] },
   docente: { nombre: "Docente", descripcion: "Imparte clases y evalúa estudiantes.", tareas: ["docencia", "trabajo_computador"] },
   coordinador_academico: { nombre: "Coordinador(a) académico", descripcion: "Coordina procesos académicos y disciplinarios.", tareas: ["reuniones_direccion", "atencion_publico_oficina", "trabajo_computador"] },
   vigilante: { nombre: "Vigilante / Portero", descripcion: "Control de acceso y vigilancia.", tareas: ["vigilancia"] },
@@ -184,11 +187,11 @@ export const sectores: {
     zonas: ["consultorio", "oficina"],
     procesos: [
       { nombre: "Dirección y administración", descripcion: "Gestión de la IPS", tareas: ["reuniones_direccion", "trabajo_computador"] },
-      { nombre: "Atención asistencial", descripcion: "Atención a pacientes", tareas: ["atencion_pacientes", "procedimientos_cortopunzantes", "movilizacion_pacientes", "esterilizacion"] },
+      { nombre: "Atención asistencial", descripcion: "Atención a pacientes", tareas: ["atencion_pacientes", "procedimientos_cortopunzantes", "odontologia_procedimientos", "radiografia_odontologica", "movilizacion_pacientes", "esterilizacion"] },
       { nombre: "Admisiones y facturación", descripcion: "Atención al usuario", tareas: ["atencion_publico_oficina", "trabajo_computador"] },
       { nombre: "Servicios generales", descripcion: "Aseo hospitalario y residuos", tareas: ["aseo_limpieza", "aseo_banos", "manejo_residuos"] },
     ],
-    cargos: ["gerente", "medico", "enfermero", "odontologo", "auxiliar_odontologia", "recepcionista", "auxiliar_administrativo", "servicios_generales"] },
+    cargos: ["gerente", "medico", "enfermero", "odontologo", "auxiliar_odontologia", "auxiliar_esterilizacion", "recepcionista", "auxiliar_administrativo", "servicios_generales"] },
   { nombre: "Educación", ciius: ["85"], descripcion: "Colegios, jardines, institutos de formación.",
     zonas: ["aula", "oficina", "exterior_zonas_verdes"],
     procesos: [
@@ -213,6 +216,6 @@ export const zonasTarea: Record<string, string[]> = {
   instalaciones_electricas: ["obra", "taller", "oficina"], pintura: ["obra"], supervision_obra: ["obra"], operacion_maquinas: ["taller"], soldadura: ["taller", "obra"],
   ensamble: ["taller"], mantenimiento_maquinas: ["taller"], control_calidad: ["taller"], manejo_quimicos_produccion: ["taller"], conduccion_vehiculo: ["vehiculo"],
   cargue_descargue: ["vehiculo", "bodega"], inspeccion_preoperacional: ["vehiculo"], atencion_pacientes: ["consultorio"], procedimientos_cortopunzantes: ["consultorio"],
-  movilizacion_pacientes: ["consultorio"], esterilizacion: ["consultorio"], docencia: ["aula"], mantenimiento_locativo: ["oficina", "taller", "punto_venta", "aula", "exterior_zonas_verdes"],
+  movilizacion_pacientes: ["consultorio"], esterilizacion: ["consultorio"], odontologia_procedimientos: ["consultorio"], radiografia_odontologica: ["consultorio"], docencia: ["aula"], mantenimiento_locativo: ["oficina", "taller", "punto_venta", "aula", "exterior_zonas_verdes"],
   jardineria: ["exterior_zonas_verdes"], vigilancia: ["exterior_zonas_verdes", "oficina", "punto_venta"],
 };

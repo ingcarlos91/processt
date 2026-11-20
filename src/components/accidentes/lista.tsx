@@ -18,12 +18,12 @@ import { TIPOS_EVENTO, GRAVEDAD, COLOR_PLAZO } from "@/lib/eventos";
 import type { PlazoUI } from "@/lib/eventos-ui";
 import { crearEvento, type DatosEvento } from "@/app/actions/eventos";
 import type { CatalogoAccidentes } from "@/lib/catalogo-accidentes";
-import { cn } from "@/lib/utils";
+import { cn, hoyLocal } from "@/lib/utils";
 
 type Ev = { id: string; tipo: string; gravedad: string; fecha: string; trabajador: string; cargo: string; descripcion: string; dias: number; invEstado: string; acciones: number; archivos: number; plazos: PlazoUI[] };
 const INV: Record<string, { t: string; v: "default" | "secondary" | "outline" | "destructive" }> = { pendiente: { t: "Sin iniciar", v: "outline" }, en_curso: { t: "En curso", v: "secondary" }, cerrada: { t: "Cerrada", v: "default" }, no_aplica: { t: "No aplica", v: "outline" } };
 const fechaCorta = (f: string) => new Date(f).toLocaleDateString("es-CO", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
-const nuevo = (): DatosEvento => ({ tipo: "AT", gravedad: "leve", fecha: new Date().toISOString().slice(0, 10), diasIncapacidad: 0, diasCargados: 0 });
+const nuevo = (): DatosEvento => ({ tipo: "AT", gravedad: "leve", fecha: hoyLocal(), diasIncapacidad: 0, diasCargados: 0 });
 
 export function Semaforo({ p, compacto }: { p: PlazoUI; compacto?: boolean }) {
   const c = COLOR_PLAZO[p.estado];

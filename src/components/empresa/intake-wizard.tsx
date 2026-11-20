@@ -4,7 +4,7 @@ import { Combo } from "@/components/app/combo";
 import type { Entidades } from "@/lib/entidades";
 import { CampoDocumento } from "@/components/app/campo-documento";
 import Link from "next/link";
-import { useMemo, useRef, useState, useTransition } from "react";
+import { useMemo, useRef, useState, useTransition, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Plus, Trash2, ChevronLeft, ChevronRight, Check, ImagePlus, UserCheck, ClipboardList } from "lucide-react";
@@ -118,6 +118,7 @@ export function IntakeWizard({ sectores, cargosTipo, ciius, inicial, empresaId, 
   const [d, setD] = useState<IntakeData>(inicial ?? {
     razonSocial: "", nit: "", claseRiesgo: 1, nTrabajadoresPlanta: 1, nContratistas: 0, nAprendices: 0, nEnMision: 0, nVehiculos: 0, nConductores: 0,
     sedes: [{ nombre: "Sede principal" }], cargos: [{ nombre: "", nPersonas: 1 }], disparadores: {}, estadoActual: {}, responsableSst: { ...profesional },
+    horario: "Lunes a viernes, 8:00 a 17:00",
   });
   const set = <K extends keyof IntakeData>(k: K, v: IntakeData[K]) => setD((x) => ({ ...x, [k]: v }));
   const [hor, setHorState] = useState(() => parseHorario(d.horario));
@@ -126,9 +127,24 @@ export function IntakeWizard({ sectores, cargosTipo, ciius, inicial, empresaId, 
   const setTurnos = (xs: string[]) => set("turnos", xs.join(","));
   const setR = (k: keyof IntakeData["responsableSst"], v: string | boolean) => setD((x) => ({ ...x, responsableSst: { ...x.responsableSst, [k]: v } }));
   const [busq, setBusq] = useState("");
+  // Borrador en el navegador mientras se crea la empresa: si la página se recarga, no se pierde lo escrito.
+  const CLAVE_BORRADOR = "processt:nueva-empresa";
+  const [borradorCargado, setBorradorCargado] = useState(!!empresaId);
+  useEffect(() => {
+    if (empresaId) return;
+    // El borrador vive en localStorage: se lee después de montar para no romper la hidratación.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    try { const g = localStorage.getItem(CLAVE_BORRADOR); if (g) { const b = JSON.parse(g) as { d: IntakeData; paso: number }; if (b?.d?.razonSocial || b?.d?.nit) { setD(b.d); setPaso(b.paso ?? 0); } } } catch { /* ignorar */ }
+    setBorradorCargado(true);
+  }, [empresaId]);
+  useEffect(() => {
+    if (empresaId || !borradorCargado) return;
+    try { localStorage.setItem(CLAVE_BORRADOR, JSON.stringify({ d, paso })); } catch { /* sin espacio */ }
+  }, [d, paso, empresaId, borradorCargado]);
   const filtro = useMemo(() => {
-    const q = busq.toLowerCase();
-    return q.length < 2 ? [] : ciius.filter((c) => c.codigo.startsWith(q) || c.descripcion.toLowerCase().includes(q)).slice(0, 8);
+    const sinTildes = (t: string) => t.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    const q = sinTildes(busq.trim());
+    return q.length < 2 ? [] : ciius.filter((c) => c.codigo.startsWith(q) || sinTildes(c.descripcion).includes(q)).slice(0, 8);
   }, [busq, ciius]);
   const trab = (Number(d.nTrabajadoresPlanta) || 0) + (Number(d.nEnMision) || 0);
   const prev = nivelPreview(trab, d.claseRiesgo);
@@ -149,6 +165,7 @@ export function IntakeWizard({ sectores, cargosTipo, ciius, inicial, empresaId, 
       } else {
         const r = await crearEmpresa(d, modo);
         if ("error" in r) return void toast.error(r.error);
+        try { localStorage.removeItem(CLAVE_BORRADOR); } catch { /* ignorar */ }
         if (logo) {
           const fd = new FormData(); fd.append("logo", logo);
           const l = await subirLogo(r.id, fd);

@@ -37,10 +37,19 @@ export function EvaluacionEditor({ empresaId, nivel, evaluaciones, actual }: {
   const run = (fn: () => Promise<unknown>, ok?: string) => start(async () => { const r = await fn(); if (r && typeof r === "object" && "error" in r) toast.error(String((r as { error: string }).error)); else if (ok) toast.success(ok); });
   const anio = new Date().getFullYear();
 
+  // Al crear una evaluación se abre de inmediato (la acción devuelve su id).
+  const crear = (tipo: "inicial" | "anual", ok: string) => start(async () => {
+    const r = await A.crearEvaluacion(empresaId, tipo, anio);
+    if (r && typeof r === "object" && "error" in r) return void toast.error(String((r as { error: string }).error));
+    toast.success(ok);
+    if (typeof r === "string") window.location.href = `?ev=${r}`;
+  });
+  const hayInicial = evaluaciones.some((e) => e.tipo === "inicial");
+  const hayAnual = evaluaciones.some((e) => e.tipo === "anual" && e.anio === anio);
   const nueva = (
     <div className="flex gap-2">
-      <Button disabled={pend} onClick={() => run(() => A.crearEvaluacion(empresaId, "inicial", anio), "Evaluación inicial creada")}><Plus /> Evaluación inicial</Button>
-      <Button variant="outline" disabled={pend} onClick={() => run(() => A.crearEvaluacion(empresaId, "anual", anio), "Autoevaluación creada")}><Plus /> Autoevaluación {anio}</Button>
+      {!hayInicial && <Button disabled={pend} onClick={() => crear("inicial", "Evaluación inicial creada")}><Plus /> Evaluación inicial</Button>}
+      {!hayAnual && <Button variant={hayInicial ? "default" : "outline"} disabled={pend} onClick={() => crear("anual", "Autoevaluación creada")}><Plus /> Autoevaluación {anio}</Button>}
     </div>
   );
 
@@ -63,7 +72,9 @@ export function EvaluacionEditor({ empresaId, nivel, evaluaciones, actual }: {
         <BotonDescarga href={`/api/empresas/${empresaId}/evaluacion.xlsx`} variant="outline" tooltip="Descargar la autoevaluación de estándares mínimos en Excel (Res. 0312/2019)"><Download /> Excel</BotonDescarga>
         {actual.cerrada
           ? <Button variant="outline" disabled={pend} onClick={() => run(() => A.reabrirEvaluacion(empresaId, actual.id))}><LockOpen /> Reabrir</Button>
-          : <Button disabled={pend} onClick={() => run(() => A.cerrarEvaluacion(empresaId, actual.id), "Evaluación cerrada: se generó el plan de mejoramiento y se actualizaron DOC-05 y PLN-02")}><Lock /> Cerrar y generar plan de mejoramiento</Button>}
+          : actual.cal.pendientes > 0
+            ? <Confirmar trigger={<Button disabled={pend}><Lock /> Cerrar y generar plan de mejoramiento</Button>} titulo="Cerrar con ítems sin evaluar" descripcion={`Hay ${actual.cal.pendientes} ítem(s) sin calificar: al cerrar cuentan como «no cumple» y entran al plan de mejoramiento. Puede reabrir la evaluación después.`} accion="Cerrar de todas formas" onConfirm={() => run(() => A.cerrarEvaluacion(empresaId, actual.id), "Evaluación cerrada: se generó el plan de mejoramiento y se actualizaron DOC-05 y PLN-02")} />
+            : <Button disabled={pend} onClick={() => run(() => A.cerrarEvaluacion(empresaId, actual.id), "Evaluación cerrada: se generó el plan de mejoramiento y se actualizaron DOC-05 y PLN-02")}><Lock /> Cerrar y generar plan de mejoramiento</Button>}
         <Confirmar trigger={<Button variant="ghost" size="icon" aria-label="Eliminar evaluación" />} titulo="Eliminar esta evaluación" descripcion="Se eliminan sus calificaciones y su plan de mejoramiento." destructivo accion="Eliminar" onConfirm={() => run(() => A.eliminarEvaluacion(empresaId, actual.id))}><Trash2 /></Confirmar>
       </div>
 

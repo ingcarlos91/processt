@@ -25,6 +25,7 @@ model Consultora {
   cargo         String? // p. ej. "Asesora externa en SST"
   curso50h      Boolean   @default(false) @map("curso_50h")
   curso50hFecha String?   @map("curso_50h_fecha")
+  curso20hFecha String?   @map("curso_20h_fecha")
   tipoDoc       String    @default("CC") @map("tipo_doc") // CC | CE | PA | PPT | PEP | TI
   cedula        String?
   telefono      String?

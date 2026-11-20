@@ -15,7 +15,7 @@ import { Selector } from "@/components/app/selector";
 import { EstadoVacio } from "@/components/app/ilustraciones";
 import { CATEGORIAS, type Categoria, type EstadoFecha, type Fecha } from "@/lib/planeador";
 import * as A from "@/app/actions/planeador";
-import { cn } from "@/lib/utils";
+import { cn, hoyLocal } from "@/lib/utils";
 
 const MESES = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
 const DIAS = ["lun", "mar", "mié", "jue", "vie", "sáb", "dom"];
@@ -27,7 +27,7 @@ const ESTADO: Record<EstadoFecha, { t: string; c: string }> = {
   hecho: { t: "Hecho", c: "border-emerald-300 bg-emerald-50 text-emerald-700" },
 };
 const ymd = (s: string) => s.slice(0, 10);
-const hoyIso = () => new Date().toISOString().slice(0, 10);
+const hoyIso = () => hoyLocal();
 
 type Recordatorio = { id?: string; empresaId: string; fecha: string; titulo: string; notas: string };
 

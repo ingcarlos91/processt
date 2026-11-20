@@ -20,7 +20,7 @@ export function ConsultoraForm({ inicial, ia }: { inicial: D; ia: { activa: bool
   const [d, setD] = useState(inicial);
   const [pend, start] = useTransition();
   const set = <K extends keyof D>(k: K, v: D[K]) => setD((x) => ({ ...x, [k]: v }));
-  const AY: Partial<Record<keyof D, string>> = { profesional: "respNombre", cargo: "cargoProfesional", licenciaSst: "licencia", licenciaFecha: "licenciaFecha", curso50hFecha: "curso50h" };
+  const AY: Partial<Record<keyof D, string>> = { profesional: "respNombre", cargo: "cargoProfesional", licenciaSst: "licencia", licenciaFecha: "licenciaFecha", curso50hFecha: "curso50h", curso20hFecha: "curso20h" };
   const campo = (k: keyof D, l: string, opts?: { tipo?: string; desc?: string; ph?: string }) => (
     <Field><FieldLabel htmlFor={k} className="gap-1">{l}{AY[k] && <Ayuda k={AY[k]} />}</FieldLabel><Input id={k} type={opts?.tipo} placeholder={opts?.ph} value={String(d[k] ?? "")} onChange={(e) => set(k, e.target.value as never)} />{opts?.desc && <FieldDescription>{opts.desc}</FieldDescription>}</Field>
   );
@@ -56,7 +56,8 @@ export function ConsultoraForm({ inicial, ia }: { inicial: D; ia: { activa: bool
                 <NormaRef>Decreto 1072/2015 art. 2.2.4.6.35</NormaRef>
               </div>
             </Field>
-            {campo("curso50hFecha", "Fecha del curso de 50 horas", { tipo: "date" })}
+            {campo("curso50hFecha", "Fecha del curso de 50 horas", { tipo: "date", desc: "Se actualiza cada 3 años con el curso de 20 horas" })}
+            {campo("curso20hFecha", "Fecha del último curso de 20 horas", { tipo: "date" })}
             <FieldSeparator className="md:col-span-2">Contacto</FieldSeparator>
             {campo("telefono", "Teléfono", { ph: "Ej.: 300 123 4567" })}
             {campo("correo", "Correo", { tipo: "email", ph: "nombre@empresa.com" })}

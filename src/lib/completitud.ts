@@ -65,7 +65,7 @@ export async function completitud(empresaId: string) {
     if (f.tipo === "tabla") {
       const filas = (Array.isArray(v) ? v : []).filter((x) => Object.values(x ?? {}).some((y) => !vacio(y)));
       if (!filas.length) { add({ id: `c-${f.k}`, grupo: s.titulo, dato: f.etiqueta, href, boton: "Completar datos", docs: f.usadoEn }); continue; }
-      const cols = f.columnas ?? [];
+      const cols = (f.columnas ?? []).filter((col) => !col.opcional);
       const incompletas = filas.filter((x) => cols.some((col) => vacio(x[col.k])));
       if (incompletas.length) add({ id: `c-${f.k}-inc`, grupo: s.titulo, dato: f.etiqueta, detalle: `${incompletas.length} fila(s) con columnas vacías (${[...new Set(incompletas.flatMap((x) => cols.filter((col) => vacio(x[col.k])).map((col) => col.etiqueta)))].join(", ")})`, href, boton: "Completar datos", docs: f.usadoEn });
     } else if (f.tipo === "persona") {

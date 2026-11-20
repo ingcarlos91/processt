@@ -22,17 +22,21 @@ export const INDICADORES: Indicador[] = [
 type Ev = { tipo: string; fecha: Date; diasIncapacidad: number; diasCargados: number; mortal: boolean; casoNuevo: boolean };
 type TM = { anio: number; mes: number; nTrabajadores: number; diasProgramados: number | null };
 
-export function calcularMensuales(eventos: Ev[], tm: TM[], anio: number) {
+/** Mes ya transcurrido (o en curso): solo esos usan el número de trabajadores de la empresa cuando el mes no se registró. */
+const transcurrido = (anio: number, mes: number, hoy = new Date()) => anio < hoy.getFullYear() || (anio === hoy.getFullYear() && mes <= hoy.getMonth() + 1);
+
+/** `base`: trabajadores de la empresa; se usa en los meses transcurridos sin registro (estimado, editable en Indicadores). */
+export function calcularMensuales(eventos: Ev[], tm: TM[], anio: number, base = 0) {
   return Array.from({ length: 12 }, (_, i) => {
     const mes = i + 1;
     const t = tm.find((x) => x.anio === anio && x.mes === mes);
     const evMes = eventos.filter((e) => e.fecha.getFullYear() === anio && e.fecha.getMonth() + 1 === mes);
     const at = evMes.filter((e) => e.tipo === "AT");
-    const n = t?.nTrabajadores ?? 0;
+    const n = t?.nTrabajadores ?? (transcurrido(anio, mes) ? base : 0);
     const diasAus = evMes.filter((e) => e.tipo === "AT" || e.tipo === "AUSENTISMO" || e.tipo === "EL").reduce((s, e) => s + e.diasIncapacidad, 0);
     const diasProg = t?.diasProgramados ?? n * 24;
     return {
-      mes, trabajadores: n, accidentes: at.length,
+      mes, trabajadores: n, estimado: !t && n > 0, accidentes: at.length,
       frecuencia: n ? (at.length / n) * 100 : null,
       severidad: n ? (at.reduce((s, e) => s + e.diasIncapacidad + e.diasCargados, 0) / n) * 100 : null,
       ausentismo: diasProg ? (diasAus / diasProg) * 100 : null,
@@ -40,12 +44,12 @@ export function calcularMensuales(eventos: Ev[], tm: TM[], anio: number) {
   });
 }
 
-export function calcularAnuales(eventos: Ev[], tm: TM[], anio: number) {
+export function calcularAnuales(eventos: Ev[], tm: TM[], anio: number, base = 0) {
   const evA = eventos.filter((e) => e.fecha.getFullYear() === anio);
   const at = evA.filter((e) => e.tipo === "AT");
   const el = evA.filter((e) => e.tipo === "EL");
-  const meses = tm.filter((x) => x.anio === anio);
-  const prom = meses.length ? meses.reduce((s, x) => s + x.nTrabajadores, 0) / meses.length : 0;
+  const meses = calcularMensuales(eventos, tm, anio, base).filter((m) => m.trabajadores > 0);
+  const prom = meses.length ? meses.reduce((s, x) => s + x.trabajadores, 0) / meses.length : 0;
   return {
     mortalidad: at.length ? (at.filter((e) => e.mortal).length / at.length) * 100 : 0,
     prevalencia: prom ? (el.length / prom) * 100000 : null,

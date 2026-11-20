@@ -171,7 +171,8 @@ export async function sugerirConIA(empresaId: string, cargoId: string, funciones
   try {
     return await sugerirTareasYPeligros(empresaId, cargoId, funciones);
   } catch (e) {
-    return { error: e instanceof Error ? e.message : String(e) };
+    console.error("sugerirConIA:", e);
+    return { error: "No fue posible generar la sugerencia. Agregue tareas desde la biblioteca o intente de nuevo." };
   }
 }
 

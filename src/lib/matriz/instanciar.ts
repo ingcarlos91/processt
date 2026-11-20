@@ -63,11 +63,37 @@ export async function agregarTareaTipo(empresaId: string, cargoId: string, tarea
     return existente;
   }
   const tt = await db.tareaTipo.findUniqueOrThrow({ where: { id: tareaTipoId }, include: { peligros: { include: { peligro: true } }, procesosTipo: true } });
-  const procesos = await db.proceso.findMany({ where: { empresaId } });
-  const proceso = procesos.find((p) => p.procesoTipoId && tt.procesosTipo.some((x) => x.procesoTipoId === p.procesoTipoId)) ?? procesos.find((p) => /producci|operaci|servicio al cliente|cocina|obra/i.test(p.nombre)) ?? procesos[0];
+  const procesos = await db.proceso.findMany({ where: { empresaId }, orderBy: { orden: "asc" } });
+  const norm = (t: string) => t.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+  // Proceso: el del sector que contiene la tarea; si no, uno con el mismo nombre que la actividad de la tarea;
+  // si tampoco, se crea un proceso con ese nombre para no colgar la tarea de un proceso ajeno (p. ej. "Distribución" en una clínica).
+  let proceso = procesos.find((p) => p.procesoTipoId && tt.procesosTipo.some((x) => x.procesoTipoId === p.procesoTipoId))
+    ?? (tt.actividad ? procesos.find((p) => norm(p.nombre) === norm(tt.actividad!)) : undefined);
+  if (!proceso) {
+    // Primero el proceso del sector de la biblioteca que contiene la tarea (agrupa varias tareas bajo el mismo proceso);
+    // si la tarea no pertenece a ningún proceso tipo, uno con el nombre de su actividad.
+    const pt = tt.procesosTipo.length ? await db.procesoTipo.findFirst({ where: { id: { in: tt.procesosTipo.map((x) => x.procesoTipoId) } }, orderBy: { nombre: "asc" } }) : null;
+    const nombre = pt?.nombre ?? tt.actividad;
+    if (nombre) {
+      proceso = procesos.find((p) => norm(p.nombre) === norm(nombre))
+        ?? await db.proceso.create({ data: { empresaId, nombre, descripcion: pt?.descripcion ?? "Creado al agregar tareas de la biblioteca con esta actividad.", procesoTipoId: pt?.id, orden: procesos.length } });
+    }
+  }
+  if (!proceso) proceso = procesos[0];
   const cargo = await db.cargo.findUniqueOrThrow({ where: { id: cargoId } });
   const zonas = await db.zona.findMany({ where: { empresaId }, include: { zonaTipo: true } });
-  const preferida = tt.zonasPreferidas.map((n) => zonas.find((z) => z.zonaTipo?.nombre === n || z.nombre === n)).find(Boolean);
+  let preferida = tt.zonasPreferidas.map((n) => zonas.find((z) => z.zonaTipo?.nombre === n || z.nombre === n)).find(Boolean);
+  if (!preferida && tt.zonasPreferidas.length) {
+    // La zona donde se hace la tarea no existe en la empresa: se crea desde la biblioteca con sus peligros de lugar.
+    const zt = await db.zonaTipo.findFirst({ where: { nombre: { in: tt.zonasPreferidas } }, include: { peligros: { include: { peligro: true } } } });
+    if (zt) {
+      const sede = await db.sede.findFirst({ where: { empresaId }, orderBy: [{ principal: "desc" }, { nombre: "asc" }] });
+      const nueva = await db.zona.create({ data: { empresaId, nombre: zt.nombre, zonaTipoId: zt.id, sedeId: sede?.id } });
+      for (const zp of zt.peligros)
+        await db.peligroEvaluado.create({ data: { empresaId, origen: "zona", zonaId: nueva.id, estado, fuente: "biblioteca", ...datosPeligro(zp.peligro, zp) } });
+      preferida = { ...nueva, zonaTipo: zt } as (typeof zonas)[number];
+    }
+  }
   const zona = preferida || (cargo.zonaId && zonas.find((z) => z.id === cargo.zonaId)) || zonas[0];
   const tarea = await db.tarea.create({
     data: {
@@ -96,6 +122,9 @@ export async function sugerirCargoTipo(nombre: string, sectorTipoId?: string | n
   const puntuar = (t: { nombre: string; sectorTipoId: string | null }) => {
     const n = norm(t.nombre);
     let s = palabras.filter((w) => n.includes(w)).length * 10;
+    if (n.trim() === norm(nombre).trim()) s += 50; // coincidencia exacta del nombre
+    const palabrasTipo = n.split(/[^a-z]+/).filter((w) => w.length > 3);
+    if (palabrasTipo.length) s += Math.round((5 * palabras.filter((w) => n.includes(w)).length) / palabrasTipo.length); // prefiere nombres sin palabras de más
     if (sectorTipoId && t.sectorTipoId === sectorTipoId) s += 3;
     if (empresaId && (t as { empresaId?: string | null }).empresaId === empresaId) s += 5;
     return s;

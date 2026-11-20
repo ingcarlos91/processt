@@ -12,6 +12,11 @@ import { peligrosAmpliacion } from "./biblioteca/peligros-ampliacion";
 import { zonasAmp, tareasAmp, cargosAmp, sectoresAmp } from "./biblioteca/estructura-ampliacion";
 import { itemsCatalogo } from "./biblioteca/catalogos";
 
+// Lecciones que la semilla puso en versiones anteriores; si la consultora no las cambió, se actualizan.
+const LECCIONES_SEMBRADAS_ANTES = [
+  "Use la herramienta adecuada, en buen estado y con guantes anticorte; corte siempre en dirección contraria al cuerpo.",
+];
+
 const db = new PrismaClient();
 
 async function main() {
@@ -124,6 +129,7 @@ async function sembrarBiblioteca() {
   for (const s of [...sectores, ...sectoresAmp, ...modulosBiblioteca.flatMap((m) => m.sectores ?? [])]) {
     let sector = await db.sectorTipo.findFirst({ where: { nombre: s.nombre } });
     if (!sector) { sector = await db.sectorTipo.create({ data: { nombre: s.nombre, ciius: s.ciius, descripcion: s.descripcion } }); conteo.sectores++; }
+    else if (!sector.validado) sector = await db.sectorTipo.update({ where: { id: sector.id }, data: { ciius: s.ciius, descripcion: s.descripcion } });
     for (const z of s.zonas) await db.sectorZonaTipo.upsert({ where: { sectorTipoId_zonaTipoId: { sectorTipoId: sector.id, zonaTipoId: req(zid, z) } }, update: {}, create: { sectorTipoId: sector.id, zonaTipoId: req(zid, z) } });
     for (const p of s.procesos) {
       let pt = await db.procesoTipo.findFirst({ where: { nombre: p.nombre, sectorTipoId: sector.id } });
@@ -148,6 +154,20 @@ async function sembrarBiblioteca() {
   for (const it of items) {
     const prev = await db.catalogoItem.findFirst({ where: { tipo: it.tipo, nombre: it.nombre, empresaId: null } });
     if (!prev) { await db.catalogoItem.create({ data: { ...it, detalle: it.detalle as object } }); conteo.catalogo++; }
+    else if (it.tipo === "FORMA_EVENTO") {
+      // Solo agrega: causas, medidas y claves nuevas se suman sin quitar lo editado en Biblioteca;
+      // la lección se reemplaza solo si sigue siendo un texto sembrado anterior.
+      const a = (prev.detalle ?? {}) as Record<string, unknown>, b = it.detalle;
+      const det: Record<string, unknown> = { ...a };
+      for (const k of ["claves", "clasificaciones", "actos", "condiciones", "personales", "trabajo", "lesiones", "agentes", "partes"]) {
+        const xs = Array.isArray(a[k]) ? (a[k] as string[]) : [];
+        det[k] = [...xs, ...((b[k] as string[] | undefined) ?? []).filter((x) => !xs.includes(x))];
+      }
+      const ms = Array.isArray(a.medidas) ? (a.medidas as { descripcion: string }[]) : [];
+      det.medidas = [...ms, ...((b.medidas as { descripcion: string }[] | undefined) ?? []).filter((m) => !ms.some((x) => x.descripcion === m.descripcion))];
+      if (b.leccion && (!a.leccion || LECCIONES_SEMBRADAS_ANTES.includes(String(a.leccion)))) det.leccion = b.leccion;
+      if (JSON.stringify(det) !== JSON.stringify(a)) await db.catalogoItem.update({ where: { id: prev.id }, data: { detalle: det as object } });
+    }
   }
   const total = { peligros: await db.peligroCatalogo.count(), tareas: await db.tareaTipo.count(), cargos: await db.cargoTipo.count(), sectores: await db.sectorTipo.count(), zonas: await db.zonaTipo.count(), catalogo: await db.catalogoItem.count() };
   console.log("Biblioteca — nuevos:", conteo, "· totales:", total);

@@ -1,4 +1,5 @@
 "use client";
+import { hoyLocal } from "@/lib/utils";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { Pencil, Plus, Save, Trash2 } from "lucide-react";
@@ -20,7 +21,7 @@ import * as A from "@/app/actions/visitas";
 
 type V = { id: string; fecha: string; horas: number; modalidad: string; atendio: string; actividades: string; compromisos: string };
 const MESES = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
-const hoy = () => new Date().toISOString().slice(0, 10);
+const hoy = () => hoyLocal();
 const pesos = (n: number) => n.toLocaleString("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 0 });
 const fecha = (f: string) => new Date(f + "T12:00:00Z").toLocaleDateString("es-CO", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" });
 

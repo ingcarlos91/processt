@@ -61,7 +61,8 @@ export async function sugerirInvestigacion(eventoId: string): Promise<{ fuente: 
   const enMatriz = delCargo.map((f) => ({ f, s: puntaje(`${f.descripcion} ${f.tarea}`, f.clasificacionClave) })).sort((x, y) => y.s - x.s)[0];
   const catalogo = await db.peligroCatalogo.findMany({ where: { OR: [{ empresaId: null }, { empresaId: ev.empresaId }] } });
   const enCatalogo = catalogo.map((c) => ({ c, s: puntaje(`${c.descripcion} ${c.subclasificacion ?? ""}`, c.clasificacion) })).sort((x, y) => y.s - x.s)[0];
-  const usarMatriz = enMatriz && enMatriz.s >= 2 && enMatriz.s >= (enCatalogo?.s ?? 0) - 1;
+  // La matriz del cargo manda: basta una coincidencia razonable (la mitad del mejor puntaje de la biblioteca).
+  const usarMatriz = enMatriz && enMatriz.s >= 2 && enMatriz.s * 2 >= (enCatalogo?.s ?? 0);
   const fuenteMedidas = usarMatriz
     ? { ingenieria: enMatriz.f.ingenieria, administrativa: enMatriz.f.administrativa, epp: enMatriz.f.epp }
     : enCatalogo && enCatalogo.s >= 2 ? { ingenieria: enCatalogo.c.medidaIngenieria ?? "", administrativa: enCatalogo.c.medidaAdministrativa ?? "", epp: enCatalogo.c.medidaEpp ?? "" } : null;

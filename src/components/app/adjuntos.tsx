@@ -12,7 +12,7 @@ import { Item, ItemActions, ItemContent, ItemDescription, ItemGroup, ItemMedia, 
 import { Pedir } from "@/components/app/confirmar";
 import { BotonDescarga } from "@/components/app/boton-descarga";
 import { subirArchivo, retirarArchivo, restaurarArchivo } from "@/app/actions/archivos";
-import { cn } from "@/lib/utils";
+import { cn, hoyLocal } from "@/lib/utils";
 
 export type ArchivoUI = { id: string; tipo: string; descripcion: string; nombreArchivo: string | null; mime: string | null; tamano: number | null; fecha: string; subidoPor: string | null; activo: boolean; documentoVersion?: number | null };
 export type ContextoAdjunto = { tipo: "DOCUMENTO_FIRMADO" | "EVIDENCIA" | "ACTA"; documentoId?: string; actividadId?: string; comiteId?: string; eventoId?: string; inspeccionId?: string; auditoriaId?: string; diagnosticoId?: string; estandarCodigo?: string };
@@ -31,7 +31,7 @@ export function SubirArchivo({ empresaId, ctx, trigger, titulo = "Subir archivo"
   const [open, setOpen] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [desc, setDesc] = useState(descripcionInicial);
-  const [fecha, setFecha] = useState(() => new Date().toISOString().slice(0, 10));
+  const [fecha, setFecha] = useState(() => hoyLocal());
   const [pend, start] = useTransition();
   const ref = useRef<HTMLInputElement>(null);
   const enviar = () => start(async () => {

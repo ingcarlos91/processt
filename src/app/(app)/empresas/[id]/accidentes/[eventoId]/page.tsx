@@ -1,3 +1,4 @@
+import { abrevDoc } from "@/lib/documento-identidad";
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import { plazosUI } from "@/lib/eventos-ui";
@@ -16,7 +17,7 @@ export default async function Evento({ params }: PageProps<"/empresas/[id]/accid
   if (!ev || ev.empresaId !== id) notFound();
   const [empresa, cargos, peligros, enMatriz, comites, consultora, cat, sedes, zonas] = await Promise.all([
     db.empresa.findUniqueOrThrow({ where: { id }, select: { responsableSst: true, representanteLegal: true, direccion: true, ciudad: true } }),
-    db.cargo.findMany({ where: { empresaId: id }, orderBy: { nombre: "asc" }, include: { tareas: { include: { tarea: { select: { nombre: true } } } } } }),
+    db.cargo.findMany({ where: { empresaId: id }, orderBy: { nombre: "asc" }, include: { tareas: { include: { tarea: { select: { nombre: true } } } }, trabajadores: { where: { activo: true }, orderBy: { nombres: "asc" }, select: { nombres: true, tipoDoc: true, documento: true, vinculacion: true, fechaIngreso: true } } } }),
     db.peligroCatalogo.findMany({ where: { OR: [{ empresaId: null }, { empresaId: id }] }, select: { id: true, descripcion: true, clasificacion: true, subclasificacion: true }, orderBy: { descripcion: "asc" } }),
     ev.cargoId ? db.peligroEvaluado.findMany({ where: { empresaId: id, peligroId: { not: null }, OR: [{ cargoId: ev.cargoId }, { tarea: { cargos: { some: { cargoId: ev.cargoId } } } }] }, select: { peligroId: true } }) : Promise.resolve([]),
     db.comite.findMany({ where: { empresaId: id, tipo: { in: ["COPASST", "VIGIA"] } }, include: { miembros: true } }),
@@ -25,17 +26,18 @@ export default async function Evento({ params }: PageProps<"/empresas/[id]/accid
     db.sede.findMany({ where: { empresaId: id }, select: { nombre: true } }),
     db.zona.findMany({ where: { empresaId: id }, select: { nombre: true } }),
   ]);
-  const resp = (empresa.responsableSst ?? {}) as { nombre?: string; cargo?: string };
+  const resp = (empresa.responsableSst ?? {}) as { nombre?: string; cargo?: string; tipoDoc?: string; cedula?: string };
+  const doc = (tipo?: string | null, n?: string | null) => (n?.trim() ? `${abrevDoc(tipo)} ${n.trim()}` : "");
   // Accidente mortal: la matriz debe actualizarse; grave: se recomienda (Decreto 1072/2015 art. 2.2.4.6.15; Res. 0312/2019 estándar 4.1.2).
   const ultimaVersion = ev.tipo === "AT" && ev.gravedad !== "leve" ? await db.matrizVersion.findFirst({ where: { empresaId: id }, orderBy: { numero: "desc" } }) : null;
   const avisoMatriz = ev.tipo === "AT" && ev.gravedad !== "leve" && (!ultimaVersion || ultimaVersion.fecha < ev.fecha) ? (ev.gravedad === "mortal" ? "obligatorio" : "recomendado") : null;
-  const miembros = comites.flatMap((c) => c.miembros.map((m) => ({ nombre: m.nombre, cargo: m.cargo ?? "", rol: "copasst" as const })));
+  const miembros = comites.flatMap((c) => c.miembros.map((m) => ({ nombre: m.nombre, cargo: m.cargo ?? "", documento: doc(m.tipoDoc, m.cedula), rol: "copasst" as const })));
   const sugeridos: Integrante[] = [
     { nombre: "", cargo: "", rol: "jefe" },
     ...(miembros.length ? [miembros[0]] : [{ nombre: "", cargo: "", rol: "copasst" }]),
-    { nombre: resp.nombre ?? "", cargo: resp.cargo ?? "Responsable del SG-SST", rol: "responsable" },
+    { nombre: resp.nombre ?? "", cargo: resp.cargo ?? "Responsable del SG-SST", documento: doc(resp.tipoDoc, resp.cedula), rol: "responsable" },
     ...(ev.gravedad !== "leve" ? [
-      { nombre: consultora?.profesional ?? "", cargo: "Profesional con licencia en SST", documento: consultora?.cedula ?? "", rol: "profesional" },
+      { nombre: consultora?.profesional ?? "", cargo: "Profesional con licencia en SST", documento: doc(consultora?.tipoDoc, consultora?.cedula), rol: "profesional" },
       { nombre: "", cargo: "", rol: "diseno" },
     ] : []),
   ];
@@ -59,7 +61,7 @@ export default async function Evento({ params }: PageProps<"/empresas/[id]/accid
         archivos: ev.archivos.map(aArchivoUI),
         plazos: plazosUI(ev),
       }}
-      cargos={cargos.map((c) => ({ id: c.id, nombre: c.nombre, tareas: c.tareas.map((t) => t.tarea.nombre) }))}
+      cargos={cargos.map((c) => ({ id: c.id, nombre: c.nombre, tareas: c.tareas.map((t) => t.tarea.nombre), personas: c.trabajadores.map((t) => ({ nombre: t.nombres, tipoDoc: t.tipoDoc, documento: t.documento ?? "", vinculacion: t.vinculacion, ingreso: t.fechaIngreso?.toISOString().slice(0, 10) ?? "" })) }))}
       peligros={peligros.map((p) => ({ valor: p.id, etiqueta: p.descripcion, detalle: [p.clasificacion, p.subclasificacion].filter(Boolean).join(" · "), grupo: idsMatriz.has(p.id) ? "En la matriz de este cargo" : p.clasificacion, relevancia: idsMatriz.has(p.id) ? "propio" : "otro" }))}
       peligrosEnMatriz={[...idsMatriz].filter(Boolean) as string[]}
       equipoSugerido={sugeridos}

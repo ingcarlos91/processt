@@ -17,7 +17,7 @@ export default async function Indicadores({ params, searchParams }: PageProps<"/
   return (
     <IndicadoresEditor
       empresaId={id} anio={anio} trabajadoresBase={e.nTrabajadoresPlanta + e.nEnMision} cargos={e.cargos.map((c) => c.nombre)}
-      mensuales={calcularMensuales(eventos, tm, anio)} anuales={calcularAnuales(eventos, tm, anio)}
+      mensuales={calcularMensuales(eventos, tm, anio, e.nTrabajadoresPlanta + e.nEnMision)} anuales={calcularAnuales(eventos, tm, anio, e.nTrabajadoresPlanta + e.nEnMision)}
       plan={acts.length ? Math.round((acts.filter((a) => a.estado === "EJECUTADA").length / acts.length) * 100) : null}
       estandares={ev ? (ev.nivel === 60 ? ev.puntajeBruto : ev.puntajeAjustado) : null}
       tm={tm.filter((t) => t.anio === anio).map((t) => ({ mes: t.mes, n: t.nTrabajadores, dias: t.diasProgramados }))}

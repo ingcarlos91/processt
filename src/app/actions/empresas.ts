@@ -110,7 +110,7 @@ export async function guardarSede(empresaId: string, s: { id?: string; nombre: s
   revalidatePath(`/empresas/${empresaId}`, "layout");
 }
 
-export type DatosConsultora = { nombre: string; nit?: string; profesional?: string; tipoDoc?: string; cedula?: string; cargo?: string; perfil?: string; licenciaSst?: string; licenciaFecha?: string; curso50h?: boolean; curso50hFecha?: string; telefono?: string; correo?: string };
+export type DatosConsultora = { nombre: string; nit?: string; profesional?: string; tipoDoc?: string; cedula?: string; cargo?: string; perfil?: string; licenciaSst?: string; licenciaFecha?: string; curso50h?: boolean; curso50hFecha?: string; curso20hFecha?: string; telefono?: string; correo?: string };
 
 export async function guardarConsultora(d: DatosConsultora) {
   await requiereUsuario();

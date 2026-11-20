@@ -1,4 +1,5 @@
 "use client";
+import { hoyLocal } from "@/lib/utils";
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -28,7 +29,7 @@ export function AuditoriasLista({ empresaId, auditorias, personasCopasst, sugere
   const [pend, start] = useTransition();
   const anio = new Date().getFullYear();
   const [plan, setPlan] = useState<A.PlanAuditoria | null>(null);
-  const nueva = () => setPlan({ anio, fechaInicio: new Date().toISOString().slice(0, 10), auditor: "", auditorPerfil: "", participantes: personasCopasst.join(", "), alcance: `Todos los procesos, sedes y trabajadores (incluidos contratistas) de la empresa, periodo ${anio}.`, metodologia: "Revisión documental, entrevistas con trabajadores y responsables, y observación en campo." });
+  const nueva = () => setPlan({ anio, fechaInicio: hoyLocal(), auditor: "", auditorPerfil: "", participantes: personasCopasst.join(", "), alcance: `Todos los procesos, sedes y trabajadores (incluidos contratistas) de la empresa, periodo ${anio}.`, metodologia: "Revisión documental, entrevistas con trabajadores y responsables, y observación en campo." });
   return (
     <div className="space-y-5">
       <div className="flex flex-wrap items-center gap-2">

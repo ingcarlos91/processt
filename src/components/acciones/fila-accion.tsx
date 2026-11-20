@@ -1,4 +1,5 @@
 "use client";
+import { hoyLocal } from "@/lib/utils";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -20,7 +21,7 @@ export function FilaAccion({ empresaId, a, conHallazgo }: { empresaId: string; a
   const router = useRouter();
   const [pend, start] = useTransition();
   const [abierto, setAbierto] = useState(false);
-  const [cierre, setCierre] = useState(() => new Date().toISOString().slice(0, 10));
+  const [cierre, setCierre] = useState(() => hoyLocal());
   const [eficacia, setEficacia] = useState("");
   const abierta = a.estado !== "cerrada";
   return (

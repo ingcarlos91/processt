@@ -80,6 +80,8 @@ IA opcional: agregar `AI_GATEWAY_API_KEY=...` en `.env`. Sin clave, “Sugerir t
 - Trazabilidad de condiciones: panel "¿Por qué? → 9. Qué dato dispara cada condición" (solo las que aplican), marcas por trabajador (conduce, modalidad, turno nocturno, alimentos, alto riesgo) que alimentan el motor, campos de experiencia/rol/curso de 20 h del responsable, obligaciones legales periódicas en el planeador, POL-04 desconexión.
 - Accidentes alineados con la Res. 1401/2007 (campos de los arts. 9-13, equipo por gravedad, formato FOR-07 reordenado, PRC-09 en 16 pasos). UI: login, sidebar, móvil, descripciones cortas, formularios largos en panel lateral con secciones.
 
+- Barrido E2E completo con el plugin de Chrome (empresa nueva → diagnóstico → SG-SST → todos los módulos). Arreglos: fechas por defecto en hora local (antes en UTC daban el día siguiente después de las 7 p. m.); buscador de trabajadores registrados en el formulario de eventos; equipo investigador propuesto con documentos; sugerencias de investigación priorizan la matriz del cargo (pinchazo en clínica → riesgo biológico) y la forma “Corte o pinchazo” incluye causas y medidas de bioseguridad (la semilla solo agrega a las formas existentes); indicadores usan los trabajadores de la empresa en meses sin registro (marcados “estimado”); obligaciones legales periódicas solo desde el ingreso de la empresa a PROCESST; calificación rápida de la auditoría sin perder clics; fecha del último curso de 20 horas en Mi consultora.
+
 ## Pendiente
 
 - PDF directo (hoy: Word; PDF desde Word o imprimir).

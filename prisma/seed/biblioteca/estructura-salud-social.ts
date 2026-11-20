@@ -334,7 +334,7 @@ export const sectores: SectorSeed[] = [
     ],
     cargos: ["sal_director_medico", "sal_psiquiatra", "sal_psicologo_clinico", "sal_trabajador_social", "sal_terapeuta_ocupacional", "sal_enfermera_salud_mental", "sal_auxiliar_enfermeria_salud_mental", "sal_operador_terapeutico", "medico", "vigilante", "auxiliar_cocina", "sal_auxiliar_aseo_hospitalario", "auxiliar_administrativo"] },
 
-  { nombre: "Estética médica, tatuajes y piercing", ciius: ["8622", "9609"], descripcion: "Consultorios de medicina estética y spa médico, estudios de tatuaje y perforación corporal, cabinas de bronceo y centros láser (procedimientos invasivos; la peluquería y estética básica está en su propio sector).",
+  { nombre: "Estética médica, tatuajes y piercing", ciius: ["9609"], descripcion: "Consultorios de medicina estética y spa médico, estudios de tatuaje y perforación corporal, cabinas de bronceo y centros láser (procedimientos invasivos; la peluquería y estética básica está en su propio sector).",
     zonas: ["sal_cabina_tatuaje", "consultorio", "punto_venta", "oficina"],
     procesos: [
       { nombre: "Dirección y administración", descripcion: "Gerencia, agenda, caja y habilitación", tareas: ["reuniones_direccion", "trabajo_computador", "manejo_caja", "atencion_publico_oficina"] },

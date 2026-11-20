@@ -16,7 +16,7 @@ import * as A from "@/app/actions/sgsst";
 import { MESES } from "@/lib/plan/generar";
 import type { Indicador } from "@/lib/indicadores";
 
-type Mensual = { mes: number; trabajadores: number; accidentes: number; frecuencia: number | null; severidad: number | null; ausentismo: number | null };
+type Mensual = { mes: number; trabajadores: number; estimado?: boolean; accidentes: number; frecuencia: number | null; severidad: number | null; ausentismo: number | null };
 type Ev = { id: string; tipo: string; fecha: string; descripcion: string; cargo: string; dias: number; mortal: boolean; reportado: boolean };
 const f = (n: number | null | undefined, d = 2) => (n == null ? "—" : n.toLocaleString("es-CO", { maximumFractionDigits: d }));
 const TIPOS: Record<string, string> = { AT: "Accidente de trabajo", INCIDENTE: "Incidente", EL: "Enfermedad laboral", AUSENTISMO: "Ausentismo por enfermedad común" };
@@ -44,7 +44,7 @@ export function IndicadoresEditor({ empresaId, anio, trabajadoresBase, mensuales
           <Stat label="Prevalencia EL" value={f(anuales.prevalencia, 0)} hint="Por 100.000 trabajadores" />
           <Stat label="Incidencia EL" value={f(anuales.incidencia, 0)} hint="Por 100.000 trabajadores" />
         </div>
-        <Section title="Indicadores mensuales" description="Registre el número de trabajadores de cada mes (incluye contratistas y en misión, art. 30). Los indicadores se calculan solos." contentClassName="px-0">
+        <Section title="Indicadores mensuales" description="Registre el número de trabajadores de cada mes (incluye contratistas y en misión, art. 30). Si un mes transcurrido no tiene dato se estima con los trabajadores de la empresa. Los indicadores se calculan solos." contentClassName="px-0">
           <Table>
             <TableHeader><TableRow><TableHead className="pl-6">Mes</TableHead><TableHead><span className="flex items-center gap-1">Trabajadores <Ayuda k="trabajadoresMes" /></span></TableHead><TableHead><span className="flex items-center gap-1">Días programados <Ayuda k="diasProgramados" /></span></TableHead><TableHead className="text-right">AT</TableHead><TableHead className="text-right">Frecuencia (%)</TableHead><TableHead className="text-right">Severidad (%)</TableHead><TableHead className="pr-6 text-right">Ausentismo (%)</TableHead></TableRow></TableHeader>
             <TableBody>
@@ -53,7 +53,7 @@ export function IndicadoresEditor({ empresaId, anio, trabajadoresBase, mensuales
                 return (
                   <TableRow key={m.mes}>
                     <TableCell className="pl-6">{MESES[m.mes - 1]}</TableCell>
-                    <TableCell><Input type="number" min={0} className="h-7 w-24" defaultValue={t?.n ?? ""} placeholder={String(trabajadoresBase)} onBlur={(e) => e.target.value && Number(e.target.value) !== t?.n && run(() => A.guardarTrabajadoresMes(empresaId, anio, m.mes, Number(e.target.value), t?.dias ?? undefined))} /></TableCell>
+                    <TableCell className="whitespace-nowrap"><Input type="number" min={0} className="inline-flex h-7 w-24" defaultValue={t?.n ?? ""} placeholder={String(trabajadoresBase)} onBlur={(e) => e.target.value && Number(e.target.value) !== t?.n && run(() => A.guardarTrabajadoresMes(empresaId, anio, m.mes, Number(e.target.value), t?.dias ?? undefined))} />{m.estimado && <span className="ml-2 text-xs text-muted-foreground" title="Mes sin registro: se usa el número de trabajadores de la empresa. Escriba el dato real del mes.">estimado</span>}</TableCell>
                     <TableCell><Input type="number" min={0} className="h-7 w-24" defaultValue={t?.dias ?? ""} placeholder="trab. × 24" onBlur={(e) => e.target.value && run(() => A.guardarTrabajadoresMes(empresaId, anio, m.mes, t?.n ?? trabajadoresBase, Number(e.target.value)))} /></TableCell>
                     <TableCell className="text-right tabular-nums">{m.accidentes}</TableCell>
                     <TableCell className="text-right tabular-nums">{f(m.frecuencia)}</TableCell>

@@ -1,7 +1,7 @@
 // Datos complementarios que piden los documentos. Una sola definición alimenta el formulario,
 // la ayuda de cada campo, la lista de datos faltantes y el contexto de las plantillas.
 
-export type ColumnaTabla = { k: string; etiqueta: string; tipo?: "text" | "number" | "date" | "select"; opciones?: string[] };
+export type ColumnaTabla = { k: string; etiqueta: string; tipo?: "text" | "number" | "date" | "select"; opciones?: string[]; opcional?: boolean };
 export type CampoComplementario = {
   k: string; etiqueta: string; tipo: "text" | "number" | "date" | "textarea" | "tabla" | "persona";
   que: string; donde?: string; ejemplo?: string; usadoEn: string[]; normas?: string[];
@@ -30,13 +30,13 @@ export const SECCIONES: Seccion[] = [
       { k: "alarma", etiqueta: "Sistema de alarma", tipo: "text", que: "Cómo se avisa una emergencia.", ejemplo: "Sirena eléctrica en recepción y pito del jefe de brigada", usadoEn: ["PLN-04"] },
       {
         k: "recursosEmergencia", etiqueta: "Recursos para emergencias", tipo: "tabla", que: "Equipos disponibles para atender emergencias, con cantidad y ubicación.", usadoEn: ["PLN-04", "PRG-06"], normas: ["Decreto 1072/2015 art. 2.2.4.6.25 num. 2 y 12"],
-        columnas: [{ k: "recurso", etiqueta: "Recurso" }, { k: "cantidad", etiqueta: "Cantidad", tipo: "number" }, { k: "ubicacion", etiqueta: "Ubicación" }, { k: "vence", etiqueta: "Vencimiento / recarga", tipo: "date" }],
+        columnas: [{ k: "recurso", etiqueta: "Recurso" }, { k: "cantidad", etiqueta: "Cantidad", tipo: "number" }, { k: "ubicacion", etiqueta: "Ubicación" }, { k: "vence", etiqueta: "Vencimiento / recarga", tipo: "date", opcional: true }],
         filasSugeridas: [{ recurso: "Extintor multipropósito ABC" }, { recurso: "Extintor de CO2 (equipos eléctricos)" }, { recurso: "Botiquín" }, { recurso: "Camilla con inmovilizadores" }, { recurso: "Señalización de evacuación" }, { recurso: "Luces de emergencia" }],
       },
     ],
   },
   {
-    id: "alto_riesgo", titulo: "Tareas de alto riesgo", descripcion: "Solo si la empresa tiene trabajo en alturas o espacios confinados.",
+    id: "alto_riesgo", titulo: "Tareas de alto riesgo", descripcion: "Solo si la empresa tiene trabajo en alturas, espacios confinados o productos químicos.",
     campos: [
       { k: "coordinadorAlturas", etiqueta: "Coordinador de trabajo en alturas", tipo: "persona", que: "Persona con certificado de coordinador que autoriza los permisos de trabajo en alturas.", usadoEn: ["PRG-08"], normas: ["Res. 4272/2021"], siDisparador: "alturas" },
       {

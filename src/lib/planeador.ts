@@ -47,7 +47,7 @@ export async function fechasPlaneador({ empresaId, desde, hasta, hoy = new Date(
   const where = empresaId ? { id: empresaId } : {};
   const empresas = await db.empresa.findMany({
     where, select: {
-      id: true, razonSocial: true, responsableSst: true, resultadoReglas: true,
+      id: true, razonSocial: true, responsableSst: true, resultadoReglas: true, creadoEn: true,
       actividades: { where: { origen: { not: "accion" } }, select: { id: true, anio: true, mes: true, nombre: true, estado: true, normaRef: true } },
       comites: { select: { id: true, tipo: true, periodoFin: true, normaRef: true } },
       eventos: { select: { id: true, tipo: true, fecha: true, gravedad: true, fechaReporte: true, reportadoArl: true, invEstado: true, invCierre: true, invRemitidaArl: true, reporteMinisterio: true, trabajadorNombre: true } },
@@ -69,6 +69,7 @@ export async function fechasPlaneador({ empresaId, desde, hasta, hoy = new Date(
   for (const e of empresas) {
     const base = `/empresas/${e.id}`;
     const add = (x: Omit<Fecha, "empresaId" | "empresa">) => out.push({ ...x, empresaId: e.id, empresa: e.razonSocial });
+    const addBase = add;
 
     for (const a of e.actividades) {
       const f = finDeMes(a.anio, a.mes), hecho = a.estado === "EJECUTADA" || a.estado === "CANCELADA";
@@ -139,6 +140,9 @@ export async function fechasPlaneador({ empresaId, desde, hasta, hoy = new Date(
     {
       const rr = (e.resultadoReglas ?? {}) as { documentos?: { codigo: string }[]; comites?: string[] };
       const docs = new Set((rr.documentos ?? []).map((d) => d.codigo));
+      // Solo desde que la empresa entró a PROCESST: lo anterior no se muestra como vencido el primer día.
+      const inicio = new Date(e.creadoEn); inicio.setUTCHours(0, 0, 0, 0);
+      const add = (x: Parameters<typeof addBase>[0]) => { if (new Date(x.fecha) >= inicio) addBase(x); };
       const anios = new Set<number>(); for (let y = desde.getUTCFullYear(); y <= hasta.getUTCFullYear(); y++) anios.add(y);
       for (const y of anios) {
         const fecha = (m: number, d: number) => new Date(Date.UTC(y, m - 1, d, 12));

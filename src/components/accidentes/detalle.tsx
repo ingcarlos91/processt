@@ -1,4 +1,5 @@
 "use client";
+import { hoyLocal } from "@/lib/utils";
 import { useState, useTransition, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -39,7 +40,7 @@ type Ev = {
 };
 type Res = { error?: string } | { ok: true };
 const fechaLarga = (f: string) => (f ? new Date(f + "T12:00:00Z").toLocaleDateString("es-CO", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" }) : "");
-const hoy = () => new Date().toISOString().slice(0, 10);
+const hoy = () => hoyLocal();
 
 function Paso({ n, titulo, descripcion, estado, children, accion, normas }: { n: number; titulo: string; descripcion?: ReactNode; estado?: ReactNode; children: ReactNode; accion?: ReactNode; normas?: string[] }) {
   return (
@@ -105,7 +106,7 @@ export function EventoDetalle({ empresaId, ev, cargos, peligros, peligrosEnMatri
   const [sug, setSug] = useState<{ fuente: string; s: SugerenciaInvestigacion } | null>(null);
   const [sugiriendo, startSug] = useTransition();
   // 4. Acciones
-  const en30 = () => new Date(Date.now() + 30 * 864e5).toISOString().slice(0, 10);
+  const en30 = () => hoyLocal(30);
   const vacia = () => ({ id: "", hallazgo: "", causa: "", tipo: "correctiva", jerarquia: "administrativo", descripcion: "", responsable, fechaLimite: en30() });
   const [acc, setAcc] = useState<ReturnType<typeof vacia> | null>(null);
 

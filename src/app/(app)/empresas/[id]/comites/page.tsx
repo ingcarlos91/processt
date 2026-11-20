@@ -10,11 +10,14 @@ export default async function Comites({ params }: PageProps<"/empresas/[id]/comi
   const { id } = await params;
   const rr = await recalcularEmpresa(id);
   const comites = await db.comite.findMany({ where: { empresaId: id }, include: { miembros: true, archivos: { orderBy: { fecha: "desc" } } }, orderBy: { tipo: "asc" } });
+  const trabajadores = await db.trabajador.findMany({ where: { empresaId: id, activo: true }, orderBy: { nombres: "asc" }, select: { nombres: true, tipoDoc: true, documento: true, cargo: { select: { nombre: true } } } });
+  const ORDEN = ["COPASST", "VIGIA", "CCL", "BRIGADA"];
   const cop = composicionCopasst(rr.trabajadores);
   return (
     <ComitesEditor
       empresaId={id}
-      requeridos={rr.comites.map((c) => (c === "COPASST" && cop.tipo === "VIGIA" ? "VIGIA" : c))}
+      requeridos={rr.comites.map((c) => (c === "COPASST" && cop.tipo === "VIGIA" ? "VIGIA" : c)).sort((a, b) => ORDEN.indexOf(a) - ORDEN.indexOf(b))}
+      trabajadores={trabajadores.map((t) => ({ nombre: t.nombres, tipoDoc: t.tipoDoc ?? "CC", documento: t.documento ?? "", cargo: t.cargo?.nombre ?? "" }))}
       composicion={cop.texto}
       refs={Object.fromEntries(rr.conclusiones.filter((c) => c.tipo === "comite").map((c) => [c.valor, c.normaRef]))}
       porques={Object.fromEntries(rr.conclusiones.filter((c) => c.tipo === "comite").map((c) => [c.valor, `${c.porque}${c.valor === "COPASST" ? ` ${cop.texto}.` : ""}`]))}

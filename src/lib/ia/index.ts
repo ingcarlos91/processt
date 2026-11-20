@@ -32,7 +32,7 @@ const schema = z.object({
 });
 export type Sugerencia = z.infer<typeof schema>;
 
-export async function sugerirTareasYPeligros(empresaId: string, cargoId: string, funciones: string): Promise<{ fuente: "ia" | "biblioteca"; sugerencia: Sugerencia }> {
+export async function sugerirTareasYPeligros(empresaId: string, cargoId: string, funciones: string): Promise<{ fuente: "ia" | "biblioteca"; sugerencia: Sugerencia; aviso?: string }> {
   const e = await db.empresa.findUniqueOrThrow({ where: { id: empresaId }, include: { procesos: true, zonas: true, sectorTipo: true } });
   const cargo = await db.cargo.findUniqueOrThrow({ where: { id: cargoId } });
   const alcance = { OR: [{ empresaId: null }, { empresaId }] };
@@ -41,6 +41,20 @@ export async function sugerirTareasYPeligros(empresaId: string, cargoId: string,
 
   if (!iaDisponible()) return { fuente: "biblioteca", sugerencia: porPalabrasClave(funciones, tareasTipo, e.procesos[0]?.nombre ?? "", e.zonas[0]?.nombre ?? "") };
 
+  let output: Sugerencia;
+  try {
+    output = await consultarIA();
+  } catch (err) {
+    console.error("IA no disponible, se usa la biblioteca:", err instanceof Error ? err.message : err);
+    return {
+      fuente: "biblioteca",
+      sugerencia: porPalabrasClave(funciones, tareasTipo, e.procesos[0]?.nombre ?? "", e.zonas[0]?.nombre ?? ""),
+      aviso: "La IA no respondió (revise la configuración de AI Gateway). Se muestran coincidencias de la biblioteca.",
+    };
+  }
+  return { fuente: "ia", sugerencia: output };
+
+  async function consultarIA() {
   const { output } = await generateText({
     model: MODELO,
     output: Output.object({ schema }),
@@ -67,7 +81,8 @@ export async function sugerirTareasYPeligros(empresaId: string, cargoId: string,
       "Devuelve las tareas que realiza este cargo y, para cada una, sus peligros con valoración GTC 45 sugerida.",
     ].join("\n"),
   });
-  return { fuente: "ia", sugerencia: output };
+  return output;
+  }
 }
 
 function norm(s: string) { return s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, ""); }

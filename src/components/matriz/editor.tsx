@@ -305,7 +305,7 @@ function CargoCard({ c, empresaId, tareas, tareasTipo, cargosTipo, procesos, zon
               <Textarea id={`fn-${c.id}`} className="text-xs min-h-20" value={funciones} onChange={(e) => setFunciones(e.target.value)} placeholder="Ej: recibe mercancía, la sube a estantes con escalera, maneja montacargas, hace inventarios…" />
               <Button size="sm" variant="secondary" className="w-fit" disabled={!funciones || cargandoIA} onClick={() => startIA(async () => {
                 const r = await A.sugerirConIA(empresaId, c.id, funciones);
-                if ("error" in r) toast.error(r.error); else { setSug(r); if (!r.sugerencia.tareas.length) toast.info("No se encontraron coincidencias en la biblioteca."); }
+                if ("error" in r) toast.error(r.error); else { setSug(r); if (r.aviso) toast.info(r.aviso); else if (!r.sugerencia.tareas.length) toast.info("No se encontraron coincidencias en la biblioteca."); }
               })}>{cargandoIA ? <Spinner /> : <Sparkles />} {cargandoIA ? "Analizando…" : "Sugerir tareas y peligros"}</Button>
             </Field>
             {sug && (

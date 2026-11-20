@@ -18,7 +18,7 @@ import { BotonDescarga } from "@/components/app/boton-descarga";
 import { SubirArchivo, ListaArchivos, type ArchivoUI } from "@/components/app/adjuntos";
 import { resumenAuditoria, type ItemAuditoria, type ResultadoAud } from "@/lib/auditoria";
 import * as A from "@/app/actions/auditoria";
-import { cn } from "@/lib/utils";
+import { cn, hoyLocal } from "@/lib/utils";
 
 type Aud = { id: string; anio: number; fechaInicio: string; fechaCierre: string; auditor: string; auditorPerfil: string; participantes: string; alcance: string; estado: string; conclusiones: string; items: ItemAuditoria[]; acciones: AccionUI[]; archivos: ArchivoUI[] };
 const RES: Record<Exclude<ResultadoAud, "">, { t: string; c: string; i: typeof Check }> = {
@@ -27,7 +27,7 @@ const RES: Record<Exclude<ResultadoAud, "">, { t: string; c: string; i: typeof C
   no_conforme: { t: "No conforme", c: "border-red-500 bg-red-500 text-white", i: X },
   na: { t: "N. A.", c: "border-slate-400 bg-slate-400 text-white", i: Minus },
 };
-const en30 = () => new Date(Date.now() + 30 * 864e5).toISOString().slice(0, 10);
+const en30 = () => hoyLocal(30);
 const fecha = (f: string) => (f ? new Date(f + "T12:00:00Z").toLocaleDateString("es-CO", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" }) : "");
 
 export function AuditoriaDetalle({ empresaId, a, sistema, responsables }: { empresaId: string; a: Aud; sistema: Record<number, string>; responsables: string[] }) {
@@ -38,7 +38,7 @@ export function AuditoriaDetalle({ empresaId, a, sistema, responsables }: { empr
   const cerrada = a.estado === "cerrada";
   const r = resumenAuditoria(items);
   const calificados = items.filter((i) => i.resultado).length;
-  const set = (n: number, x: Partial<ItemAuditoria>) => setItems(items.map((i) => (i.n === n ? { ...i, ...x } : i)));
+  const set = (n: number, x: Partial<ItemAuditoria>) => setItems((items) => items.map((i) => (i.n === n ? { ...i, ...x } : i)));
   const cambio = JSON.stringify(items) !== JSON.stringify(a.items) || conclusiones !== a.conclusiones;
   const guardar = (msg = "Auditoría guardada", despues?: () => Promise<void>) => start(async () => {
     const res = await A.guardarAuditoria(empresaId, a.id, { items, conclusiones });
@@ -55,7 +55,7 @@ export function AuditoriaDetalle({ empresaId, a, sistema, responsables }: { empr
         <BotonDescarga href={`/api/empresas/${empresaId}/auditorias/${a.id}/informe`} variant="outline" tooltip="Informe de auditoría en Word, para firmar"><Download /> Informe Word</BotonDescarga>
         <BotonDescarga href={`/api/empresas/${empresaId}/auditorias/${a.id}/informe?formato=pdf`} variant="outline" texto="Generando PDF…" tooltip="Informe de auditoría en PDF"><FileDown /> PDF</BotonDescarga>
         {!cerrada && <Button disabled={pend || !cambio} onClick={() => guardar()}>{pend ? <Spinner /> : <Save />} Guardar</Button>}
-        {!cerrada && <Pedir trigger={<Button variant="outline" disabled={pend} tooltip="Exige todos los aspectos calificados; crea las acciones de las no conformidades en FOR-06" />} titulo="Cerrar auditoría" descripcion="Se verifican los aspectos y se crean las acciones de las no conformidades. Elija la fecha de cierre." label="Fecha de cierre" tipo="date" inicial={new Date().toISOString().slice(0, 10)} accion="Cerrar"
+        {!cerrada && <Pedir trigger={<Button variant="outline" disabled={pend} tooltip="Exige todos los aspectos calificados; crea las acciones de las no conformidades en FOR-06" />} titulo="Cerrar auditoría" descripcion="Se verifican los aspectos y se crean las acciones de las no conformidades. Elija la fecha de cierre." label="Fecha de cierre" tipo="date" inicial={hoyLocal()} accion="Cerrar"
           onConfirm={(f) => guardar("", async () => { const res = await A.cerrarAuditoria(empresaId, a.id, f); if ("error" in res) toast.error(res.error); else toast.success(`Auditoría cerrada${res.acciones ? ` y ${res.acciones} acción(es) creadas en FOR-06` : ""}. Descargue el informe para firmarlo.`); })}><Lock /> Cerrar auditoría</Pedir>}
         {cerrada && <Button variant="outline" disabled={pend} onClick={() => start(async () => { await A.reabrirAuditoria(empresaId, a.id); toast.success("Auditoría reabierta"); router.refresh(); })}><LockOpen /> Reabrir</Button>}
       </div>
