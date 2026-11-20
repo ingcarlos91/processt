@@ -20,6 +20,9 @@ import { Combo } from "@/components/app/combo";
 import { Confirmar } from "@/components/app/confirmar";
 import { EstadoVacio } from "@/components/app/ilustraciones";
 import * as A from "@/app/actions/auditoria";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { mismaPersona } from "@/lib/auditoria";
 
 type Aud = { id: string; anio: number; fechaInicio: string; fechaCierre: string; auditor: string; estado: string; calificados: number; total: number; conformidad: number | null; noConformes: number; acciones: number };
 const fecha = (f: string) => (f ? new Date(f + "T12:00:00Z").toLocaleDateString("es-CO", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" }) : "—");
@@ -29,7 +32,7 @@ export function AuditoriasLista({ empresaId, auditorias, personasCopasst, sugere
   const [pend, start] = useTransition();
   const anio = new Date().getFullYear();
   const [plan, setPlan] = useState<A.PlanAuditoria | null>(null);
-  const nueva = () => setPlan({ anio, fechaInicio: hoyLocal(), auditor: "", auditorPerfil: "", participantes: personasCopasst.join(", "), alcance: `Todos los procesos, sedes y trabajadores (incluidos contratistas) de la empresa, periodo ${anio}.`, metodologia: "Revisión documental, entrevistas con trabajadores y responsables, y observación en campo." });
+  const nueva = () => setPlan({ anio, fechaInicio: hoyLocal(), auditor: "", auditorPerfil: "", independiente: false, participantes: personasCopasst.join(", "), alcance: `Todos los procesos, sedes y trabajadores (incluidos contratistas) de la empresa, periodo ${anio}.`, metodologia: "Revisión documental, entrevistas con trabajadores y responsables, y observación en campo." });
   return (
     <div className="space-y-5">
       <div className="flex flex-wrap items-center gap-2">
@@ -80,6 +83,10 @@ export function AuditoriasLista({ empresaId, auditorias, personasCopasst, sugere
                   <Field><FieldLabel htmlFor="a-f">Fecha de inicio</FieldLabel><Input id="a-f" type="date" value={plan.fechaInicio} onChange={(e) => setPlan({ ...plan, fechaInicio: e.target.value })} /></Field>
                   <Field className="sm:col-span-2"><FieldLabel>Auditor</FieldLabel><Combo value={plan.auditor} onChange={(v) => setPlan({ ...plan, auditor: v })} grupos={[{ titulo: "Sugerido", opciones: sugerenciaAuditor ? [{ valor: sugerenciaAuditor, detalle: "Profesional de la consultora" }] : [] }]} placeholder="Nombre del auditor" /></Field>
                   <Field className="sm:col-span-2"><FieldLabel htmlFor="a-p">Perfil e independencia del auditor</FieldLabel><Input id="a-p" value={plan.auditorPerfil} placeholder="Ej: Especialista en SST con curso de auditor interno; no participó en la ejecución auditada" onChange={(e) => setPlan({ ...plan, auditorPerfil: e.target.value })} /></Field>
+                  {mismaPersona(plan.auditor, responsable) && (
+                    <Alert variant="destructive" className="sm:col-span-2"><AlertDescription>El auditor es el responsable del SG-SST. Si diseñó o ejecuta el sistema estaría auditando su propio trabajo, lo que el Decreto 1072/2015 (art. 2.2.4.6.29) no permite: designe a otra persona idónea o deje constancia de que no audita lo que él mismo ejecutó.</AlertDescription></Alert>
+                  )}
+                  <Field orientation="horizontal" className="sm:col-span-2"><Checkbox id="a-ind" checked={!!plan.independiente} onCheckedChange={(v) => setPlan({ ...plan, independiente: !!v })} /><FieldLabel htmlFor="a-ind" className="font-normal">Declaro que el auditor es independiente: no audita su propio trabajo ni las actividades que diseñó o ejecutó (Decreto 1072/2015 art. 2.2.4.6.29). Sin esta declaración la auditoría no se puede cerrar.</FieldLabel></Field>
                 </SeccionFormulario>
                 <SeccionFormulario titulo="Planificación" descripcion="Estándar 6.1.4: la auditoría se planifica con el COPASST o Vigía. Alcance y metodología van al programa de auditoría.">
                   <Field><FieldLabel htmlFor="a-c">Planificada con (COPASST o Vigía)</FieldLabel><Input id="a-c" placeholder="Ej.: COPASST, en reunión ordinaria" value={plan.participantes} onChange={(e) => setPlan({ ...plan, participantes: e.target.value })} /></Field>

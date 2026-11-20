@@ -8,7 +8,7 @@ import { TIPOS_EVENTO, faltasParaCerrar, type Analisis, type Integrante } from "
 import { sugerirInvestigacion } from "@/lib/ia/investigacion";
 
 // Documentos que se alimentan de eventos y acciones.
-const DOCS = ["FOR-08", "FOR-06", "ACT-06", "DOC-11", "ACT-02"];
+const DOCS = ["FOR-08", "FOR-06", "ACT-06", "DOC-11", "ACT-02", "DOC-12"];
 const dia = (s?: string | null) => (s && /^\d{4}-\d{2}-\d{2}$/.test(s) ? new Date(s + "T12:00:00Z") : null);
 async function listo(empresaId: string, eventoId?: string) {
   await actualizarDocumentos(empresaId, DOCS);
@@ -29,6 +29,10 @@ export type DatosEvento = {
   // Variables del FURAT que el informe retoma (Res. 1401/2007 arts. 9 y 10)
   sitioExacto?: string; tipoAccidente?: string; jornadaHabitual?: string; turno?: string; tiempoEmpresa?: string; tiempoLaborado?: string;
   versionTrabajador?: string; versionTestigos?: string;
+  // Datos FURAT de la persona (Res. 156/2005 anexo; Res. 1401/2007 art. 9), precargados del trabajador elegido
+  sexo?: string; fechaNacimiento?: string; eps?: string; afp?: string; sede?: string;
+  // Trabajadores potencialmente expuestos y acciones para ellos (Res. 0312/2019 estándar 3.2.2)
+  expuestos?: string;
 };
 
 function datos(d: DatosEvento) {
@@ -36,7 +40,8 @@ function datos(d: DatosEvento) {
   if (!t) throw new Error("Tipo de evento no válido.");
   const fecha = dia(d.fecha);
   if (!fecha) throw new Error("La fecha del evento es obligatoria.");
-  const gravedad = d.tipo === "AT" ? (d.gravedad ?? "leve") : "leve";
+  // AT: leve, grave o mortal (Res. 1401/2007 art. 3). EL: solo se distingue si causó la muerte (Decreto 1072/2015 art. 2.2.4.1.6).
+  const gravedad = d.tipo === "AT" ? (d.gravedad ?? "leve") : d.tipo === "EL" && d.gravedad === "mortal" ? "mortal" : "leve";
   return {
     tipo: d.tipo, fecha, hora: d.hora || null, lugar: d.lugar || null, descripcion: d.descripcion || null,
     trabajadorNombre: d.trabajadorNombre || null, trabajadorTipoDoc: d.trabajadorTipoDoc || "CC", trabajadorCedula: d.trabajadorCedula || null, vinculacion: d.vinculacion || null, antiguedad: d.antiguedad || null,
@@ -48,6 +53,8 @@ function datos(d: DatosEvento) {
     jornadaHabitual: d.jornadaHabitual === "si" ? true : d.jornadaHabitual === "no" ? false : null, turno: d.turno || null,
     tiempoEmpresa: d.tiempoEmpresa || null, tiempoLaborado: d.tiempoLaborado || null,
     versionTrabajador: d.versionTrabajador || null, versionTestigos: d.versionTestigos || null,
+    sexo: d.sexo || null, fechaNacimiento: dia(d.fechaNacimiento), eps: d.eps?.trim() || null, afp: d.afp?.trim() || null, sede: d.sede?.trim() || null,
+    expuestos: d.expuestos?.trim() || null,
   };
 }
 
@@ -154,13 +161,13 @@ export async function agregarPeligroDelEvento(empresaId: string, eventoId: strin
 }
 
 // ───────── Acciones correctivas, preventivas y de mejora (FOR-06) ─────────
-export type DatosAccion = { hallazgo: string; causa?: string; tipo: string; jerarquia?: string; descripcion: string; responsable?: string; fechaLimite?: string; origen?: string };
+export type DatosAccion = { hallazgo: string; causa?: string; tipo: string; jerarquia?: string; dirigidaA?: string; descripcion: string; responsable?: string; fechaLimite?: string; origen?: string };
 
 export async function guardarAccion(empresaId: string, d: DatosAccion & { id?: string; eventoId?: string }) {
   await requiereUsuario();
   if (!d.descripcion?.trim()) return { error: "Describa la acción." };
   const data = {
-    hallazgo: d.hallazgo?.trim() || "Hallazgo de investigación", causa: d.causa || null, tipo: d.tipo || "correctiva", jerarquia: d.jerarquia || null,
+    hallazgo: d.hallazgo?.trim() || "Hallazgo de investigación", causa: d.causa || null, tipo: d.tipo || "correctiva", jerarquia: d.jerarquia || null, dirigidaA: d.dirigidaA || null,
     descripcion: d.descripcion.trim(), responsable: d.responsable || null, fechaLimite: dia(d.fechaLimite), origen: d.origen || (d.eventoId ? "investigacion" : "inspeccion"),
   };
   if (d.id) {

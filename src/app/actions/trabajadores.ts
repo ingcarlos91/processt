@@ -4,6 +4,7 @@ import { recalcularEmpresa } from "@/lib/empresa";
 import { db } from "@/lib/db";
 import { requiereUsuario } from "@/lib/auth/sesion";
 import { actualizarDocumentos } from "@/lib/generador/documentos";
+import { puedeBorrarExamen } from "@/lib/examenes";
 
 const DOCS = ["FOR-02", "MTZ-04", "PRG-01", "FOR-01"];
 const dia = (s?: string | null) => (s && /^\d{4}-\d{2}-\d{2}$/.test(s) ? new Date(s + "T12:00:00Z") : null);
@@ -65,6 +66,9 @@ export async function reactivarTrabajador(empresaId: string, id: string) {
 export async function eliminarTrabajador(empresaId: string, id: string) {
   await requiereUsuario();
   await delaEmpresa(empresaId, id);
+  // Borrar al trabajador borraría sus exámenes, que se conservan 20 años (Decreto 1072/2015 art. 2.2.4.6.13).
+  const examenes = await db.examenMedico.findMany({ where: { trabajadorId: id }, select: { creadoEn: true } });
+  if (examenes.some((x) => !puedeBorrarExamen(x.creadoEn))) return { error: "Este trabajador tiene exámenes médicos que se conservan veinte (20) años (Decreto 1072/2015 art. 2.2.4.6.13). Use Retirar en lugar de Eliminar." };
   await db.trabajador.delete({ where: { id } });
   await listo(empresaId);
   return { ok: true as const };
@@ -98,13 +102,19 @@ export async function importarTrabajadores(empresaId: string, texto: string) {
 }
 
 // ───────── Exámenes médicos ocupacionales (FOR-02) ─────────
-export async function guardarExamen(empresaId: string, d: { id?: string; trabajadorId: string; tipo: string; fecha: string; ips?: string; concepto: string; regimen?: string; restricciones?: string; comunicadoTrabajador?: string; proximo?: string }) {
+export async function guardarExamen(empresaId: string, d: { id?: string; trabajadorId: string; tipo: string; fecha: string; ips?: string; concepto: string; regimen?: string; restricciones?: string; restriccionHasta?: string; restriccionPermanente?: boolean; adaptacionFecha?: string; comunicadoTrabajador?: string; proximo?: string }) {
   await requiereUsuario();
   await delaEmpresa(empresaId, d.trabajadorId);
   const fecha = dia(d.fecha);
   if (!fecha) return { error: "Escriba la fecha del examen." };
   if (d.concepto === "no_apto" && !d.regimen) return { error: "\"No apto\" solo se usa en los certificados de regímenes especiales (Res. 1843/2025 art. 19 par.). Elija el régimen o use apto con restricciones." };
-  const data = { trabajadorId: d.trabajadorId, tipo: d.tipo, fecha, ips: d.ips || null, concepto: d.concepto, regimen: d.regimen || null, restricciones: d.restricciones?.trim() || null, comunicadoTrabajador: dia(d.comunicadoTrabajador), proximo: dia(d.proximo) };
+  if (d.id) {
+    const prev = await db.examenMedico.findUnique({ where: { id: d.id }, include: { trabajador: true } });
+    if (!prev || prev.trabajador.empresaId !== empresaId) return { error: "Examen no encontrado." };
+  }
+  if (d.restriccionHasta && !d.restriccionPermanente && d.restriccionHasta < d.fecha) return { error: "La vigencia de la restricción no puede ser anterior a la fecha del examen." };
+  const data = { trabajadorId: d.trabajadorId, tipo: d.tipo, fecha, ips: d.ips || null, concepto: d.concepto, regimen: d.regimen || null, restricciones: d.restricciones?.trim() || null,
+    restriccionPermanente: !!d.restriccionPermanente, restriccionHasta: d.restriccionPermanente ? null : dia(d.restriccionHasta), adaptacionFecha: dia(d.adaptacionFecha), comunicadoTrabajador: dia(d.comunicadoTrabajador), proximo: dia(d.proximo) };
   if (d.id) await db.examenMedico.update({ where: { id: d.id }, data }); else await db.examenMedico.create({ data });
   await listo(empresaId);
   return { ok: true as const };
@@ -113,6 +123,8 @@ export async function eliminarExamen(empresaId: string, id: string) {
   await requiereUsuario();
   const x = await db.examenMedico.findUniqueOrThrow({ where: { id }, include: { trabajador: true } });
   if (x.trabajador.empresaId !== empresaId) return { error: "No encontrado." };
+  // El registro se conserva 20 años (Decreto 1072/2015 art. 2.2.4.6.13): solo se borra un error de captura del mismo día.
+  if (!puedeBorrarExamen(x.creadoEn)) return { error: "Este examen se registró hace más de un día y no se puede borrar: los registros de evaluaciones médicas se conservan veinte (20) años (Decreto 1072/2015 art. 2.2.4.6.13). Si tiene un error, corríjalo con Editar." };
   await db.examenMedico.delete({ where: { id } });
   await listo(empresaId);
   return { ok: true as const };

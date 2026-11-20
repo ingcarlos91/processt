@@ -63,6 +63,12 @@ export async function evidenciasSistema(empresaId: string, hoy = new Date()) {
   } as Record<number, string>;
 }
 
+/** ¿Es la misma persona? (sin tildes, mayúsculas ni espacios extra). Sirve para avisar si el auditor es el responsable del SG-SST. */
+export function mismaPersona(a?: string | null, b?: string | null) {
+  const n = (t?: string | null) => (t ?? "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/\s+/g, " ").trim();
+  return !!n(a) && n(a) === n(b);
+}
+
 export function resumenAuditoria(items: { resultado: string }[]) {
   const ap = items.filter((i) => i.resultado && i.resultado !== "na");
   const conformes = ap.filter((i) => i.resultado === "conforme").length;

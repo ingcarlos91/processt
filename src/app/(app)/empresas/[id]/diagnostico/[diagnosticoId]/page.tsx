@@ -12,7 +12,7 @@ export default async function Diagnostico({ params }: PageProps<"/empresas/[id]/
   if (!d || d.empresaId !== id) notFound();
   const consultora = await db.consultora.findFirst();
   return (
-    <DiagnosticoEditor empresaId={id} etapa={d.empresa.etapa} profesional={consultora?.profesional ?? ""}
+    <DiagnosticoEditor empresaId={id} etapa={d.empresa.etapa} profesional={consultora?.profesional ?? ""} licencia={consultora?.licenciaSst ?? ""}
       d={{ id: d.id, fecha: d.fecha.toISOString().slice(0, 10), nivel: d.nivel, estado: d.estado, conclusiones: d.conclusiones ?? "", items: (d.items ?? []) as ItemDiag[], iniciado: !!d.evaluacionId, archivos: d.archivos.map(aArchivoUI) }} />
   );
 }

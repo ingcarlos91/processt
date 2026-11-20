@@ -14,6 +14,13 @@ export const GRAVEDAD: Record<string, { t: string; d: string }> = {
 };
 
 export const VINCULACION: Record<string, string> = { planta: "Trabajador de planta", contratista: "Contratista", aprendiz: "Aprendiz o practicante", mision: "Trabajador en misión", visitante: "Visitante" };
+export const esVisitante = (v?: string | null) => v === "visitante";
+/** Por qué el evento de un visitante no genera FURAT ni avisos: el reporte es del empleador sobre sus trabajadores afiliados. */
+export const NOTA_VISITANTE = "Un visitante no es trabajador afiliado por la empresa al Sistema General de Riesgos Laborales: no se diligencia FURAT ni FUREL, no se avisa a la Dirección Territorial ni se remite la investigación a la ARL, porque esos reportes son del empleador sobre sus trabajadores afiliados (Decreto Ley 1295/1994 art. 62; Res. 156/2005 art. 3). El evento se registra para la estadística interna, se investiga para prevenir que se repita y no cuenta en los indicadores mínimos (Res. 0312/2019 art. 30).";
+/** Datos FURAT de la persona afectada (Res. 156/2005 anexo; Res. 1401/2007 art. 9). */
+export const SEXO: Record<string, string> = { F: "Femenino", M: "Masculino", otro: "Otro" };
+/** Hacia dónde apunta la medida de intervención (Res. 1401/2007 art. 12). */
+export const DIRIGIDA_A: Record<string, string> = { fuente: "La fuente", medio: "El medio", trabajador: "El trabajador" };
 
 export const JERARQUIA: Record<string, string> = { eliminacion: "Eliminación", sustitucion: "Sustitución", ingenieria: "Control de ingeniería", administrativo: "Control administrativo", epp: "Elemento de protección personal" };
 export const ORIGEN_ACCION: Record<string, string> = { investigacion: "Investigación de evento", inspeccion: "Inspección", auditoria: "Auditoría", revision: "Revisión por la dirección", arl: "Recomendación de la ARL", autoridad: "Requerimiento de autoridad", trabajador: "Reporte de trabajador" };
@@ -57,7 +64,7 @@ const sumarDias = (d: Date, n: number) => { const r = new Date(d); r.setUTCDate(
 
 export type Plazo = { clave: string; t: string; vence: Date; hecho: Date | null; estado: "cumplido" | "tarde" | "vencido" | "por_vencer" | "pendiente"; normaRef: string; porque: string };
 
-type EvPlazos = { tipo: string; fecha: Date; gravedad: string; fechaReporte: Date | null; reportadoArl: boolean; invEstado: string; invCierre: Date | null; invRemitidaArl: Date | null; reporteMinisterio: Date | null };
+type EvPlazos = { tipo: string; fecha: Date; gravedad: string; vinculacion?: string | null; fechaReporte: Date | null; reportadoArl: boolean; invEstado: string; invCierre: Date | null; invRemitidaArl: Date | null; reporteMinisterio: Date | null };
 
 function estado(vence: Date, hecho: Date | null, hoy: Date): Plazo["estado"] {
   if (hecho) return hecho.getTime() <= vence.getTime() + 864e5 - 1 ? "cumplido" : "tarde";
@@ -69,11 +76,14 @@ function estado(vence: Date, hecho: Date | null, hoy: Date): Plazo["estado"] {
 export function plazos(e: EvPlazos, hoy = new Date()): Plazo[] {
   const t = TIPOS_EVENTO[e.tipo];
   const out: Plazo[] = [];
-  if (t?.reporta) {
+  // El visitante no es trabajador afiliado por la empresa: no hay FURAT ni aviso a la Dirección Territorial ni remisión a la ARL;
+  // el evento se registra para la estadística interna y se investiga para prevenir que se repita (ver NOTA_VISITANTE).
+  const afiliado = !esVisitante(e.vinculacion);
+  if (t?.reporta && afiliado) {
     const vence = sumarHabiles(e.fecha, 2);
     out.push({ clave: "furat", t: e.tipo === "EL" ? "Reporte FUREL a la ARL y la EPS" : "Reporte FURAT a la ARL y la EPS", vence, hecho: e.fechaReporte, estado: e.fechaReporte ? estado(vence, e.fechaReporte, hoy) : e.reportadoArl ? "cumplido" : estado(vence, null, hoy), normaRef: "Decreto Ley 1295/1994 art. 62; Res. 156/2005 art. 3 (mod. Res. 2851/2015)", porque: "El empleador reporta el accidente de trabajo o la enfermedad laboral dentro de los dos días hábiles siguientes. Para enfermedad laboral el plazo cuenta desde el diagnóstico." + (e.tipo === "AT" && e.gravedad === "leve" ? " La Res. 156/2005 (modificada por la Res. 2851/2015) pide además informar a la Dirección Territorial todo accidente; el Decreto 1072/2015 art. 2.2.4.1.7 lo exige para graves y mortales. Infórmelo también si quiere ser prudente." : "") });
   }
-  if ((e.tipo === "AT" && (e.gravedad === "grave" || e.gravedad === "mortal")) || e.tipo === "EL") {
+  if (afiliado && ((e.tipo === "AT" && (e.gravedad === "grave" || e.gravedad === "mortal")) || e.tipo === "EL")) {
     const vence = sumarHabiles(e.fecha, 2);
     out.push({ clave: "ministerio", t: "Reporte a la Dirección Territorial del Ministerio del Trabajo", vence, hecho: e.reporteMinisterio, estado: estado(vence, e.reporteMinisterio, hoy), normaRef: "Decreto 1072/2015 art. 2.2.4.1.7 (Decreto 472/2015 art. 14); Res. 156/2005 art. 3 (mod. Res. 2851/2015)", porque: "Los accidentes graves y mortales y las enfermedades laborales diagnosticadas se reportan también a la Dirección Territorial del Ministerio del Trabajo dentro de los 2 días hábiles (Decreto 1072/2015 art. 2.2.4.1.7), como lo establece el procedimiento PRC-08." });
   }
@@ -81,7 +91,7 @@ export function plazos(e: EvPlazos, hoy = new Date()): Plazo[] {
     const vence = sumarDias(e.fecha, 15);
     out.push({ clave: "investigacion", t: "Investigación del evento", vence, hecho: e.invEstado === "cerrada" ? e.invCierre : null, estado: estado(vence, e.invEstado === "cerrada" ? e.invCierre : null, hoy), normaRef: e.tipo === "EL" ? (e.gravedad === "mortal" ? "Decreto 1072/2015 art. 2.2.4.1.6; Res. 0312/2019 estándar 3.2.2" : "Res. 0312/2019 estándar 3.2.2; Decreto 1072/2015 art. 2.2.4.6.32") : "Res. 1401/2007 art. 4 num. 2; Decreto 1072/2015 art. 2.2.4.6.32" + (e.gravedad === "mortal" ? "; art. 2.2.4.1.6" : ""), porque: e.tipo === "EL" ? (e.gravedad === "mortal" ? "La muerte por enfermedad laboral se investiga dentro de los quince días calendario siguientes, con el COPASST o Vigía (Decreto 1072/2015 art. 2.2.4.1.6)." : "Toda enfermedad laboral diagnosticada se investiga para encontrar sus causas y ajustar los controles (Res. 0312/2019 estándar 3.2.2).") : "Todo incidente y accidente de trabajo se investiga dentro de los quince días siguientes a su ocurrencia, con el equipo investigador definido." + (e.gravedad === "mortal" ? " La muerte se investiga con el COPASST o Vigía (Decreto 1072/2015 art. 2.2.4.1.6)." : "") });
   }
-  if ((e.tipo === "AT" && (e.gravedad === "grave" || e.gravedad === "mortal")) || (e.tipo === "EL" && e.gravedad === "mortal")) {
+  if (afiliado && ((e.tipo === "AT" && (e.gravedad === "grave" || e.gravedad === "mortal")) || (e.tipo === "EL" && e.gravedad === "mortal"))) {
     const vence = sumarDias(e.fecha, 15);
     out.push({ clave: "remision", t: "Remisión del informe de investigación a la ARL", vence, hecho: e.invRemitidaArl, estado: estado(vence, e.invRemitidaArl, hoy), normaRef: "Res. 1401/2007 art. 14", porque: "La investigación de un accidente grave o mortal se remite a la ARL dentro de los quince días siguientes al evento." });
   }

@@ -56,7 +56,7 @@ Las medidas de intervención se implementan según la jerarquía de controles (D
 |---|---|---|---|---|---|---|
 {{#if matriz.prioritarios.length}}
 {{#each matriz.prioritarios}}
-| {{celda descripcion}} ({{nivelRiesgo}}) | {{#if eliminacion}}Elim.: {{celda eliminacion}}. {{/if}}{{#if sustitucion}}Sust.: {{celda sustitucion}}. {{/if}}{{#if ingenieria}}Ing.: {{celda ingenieria}}. {{/if}}{{#if administrativa}}Adm.: {{celda administrativa}}. {{/if}}{{#if epp}}EPP: {{celda epp}}{{/if}} | | | | | |
+| {{celda descripcion}} ({{nivelRiesgo}}) | {{#if eliminacion}}Elim.: {{celda eliminacion}}. {{/if}}{{#if sustitucion}}Sust.: {{celda sustitucion}}. {{/if}}{{#if ingenieria}}Ing.: {{celda ingenieria}}. {{/if}}{{#if administrativa}}Adm.: {{celda administrativa}}. {{/if}}{{#if epp}}EPP: {{celda epp}}{{/if}} | {{celda seguimiento.responsable}} | {{seguimiento.fecha}} | {{default seguimiento.estado "Sin registrar"}} | {{celda seguimiento.verificacion}} | {{seguimiento.eficaz}} |
 {{/each}}
 {{else}}
 | | | | | | | |

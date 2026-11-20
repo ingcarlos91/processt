@@ -9,7 +9,7 @@ normas: ["LEY-1010-2006","RES-3461-2025","LEY-2365-2024","DEC-1040-2026","LEY-24
 ---
 ## Declaración
 
-**{{empresa.razonSocial}}** declara cero tolerancia frente a toda forma de acoso laboral, acoso sexual, violencia basada en género y discriminación en el trabajo, y se compromete a promover un ambiente de trabajo libre de violencias, basado en el respeto, la dignidad, la buena convivencia y el bienestar de todas las personas que trabajan en la empresa o en su nombre, sin importar su forma de vinculación (Ley 1010 de 2006; Ley 2365 de 2024; Ley 2466 de 2025, art. 18; Decreto 1040 de 2026, que adiciona el Capítulo 8 al Título 1, Parte 2, Libro 2 del Decreto 1072 de 2015). La política se articula con el SG-SST y con el Comité de Convivencia Laboral (Decreto 1072 de 2015, art. 2.2.1.8.2.1).
+**{{empresa.razonSocial}}** declara cero tolerancia frente a toda forma de acoso laboral, acoso sexual, violencia basada en género y discriminación en el trabajo, y se compromete a promover un ambiente de trabajo libre de violencias, basado en el respeto, la dignidad, la buena convivencia y el bienestar de todas las personas que trabajan en la empresa o en su nombre, sin importar su forma de vinculación (Ley 1010 de 2006; Ley 2365 de 2024; Ley 2466 de 2025, art. 18; Decreto 1040 de 2026, que adiciona el Capítulo 8 al Título 1, Parte 2, Libro 2 del Decreto 1072 de 2015, reglamenta la Ley 2466 de 2025 —arts. 4, 15 nums. 15 y 16, 16, 17, 18 y 20— y desarrolla las Leyes 1010 de 2006 y 2365 de 2024). La política se articula con el SG-SST y con el Comité de Convivencia Laboral (Decreto 1072 de 2015, art. 2.2.1.8.2.1 num. 1).
 
 Las conductas de clientes, proveedores u otras personas vinculadas al trabajo también pueden constituir violencia o acoso, y la empresa adopta medidas de reparación y no repetición (Ley 2466 de 2025, art. 18).
 
@@ -17,13 +17,13 @@ Las conductas de clientes, proveedores u otras personas vinculadas al trabajo ta
 
 ## Principios
 
-Dignidad humana, igualdad y no discriminación, confidencialidad, no revictimización, debida diligencia, imparcialidad y debido proceso para todas las partes (Decreto 1072 de 2015, art. 2.2.1.8.2.1; Ley 2365 de 2024, art. 3).
+Dignidad humana, igualdad y no discriminación, confidencialidad, no revictimización, debida diligencia, imparcialidad y debido proceso para todas las partes (Decreto 1072 de 2015, art. 2.2.1.8.2.1 num. 1; Ley 2365 de 2024, art. 3).
 
 ## Definiciones
 
 - **Acoso laboral:** toda conducta persistente y demostrable ejercida sobre un trabajador por parte de un empleador, jefe, superior, compañero o subalterno, encaminada a infundir miedo, intimidación, terror y angustia, a causar perjuicio laboral, generar desmotivación o inducir la renuncia (Ley 1010 de 2006, art. 2). Sus modalidades son: maltrato, persecución, discriminación, entorpecimiento, inequidad y desprotección laboral.
 - **Acoso sexual:** todo acto de persecución, hostigamiento o asedio de carácter o connotación sexual en el contexto laboral (Ley 2365 de 2024, art. 2); se atiende mediante el protocolo específico de la empresa (PRC-06), no por el Comité de Convivencia Laboral (Resolución 3461 de 2025, art. 6 par. 1).
-- **Violencia basada en género y discriminación:** conductas cubiertas por el Decreto 1040 de 2026, que se previenen, atienden y sancionan con el mismo protocolo.
+- **Violencia y acoso en el trabajo, violencia basada en género y discriminación:** conductas cubiertas por el Capítulo 8 del Decreto 1072 de 2015 (Decreto 1040 de 2026) y por la Ley 2466 de 2025, art. 18, que se previenen, atienden y sancionan con el protocolo PRC-06. El consentimiento no se infiere del silencio, de la falta de resistencia ni de la relación de poder (Decreto 1072 de 2015, art. 2.2.1.8.1.6).
 
 ## Derechos y deberes
 
@@ -36,13 +36,13 @@ Dignidad humana, igualdad y no discriminación, confidencialidad, no revictimiza
 
 1. Conformar y mantener en funcionamiento el Comité de Convivencia Laboral, conforme a la Resolución 3461 de 2025, con reuniones ordinarias mensuales y extraordinarias por cada queja.
 2. Disponer canales confidenciales para la presentación de quejas, por cualquier medio (Ley 2365 de 2024, art. 15), y garantizar el trámite del procedimiento preventivo en los plazos de la norma.
-3. Prohibir y no tolerar represalias contra quien presente una queja o actúe como testigo. El despido de la víctima o del testigo dentro de los seis (6) meses siguientes a la queja de acoso sexual carece de efecto (Ley 2365 de 2024, art. 14).
+3. Prohibir y no tolerar represalias contra quien presente una queja o actúe como testigo (Decreto 1072 de 2015, art. 2.2.1.8.2.7). La terminación del contrato de la víctima de acoso sexual dentro de los seis (6) meses siguientes a su queja carece de efecto, protección que se extiende a los testigos, y el despido en ese periodo se presume como retaliación (Ley 2365 de 2024, art. 14 y par.).
 4. Adoptar las medidas de protección que soliciten la víctima o los testigos de acoso sexual; las de traslado del área, trabajo remoto, no asignación de tareas con la persona señalada y terminación del contrato sin preaviso se adoptan en máximo cinco (5) días hábiles (Ley 2365 de 2024, art. 13). Facilitar el apoyo emocional y psicológico a través de la ARL.
 5. Informar a la víctima que puede acudir a la Fiscalía General de la Nación y remitir de inmediato la queja a la autoridad competente cuando lo solicite (Ley 2365 de 2024, art. 11 nums. 4 y 5). Cuando la persona señalada sea el superior jerárquico de la empresa, la queja deberá presentarse ante la inspección de trabajo (art. 11 par. 3).
 6. Publicar cada semestre, por los canales físicos o electrónicos disponibles y de forma anonimizada, el número de quejas tramitadas y de sanciones impuestas, y remitir esa información al Sistema Integrado de Información de Violencias de Género (SIVIGE) dentro de los últimos diez (10) días de cada semestre (Ley 2365 de 2024, art. 11 num. 7).
 7. Ante presuntos actos de acoso sexual, implementar una campaña inmediata de acción colectiva para transformar el ambiente laboral (Ley 1010 de 2006, art. 9 num. 10, adicionado por la Ley 2365 de 2024, art. 16).
-8. Desarrollar actividades de prevención: formación y actualización anual de directivos y trabajadores en acoso laboral, acoso sexual, violencia basada en género y discriminación (Decreto 1072 de 2015, art. 2.2.1.8.2.1), capacitación en comunicación asertiva, resolución de conflictos y convivencia, y evaluación e intervención de los factores de riesgo psicosocial (Resolución 2646 de 2008, art. 14).
-9. Incluir esta política, el protocolo PRC-06 y los mecanismos de prevención del acoso en el Reglamento Interno de Trabajo, en los contratos de trabajo y en las demás formas de vinculación, indicando que son vinculantes (Ley 2365 de 2024, art. 11 num. 1; Decreto 1072 de 2015, art. 2.2.1.8.2.2; Ley 1010 de 2006, art. 9 num. 1), y llevar el registro estadístico de los casos.
+8. Desarrollar actividades de prevención: formación y actualización anual de directivos y trabajadores en acoso laboral, acoso sexual, violencia basada en género y discriminación (Decreto 1072 de 2015, art. 2.2.1.8.2.1 inciso final), capacitación en comunicación asertiva, resolución de conflictos y convivencia, y evaluación e intervención de los factores de riesgo psicosocial (Resolución 2646 de 2008, art. 14).
+9. Incluir esta política, el protocolo PRC-06 y los mecanismos de prevención del acoso en el Reglamento Interno de Trabajo, en los contratos de trabajo y en las demás formas de vinculación, indicando que son vinculantes (Ley 2365 de 2024, art. 11 num. 1; Decreto 1072 de 2015, art. 2.2.1.8.2.2 incs. 1 y 2; Ley 1010 de 2006, art. 9 num. 1), y llevar el registro estadístico de los casos.
 
 ## Canales de atención
 
@@ -50,7 +50,7 @@ Las quejas de acoso laboral pueden presentarse por escrito ante cualquier miembr
 
 ## Seguimiento e indicadores
 
-El responsable del SG-SST, con el Comité de Convivencia Laboral, hace seguimiento a esta política con los siguientes indicadores y los informa a la gerencia cada semestre (Decreto 1072 de 2015, art. 2.2.1.8.2.1):
+El responsable del SG-SST, con el Comité de Convivencia Laboral, hace seguimiento a esta política con los siguientes indicadores y los informa a la gerencia cada semestre (Decreto 1072 de 2015, art. 2.2.1.8.2.1 num. 6):
 
 | Indicador | Fórmula | Periodicidad | Responsable |
 |---|---|---|---|
@@ -61,7 +61,7 @@ El responsable del SG-SST, con el Comité de Convivencia Laboral, hace seguimien
 
 ## Divulgación y revisión
 
-La política se publica y se da a conocer a todas las personas, sin importar su forma de vinculación, en la inducción y por medios físicos y digitales en lenguaje claro (Decreto 1072 de 2015, art. 2.2.1.8.2.1), y se revisa y actualiza al menos una vez al año o cuando cambie la normatividad.
+La política se publica y se da a conocer a todas las personas, sin importar su forma de vinculación, en la inducción y por medios físicos y digitales en lenguaje claro (Decreto 1072 de 2015, art. 2.2.1.8.2.1 inciso final), y se revisa y actualiza al menos una vez al año o cuando cambie la normatividad.
 
 ## Firma
 

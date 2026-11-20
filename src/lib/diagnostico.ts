@@ -1,6 +1,6 @@
 // Diagnóstico inicial del SG-SST: estado actual frente a los estándares mínimos que aplican a la empresa.
 // Puntaje con la tabla de valores de la Res. 0312/2019 (arts. 27 y 28), cumplimiento por ciclo PHVA y ruta de implementación.
-import { calificar } from "@/lib/evaluacion";
+import { calificar, sumaPuntos } from "@/lib/evaluacion";
 
 /** Lo marcado en “Estado actual” del cuestionario precarga como “cumple” estos estándares. */
 export const MAPA_ESTADO_ACTUAL: Record<string, string[]> = {
@@ -37,7 +37,7 @@ export function calcularDiagnostico(items: ItemDiag[], nivel: number) {
   const porCiclo = Object.fromEntries(CICLOS.map(({ k }) => {
     const xs = items.filter((i) => i.ciclo === k);
     const maximo = xs.reduce((s, i) => s + i.puntaje, 0);
-    const obtenido = xs.reduce((s, i) => s + (i.estado === "cumple" || i.estado === "no_aplica" ? i.puntaje : 0), 0);
+    const obtenido = xs.reduce((s, i) => s + (i.estado && sumaPuntos(i.estado, nivel) ? i.puntaje : 0), 0);
     return [k, { obtenido: Math.round(obtenido * 100) / 100, maximo: Math.round(maximo * 100) / 100, pct: maximo ? Math.round((obtenido / maximo) * 100) : null, items: xs.length, noCumple: xs.filter((i) => i.estado === "no_cumple").length }];
   })) as Record<string, { obtenido: number; maximo: number; pct: number | null; items: number; noCumple: number }>;
   return { ...cal, porCiclo, evaluados: items.filter((i) => i.estado).length, total: items.length };

@@ -62,7 +62,7 @@ Las acciones se eligen según los resultados de la batería (Decreto 1072 de 201
 
 Así se cumple el deber de tener programas de intervención en crisis (Resolución 2646 de 2008, art. 13 numeral 9).
 
-{{#if dis.residuosSalud}}**Talento humano que trabaja en salud mental:** si la empresa tiene personal que atiende salud mental (urgencias, consulta externa, hospitalización, atención de violencias o atención psicosocial en emergencias), aplica acciones de protección especial con asesoría de la ARL y el protocolo para trabajadores de la salud y asistencia social (Decreto 1072 de 2015, art. 2.2.4.13.5; Resolución 2764 de 2022, art. 1 numeral 6).{{else}}**Talento humano que trabaja en salud mental:** si la empresa llega a tener personal que atiende salud mental, aplicará acciones de protección especial con asesoría de la ARL (Decreto 1072 de 2015, art. 2.2.4.13.5).{{/if}}
+{{#if dis.serviciosSalud}}**Talento humano que trabaja en salud mental:** si la empresa tiene personal que atiende salud mental (urgencias, consulta externa, hospitalización, atención de violencias o atención psicosocial en emergencias), aplica acciones de protección especial con asesoría de la ARL y el protocolo para trabajadores de la salud y asistencia social (Decreto 1072 de 2015, art. 2.2.4.13.5; Resolución 2764 de 2022, art. 1 numeral 6).{{else}}**Talento humano que trabaja en salud mental:** si la empresa llega a tener personal que atiende salud mental, aplicará acciones de protección especial con asesoría de la ARL (Decreto 1072 de 2015, art. 2.2.4.13.5).{{/if}}
 
 ## Componentes
 

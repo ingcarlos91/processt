@@ -21,9 +21,10 @@ import { SubirArchivo, ListaArchivos, type ArchivoUI } from "@/components/app/ad
 import { Popover, PopoverContent, PopoverDescription, PopoverHeader, PopoverTitle, PopoverTrigger } from "@/components/ui/popover";
 import * as A from "@/app/actions/sgsst";
 import { cn } from "@/lib/utils";
+import { permiteNoAplica, sumaPuntos } from "@/lib/evaluacion";
 
 type It = { id: string; codigo: string; ciclo: string; grupo: string; subgrupo: string; descripcion: string; puntaje: number; modo: string; soportes: ArchivoUI[]; estado: string; justificacion: string; observacion: string };
-type Cal = { puntaje: number; valoracion: string; accion: string; obtenido: number; maximo: number; noAplicanPorNivel: number; pendientes: number };
+type Cal = { puntaje: number; valoracion: string; accion: string; obtenido: number; maximo: number; noAplicanPorNivel: number; pendientes: number; noAplicaInvalidos: string[] };
 type Plan = { id: string; estandar: string; actividad: string; responsable: string; fecha: string; recursos: string; soporte: string; estado: string };
 
 const TONO: Record<string, "ok" | "warn" | "bad"> = { ACEPTABLE: "ok", "MODERADAMENTE ACEPTABLE": "warn", "CRÍTICO": "bad" };
@@ -69,17 +70,17 @@ export function EvaluacionEditor({ empresaId, nivel, evaluaciones, actual }: {
         <NormaRef>Res. 0312/2019 arts. 27 y 28</NormaRef>
         <div className="flex-1" />
         {nueva}
-        <BotonDescarga href={`/api/empresas/${empresaId}/evaluacion.xlsx`} variant="outline" tooltip="Descargar la autoevaluación de estándares mínimos en Excel (Res. 0312/2019)"><Download /> Excel</BotonDescarga>
+        <BotonDescarga href={`/api/empresas/${empresaId}/evaluacion.xlsx?ev=${actual.id}`} variant="outline" tooltip="Descargar la autoevaluación de estándares mínimos en Excel (Res. 0312/2019)"><Download /> Excel</BotonDescarga>
         {actual.cerrada
           ? <Button variant="outline" disabled={pend} onClick={() => run(() => A.reabrirEvaluacion(empresaId, actual.id))}><LockOpen /> Reabrir</Button>
-          : actual.cal.pendientes > 0
-            ? <Confirmar trigger={<Button disabled={pend}><Lock /> Cerrar y generar plan de mejoramiento</Button>} titulo="Cerrar con ítems sin evaluar" descripcion={`Hay ${actual.cal.pendientes} ítem(s) sin calificar: al cerrar cuentan como «no cumple» y entran al plan de mejoramiento. Puede reabrir la evaluación después.`} accion="Cerrar de todas formas" onConfirm={() => run(() => A.cerrarEvaluacion(empresaId, actual.id), "Evaluación cerrada: se generó el plan de mejoramiento y se actualizaron DOC-05 y PLN-02")} />
+          : actual.cal.pendientes > 0 || actual.cal.noAplicaInvalidos.length > 0
+            ? <Button variant="outline" disabled={pend} onClick={() => run(() => A.cerrarEvaluacion(empresaId, actual.id))} tooltip={actual.cal.pendientes > 0 ? `Faltan ${actual.cal.pendientes} ítem(s) por calificar: la autoevaluación se cierra con todos los estándares calificados (Res. 0312/2019 art. 27)` : `Recalifique los ítems marcados «No aplica» (${actual.cal.noAplicaInvalidos.join(", ")}): en 60 estándares no existe esa opción (Res. 0312/2019 arts. 16 y 27)`}><Lock /> Cerrar y generar plan de mejoramiento</Button>
             : <Button disabled={pend} onClick={() => run(() => A.cerrarEvaluacion(empresaId, actual.id), "Evaluación cerrada: se generó el plan de mejoramiento y se actualizaron DOC-05 y PLN-02")}><Lock /> Cerrar y generar plan de mejoramiento</Button>}
         <Confirmar trigger={<Button variant="ghost" size="icon" aria-label="Eliminar evaluación" />} titulo="Eliminar esta evaluación" descripcion="Se eliminan sus calificaciones y su plan de mejoramiento." destructivo accion="Eliminar" onConfirm={() => run(() => A.eliminarEvaluacion(empresaId, actual.id))}><Trash2 /></Confirmar>
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <Stat label="Puntaje" porque={actual.nivel === 60 ? "Suma de los puntos de los ítems que cumplen o no aplican (con justificación). El total posible es 100." : `Los ${actual.items.length} ítems de este nivel suman ${actual.cal.maximo} puntos; los demás ítems no le corresponden a la empresa y reciben su porcentaje máximo (Res. 0312/2019 art. 27). Puntaje = 100 menos los puntos de los ítems que no cumple. Los ítems sin evaluar cuentan como no cumplidos.`} normas={["Res. 0312/2019 art. 27"]} value={`${actual.cal.puntaje}%`} hint={actual.nivel === 60 ? "Sobre 100 puntos" : `Sobre 100: ${actual.cal.obtenido} de ${actual.cal.maximo} puntos de los ${actual.items.length} ítems del nivel, más ${actual.cal.noAplicanPorNivel} de los que no le corresponden (art. 27)`} tone={TONO[actual.cal.valoracion]} />
+        <Stat label="Puntaje" porque={actual.nivel === 60 ? "Suma de los puntos de los ítems que cumplen. El total posible es 100. En 60 estándares todos los ítems aplican: no existe «No aplica» (Res. 0312/2019 arts. 16 y 27)." : `Los ${actual.items.length} ítems de este nivel suman ${actual.cal.maximo} puntos; los demás ítems no le corresponden a la empresa y reciben su porcentaje máximo (Res. 0312/2019 art. 27). Puntaje = 100 menos los puntos de los ítems que no cumple. Los ítems sin evaluar cuentan como no cumplidos.`} normas={["Res. 0312/2019 art. 27"]} value={`${actual.cal.puntaje}%`} hint={actual.nivel === 60 ? "Sobre 100 puntos" : `Sobre 100: ${actual.cal.obtenido} de ${actual.cal.maximo} puntos de los ${actual.items.length} ítems del nivel, más ${actual.cal.noAplicanPorNivel} de los que no le corresponden (art. 27)`} tone={TONO[actual.cal.valoracion]} />
         <Stat label="Valoración" porque="Menos de 60 %: crítico. Entre 60 % y 85 %: moderadamente aceptable. Más de 85 %: aceptable. Cada valoración trae acciones obligatorias distintas." normas={["Res. 0312/2019 art. 28"]} value={<span className="text-lg">{actual.cal.valoracion}</span>} tone={TONO[actual.cal.valoracion]} />
         <Stat label="Ítems evaluados" value={`${evaluados} / ${actual.items.length}`} hint={<Progress value={(evaluados / actual.items.length) * 100} className="w-full" />} />
         <Stat label="Estado" value={actual.cerrada ? "Cerrada" : "En curso"} hint={actual.tipo === "inicial" ? "Evaluación inicial" : `Autoevaluación ${actual.anio}`} />
@@ -87,12 +88,19 @@ export function EvaluacionEditor({ empresaId, nivel, evaluaciones, actual }: {
 
       <Alert>
         <AlertTitle>Acción exigida por la Res. 0312/2019 art. 28</AlertTitle>
-        <AlertDescription>{actual.cal.accion}{actual.cal.pendientes > 0 && ` Hay ${actual.cal.pendientes} ítems sin evaluar: cuentan como no cumplidos.`}</AlertDescription>
+        <AlertDescription>{actual.cal.accion}{actual.cal.pendientes > 0 && ` Hay ${actual.cal.pendientes} ítems sin evaluar: la autoevaluación no se puede cerrar hasta calificarlos todos (art. 27); mientras tanto el puntaje los cuenta como no cumplidos.`}</AlertDescription>
       </Alert>
+
+      {actual.cal.noAplicaInvalidos.length > 0 && (
+        <Alert variant="destructive">
+          <AlertTitle>Recalifique los ítems marcados «No aplica»</AlertTitle>
+          <AlertDescription>En 60 estándares todos los ítems aplican: la regla del porcentaje máximo para lo que no aplica es solo para empresas de menos de 50 trabajadores con riesgo I, II o III (Res. 0312/2019 arts. 16 y 27). Por eso {actual.cal.noAplicaInvalidos.join(", ")} cuenta{actual.cal.noAplicaInvalidos.length > 1 ? "n" : ""} como no cumplido{actual.cal.noAplicaInvalidos.length > 1 ? "s" : ""} hasta que lo{actual.cal.noAplicaInvalidos.length > 1 ? "s" : ""} califique como «Cumple» o «No cumple».</AlertDescription>
+        </Alert>
+      )}
 
       {grupos.map((g) => {
         const its = actual.items.filter((i) => i.grupo === g);
-        const ob = its.reduce((s, i) => s + (i.estado === "CUMPLE" || i.estado === "NO_APLICA" ? i.puntaje : 0), 0);
+        const ob = its.reduce((s, i) => s + (sumaPuntos(i.estado, actual.nivel) ? i.puntaje : 0), 0);
         const mx = its.reduce((s, i) => s + i.puntaje, 0);
         return (
           <Section key={g} title={g} description={`${its[0].ciclo} · ${ob} de ${mx} puntos`} contentClassName="px-0">
@@ -117,14 +125,15 @@ export function EvaluacionEditor({ empresaId, nivel, evaluaciones, actual }: {
                     <TableCell className="tabular-nums">{i.puntaje}</TableCell>
                     <TableCell>
                       <div className="flex gap-1">
-                        {([["CUMPLE", "Cumple", "bg-emerald-600 text-white hover:bg-emerald-600/90"], ["NO_CUMPLE", "No cumple", "bg-destructive text-white hover:bg-destructive/90"], ["NO_APLICA", "No aplica", ""]] as const).map(([v, l, on]) => (
-                          <Button key={v} size="xs" variant={i.estado === v ? (v === "NO_APLICA" ? "secondary" : "default") : "outline"} className={cn(i.estado === v && on)} disabled={actual.cerrada || pend}
+                        {([["CUMPLE", "Cumple", "bg-emerald-600 text-white hover:bg-emerald-600/90"], ["NO_CUMPLE", "No cumple", "bg-destructive text-white hover:bg-destructive/90"], ["NO_APLICA", "No aplica", ""]] as const).filter(([v]) => v !== "NO_APLICA" || permiteNoAplica(actual.nivel) || i.estado === "NO_APLICA").map(([v, l, on]) => (
+                          <Button key={v} size="xs" variant={i.estado === v ? (v === "NO_APLICA" ? "secondary" : "default") : "outline"} className={cn(i.estado === v && on, v === "NO_APLICA" && !permiteNoAplica(actual.nivel) && "line-through")} disabled={actual.cerrada || pend}
+                            tooltip={v === "NO_APLICA" ? (permiteNoAplica(actual.nivel) ? "El ítem no corresponde a la empresa: suma su valor máximo y exige justificación escrita (Res. 0312/2019 art. 27)" : "En 60 estándares no existe «No aplica»: quítelo y califique «Cumple» o «No cumple» (Res. 0312/2019 arts. 16 y 27)") : undefined}
                             onClick={() => run(() => A.actualizarItemEvaluacion(empresaId, i.id, { estado: i.estado === v ? "PENDIENTE" : v }))}>{l}</Button>
                         ))}
                       </div>
                     </TableCell>
                     <TableCell className="pr-6">
-                      <Textarea className="min-h-9 text-xs" disabled={actual.cerrada} placeholder={i.estado === "NO_APLICA" ? "Justificación obligatoria" : "Observación"} aria-invalid={i.estado === "NO_APLICA" && !i.justificacion}
+                      <Textarea className="min-h-9 text-xs" disabled={actual.cerrada} placeholder={i.estado === "NO_APLICA" ? "Justificación obligatoria: por qué el ítem no corresponde a la empresa" : "Observación"} aria-invalid={i.estado === "NO_APLICA" && !i.justificacion}
                         defaultValue={i.estado === "NO_APLICA" ? i.justificacion : i.observacion}
                         onBlur={(e) => run(() => A.actualizarItemEvaluacion(empresaId, i.id, i.estado === "NO_APLICA" ? { justificacion: e.target.value } : { observacion: e.target.value }))} />
                     </TableCell>

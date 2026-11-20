@@ -29,8 +29,8 @@ Roles que exige la Resolución 0491 de 2020 (art. 10; art. 7 numeral 25); no imp
 | Rol | Responsabilidad | Designado |
 |---|---|---|
 | Responsable del diseño y la administración del programa | Diseñar, administrar y asegurar el programa | |
-| Supervisor de espacios confinados | Coordinar el ingreso; autorizar, rotar, negar, suspender, cancelar y cerrar el permiso; fácil de identificar | |
-| Vigía | Permanecer en la entrada, verificar las condiciones seguras, monitorear y activar el plan de emergencias | |
+| Supervisor de espacios confinados | Coordinar el ingreso; autorizar, rotar, negar, suspender, cancelar y cerrar el permiso; fácil de identificar | {{op.supervisorConfinados.nombre}} |
+| Vigía | Permanecer en la entrada, verificar las condiciones seguras, monitorear y activar el plan de emergencias | {{op.vigiaConfinados.nombre}} |
 | Trabajador entrante | Realizar las tareas dentro del espacio cumpliendo las medidas del programa | |
 | Personal de rescate | Ejecutar los procedimientos de rescate | |
 

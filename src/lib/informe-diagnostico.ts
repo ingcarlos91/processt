@@ -1,4 +1,4 @@
-// Informe de diagnóstico inicial del SG-SST, membreteado por la consultora (PROCESST) y firmado por su profesional.
+// Informe de diagnóstico de estándares mínimos del SG-SST (no es la evaluación inicial completa del art. 2.2.4.6.16), membreteado por la consultora (PROCESST) y firmado por su profesional.
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { db } from "@/lib/db";
@@ -28,7 +28,7 @@ function graficaGlobal(pct: number, valoracion: string) {
 
 export async function informeDiagnostico(diagnosticoId: string) {
   const dg = await db.diagnostico.findUniqueOrThrow({ where: { id: diagnosticoId }, include: { empresa: { include: { consultora: true, sedes: true } }, archivos: { where: { activo: true }, orderBy: { subidoEn: "asc" } } } });
-  const e = dg.empresa, co = e.consultora;
+  const e = dg.empresa, co = e.consultora ?? (await db.consultora.findFirst());
   const items = (dg.items ?? []) as ItemDiag[];
   const cal = calcularDiagnostico(items, dg.nivel);
   const v = valorar(cal.puntaje);
@@ -57,9 +57,11 @@ export async function informeDiagnostico(diagnosticoId: string) {
 
 ## Objetivo y metodología
 
-Establecer el estado actual del Sistema de Gestión de la Seguridad y Salud en el Trabajo de **${c(e.razonSocial)}** frente a los estándares mínimos que le aplican (Resolución 0312 de 2019) y el Decreto 1072 de 2015, como línea base para su diseño e implementación (evaluación inicial, art. 2.2.4.6.16).
+Establecer el estado actual del Sistema de Gestión de la Seguridad y Salud en el Trabajo de **${c(e.razonSocial)}** frente a los estándares mínimos que le aplican (Resolución 0312 de 2019), como línea base para su diseño e implementación.
 
-Se verificó cada estándar mediante revisión de documentos, entrevistas y observación. La calificación usa la tabla de valores de la Resolución 0312 de 2019 (arts. 27 y 28): cada estándar que se cumple o no aplica (justificado) suma su peso.
+**Alcance:** este es un diagnóstico de cumplimiento de estándares mínimos. No reemplaza la evaluación inicial del SG-SST del Decreto 1072 de 2015 (art. 2.2.4.6.16), que además revisa la normatividad aplicable, la identificación de peligros y la valoración de riesgos, las amenazas y la vulnerabilidad, la efectividad de los controles, la capacitación, los programas de vigilancia epidemiológica, la descripción sociodemográfica y las condiciones de salud, y las estadísticas de accidentalidad y enfermedad de los dos últimos años. Esa evaluación se completa al iniciar el SG-SST.
+
+Se verificó cada estándar mediante revisión de documentos, entrevistas y observación. La calificación usa la tabla de valores de la Resolución 0312 de 2019 (arts. 27 y 28): cada estándar que se cumple suma su valor.${dg.nivel === 60 ? " En 60 estándares todos los ítems aplican: no se usa «no aplica» (arts. 16 y 27)." : ` En las empresas de ${dg.nivel} estándares, los ítems que no les corresponden por su tamaño y clase de riesgo, y los que no aplican con justificación, reciben su valor máximo (art. 27), así que el puntaje es 100 menos lo que se deja de cumplir.`}
 
 ## Resultado general
 
@@ -70,7 +72,8 @@ Se verificó cada estándar mediante revisión de documentos, entrevistas y obse
 | Estándares evaluados | ${cal.total} |
 | Cumplen | ${cumple.length} |
 | No cumplen | ${brechas.length} |
-| No aplican | ${items.filter((i) => i.estado === "no_aplica").length} |
+| No aplican | ${items.filter((i) => i.estado === "no_aplica").length}${dg.nivel === 60 && noAplica.length ? " (en 60 estándares cuentan como no cumplidos)" : ""} |${dg.nivel !== 60 ? `
+| Ítems que no le corresponden al nivel (valor máximo, art. 27) | ${cal.noAplicanPorNivel} puntos |` : ""}
 | Puntaje | ${cal.puntaje} % |
 | Valoración | ${cal.valoracion} |
 
@@ -116,7 +119,7 @@ ${f.que}${f.brechas.length ? `
 
 ${f.brechas.map((b) => `- ${b.codigo} ${c(b.actividad || b.descripcion)}`).join("\n")}` : "\n\nSin brechas en esta fase."}`).join("\n\n")}
 
-${cal.valoracion === "CRÍTICO" ? "Por la valoración crítica, el plan de mejoramiento debe tenerse de inmediato y reportar avances a la ARL en máximo tres meses (Resolución 0312 de 2019, art. 28)." : ""}
+${cal.valoracion === "CRÍTICO" ? "Por la valoración crítica, el plan de mejoramiento debe tenerse de inmediato y reportar avances a la ARL en máximo tres meses (Resolución 0312 de 2019, art. 28)." : cal.valoracion === "MODERADAMENTE ACEPTABLE" ? "Por la valoración moderadamente aceptable, se debe tener un plan de mejoramiento y reportar avances a la ARL en máximo seis meses (Resolución 0312 de 2019, art. 28)." : ""}
 
 ## Conclusiones de la consultora
 
@@ -124,14 +127,14 @@ ${c(dg.conclusiones || "______")}
 
 Este diagnóstico es la línea base para diseñar el SG-SST y medir su avance en las autoevaluaciones siguientes.
 
-______________________________________
-**${c(co?.profesional || "Profesional en SST")}** — ${c(co?.cargo || "Consultora en SST")}${co?.licenciaSst ? `, licencia SST ${c(co.licenciaSst)}` : ""} — ${docTexto(co?.tipoDoc, co?.cedula)}
+${co?.licenciaSst ? "" : "**Advertencia:** no se registró la licencia en Seguridad y Salud en el Trabajo de quien firma. La evaluación de los estándares la debe hacer personal idóneo con licencia en SST (Resolución 0312 de 2019, art. 16, estándar 2.3.1).\n\n"}______________________________________
+**${c(co?.profesional || "Profesional en SST")}** — ${c(co?.cargo || "Consultora en SST")}${co?.licenciaSst ? `, licencia SST ${c(co.licenciaSst)}` : ", licencia SST ______"} — ${docTexto(co?.tipoDoc, co?.cedula)}
 `;
   const logo = await readFile(join(process.cwd(), "public", "brand", "logo.png")).catch(() => null);
   return {
     md, empresa: e, consultora: co,
     meta: {
-      codigo: "DIAG", nombre: `Diagnóstico inicial del SG-SST — ${e.razonSocial}`, version: 1, fecha: fecha(dg.fecha),
+      codigo: "DIAG", nombre: `Diagnóstico de estándares mínimos del SG-SST — ${e.razonSocial}`, version: 1, fecha: fecha(dg.fecha),
       empresa: co?.nombre || "PROCESST", nit: co?.nit || "", elaboro: co?.profesional || "", aprobo: co?.profesional || "",
       sistema: "PROCESST — CONSULTORÍA EN SEGURIDAD Y SALUD EN EL TRABAJO",
       logo: logo ? { buf: logo, tipo: "png" as const, ancho: 120, alto: 30 } : null,

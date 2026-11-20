@@ -43,14 +43,28 @@ Junto con este documento se entregan al prestador (art. 16 literales b a e):
 | {{clasificacion}} | {{celda descripcion}} | {{nivelRiesgo}} |
 {{/each}}
 
-**vii) Medidas preventivas:** las de la matriz de peligros para este cargo (controles en la fuente, el medio y el individuo){{#if epp.length}}; elementos de protección personal: {{join epp ", "}}{{/if}}.
+**vii) Medidas preventivas** (de la matriz de peligros para este cargo; Resolución 1843 de 2025, art. 16):
+
+{{#if controles.length}}
+| Peligro | Control en la fuente | Control en el medio | Control en el individuo | Medidas de intervención |
+|---|---|---|---|---|
+{{#each controles}}
+| {{celda peligro}} | {{celda (default fuente "Ninguno")}} | {{celda (default medio "Ninguno")}} | {{celda (default individuo "Ninguno")}} | {{celda (default medidas "Por definir")}} |
+{{/each}}
+{{else}}
+La matriz de peligros aún no registra controles ni medidas para este cargo; complételos en MTZ-01.
+{{/if}}
+
+{{#if epp.length}}Elementos de protección personal: {{join epp ", "}}.{{/if}}
 
 **Evaluaciones médicas y exámenes complementarios propuestos** (los confirma el médico; la periodicidad la define la empresa con justificación técnica, art. 15):
 
-| Examen | Pre-ingreso | Periódica | Periodicidad y justificación | Egreso |
+**Periodicidad de la evaluación periódica:** {{#if periodicidad}}{{periodicidad}}{{#if periodicidadMotivo}}. Justificación técnica: {{celda periodicidadMotivo}}{{else}}. Justificación técnica: por registrar{{/if}}{{else}}por definir (la empresa la fija con justificación técnica según la exposición del cargo){{/if}}.
+
+| Examen | Pre-ingreso | Periódica | Periodicidad | Egreso |
 |---|---|---|---|---|
 {{#each examenes}}
-| {{this}} | ☐ | ☐ | | ☐ |
+| {{this}} | ☐ | ☐ | {{default ../periodicidad "Por definir"}} | ☐ |
 {{/each}}
 
 {{#if altoRiesgo.length}}**Tareas de alto riesgo:** {{join altoRiesgo ", "}}. Requieren el certificado de aptitud específico de su régimen, con la vigencia de su propia norma (Resolución 1843 de 2025, art. 15 parágrafo 1).{{/if}}
@@ -88,4 +102,4 @@ Elaboró: {{responsable.nombre}} — Licencia SST {{default responsable.licencia
 
 IPS: {{op.ips}}
 
-Revisó (médico de la IPS): {{op.medicoIps.nombre}}  Documento: {{default op.medicoIps.cedula "__________"}}  Licencia SST: __________  Firma: __________
+Revisó (médico de la IPS): {{op.medicoIps.nombre}}  Documento: {{default op.medicoIps.cedula "__________"}}  Licencia SST: {{default op.medicoIps.licencia "__________"}}  Firma: __________

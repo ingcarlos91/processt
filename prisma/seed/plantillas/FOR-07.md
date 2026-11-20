@@ -5,7 +5,7 @@ tipo: INF
 nivelMin: 7
 carpeta: 3. Gestión de la salud
 estandares: ["3.2.2"]
-normas: ["RES-1401-2007","RES-0156-2005","DEC-1072-2015","RES-0312-2019","LEY-1581-2012"]
+normas: ["RES-1401-2007","RES-0156-2005","DEC-1072-2015","RES-0312-2019","LEY-1581-2012","DL-1295-1994"]
 descripcion: Se genera uno por cada evento desde la pestaña Accidentes e incidentes. Sigue el contenido mínimo del informe de investigación de la Resolución 1401 de 2007 (arts. 9 a 13).
 ---
 ## 1. Identificación del aportante (Res. 1401/2007 art. 9; Res. 156/2005)
@@ -19,11 +19,11 @@ descripcion: Se genera uno por cada evento desde la pestaña Accidentes e incide
 | Dirección | {{default empresa.direccion "______"}}, {{empresa.ciudad}}{{#if empresa.departamento}}, {{empresa.departamento}}{{/if}} |
 | Teléfono y correo | {{default empresa.telefono "______"}}{{#if empresa.correo}} — {{empresa.correo}}{{/if}} |
 | ARL | {{default empresa.arl "______"}} |
-| Sede o centro de trabajo donde labora el trabajador | ______ |
+| Sede o centro de trabajo donde labora el trabajador | {{default ev.sede "______"}} |
 | Representante legal | {{empresa.representanteLegal}} — {{empresa.representanteDoc}} |
 | Responsable del SG-SST | {{responsable.nombre}}{{#if responsable.licencia}} — Licencia SST {{responsable.licencia}}{{/if}} |
 
-{{#if ev.esEL}}Enfermedad laboral: se investiga para determinar las causas y las deficiencias del SG-SST que permitieron la exposición (Decreto 1072 de 2015, art. 2.2.4.6.32). El reporte a la ARL y la EPS se hizo en el FUREL (Resolución 156 de 2005).{{else}}{{#if ev.esIncidente}}Incidente de trabajo: suceso con potencial de ser accidente, que se investiga igual que los accidentes (Resolución 1401 de 2007, arts. 3 y 4 num. 2). No requiere FURAT.{{else}}Este informe contiene las variables del Formulario Único de Reporte de Accidente de Trabajo (FURAT, Resolución 156 de 2005) y los datos adicionales que exige la Resolución 1401 de 2007 para el informe de investigación.{{/if}}{{/if}}
+{{#if ev.esEL}}Enfermedad laboral: se investiga para determinar las causas y las deficiencias del SG-SST que permitieron la exposición (Decreto 1072 de 2015, art. 2.2.4.6.32). El reporte a la ARL y la EPS se hizo en el FUREL (Resolución 156 de 2005).{{else}}{{#if ev.esIncidente}}Incidente de trabajo: suceso con potencial de ser accidente, que se investiga igual que los accidentes (Resolución 1401 de 2007, arts. 3 y 4 num. 2). No requiere FURAT.{{else}}Este informe contiene las variables del Formulario Único de Reporte de Accidente de Trabajo (FURAT, Resolución 156 de 2005) y los datos adicionales que exige la Resolución 1401 de 2007 para el informe de investigación.{{/if}}{{/if}}{{#if ev.esVisitante}} La persona afectada es un visitante, no un trabajador afiliado por la empresa: no se diligencia FURAT ni FUREL (Decreto Ley 1295 de 1994, art. 62); el evento se registra para la estadística interna y se investiga para prevenir que se repita.{{/if}}
 
 ## 2. Identificación del trabajador (Res. 1401/2007 art. 9; Res. 156/2005)
 
@@ -31,8 +31,8 @@ descripcion: Se genera uno por cada evento desde la pestaña Accidentes e incide
 |---|---|
 | Nombres y apellidos | {{default ev.trabajador "______"}} |
 | Documento de identidad | {{default ev.doc "______"}} |
-| Fecha de nacimiento y sexo | ______ |
-| EPS y AFP del trabajador | ______ |
+| Fecha de nacimiento y sexo | {{default ev.fechaNacimiento "______"}} — {{default ev.sexo "______"}} |
+| EPS y AFP del trabajador | EPS: {{default ev.eps "______"}} — AFP: {{default ev.afp "______"}} |
 | Tipo de vinculación | {{default ev.vinculacion "______"}} |
 | Cargo u ocupación | {{default ev.cargo "______"}} |
 | Antigüedad en el cargo | {{default ev.antiguedad "______"}} |
@@ -106,20 +106,20 @@ Se relacionan todas las causas encontradas, separando las inmediatas de las bás
 
 ## 6. Medidas de intervención (Res. 1401/2007 art. 12)
 
-Medidas que la empresa se compromete a adoptar para prevenir eventos similares, cada una con responsable y fecha de ejecución, dirigidas a la fuente, el medio y el trabajador y con relación lógica con las causas básicas (art. 12). En la descripción de cada medida se indica a qué apunta (fuente, medio o trabajador) y qué causa básica ataca. Se definen con la jerarquía de controles (Decreto 1072 de 2015, art. 2.2.4.6.24).
+Medidas que la empresa se compromete a adoptar para prevenir eventos similares, cada una con responsable y fecha de ejecución, dirigidas a la fuente, el medio y el trabajador y con relación lógica con las causas básicas (art. 12). Para cada medida se indica qué causa básica ataca y si se dirige a la fuente, al medio o al trabajador. Se definen con la jerarquía de controles (Decreto 1072 de 2015, art. 2.2.4.6.24).
 
-| N.º | Medida | Tipo | Jerarquía | Responsable | Fecha de ejecución | Estado |
-|---|---|---|---|---|---|---|
+| N.º | Medida | Causa básica que ataca | Dirigida a | Tipo | Jerarquía | Responsable | Fecha de ejecución | Estado |
+|---|---|---|---|---|---|---|---|---|
 {{#if ev.acciones.length}}
 {{#each ev.acciones}}
-| {{n}} | {{celda descripcion}} | {{tipo}} | {{jerarquia}} | {{responsable}} | {{fechaLimite}} | {{estado}} |
+| {{n}} | {{celda descripcion}} | {{celda causa}} | {{default dirigidaA "______"}} | {{tipo}} | {{jerarquia}} | {{responsable}} | {{fechaLimite}} | {{estado}} |
 {{/each}}
 {{else}}
-| 1 | | | | | | |
-| 2 | | | | | | |
+| 1 | | | | | | | | |
+| 2 | | | | | | | | |
 {{/if}}
 
-**Trabajadores potencialmente expuestos:** cargos, áreas, turnos o sedes con exposición al mismo peligro a los que se extienden las medidas (Resolución 0312 de 2019, estándar 3.2.2): ______
+**Trabajadores potencialmente expuestos:** cargos, áreas, turnos o sedes con exposición al mismo peligro a los que se extienden las medidas (Resolución 0312 de 2019, estándar 3.2.2): {{default ev.expuestos "______"}}
 
 La empresa implementa las medidas, registra su cumplimiento y verifica su efectividad (art. 12); la verificación de la efectividad se registra al cerrar cada acción en el FOR-06. Quedan en el registro de acciones correctivas, preventivas y de mejora (FOR-06) y en el plan anual de trabajo (art. 4 num. 6).
 
@@ -131,7 +131,7 @@ Las lecciones aprendidas se divulgan a los trabajadores y al {{#if comites.copas
 
 ## 8. Equipo investigador y firmas (Res. 1401/2007 arts. 7 y 13)
 
-Equipo conformado según el art. 7: {{join ev.rolesMinimos ", "}}{{#if ev.esGrave}}, por tratarse de un accidente {{ev.gravedad}}{{/if}}.{{#if ev.esMortal}} Accidente mortal: la investigación se adelanta con el {{#if comites.copasst.esVigia}}Vigía de SST{{else}}COPASST{{/if}} dentro de los 15 días calendario siguientes a la muerte (Decreto 1072 de 2015, art. 2.2.4.1.6) y obligatoriamente en el formato suministrado por la ARL (art. 4 num. 3); este informe lo acompaña.{{/if}}
+Equipo conformado según el art. 7: {{join ev.rolesMinimos ", "}}{{#if ev.esGrave}}, por tratarse de un accidente {{ev.gravedad}}{{/if}}.{{#if ev.esMortal}} {{#if ev.esEL}}Muerte por enfermedad laboral{{else}}Accidente mortal{{/if}}: la investigación se adelanta con el {{#if comites.copasst.esVigia}}Vigía de SST{{else}}COPASST{{/if}} dentro de los 15 días calendario siguientes a la muerte (Decreto 1072 de 2015, art. 2.2.4.1.6){{#if ev.esAT}} y obligatoriamente en el formato suministrado por la ARL (art. 4 num. 3); este informe lo acompaña{{/if}}.{{/if}}
 
 | Nombre | Cargo | Identificación | Rol en la investigación |
 |---|---|---|---|
@@ -174,11 +174,12 @@ ______________________________________
 | Fecha de inicio de la investigación | {{default ev.invInicio "______"}} |
 | Fechas y horas de las sesiones | {{default ev.invFechas "______ (fecha y hora de cada sesión)"}} |
 | Fecha de cierre del informe | {{default ev.invCierre "______"}} |
-{{#if ev.esGrave}}| Remisión del informe a la ARL (accidente {{ev.gravedad}}) | {{default ev.remitidaArl "Pendiente"}} — plazo: {{ev.plazoRemision}} |
+| Plazo de la investigación (15 días) | Hasta el {{ev.plazoInvestigacion}} — {{#if ev.invCerrada}}{{#if ev.aTiempo}}Cumplido{{else}}No cumplido (cerrada después del plazo){{/if}}{{else}}En curso{{/if}} |
+{{#if ev.plazoRemision}}| Remisión del informe a la ARL ({{#if ev.esEL}}muerte por enfermedad laboral{{else}}accidente {{ev.gravedad}}{{/if}}) | {{default ev.remitidaArl "Pendiente"}} — plazo: {{ev.plazoRemision}} |
 {{/if}}
 
-{{#if ev.esGrave}}Por tratarse de un accidente {{ev.gravedad}}, este informe, firmado por el representante legal, se remite a la ARL dentro de los quince (15) días siguientes a la ocurrencia del evento (art. 14); la ARL emite concepto en quince (15) días hábiles{{#if ev.esMortal}} y, por ser mortal, remite el expediente a la Dirección Territorial del Ministerio del Trabajo{{/if}}.
-{{else}}El informe se conserva en el expediente del SG-SST; los incidentes y accidentes leves no se remiten a la ARL, pero el Ministerio del Trabajo puede solicitarlos en cualquier momento (art. 14).
+{{#if ev.plazoRemision}}Por tratarse de {{#if ev.esEL}}una muerte por enfermedad laboral{{else}}un accidente {{ev.gravedad}}{{/if}}, este informe, firmado por el representante legal, se remite a la ARL dentro de los quince (15) días siguientes a la ocurrencia del evento (art. 14); la ARL emite concepto en quince (15) días hábiles{{#if (and ev.esMortal ev.esAT)}} y, por ser mortal, remite el expediente a la Dirección Territorial del Ministerio del Trabajo{{/if}}.
+{{else}}{{#if ev.esVisitante}}El informe se conserva en el expediente del SG-SST; por tratarse de un visitante no se remite a la ARL.{{else}}El informe se conserva en el expediente del SG-SST; los incidentes y accidentes leves no se remiten a la ARL, pero el Ministerio del Trabajo puede solicitarlos en cualquier momento (art. 14).{{/if}}
 {{/if}}
 
-La investigación debe realizarse dentro de los quince (15) días siguientes a la ocurrencia del evento (art. 4 num. 2); las fechas de inicio y de cierre registradas arriba permiten verificarlo. Este informe y las pruebas de los correctivos se archivan a disposición del Ministerio del Trabajo (art. 4 num. 10; Decreto 1072 de 2015, art. 2.2.4.6.12 num. 11). Por política de la empresa se conservan por veinte (20) años.
+La investigación debe realizarse dentro de los quince (15) días siguientes a la ocurrencia del evento (art. 4 num. 2), es decir, hasta el {{ev.plazoInvestigacion}}. {{#if ev.invCerrada}}{{#if ev.aTiempo}}**Plazo cumplido:** la investigación se cerró el {{ev.invCierre}}, dentro de los quince días.{{else}}**Plazo no cumplido:** la investigación se cerró el {{ev.invCierre}}, después de los quince días; se dejan registradas las razones del retraso y se toman medidas para que no se repita.{{/if}}{{else}}La investigación está en curso; al cerrarla se verifica si se cumplió el plazo.{{/if}} Este informe y las pruebas de los correctivos se archivan a disposición del Ministerio del Trabajo (art. 4 num. 10; Decreto 1072 de 2015, art. 2.2.4.6.12 num. 11). Por política de la empresa se conservan por veinte (20) años.

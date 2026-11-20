@@ -51,7 +51,7 @@ La empresa define la periodicidad de las evaluaciones periódicas dentro del SG-
 | Cargo | Exámenes (ver DOC-07) | Periodicidad definida | Justificación técnica (peligro, nivel de riesgo, PVE) |
 |---|---|---|---|
 {{#each cargos}}
-| {{celda nombre}} | {{celda (join examenes "; ")}} | | |
+| {{celda nombre}} | {{celda (join examenes "; ")}} | {{default periodicidad "Por definir"}} | {{celda (default periodicidadMotivo "Por registrar")}} |
 {{/each}}
 
 Mientras el médico no recomiende otra cosa, la consultora propone revisar la periodicidad cada año, al actualizar la matriz de peligros.{{#if (gte empresa.nivel 60)}} Para esta empresa (más de 50 trabajadores o riesgo IV-V), el documento que define la frecuencia es evidencia del estándar 3.1.4 (Resolución 0312 de 2019).{{/if}}

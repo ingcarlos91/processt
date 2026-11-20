@@ -28,7 +28,7 @@ La alta dirección revisa el SG-SST por lo menos una vez al año, cualquiera que
 | 4 | Capacidad del SG-SST para satisfacer las necesidades de la empresa en SST | |
 | 5 | Necesidad de cambios en el SG-SST, incluida la política y los objetivos | |
 | 6 | Eficacia de las medidas de seguimiento de revisiones anteriores | |
-| 7 | Resultados de indicadores y auditorías anteriores | Indicadores: frecuencia ______, severidad ______, ausentismo ______, cumplimiento del plan ______ (ver registro anual de indicadores mínimos). {{#if ultimaAuditoria}}Auditoría interna {{ultimaAuditoria.anio}} (cerrada el {{ultimaAuditoria.cierre}}): conformidad {{ultimaAuditoria.conformidad}}, {{ultimaAuditoria.noConformes}} no conformidad(es) y {{ultimaAuditoria.acciones}} acción(es).{{/if}} |
+| 7 | Resultados de indicadores y auditorías anteriores | Indicadores {{accidentalidad.indicadores.anio}} (Res. 0312/2019 art. 30): frecuencia {{accidentalidad.indicadores.frecuencia}} y severidad {{accidentalidad.indicadores.severidad}} por cada 100 trabajadores (promedio mensual), proporción de AT mortales {{accidentalidad.indicadores.mortalidad}}, prevalencia {{accidentalidad.indicadores.prevalencia}} e incidencia {{accidentalidad.indicadores.incidencia}} de enfermedad laboral por 100.000 trabajadores, ausentismo {{accidentalidad.indicadores.ausentismo}}{{#if accidentalidad.indicadores.estimado}} (con meses estimados){{/if}}; año anterior: frecuencia {{accidentalidad.anterior.indicadores.frecuencia}}, severidad {{accidentalidad.anterior.indicadores.severidad}}, ausentismo {{accidentalidad.anterior.indicadores.ausentismo}}; cumplimiento del plan anual: {{#if planEjecucion.hay}}{{planEjecucion.texto}}{{else}}______.{{/if}} (Ver registro anual de indicadores mínimos.) {{#if ultimaAuditoria}}Auditoría interna {{ultimaAuditoria.anio}} (cerrada el {{ultimaAuditoria.cierre}}): conformidad {{ultimaAuditoria.conformidad}}, {{ultimaAuditoria.noConformes}} no conformidad(es) y {{ultimaAuditoria.acciones}} acción(es).{{/if}} |
 | 8 | Nuevas prioridades y objetivos estratégicos | |
 | 9 | Eficacia de las medidas de prevención y control de peligros | |
 | 10 | Comunicación de resultados y desempeño a los trabajadores | |
@@ -42,7 +42,7 @@ La alta dirección revisa el SG-SST por lo menos una vez al año, cualquiera que
 | 18 | Vigilancia de las condiciones de salud de los trabajadores | |
 | 19 | Actualización de la identificación de peligros y evaluación de riesgos | |
 | 20 | Notificación e investigación de incidentes, accidentes y enfermedades | {{accidentalidad.resumen.texto}} |
-| 21 | Ausentismo laboral por causas asociadas a SST | {{accidentalidad.resumen.diasAt}} día(s) perdido(s) por accidentes de trabajo y {{accidentalidad.resumen.el}} enfermedad(es) laboral(es) en {{accidentalidad.resumen.anio}}. Días de ausencia por enfermedad laboral: ______. |
+| 21 | Ausentismo laboral por causas asociadas a SST | {{accidentalidad.resumen.diasAt}} día(s) perdido(s) por accidentes de trabajo y {{accidentalidad.resumen.el}} enfermedad(es) laboral(es) en {{accidentalidad.resumen.anio}}. Días de ausencia por enfermedad laboral: {{accidentalidad.resumen.diasEl}} ({{accidentalidad.resumen.elNuevas}} caso(s) nuevo(s) y {{accidentalidad.resumen.elAntiguas}} antiguo(s)). Días de ausencia por enfermedad común: {{accidentalidad.resumen.diasAusentismo}}. |
 | 22 | Pérdidas (daños a la propiedad, máquinas, equipos) relacionadas con SST | |
 | 23 | Deficiencias en la gestión de SST | |
 | 24 | Efectividad de los programas de rehabilitación | |

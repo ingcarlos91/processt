@@ -19,7 +19,7 @@ async function delaEmpresa(empresaId: string, id: string) {
   return a;
 }
 
-export type PlanAuditoria = { anio: number; fechaInicio: string; auditor: string; auditorPerfil?: string; participantes?: string; alcance?: string; metodologia?: string };
+export type PlanAuditoria = { anio: number; fechaInicio: string; auditor: string; auditorPerfil?: string; participantes?: string; alcance?: string; metodologia?: string; independiente?: boolean };
 
 /** Crea la auditoría del año con los 13 aspectos del Decreto 1072/2015 art. 2.2.4.6.30. */
 export async function crearAuditoria(empresaId: string, d: PlanAuditoria) {
@@ -28,7 +28,7 @@ export async function crearAuditoria(empresaId: string, d: PlanAuditoria) {
   if (!fechaInicio || !d.auditor.trim()) return { error: "Escriba la fecha y el auditor." };
   const items: ItemAuditoria[] = ASPECTOS.map((a) => ({ ...a, resultado: "", evidencia: "", hallazgo: "" }));
   const a = await db.auditoria.create({ data: {
-    empresaId, anio: d.anio, fechaInicio, auditor: d.auditor.trim(), auditorPerfil: d.auditorPerfil || null, participantes: d.participantes || null,
+    empresaId, anio: d.anio, fechaInicio, auditor: d.auditor.trim(), auditorPerfil: d.auditorPerfil || null, participantes: d.participantes || null, independiente: !!d.independiente,
     alcance: d.alcance || null, metodologia: d.metodologia || null, items: items as object[],
   } });
   await listo(empresaId);
@@ -44,6 +44,7 @@ export async function guardarAuditoria(empresaId: string, id: string, d: Partial
     ...(d.auditor ? { auditor: d.auditor } : {}), ...(d.auditorPerfil !== undefined ? { auditorPerfil: d.auditorPerfil || null } : {}),
     ...(d.participantes !== undefined ? { participantes: d.participantes || null } : {}), ...(d.alcance !== undefined ? { alcance: d.alcance || null } : {}),
     ...(d.metodologia !== undefined ? { metodologia: d.metodologia || null } : {}), ...(d.fechaInicio ? { fechaInicio: dia(d.fechaInicio) ?? a.fechaInicio } : {}),
+    ...(d.independiente !== undefined ? { independiente: d.independiente } : {}),
   } });
   await listo(empresaId, id);
   return { ok: true as const };
@@ -57,6 +58,7 @@ export async function cerrarAuditoria(empresaId: string, id: string, fechaCierre
   const faltan = items.filter((i) => !i.resultado).map((i) => i.n);
   if (faltan.length) return { error: `Falta calificar los aspectos ${faltan.join(", ")}.` };
   if (items.some((i) => i.resultado === "no_conforme" && !i.hallazgo?.trim())) return { error: "Describa el hallazgo de cada no conformidad." };
+  if (!a.independiente) return { error: "Registre la declaración de independencia del auditor: no puede auditar su propio trabajo (Decreto 1072/2015 art. 2.2.4.6.29)." };
   const fecha = dia(fechaCierre) ?? new Date();
   let n = 0;
   for (const i of items) {
@@ -72,6 +74,17 @@ export async function cerrarAuditoria(empresaId: string, id: string, fechaCierre
   await db.auditoria.update({ where: { id }, data: { estado: "cerrada", fechaCierre: fecha } });
   await listo(empresaId, id);
   return { ok: true as const, acciones: n };
+}
+
+/** A quién y cuándo se comunicaron los resultados (Decreto 1072/2015 art. 2.2.4.6.29). Se puede registrar con la auditoría cerrada. */
+export async function registrarComunicacion(empresaId: string, id: string, d: { comunicadoA: string; comunicadoFecha: string }) {
+  await requiereUsuario();
+  await delaEmpresa(empresaId, id);
+  const fecha = dia(d.comunicadoFecha);
+  if (d.comunicadoA.trim() && !fecha) return { error: "Escriba la fecha en que se comunicaron los resultados." };
+  await db.auditoria.update({ where: { id }, data: { comunicadoA: d.comunicadoA.trim() || null, comunicadoFecha: d.comunicadoA.trim() ? fecha : null } });
+  await listo(empresaId, id);
+  return { ok: true as const };
 }
 
 export async function reabrirAuditoria(empresaId: string, id: string) {

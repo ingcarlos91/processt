@@ -17,7 +17,7 @@ export default async function Evento({ params }: PageProps<"/empresas/[id]/accid
   if (!ev || ev.empresaId !== id) notFound();
   const [empresa, cargos, peligros, enMatriz, comites, consultora, cat, sedes, zonas] = await Promise.all([
     db.empresa.findUniqueOrThrow({ where: { id }, select: { responsableSst: true, representanteLegal: true, direccion: true, ciudad: true } }),
-    db.cargo.findMany({ where: { empresaId: id }, orderBy: { nombre: "asc" }, include: { tareas: { include: { tarea: { select: { nombre: true } } } }, trabajadores: { where: { activo: true }, orderBy: { nombres: "asc" }, select: { nombres: true, tipoDoc: true, documento: true, vinculacion: true, fechaIngreso: true } } } }),
+    db.cargo.findMany({ where: { empresaId: id }, orderBy: { nombre: "asc" }, include: { tareas: { include: { tarea: { select: { nombre: true } } } }, trabajadores: { where: { activo: true }, orderBy: { nombres: "asc" }, select: { nombres: true, tipoDoc: true, documento: true, vinculacion: true, fechaIngreso: true, sexo: true, fechaNacimiento: true, eps: true, afp: true } }, sede: { select: { nombre: true } } } }),
     db.peligroCatalogo.findMany({ where: { OR: [{ empresaId: null }, { empresaId: id }] }, select: { id: true, descripcion: true, clasificacion: true, subclasificacion: true }, orderBy: { descripcion: "asc" } }),
     ev.cargoId ? db.peligroEvaluado.findMany({ where: { empresaId: id, peligroId: { not: null }, OR: [{ cargoId: ev.cargoId }, { tarea: { cargos: { some: { cargoId: ev.cargoId } } } }] }, select: { peligroId: true } }) : Promise.resolve([]),
     db.comite.findMany({ where: { empresaId: id, tipo: { in: ["COPASST", "VIGIA"] } }, include: { miembros: true } }),
@@ -46,7 +46,7 @@ export default async function Evento({ params }: PageProps<"/empresas/[id]/accid
     <EventoDetalle
       empresaId={id} iaActiva={iaDisponible()}
       ev={{
-        id: ev.id, tipo: ev.tipo, gravedad: ev.gravedad,
+        id: ev.id, tipo: ev.tipo, gravedad: ev.gravedad, vinculacion: ev.vinculacion ?? "",
         datos: {
           tipo: ev.tipo, gravedad: ev.gravedad, fecha: iso(ev.fecha), hora: ev.hora ?? "", lugar: ev.lugar ?? "", descripcion: ev.descripcion ?? "",
           trabajadorNombre: ev.trabajadorNombre ?? "", trabajadorTipoDoc: ev.trabajadorTipoDoc ?? "CC", trabajadorCedula: ev.trabajadorCedula ?? "", vinculacion: ev.vinculacion ?? "", antiguedad: ev.antiguedad ?? "",
@@ -54,20 +54,21 @@ export default async function Evento({ params }: PageProps<"/empresas/[id]/accid
           parteCuerpo: ev.parteCuerpo ?? "", testigos: ev.testigos ?? "", diasIncapacidad: ev.diasIncapacidad, diasCargados: ev.diasCargados, casoNuevo: ev.casoNuevo,
           sitioExacto: ev.sitioExacto ?? "", tipoAccidente: ev.tipoAccidente ?? "", jornadaHabitual: ev.jornadaHabitual === true ? "si" : ev.jornadaHabitual === false ? "no" : "", turno: ev.turno ?? "",
           tiempoEmpresa: ev.tiempoEmpresa ?? "", tiempoLaborado: ev.tiempoLaborado ?? "", versionTrabajador: ev.versionTrabajador ?? "", versionTestigos: ev.versionTestigos ?? "",
+          sexo: ev.sexo ?? "", fechaNacimiento: iso(ev.fechaNacimiento), eps: ev.eps ?? "", afp: ev.afp ?? "", sede: ev.sede ?? "", expuestos: ev.expuestos ?? "",
         },
         reporte: { fechaReporte: iso(ev.fechaReporte), furatNumero: ev.furatNumero ?? "", reporteMinisterio: iso(ev.reporteMinisterio), invRemitidaArl: iso(ev.invRemitidaArl) },
         inv: { estado: ev.invEstado, inicio: iso(ev.invInicio), cierre: iso(ev.invCierre), lugar: ev.invLugar ?? "", fechas: ev.invFechas ?? "", equipo: (ev.equipo as Integrante[]) ?? [], analisis: (ev.analisis ?? {}) as Analisis, lecciones: ev.lecciones ?? "", peligroId: ev.peligroId ?? "" },
-        acciones: ev.acciones.map((a) => ({ id: a.id, hallazgo: a.hallazgo, causa: a.causa ?? "", tipo: a.tipo, jerarquia: a.jerarquia ?? "", descripcion: a.descripcion, responsable: a.responsable ?? "", fechaLimite: iso(a.fechaLimite), estado: a.estado, fechaCierre: iso(a.fechaCierre), eficacia: a.eficacia ?? "", enPlan: a.actividad ? `${a.actividad.mes}/${a.actividad.anio}` : "" })),
+        acciones: ev.acciones.map((a) => ({ id: a.id, hallazgo: a.hallazgo, causa: a.causa ?? "", tipo: a.tipo, jerarquia: a.jerarquia ?? "", dirigidaA: a.dirigidaA ?? "", descripcion: a.descripcion, responsable: a.responsable ?? "", fechaLimite: iso(a.fechaLimite), estado: a.estado, fechaCierre: iso(a.fechaCierre), eficacia: a.eficacia ?? "", enPlan: a.actividad ? `${a.actividad.mes}/${a.actividad.anio}` : "" })),
         archivos: ev.archivos.map(aArchivoUI),
         plazos: plazosUI(ev),
       }}
-      cargos={cargos.map((c) => ({ id: c.id, nombre: c.nombre, tareas: c.tareas.map((t) => t.tarea.nombre), personas: c.trabajadores.map((t) => ({ nombre: t.nombres, tipoDoc: t.tipoDoc, documento: t.documento ?? "", vinculacion: t.vinculacion, ingreso: t.fechaIngreso?.toISOString().slice(0, 10) ?? "" })) }))}
+      cargos={cargos.map((c) => ({ id: c.id, nombre: c.nombre, sede: c.sede?.nombre, tareas: c.tareas.map((t) => t.tarea.nombre), personas: c.trabajadores.map((t) => ({ nombre: t.nombres, tipoDoc: t.tipoDoc, documento: t.documento ?? "", vinculacion: t.vinculacion, ingreso: t.fechaIngreso?.toISOString().slice(0, 10) ?? "", sexo: t.sexo ?? "", nacimiento: t.fechaNacimiento?.toISOString().slice(0, 10) ?? "", eps: t.eps ?? "", afp: t.afp ?? "" })) }))}
       peligros={peligros.map((p) => ({ valor: p.id, etiqueta: p.descripcion, detalle: [p.clasificacion, p.subclasificacion].filter(Boolean).join(" · "), grupo: idsMatriz.has(p.id) ? "En la matriz de este cargo" : p.clasificacion, relevancia: idsMatriz.has(p.id) ? "propio" : "otro" }))}
       peligrosEnMatriz={[...idsMatriz].filter(Boolean) as string[]}
       equipoSugerido={sugeridos}
       responsable={resp.nombre ?? ""}
       avisoMatriz={avisoMatriz}
-      cat={cat} lugares={[...new Set([...zonas, ...sedes].map((x) => x.nombre))]} direccionEmpresa={[empresa.direccion, empresa.ciudad].filter(Boolean).join(", ")}
+      cat={cat} lugares={[...new Set([...zonas, ...sedes].map((x) => x.nombre))]} sedes={sedes.map((x) => x.nombre)} direccionEmpresa={[empresa.direccion, empresa.ciudad].filter(Boolean).join(", ")}
       personas={[...new Set([resp.nombre, empresa.representanteLegal, ...miembros.map((m) => m.nombre)].filter(Boolean) as string[])]}
     />
   );

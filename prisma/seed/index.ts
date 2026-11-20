@@ -3,6 +3,7 @@ import { sincronizarPlantillas } from "./sincronizar-plantillas";
 import { modulosBiblioteca } from "./biblioteca/modulos";
 import { deduplicarPeligros } from "./biblioteca/deduplicar";
 import { estandares } from "./estandares";
+import { LISTAS_ANTERIORES_2026_11 } from "./biblioteca/inspecciones";
 import { normas } from "./normas";
 import { reglas } from "./reglas";
 import { ciiu } from "./ciiu";
@@ -39,6 +40,7 @@ async function main() {
       tipo: n.tipo, numero: n.numero, anio: n.anio, entidad: n.entidad, nombre: n.nombre, tema: n.tema, resumen: n.resumen,
       articulosClave: n.articulosClave, urlOficial: n.urlOficial, condicionAplicabilidad: n.condicion as object,
       derogadaPor: n.derogadaPor, vigente: n.vigente ?? true, evidenciaCumplimiento: n.evidenciaCumplimiento,
+      vigenteDesde: n.vigenteDesde ? new Date(`${n.vigenteDesde}T12:00:00Z`) : undefined,
     };
     await db.norma.upsert({ where: { codigo: n.codigo }, update: data, create: { codigo: n.codigo, ...data } });
   }
@@ -162,9 +164,13 @@ async function sembrarBiblioteca() {
     if (!prev) { await db.catalogoItem.create({ data: { ...it, detalle: it.detalle as object } }); conteo.catalogo++; }
     else if (it.tipo === "LISTA_INSPECCION") {
       // Se reemplazan los ítems solo si la lista sigue igual a una versión sembrada antes (no se pisa lo editado).
+      // Si los ítems siguen iguales a la versión actual, solo se actualizan las normas que la sustentan.
       const actuales = JSON.stringify(((prev.detalle ?? {}) as { items?: string[] }).items ?? []);
-      if ((LISTAS_SEMBRADAS_ANTES[it.nombre] ?? []).some((v) => JSON.stringify(v) === actuales) && actuales !== JSON.stringify(it.detalle.items))
-        await db.catalogoItem.update({ where: { id: prev.id }, data: { detalle: it.detalle as object, normas: it.normas } });
+      const anteriores = [...(LISTAS_SEMBRADAS_ANTES[it.nombre] ?? []), ...(LISTAS_ANTERIORES_2026_11[it.nombre] ? [LISTAS_ANTERIORES_2026_11[it.nombre]] : [])];
+      if (actuales === JSON.stringify(it.detalle.items)) {
+        if (JSON.stringify(prev.normas) !== JSON.stringify(it.normas)) await db.catalogoItem.update({ where: { id: prev.id }, data: { normas: it.normas } });
+      } else if (anteriores.some((v) => JSON.stringify(v) === actuales))
+        await db.catalogoItem.update({ where: { id: prev.id }, data: { detalle: it.detalle as object, normas: it.normas, descripcion: it.descripcion } });
     }
     else if (it.tipo === "FORMA_EVENTO") {
       // Solo agrega: causas, medidas y claves nuevas se suman sin quitar lo editado en Biblioteca;

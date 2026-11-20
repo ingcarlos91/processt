@@ -198,6 +198,9 @@ model Cargo {
   area                 String?
   nPersonas            Int               @default(1) @map("n_personas")
   descripcionFunciones String?           @map("descripcion_funciones")
+  // Periodicidad de las evaluaciones médicas periódicas, definida por la empresa con justificación técnica (Res. 1843/2025 art. 15).
+  periodicidadMeses    Int?              @map("periodicidad_meses")
+  periodicidadMotivo   String?           @map("periodicidad_motivo")
   tareas               CargoTarea[]
   peligros             PeligroEvaluado[]
   eventos              Evento[]
@@ -476,6 +479,8 @@ model PeligroEvaluado {
   medidaIngenieria     String?          @map("medida_ingenieria")
   medidaAdministrativa String?          @map("medida_administrativa")
   medidaEpp            String?          @map("medida_epp")
+  // Implementación y verificación de las medidas (Res. 0312/2019 est. 4.2.1 y 4.2.2): responsable, fecha, estado, verificación y eficacia.
+  seguimiento          Json             @default("{}")
   estado               String           @default("aprobado") // sugerido | aprobado
   fuente               String           @default("manual") // biblioteca | ia | manual
   creadoEn             DateTime         @default(now()) @map("creado_en")
@@ -750,6 +755,13 @@ model Evento {
   tipoAccidente     String?          @map("tipo_accidente") // propio_trabajo | transito | violencia | deportivo_recreativo (FURAT)
   jornadaHabitual   Boolean?         @map("jornada_habitual") // ¿estaba en su jornada o labor habitual? (FURAT)
   turno             String? // jornada o turno de trabajo (FURAT)
+  // Datos del FURAT que el informe de investigación retoma (Res. 1401/2007 art. 9; Res. 156/2005 anexo). Se precargan del trabajador.
+  sexo              String?
+  fechaNacimiento   DateTime?        @map("fecha_nacimiento")
+  eps               String?
+  afp               String?
+  sede              String? // sede o centro de trabajo
+  expuestos         String? // trabajadores potencialmente expuestos y acciones para ellos (Res. 0312/2019 est. 3.2.2)
   tiempoEmpresa     String?          @map("tiempo_empresa") // antigüedad en la empresa (FURAT); `antiguedad` es en el cargo
   tiempoLaborado    String?          @map("tiempo_laborado") // tiempo laborado previo al evento (FURAT)
   versionTrabajador String?          @map("version_trabajador") // relato del trabajador (Res. 1401/2007 art. 10)
@@ -800,6 +812,7 @@ model Accion {
   causa        String?
   tipo         String         @default("correctiva") // correctiva | preventiva | mejora
   jerarquia    String? // eliminacion | sustitucion | ingenieria | administrativo | epp
+  dirigidaA    String?        @map("dirigida_a") // fuente | medio | trabajador (Res. 1401/2007 art. 12)
   descripcion  String
   responsable  String?
   fechaLimite  DateTime?      @map("fecha_limite")
@@ -869,19 +882,22 @@ model Trabajador {
 
 // Evaluación médica ocupacional (Res. 1843/2025): solo concepto y recomendaciones, nunca diagnóstico.
 model ExamenMedico {
-  id                   String     @id @default(cuid())
-  trabajadorId         String     @map("trabajador_id")
-  trabajador           Trabajador @relation(fields: [trabajadorId], references: [id], onDelete: Cascade)
-  tipo                 String // Res. 1843/2025 art. 8: ingreso (pre-ingreso) | periodico | cambio_ocupacion | retiro (egreso) | post_incapacidad | retorno_laboral | seguimiento
-  fecha                DateTime
-  ips                  String?
+  id                    String     @id @default(cuid())
+  trabajadorId          String     @map("trabajador_id")
+  trabajador            Trabajador @relation(fields: [trabajadorId], references: [id], onDelete: Cascade)
+  tipo                  String // Res. 1843/2025 art. 8: ingreso (pre-ingreso) | periodico | cambio_ocupacion | retiro (egreso) | post_incapacidad | retorno_laboral | seguimiento
+  fecha                 DateTime
+  ips                   String?
   // Res. 1843/2025 art. 19 par.: no se usa "no apto" salvo en los regímenes especiales del art. 2 (campo regimen).
-  concepto             String // apto | apto_recomendaciones | apto_restricciones | aplazado | no_apto (solo con regimen)
-  regimen              String? // alturas | conduccion | alimentos | armas | electrico | confinados
-  restricciones        String? // recomendaciones y restricciones (sin diagnósticos)
-  comunicadoTrabajador DateTime?  @map("comunicado_trabajador")
-  proximo              DateTime?
-  creadoEn             DateTime   @default(now()) @map("creado_en")
+  concepto              String // apto | apto_recomendaciones | apto_restricciones | aplazado | no_apto (solo con regimen)
+  regimen               String? // alturas | conduccion | alimentos | armas | electrico | confinados
+  restricciones         String? // recomendaciones y restricciones (sin diagnósticos)
+  restriccionHasta      DateTime?  @map("restriccion_hasta") // vigencia de la restricción; vacío = permanente o sin restricción
+  restriccionPermanente Boolean    @default(false) @map("restriccion_permanente")
+  adaptacionFecha       DateTime?  @map("adaptacion_fecha") // fecha en que se adaptó el puesto (Res. 1843/2025 art. 19 par.)
+  comunicadoTrabajador  DateTime?  @map("comunicado_trabajador")
+  proximo               DateTime?
+  creadoEn              DateTime   @default(now()) @map("creado_en")
 
   @@map("examen_medico")
 }
@@ -970,23 +986,26 @@ model Visita {
 
 // Auditoría interna anual del SG-SST (Decreto 1072/2015 arts. 2.2.4.6.29 y 2.2.4.6.30; Res. 0312/2019 estándares 6.1.2 y 6.1.4).
 model Auditoria {
-  id            String      @id @default(cuid())
-  empresaId     String      @map("empresa_id")
-  empresa       Empresa     @relation(fields: [empresaId], references: [id], onDelete: Cascade)
-  anio          Int
-  fechaInicio   DateTime    @map("fecha_inicio")
-  fechaCierre   DateTime?   @map("fecha_cierre")
-  auditor       String
-  auditorPerfil String?     @map("auditor_perfil") // formación e independencia del auditor
-  participantes String? // COPASST o Vigía que participó en la planificación
-  alcance       String?
-  metodologia   String?
-  items         Json        @default("[]") // [{ n, aspecto, criterio, estandares, resultado, evidencia, hallazgo }]
-  conclusiones  String?
-  estado        String      @default("en_curso") // en_curso | cerrada
-  creadoEn      DateTime    @default(now()) @map("creado_en")
-  acciones      Accion[]
-  archivos      Evidencia[]
+  id              String      @id @default(cuid())
+  empresaId       String      @map("empresa_id")
+  empresa         Empresa     @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  anio            Int
+  fechaInicio     DateTime    @map("fecha_inicio")
+  fechaCierre     DateTime?   @map("fecha_cierre")
+  auditor         String
+  auditorPerfil   String?     @map("auditor_perfil") // formación e independencia del auditor
+  independiente   Boolean     @default(false) // declaración: no audita su propio trabajo (Decreto 1072/2015 art. 2.2.4.6.29)
+  comunicadoA     String?     @map("comunicado_a") // a quién se comunicaron los resultados (art. 2.2.4.6.29)
+  comunicadoFecha DateTime?   @map("comunicado_fecha")
+  participantes   String? // COPASST o Vigía que participó en la planificación
+  alcance         String?
+  metodologia     String?
+  items           Json        @default("[]") // [{ n, aspecto, criterio, estandares, resultado, evidencia, hallazgo }]
+  conclusiones    String?
+  estado          String      @default("en_curso") // en_curso | cerrada
+  creadoEn        DateTime    @default(now()) @map("creado_en")
+  acciones        Accion[]
+  archivos        Evidencia[]
 
   @@index([empresaId, anio])
   @@map("auditoria")
@@ -1034,6 +1053,7 @@ model Comite {
   empresaId     String          @map("empresa_id")
   empresa       Empresa         @relation(fields: [empresaId], references: [id], onDelete: Cascade)
   tipo          String // COPASST | VIGIA | CCL | BRIGADA
+  sede          String? // centro de trabajo, cuando la empresa tiene un CCL por sede (Res. 3461/2025 art. 3)
   periodoInicio DateTime?       @map("periodo_inicio")
   periodoFin    DateTime?       @map("periodo_fin")
   normaRef      String?         @map("norma_ref")
@@ -1055,6 +1075,7 @@ model ComiteMiembro {
   cedula     String?
   cargo      String?
   rol        String // presidente | secretario | principal_empleador | principal_trabajadores | suplente_empleador | suplente_trabajadores | brigadista | jefe_brigada
+  calidad    String? // principal | suplente (separado del cargo en el comité: presidente | secretario)
   representa String? // empleador | trabajadores
 
   @@map("comite_miembro")

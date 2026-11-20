@@ -50,15 +50,16 @@ export async function fechasPlaneador({ empresaId, desde, hasta, hoy = new Date(
       id: true, razonSocial: true, responsableSst: true, resultadoReglas: true, creadoEn: true,
       actividades: { where: { origen: { not: "accion" } }, select: { id: true, anio: true, mes: true, nombre: true, estado: true, normaRef: true } },
       comites: { select: { id: true, tipo: true, periodoFin: true, normaRef: true } },
-      eventos: { select: { id: true, tipo: true, fecha: true, gravedad: true, fechaReporte: true, reportadoArl: true, invEstado: true, invCierre: true, invRemitidaArl: true, reporteMinisterio: true, trabajadorNombre: true } },
+      eventos: { select: { id: true, tipo: true, fecha: true, gravedad: true, vinculacion: true, fechaReporte: true, reportadoArl: true, invEstado: true, invCierre: true, invRemitidaArl: true, reporteMinisterio: true, trabajadorNombre: true } },
       acciones: { where: { fechaLimite: { not: null } }, select: { id: true, descripcion: true, fechaLimite: true, estado: true, eventoId: true } },
       matrizVersiones: { orderBy: { numero: "desc" }, take: 1, select: { numero: true, fecha: true } },
-      evaluaciones: { orderBy: { fecha: "desc" }, take: 1, select: { fecha: true, anio: true } },
+      evaluaciones: { orderBy: { fecha: "desc" }, select: { fecha: true, anio: true, tipo: true, cerrada: true, valoracion: true } },
+      capacitaciones: { where: { OR: [{ tema: { contains: "altura", mode: "insensitive" } }, { tema: { contains: "confinad", mode: "insensitive" } }] }, orderBy: { fecha: "desc" }, select: { id: true, fecha: true, tema: true, asistentes: { where: { aprobo: { not: false } }, select: { trabajadorId: true, trabajador: { select: { nombres: true, activo: true } } } } } },
       recordatorios: true,
       inspecciones: { orderBy: { fecha: "desc" }, select: { lista: true, fecha: true } },
       auditorias: { orderBy: { fechaInicio: "desc" }, take: 1, select: { id: true, anio: true, fechaInicio: true, estado: true } },
       visitas: { where: { fecha: { gte: desde, lte: hasta } }, select: { id: true, fecha: true, horas: true, actividades: true } },
-      trabajadores: { where: { OR: [{ activo: true }, { fechaRetiro: { gte: new Date(Date.now() - 90 * 864e5) } }] }, select: { id: true, nombres: true, activo: true, fechaRetiro: true, examenes: { orderBy: { fecha: "desc" }, take: 3, select: { id: true, proximo: true, tipo: true, fecha: true, concepto: true } }, entregasEpp: { where: { proximaReposicion: { not: null } }, orderBy: { fecha: "desc" }, select: { id: true, elemento: true, proximaReposicion: true } } } },
+      trabajadores: { where: { OR: [{ activo: true }, { fechaRetiro: { gte: new Date(Date.now() - 90 * 864e5) } }] }, select: { id: true, nombres: true, activo: true, fechaRetiro: true, examenes: { orderBy: { fecha: "desc" }, take: 3, select: { adaptacionFecha: true, id: true, proximo: true, tipo: true, fecha: true, concepto: true } }, entregasEpp: { where: { proximaReposicion: { not: null } }, orderBy: { fecha: "desc" }, select: { id: true, elemento: true, proximaReposicion: true } } } },
     },
   });
   const out: Fecha[] = [];
@@ -94,10 +95,34 @@ export async function fechasPlaneador({ empresaId, desde, hasta, hoy = new Date(
       const f = masAnios(v.fecha, 1);
       if (dentro(f, false)) add({ id: `matriz-${e.id}`, fecha: iso(f), titulo: `Actualización anual de la matriz de peligros (última: v${v.numero})`, categoria: "matriz", estado: estadoDe(f, false, hoy), normaRef: "Decreto 1072/2015 art. 2.2.4.6.15", href: `${base}/matriz` });
     }
-    const ev = e.evaluaciones[0];
-    if (ev) {
-      const f = masAnios(ev.fecha, 1);
-      if (dentro(f, false)) add({ id: `eval-${e.id}`, fecha: iso(f), titulo: "Autoevaluación anual de estándares mínimos", detalle: `La última fue el ${ev.fecha.toISOString().slice(0, 10)}. Después de la autoevaluación se actualiza el plan de mejoramiento.`, categoria: "evaluacion", estado: estadoDe(f, false, hoy), normaRef: "Res. 0312/2019 arts. 27 y 28", href: `${base}/evaluacion` });
+    // Reporte de avance del plan de mejoramiento a la ARL según la valoración de la última evaluación cerrada (Res. 0312/2019 art. 28).
+    const evCerrada = e.evaluaciones.find((x) => x.cerrada);
+    const mesesArl = evCerrada?.valoracion === "CRÍTICO" ? 3 : evCerrada?.valoracion === "MODERADAMENTE ACEPTABLE" ? 6 : 0;
+    if (evCerrada && mesesArl) {
+      const f = new Date(evCerrada.fecha); f.setUTCMonth(f.getUTCMonth() + mesesArl);
+      const hecho = e.evaluaciones.some((x) => x.cerrada && x.fecha > evCerrada.fecha);
+      if (dentro(f, hecho)) add({ id: `arl-avance-${e.id}-${evCerrada.fecha.toISOString().slice(0, 10)}`, fecha: iso(f), titulo: `Enviar a la ARL el reporte de avances del plan de mejoramiento (valoración ${evCerrada.valoracion!.toLowerCase()})`, detalle: `La ${evCerrada.tipo === "inicial" ? "evaluación inicial" : `autoevaluación ${evCerrada.anio}`} del ${evCerrada.fecha.toISOString().slice(0, 10)} quedó ${evCerrada.valoracion!.toLowerCase()}: el reporte de avances va a la ARL en máximo ${mesesArl === 3 ? "tres (3)" : "seis (6)"} meses.`, categoria: "evaluacion", estado: estadoDe(f, hecho, hoy), normaRef: "Res. 0312/2019 art. 28", href: `${base}/evaluacion` });
+    }
+    // Reentrenamiento y actualización de la formación en tareas de alto riesgo.
+    {
+      const rrN = new Set(((e.resultadoReglas ?? {}) as { normas?: { codigo: string }[] }).normas?.map((n) => n.codigo) ?? []);
+      const tareaFormacion = (clave: string, re: RegExp, meses: number, titulo: string, detalle: string, normaRef: string) => {
+        const caps = e.capacitaciones.filter((c) => re.test(c.tema));
+        if (!caps.length) return;
+        // Por trabajador activo: su última formación registrada con asistencia.
+        const ultima = new Map<string, { fecha: Date; nombre: string }>();
+        for (const c of caps) for (const a of c.asistentes) if (a.trabajador.activo && !ultima.has(a.trabajadorId)) ultima.set(a.trabajadorId, { fecha: c.fecha, nombre: a.trabajador.nombres });
+        const vence = (d: Date) => { const f = new Date(d); f.setUTCMonth(f.getUTCMonth() + meses); return f; };
+        if (ultima.size) {
+          for (const [tid, u] of ultima) { const f = vence(u.fecha); if (dentro(f, false)) add({ id: `${clave}-${tid}`, fecha: iso(f), titulo: `${titulo} — ${u.nombre}`, detalle: `${detalle} Última formación registrada: ${u.fecha.toISOString().slice(0, 10)}.`, categoria: "legal", estado: estadoDe(f, false, hoy), normaRef, href: `${base}/trabajadores` }); }
+        } else {
+          // Sin asistentes registrados no se sabe quién está autorizado: una tarea para la empresa desde la última formación.
+          const f = vence(caps[0].fecha);
+          if (dentro(f, false)) add({ id: `${clave}-${e.id}`, fecha: iso(f), titulo, detalle: `${detalle} Última formación registrada: ${caps[0].fecha.toISOString().slice(0, 10)} (${caps[0].tema}); registre los asistentes para programarlo por trabajador.`, categoria: "legal", estado: estadoDe(f, false, hoy), normaRef, href: `${base}/trabajadores` });
+        }
+      };
+      if (rrN.has("RES-4272-2021")) tareaFormacion("alturas-reent", /altura/i, 18, "Reentrenamiento de actualización en trabajo en alturas", "El trabajador autorizado que lleva 18 meses en la empresa sin cambiar de actividad hace un reentrenamiento de mínimo 8 horas (20 % teoría, 80 % práctica), presencial y a cargo del empleador; se reporta a la ARL.", "Res. 4272/2021 art. 27 num. 4 lit. b");
+      if (rrN.has("RES-0491-2020")) tareaFormacion("confinado-act", /confinad/i, 36, "Actualización de la formación en espacios confinados", "La formación para trabajo en espacios confinados se actualiza cada tres (3) años, a cargo del empleador.", "Res. 0491/2020 art. 30 par. (adicionado por la Res. 2605/2020 art. 3)");
     }
     const r = (e.responsableSst ?? {}) as { nombre?: string; curso50h?: boolean; curso50hFecha?: string };
     if (r.curso50h && /^\d{4}-\d{2}-\d{2}$/.test(r.curso50hFecha ?? "")) {
@@ -124,7 +149,8 @@ export async function fechasPlaneador({ empresaId, desde, hasta, hoy = new Date(
       const conRestr = t.activo ? t.examenes.find((x) => x.concepto === "apto_restricciones") : undefined;
       if (conRestr) {
         const f = sumarHabiles(conRestr.fecha, 20);
-        if (dentro(f, false) && f.getTime() > hoy.getTime() - 60 * DIA) add({ id: `adapt-${conRestr.id}`, fecha: iso(f), titulo: `Adaptar el puesto a las restricciones médicas — ${t.nombres}`, detalle: "Implementar las restricciones o recomendaciones del concepto médico y dejar constancia (reubicación, ajuste de tareas o de jornada).", categoria: "examen", estado: estadoDe(f, false, hoy), normaRef: "Res. 1843/2025 art. 5 lit. f; Ley 776/2002 arts. 4 y 8", href: `${base}/trabajadores` });
+        const hecho = conRestr.adaptacionFecha ?? null;
+        if (dentro(f, !!hecho) && f.getTime() > hoy.getTime() - 60 * DIA) add({ id: `adapt-${conRestr.id}`, fecha: iso(f), titulo: `Adaptar el puesto a las restricciones médicas — ${t.nombres}`, detalle: "Implementar las restricciones o recomendaciones del concepto médico y dejar constancia (reubicación, ajuste de tareas o de jornada).", categoria: "examen", estado: estadoDe(f, !!hecho, hoy), normaRef: "Res. 1843/2025 art. 5 lit. f; Ley 776/2002 arts. 4 y 8", href: `${base}/trabajadores` });
       }
       if (!t.activo) continue;
       const x = t.examenes[0];
@@ -146,6 +172,11 @@ export async function fechasPlaneador({ empresaId, desde, hasta, hoy = new Date(
       const anios = new Set<number>(); for (let y = desde.getUTCFullYear(); y <= hasta.getUTCFullYear(); y++) anios.add(y);
       for (const y of anios) {
         const fecha = (m: number, d: number) => new Date(Date.UTC(y, m - 1, d, 12));
+        // Autoevaluación de estándares mínimos cada diciembre, con el plan de mejoramiento y el plan anual del año siguiente (Res. 0312/2019 art. 26).
+        { const f = fecha(12, 31); const hecho = e.evaluaciones.some((x) => x.cerrada && (x.anio === y && x.tipo === "anual" || x.fecha.getUTCFullYear() === y && x.fecha.getUTCMonth() === 11)); if (dentro(f, hecho)) add({ id: `eval-${e.id}-${y}`, fecha: iso(f), titulo: `Autoevaluación anual de estándares mínimos ${y}`, detalle: "Se hace en diciembre de cada año; con su resultado se actualizan el plan de mejoramiento y el plan anual de trabajo que arranca el 1 de enero.", categoria: "evaluacion", estado: estadoDe(f, hecho, hoy), normaRef: "Res. 0312/2019 art. 26", href: `${base}/evaluacion`, mesCompleto: true }); }
+        // Julio: informe de avance del plan de mejoramiento (art. 28) y registro de la autoevaluación y el plan en el Fondo de Riesgos Laborales.
+        { const f = fecha(7, 31); if (dentro(f, false)) add({ id: `avance-jul-${e.id}-${y}`, fecha: iso(f), titulo: "Informe de avance del plan de mejoramiento (julio)", detalle: "Informe de avance de las acciones del plan de mejoramiento, teniendo en cuenta las recomendaciones de la ARL.", categoria: "evaluacion", estado: estadoDe(f, false, hoy), normaRef: "Res. 0312/2019 art. 28", href: `${base}/evaluacion`, mesCompleto: true }); }
+        { const f = fecha(7, 31); if (dentro(f, false)) add({ id: `registro-sgrl-${e.id}-${y}`, fecha: iso(f), titulo: `Registrar la autoevaluación ${y - 1} y el plan de mejoramiento en sgrl.mintrabajo.gov.co (copia a la ARL)`, detalle: y === 2026 ? "Plazo de la vigencia 2025: hasta el 31 de julio de 2026." : "Fecha de referencia: el plazo de cada vigencia lo fija la circular anual del Ministerio del Trabajo (para la vigencia 2025 fue el 31 de julio de 2026, Circular 027/2026). Confírmelo.", categoria: "evaluacion", estado: estadoDe(f, false, hoy), normaRef: y === 2026 ? "Circular 027/2026 nums. 1 y 2; Res. 0312/2019 art. 28" : "Res. 0312/2019 arts. 26 y 28; Circular 027/2026 (vigencia 2025)", href: `${base}/evaluacion` }); }
         if (docs.has("PRG-09")) { const f = fecha(1, 31); if (dentro(f, false)) add({ id: `pesv-${e.id}-${y}`, fecha: iso(f), titulo: "Reporte anual de autogestión del PESV al Ministerio del Trabajo", detalle: "Indicadores del PESV con corte al 31 de diciembre; plazo general 31 de enero, escalonado por el último dígito del NIT.", categoria: "legal", estado: estadoDe(f, false, hoy), normaRef: "Circular 034/2026; Res. 40595/2022", href: `${base}/documentos/PRG-09` }); }
         for (const [m, d] of [[6, 30], [12, 31]] as const) { const f = fecha(m, d); if (dentro(f, false)) add({ id: `acoso-${e.id}-${y}-${m}`, fecha: iso(f), titulo: "Publicación semestral anonimizada de quejas por acoso sexual y remisión al SIVIGE", detalle: "Número de quejas tramitadas y sanciones, sin datos personales.", categoria: "legal", estado: estadoDe(f, false, hoy), normaRef: "Ley 2365/2024 art. 11 num. 7", href: `${base}/documentos/PRC-06` }); }
         { const f = fecha(12, 15); if (dentro(f, false)) add({ id: `spa-${e.id}-${y}`, fecha: iso(f), titulo: "Información anual del programa de salud mental y prevención de SPA", detalle: "Planeación, implementación, seguimiento y ajustes, desagregados por actividad económica, número de trabajadores, ocupación, sexo y edad, a disposición de los inspectores.", categoria: "legal", estado: estadoDe(f, false, hoy), normaRef: "Decreto 728/2025 (Decreto 1072 art. 2.2.4.13.10)", href: `${base}/documentos/PRG-03` }); }

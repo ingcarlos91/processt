@@ -8,6 +8,7 @@ import { db } from "@/lib/db";
 import { recalcularEmpresa } from "@/lib/empresa";
 import { aplicarCargoTipo, agregarTareaTipo, agregarPeligroCatalogo, prepararEstructura } from "@/lib/matriz/instanciar";
 import { sugerirTareasYPeligros, type Sugerencia } from "@/lib/ia";
+import { leerSeguimiento, type Seguimiento } from "@/lib/matriz/seguimiento";
 
 const rv = (id: string) => revalidatePath(`/empresas/${id}`, "layout");
 
@@ -34,9 +35,12 @@ export async function agregarCargo(empresaId: string, d: { nombre: string; nPers
   return c.id;
 }
 
-export async function actualizarCargo(empresaId: string, cargoId: string, d: { nombre?: string; nPersonas?: number; descripcionFunciones?: string; zonaId?: string | null; area?: string }) {
+export async function actualizarCargo(empresaId: string, cargoId: string, d: { nombre?: string; nPersonas?: number; descripcionFunciones?: string; zonaId?: string | null; area?: string; periodicidadMeses?: number | null; periodicidadMotivo?: string | null }) {
   await requiereUsuario();
-  await db.cargo.update({ where: { id: cargoId }, data: { ...d, nPersonas: d.nPersonas != null ? Math.max(1, Number(d.nPersonas)) : undefined } });
+  // Periodicidad de las evaluaciones periódicas (Res. 1843/2025 art. 15): entero positivo o vacío.
+  const periodicidadMeses = d.periodicidadMeses === undefined ? undefined : Number(d.periodicidadMeses) > 0 ? Math.round(Number(d.periodicidadMeses)) : null;
+  const periodicidadMotivo = d.periodicidadMotivo === undefined ? undefined : d.periodicidadMotivo?.trim() || null;
+  await db.cargo.update({ where: { id: cargoId, empresaId }, data: { ...d, periodicidadMeses, periodicidadMotivo, nPersonas: d.nPersonas != null ? Math.max(1, Number(d.nPersonas)) : undefined } });
   rv(empresaId);
 }
 
@@ -100,6 +104,16 @@ export async function actualizarPeligro(empresaId: string, id: string, d: Record
   const data: Record<string, unknown> = {};
   for (const k of permitidos) if (k in d) data[k] = ["nd", "ne", "nc"].includes(k) ? Number(d[k]) : d[k];
   await db.peligroEvaluado.update({ where: { id }, data });
+  rv(empresaId);
+}
+
+/** Responsable, fecha, estado y verificación de las medidas de un peligro (Res. 0312/2019 est. 4.2.1 y 4.2.2). */
+export async function actualizarSeguimiento(empresaId: string, id: string, cambios: Seguimiento) {
+  await requiereUsuario();
+  const p = await db.peligroEvaluado.findFirstOrThrow({ where: { id, empresaId }, select: { seguimiento: true } });
+  const actual = leerSeguimiento(p.seguimiento) as Record<string, string>;
+  for (const [k, v] of Object.entries(cambios)) actual[k] = v ?? "";
+  await db.peligroEvaluado.update({ where: { id }, data: { seguimiento: leerSeguimiento(actual) } });
   rv(empresaId);
 }
 

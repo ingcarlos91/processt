@@ -4,7 +4,7 @@ nombre: Programa de capacitación, inducción y reinducción en SST
 tipo: PRG
 nivelMin: 7
 carpeta: 1. Recursos
-estandares: ["1.2.1","1.2.2"]
+estandares: ["1.1.7","1.2.1","1.2.2"]
 normas: ["DEC-1072-2015","RES-0312-2019"]
 ---
 ## Objetivo
@@ -28,6 +28,8 @@ Todo trabajador que ingrese por primera vez recibe, antes de iniciar labores, un
 7. Derechos y deberes en el Sistema General de Riesgos Laborales.
 
 Como política de la empresa, la reinducción se hace una vez al año y cada vez que cambien las condiciones de trabajo, el cargo o la normatividad. La norma no fija una periodicidad, pero la evaluación inicial y la anual revisan el cumplimiento de la inducción y la reinducción (Decreto 1072 de 2015, art. 2.2.4.6.16, num. 5).
+
+Los integrantes del {{#if comites.copasst.esVigia}}Vigía de SST{{else}}COPASST{{/if}} reciben capacitación para cumplir sus funciones: responsabilidades del comité o vigía, identificación de peligros, inspecciones e investigación de incidentes y accidentes. Se dejan los soportes de asistencia y de los temas tratados {{#if (gte empresa.nivel 21)}}(Resolución 0312 de 2019, estándar 1.1.7 y art. 9, ítem 4: "conformar, capacitar y verificar"){{else}}(buena práctica de la empresa: los 7 estándares del art. 3 de la Resolución 0312 de 2019 no incluyen este ítem; se hace para que el Vigía cumpla sus funciones){{/if}}.
 
 ## Cronograma temático {{anio}}
 

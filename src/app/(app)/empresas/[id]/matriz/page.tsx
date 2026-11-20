@@ -1,4 +1,5 @@
 import { db } from "@/lib/db";
+import { leerSeguimiento } from "@/lib/matriz/seguimiento";
 import { MatrizEditor } from "@/components/matriz/editor";
 import { relevanciaEmpresa, relevancia } from "@/lib/biblioteca/relevancia";
 import { avisosActualizacion } from "@/lib/matriz/versiones";
@@ -32,13 +33,13 @@ export default async function Matriz({ params }: PageProps<"/empresas/[id]/matri
       version={e.matrizVersiones[0] ? { numero: e.matrizVersiones[0].numero, fecha: e.matrizVersiones[0].fecha.toISOString(), motivo: e.matrizVersiones[0].motivo } : null}
       procesos={e.procesos.map((p) => ({ id: p.id, nombre: p.nombre }))}
       zonas={e.zonas.map((z) => ({ id: z.id, nombre: z.nombre }))}
-      cargos={e.cargos.map((c) => ({ id: c.id, nombre: c.nombre, nPersonas: c.nPersonas, funciones: c.descripcionFunciones ?? "", tipo: c.cargoTipo?.nombre ?? null, zonaId: c.zonaId, tareaIds: c.tareas.map((t) => t.tareaId) }))}
+      cargos={e.cargos.map((c) => ({ id: c.id, nombre: c.nombre, nPersonas: c.nPersonas, funciones: c.descripcionFunciones ?? "", periodicidadMeses: c.periodicidadMeses ?? null, periodicidadMotivo: c.periodicidadMotivo ?? "", tipo: c.cargoTipo?.nombre ?? null, zonaId: c.zonaId, tareaIds: c.tareas.map((t) => t.tareaId) }))}
       tareas={e.tareas.map((t) => ({ id: t.id, nombre: t.nombre, procesoId: t.procesoId, zonaId: t.zonaId, rutinaria: t.rutinaria, altoRiesgo: t.altoRiesgo, estado: t.estado, fuente: t.fuente, tareaTipoId: t.tareaTipoId, cargoIds: t.cargos.map((c) => c.cargoId) }))}
       peligros={e.peligros.map((p) => ({
         id: p.id, origen: p.origen as "tarea" | "zona" | "cargo", tareaId: p.tareaId, zonaId: p.zonaId, cargoId: p.cargoId, peligroId: p.peligroId,
         clasificacion: p.clasificacion, descripcion: p.descripcion, efectosPosibles: p.efectosPosibles ?? "", controlesFuente: p.controlesFuente ?? "", controlesMedio: p.controlesMedio ?? "", controlesIndividuo: p.controlesIndividuo ?? "",
         nd: p.nd, ne: p.ne, nc: p.nc, medidaEliminacion: p.medidaEliminacion ?? "", medidaSustitucion: p.medidaSustitucion ?? "", medidaIngenieria: p.medidaIngenieria ?? "",
-        medidaAdministrativa: p.medidaAdministrativa ?? "", medidaEpp: p.medidaEpp ?? "", requisitoLegal: p.requisitoLegal, estado: p.estado, fuente: p.fuente,
+        medidaAdministrativa: p.medidaAdministrativa ?? "", medidaEpp: p.medidaEpp ?? "", requisitoLegal: p.requisitoLegal, estado: p.estado, fuente: p.fuente, seguimiento: leerSeguimiento(p.seguimiento),
       }))}
       cargosTipo={cargosTipo.map((c) => ({ ...c, relevancia: relevancia(!!c.empresaId, !!c.sectorTipoId && c.sectorTipoId === e.sectorTipoId) }))}
       tareasTipo={tareasTipo.map((t) => ({ ...t, relevancia: relevancia(!!t.empresaId, rel.tareas.has(t.id)) }))}

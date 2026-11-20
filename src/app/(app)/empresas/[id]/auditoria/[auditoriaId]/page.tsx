@@ -13,9 +13,9 @@ export default async function Auditoria({ params }: PageProps<"/empresas/[id]/au
   if (!a || a.empresaId !== id) notFound();
   const [sistema, e] = await Promise.all([evidenciasSistema(id), db.empresa.findUniqueOrThrow({ where: { id }, select: { responsableSst: true, representanteLegal: true } })]);
   return (
-    <AuditoriaDetalle empresaId={id} sistema={sistema}
+    <AuditoriaDetalle empresaId={id} sistema={sistema} responsableSst={(e.responsableSst as { nombre?: string } | null)?.nombre ?? ""}
       responsables={[...new Set([(e.responsableSst as { nombre?: string } | null)?.nombre, e.representanteLegal].filter(Boolean) as string[])]}
-      a={{ id: a.id, anio: a.anio, fechaInicio: iso(a.fechaInicio), fechaCierre: iso(a.fechaCierre), auditor: a.auditor, auditorPerfil: a.auditorPerfil ?? "", participantes: a.participantes ?? "", alcance: a.alcance ?? "", estado: a.estado, conclusiones: a.conclusiones ?? "",
+      a={{ id: a.id, anio: a.anio, fechaInicio: iso(a.fechaInicio), fechaCierre: iso(a.fechaCierre), auditor: a.auditor, auditorPerfil: a.auditorPerfil ?? "", independiente: a.independiente, comunicadoA: a.comunicadoA ?? "", comunicadoFecha: iso(a.comunicadoFecha), participantes: a.participantes ?? "", alcance: a.alcance ?? "", estado: a.estado, conclusiones: a.conclusiones ?? "",
         items: (a.items ?? []) as ItemAuditoria[], acciones: a.acciones.map((x) => ({ id: x.id, hallazgo: x.hallazgo, descripcion: x.descripcion, responsable: x.responsable ?? "", fechaLimite: iso(x.fechaLimite), estado: x.estado, causa: x.causa ?? "" })), archivos: a.archivos.map(aArchivoUI) }} />
   );
 }

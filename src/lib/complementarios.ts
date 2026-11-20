@@ -21,6 +21,7 @@ export const SECCIONES: Seccion[] = [
       { k: "acosoSexual", etiqueta: "Persona que recibe denuncias de acoso sexual", tipo: "persona", que: "Persona designada por la gerencia, distinta del Comité de Convivencia, para recibir denuncias de acoso sexual con confidencialidad.", usadoEn: ["PRC-06"], normas: ["Ley 2365/2024"] },
       { k: "ips", etiqueta: "IPS que realiza las evaluaciones médicas", tipo: "text", que: "Institución de salud con licencia en SST que hace los exámenes de ingreso, periódicos y de retiro.", donde: "Contrato o cotización con la IPS.", ejemplo: "IPS Salud Ocupacional del Cauca S.A.S.", usadoEn: ["DOC-07", "PRC-07", "PRG-02"], normas: ["Res. 1843/2025"] },
       { k: "medicoIps", etiqueta: "Médico de la IPS que revisa el perfil de cargo (profesiograma)", tipo: "persona", que: "Médico especialista en SST o medicina del trabajo del prestador que recibe el perfil de cargo y recomienda los énfasis de las evaluaciones.", usadoEn: ["DOC-07"], normas: ["Res. 1843/2025 arts. 5-d y 16"] },
+      { k: "medicoIpsLicencia", etiqueta: "Licencia en SST del médico de la IPS", tipo: "text", que: "Número y fecha de la licencia en seguridad y salud en el trabajo del médico que revisa el perfil de cargo; las evaluaciones las hace un médico especialista en SST con licencia vigente.", donde: "Certificado o licencia que entrega la IPS.", ejemplo: "Licencia SST 12345 del 10/03/2022, Secretaría de Salud del Cauca", usadoEn: ["DOC-07"], normas: ["Res. 1843/2025 art. 17"] },
     ],
   },
   {
@@ -38,7 +39,10 @@ export const SECCIONES: Seccion[] = [
   {
     id: "alto_riesgo", titulo: "Tareas de alto riesgo", descripcion: "Solo si la empresa tiene trabajo en alturas, espacios confinados o productos químicos.",
     campos: [
+      { k: "administradorAlturas", etiqueta: "Administrador del programa de protección contra caídas", tipo: "persona", que: "Persona que diseña, administra y asegura el programa de trabajo en alturas: profesional, especialista o magíster en SST con licencia vigente y curso de coordinador de alturas.", usadoEn: ["PRG-08"], normas: ["Res. 4272/2021 art. 61 lit. c"], siDisparador: "alturas" },
       { k: "coordinadorAlturas", etiqueta: "Coordinador de trabajo en alturas", tipo: "persona", que: "Persona con certificado de coordinador que autoriza los permisos de trabajo en alturas.", usadoEn: ["PRG-08"], normas: ["Res. 4272/2021"], siDisparador: "alturas" },
+      { k: "supervisorConfinados", etiqueta: "Supervisor de espacios confinados", tipo: "persona", que: "Persona que coordina el ingreso y autoriza, suspende, cancela y cierra el permiso de trabajo en espacios confinados, con la formación de supervisor.", usadoEn: ["PRG-11"], normas: ["Res. 0491/2020 art. 10"], siDisparador: "confinados" },
+      { k: "vigiaConfinados", etiqueta: "Vigía de espacios confinados", tipo: "persona", que: "Persona que permanece en la entrada, verifica las condiciones, monitorea a los entrantes y activa el plan de emergencias. Puede ser el mismo supervisor si tiene la formación de ambos roles.", usadoEn: ["PRG-11"], normas: ["Res. 0491/2020 art. 10"], siDisparador: "confinados" },
       {
         k: "espaciosConfinados", etiqueta: "Inventario de espacios confinados", tipo: "tabla", que: "Tanques, pozos, cámaras o silos donde una persona puede entrar pero no está diseñado para permanecer.", usadoEn: ["PRG-11"], normas: ["Res. 0491/2020"], siDisparador: "confinados",
         columnas: [{ k: "espacio", etiqueta: "Espacio" }, { k: "ubicacion", etiqueta: "Ubicación" }, { k: "peligros", etiqueta: "Peligros" }, { k: "acceso", etiqueta: "Acceso" }, { k: "senalizado", etiqueta: "Señalizado", tipo: "select", opciones: ["Sí", "No"] }],

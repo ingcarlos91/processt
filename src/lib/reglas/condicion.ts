@@ -1,7 +1,7 @@
 // Evaluación de condiciones de aplicabilidad (reglas, normas, plantillas).
 export type Disparador =
   | "alturas" | "confinados" | "quimicos" | "electrico" | "ruido" | "manipulacionAlimentos"
-  | "atencionPublico" | "cargas" | "maquinaria" | "trabajoCaliente" | "izaje" | "biologico" | "residuosSalud"
+  | "atencionPublico" | "cargas" | "maquinaria" | "trabajoCaliente" | "izaje" | "biologico" | "residuosSalud" | "serviciosSalud"
   | "altoRiesgoPension" | "trabajoNocturno" | "teletrabajo" | "trabajoEnCasa" | "conduccion"
   | "actividadIndustrial" | "almacenamientoCarga" | "aglomeracionesPublico" | "serviciosPublicos" | "obraCivilMayor" | "instalacionClasificada";
 
@@ -18,6 +18,7 @@ export const DISPARADORES: { clave: Disparador; etiqueta: string; norma?: string
   { clave: "izaje", etiqueta: "Izaje de cargas (grúas, montacargas, polipastos)", norma: "Res. 2400/1979 arts. 398-447" },
   { clave: "biologico", etiqueta: "Riesgo biológico (fluidos, residuos, aguas, animales, público)", norma: "Decreto 1072/2015 art. 2.2.4.6.24; Decreto 1477/2014" },
   { clave: "residuosSalud", etiqueta: "Genera residuos de atención en salud o afines (salud, veterinaria, estética, tatuajes, funerarias, laboratorios)", norma: "Decreto 780/2016 art. 2.8.10.2; Res. 591/2024", grupo: "especial" },
+  { clave: "serviciosSalud", etiqueta: "Presta servicios de salud humana o de asistencia social (CIIU 86 y 87): personal que puede atender salud mental", norma: "Decreto 1072/2015 art. 2.2.4.13.5 (Decreto 728/2025)" },
   { clave: "manipulacionAlimentos", etiqueta: "Manipulación de alimentos", norma: "Res. 2674/2013 arts. 11-14" },
   { clave: "atencionPublico", etiqueta: "Atención al público / manejo de dinero", norma: "Res. 2646/2008 art. 6" },
   { clave: "aglomeracionesPublico", etiqueta: "Administra espacios con aglomeraciones de público (eventos, centros comerciales, estadios, templos)", norma: "Decreto 2157/2017", grupo: "especial" },
@@ -107,9 +108,17 @@ export function nivelPesv(ctx: { vehiculos: number; conductores: number; esTrans
   return "basico";
 }
 
-/** Composición del Comité de Convivencia Laboral (Res. 3461/2025 art. 3). */
+/**
+ * Composición del Comité de Convivencia Laboral (Res. 3461/2025 art. 3).
+ * El texto fija "menos de 5", "más de 5 y menos de 20" y "más de 20": deja sin tramo a las empresas de
+ * exactamente 5 y 20 trabajadores. Se aplica el tramo más protector (decisión D2): 5 → 1 y 1 con suplentes;
+ * 20 → 2 y 2 con suplentes.
+ */
 export function composicionCcl(trabajadores: number) {
-  if (trabajadores < 5) return { porParte: 1, suplentes: false, texto: "1 representante de los trabajadores y 1 del empleador, sin suplentes" };
-  if (trabajadores <= 20) return { porParte: 1, suplentes: true, texto: "1 representante de los trabajadores y 1 del empleador, con sus suplentes" };
-  return { porParte: 2, suplentes: true, texto: "2 representantes de los trabajadores y 2 del empleador, con sus suplentes" };
+  const norma = "Res. 3461/2025 art. 3";
+  if (trabajadores < 5) return { porParte: 1, suplentes: false, norma, interpretado: false, texto: "1 representante de los trabajadores y 1 del empleador, sin suplentes", tramo: "menos de 5 trabajadores" };
+  if (trabajadores === 5) return { porParte: 1, suplentes: true, norma, interpretado: true, texto: "1 representante de los trabajadores y 1 del empleador, con sus suplentes", tramo: "exactamente 5 trabajadores: el art. 3 no ubica este número en ningún tramo (\"menos de 5\" o \"más de 5 y menos de 20\"), por lo que se aplica el tramo más protector, con suplentes" };
+  if (trabajadores < 20) return { porParte: 1, suplentes: true, norma, interpretado: false, texto: "1 representante de los trabajadores y 1 del empleador, con sus suplentes", tramo: "más de 5 y menos de 20 trabajadores" };
+  if (trabajadores === 20) return { porParte: 2, suplentes: true, norma, interpretado: true, texto: "2 representantes de los trabajadores y 2 del empleador, con sus suplentes", tramo: "exactamente 20 trabajadores: el art. 3 no ubica este número en ningún tramo (\"menos de 20\" o \"más de 20\"), por lo que se aplica el tramo más protector, de 2 y 2" };
+  return { porParte: 2, suplentes: true, norma, interpretado: false, texto: "2 representantes de los trabajadores y 2 del empleador, con sus suplentes", tramo: "más de 20 trabajadores" };
 }

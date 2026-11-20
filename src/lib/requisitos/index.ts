@@ -15,7 +15,30 @@ export type Requisito = {
   seccion: string;
   /** Expresión regular que debe aparecer en la sección (escríbala en minúsculas y sin tildes: el texto se normaliza). Sin clave, solo se exige que la sección tenga contenido. */
   clave?: string;
+  /** Solo aplica a ciertas empresas: "nivel7" | "nivel21" | "nivel60" | "vigia" | "copasst" | "dis:<disparador>". Varias opciones separadas por "|" (basta una). */
+  si?: string;
 };
+
+/** Perfil de la empresa para decidir qué requisitos le aplican (sale del resultado de reglas). */
+export type PerfilRequisitos = { normas: Set<string>; nivel?: number; comites?: string[]; disparadores?: string[] };
+
+export function perfilDe(rr: { normas?: { codigo: string }[]; nivel?: number; comites?: string[]; disparadores?: string[] } | null | undefined): PerfilRequisitos | undefined {
+  if (!rr?.normas) return undefined;
+  return { normas: new Set(rr.normas.map((n) => n.codigo)), nivel: rr.nivel, comites: rr.comites, disparadores: rr.disparadores };
+}
+
+function aplica(r: Requisito, p?: PerfilRequisitos) {
+  if (!p) return true;
+  if (!p.normas.has(r.norma)) return false;
+  if (!r.si) return true;
+  return r.si.split("|").some((c) => {
+    if (c.startsWith("nivel")) return p.nivel === undefined || p.nivel === Number(c.slice(5));
+    if (c === "vigia") return !p.comites || p.comites.includes("VIGIA");
+    if (c === "copasst") return !p.comites || p.comites.includes("COPASST");
+    if (c.startsWith("dis:")) return !p.disparadores || p.disparadores.includes(c.slice(4));
+    return true;
+  });
+}
 
 export const REQUISITOS: Record<string, Requisito[]> = REQUISITOS_DATOS;
 
@@ -25,11 +48,11 @@ const normalizar = (t: string) => t.normalize("NFD").replace(/[\u0300-\u036f]/g,
 
 /** Cobertura de un documento generado (o de una plantilla) frente a sus requisitos. */
 /**
- * `normasAplicables`: si se pasa (normas que el motor de reglas aplica a la empresa), se omiten los requisitos
- * de normas que no le aplican (p. ej. el capítulo de alturas en una empresa sin trabajo en alturas).
+ * `perfil`: si se pasa (resultado de reglas de la empresa), se omiten los requisitos que no le aplican: los de normas
+ * que el motor no le aplica (p. ej. el capítulo de alturas sin trabajo en alturas) y los condicionados con `si`.
  */
-export function coberturaRequisitos(codigo: string, secciones: { titulo: string; contenido: string }[], normasAplicables?: Set<string>): EstadoRequisito[] {
-  return (REQUISITOS[codigo] ?? []).filter((r) => !normasAplicables || normasAplicables.has(r.norma)).map((r) => {
+export function coberturaRequisitos(codigo: string, secciones: { titulo: string; contenido: string }[], perfil?: PerfilRequisitos): EstadoRequisito[] {
+  return (REQUISITOS[codigo] ?? []).filter((r) => aplica(r, perfil)).map((r) => {
     const s = secciones.find((x) => normalizar(x.titulo) === normalizar(r.seccion));
     if (!s) return { ...r, cubierto: false, motivo: `No existe la sección “${r.seccion}”.` };
     const texto = s.contenido.replace(/<!--[\s\S]*?-->/g, "").trim();

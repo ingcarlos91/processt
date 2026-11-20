@@ -2,6 +2,7 @@ import { db } from "@/lib/db";
 import { cargarEmpresa, filasMatriz } from "@/lib/generador/contexto";
 import { TrabajadoresEditor } from "@/components/trabajadores/editor";
 import { cargarEntidades } from "@/lib/entidades";
+import { puedeBorrarExamen } from "@/lib/examenes";
 
 export const dynamic = "force-dynamic";
 const iso = (d?: Date | null) => d?.toISOString().slice(0, 10) ?? "";
@@ -28,7 +29,7 @@ export default async function Trabajadores({ params }: PageProps<"/empresas/[id]
       empresaId={id}
       entidades={await cargarEntidades()}
       ipsPorDefecto={String(((e.datosComplementarios ?? {}) as Record<string, unknown>).ips ?? "")}
-      cargos={e.cargos.map((c) => ({ id: c.id, nombre: c.nombre, nPersonas: c.nPersonas }))}
+      cargos={e.cargos.map((c) => ({ id: c.id, nombre: c.nombre, nPersonas: c.nPersonas, periodicidadMeses: c.periodicidadMeses ?? null }))}
       sugeridos={sugeridos}
       catalogoEpp={catalogo.filter((c) => c.tipo === "EPP").map((c) => c.nombre)}
       catalogoCapacitaciones={catalogo.filter((c) => c.tipo === "CAPACITACION").map((c) => c.nombre)}
@@ -37,7 +38,7 @@ export default async function Trabajadores({ params }: PageProps<"/empresas/[id]
         id: t.id, nombres: t.nombres, tipoDoc: t.tipoDoc, documento: t.documento ?? "", cargoId: t.cargoId ?? "", cargo: t.cargo?.nombre ?? "", vinculacion: t.vinculacion,
         fechaIngreso: iso(t.fechaIngreso), fechaRetiro: iso(t.fechaRetiro), activo: t.activo, sexo: t.sexo ?? "", fechaNacimiento: iso(t.fechaNacimiento), escolaridad: t.escolaridad ?? "",
         telefono: t.telefono ?? "", correo: t.correo ?? "", eps: t.eps ?? "", afp: t.afp ?? "", conduce: t.conduce, modalidad: t.modalidad, turnoNocturno: t.turnoNocturno, altoRiesgoPension: t.altoRiesgoPension, manipulaAlimentos: t.manipulaAlimentos,
-        examenes: t.examenes.map((x) => ({ id: x.id, tipo: x.tipo, fecha: iso(x.fecha), ips: x.ips ?? "", concepto: x.concepto, regimen: x.regimen ?? "", restricciones: x.restricciones ?? "", comunicadoTrabajador: iso(x.comunicadoTrabajador), proximo: iso(x.proximo) })),
+        examenes: t.examenes.map((x) => ({ id: x.id, tipo: x.tipo, fecha: iso(x.fecha), ips: x.ips ?? "", concepto: x.concepto, regimen: x.regimen ?? "", restricciones: x.restricciones ?? "", restriccionHasta: iso(x.restriccionHasta), restriccionPermanente: x.restriccionPermanente, adaptacionFecha: iso(x.adaptacionFecha), comunicadoTrabajador: iso(x.comunicadoTrabajador), proximo: iso(x.proximo), borrable: puedeBorrarExamen(x.creadoEn) })),
         entregas: t.entregasEpp.map((x) => ({ id: x.id, fecha: iso(x.fecha), elemento: x.elemento, cantidad: x.cantidad, tipo: x.tipo, capacitado: x.capacitado, proximaReposicion: iso(x.proximaReposicion) })),
         capacitaciones: t.asistencias.length,
       }))}

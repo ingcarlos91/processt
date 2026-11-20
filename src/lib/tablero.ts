@@ -24,7 +24,7 @@ export async function tableroConsultora(hoy = new Date()) {
       evaluaciones: { orderBy: { fecha: "desc" }, take: 1, select: { fecha: true, nivel: true, puntajeBruto: true, puntajeAjustado: true, valoracion: true } },
       actividades: { select: { anio: true, mes: true, estado: true } },
       documentos: { select: { estado: true, version: true, secciones: { select: { requiereRevision: true } }, archivos: { where: { activo: true, tipo: "DOCUMENTO_FIRMADO" }, orderBy: { subidoEn: "desc" }, take: 1, select: { documentoVersion: true } } } },
-      eventos: { select: { tipo: true, fecha: true, gravedad: true, fechaReporte: true, reportadoArl: true, invEstado: true, invCierre: true, invRemitidaArl: true, reporteMinisterio: true } },
+      eventos: { select: { tipo: true, fecha: true, gravedad: true, vinculacion: true, fechaReporte: true, reportadoArl: true, invEstado: true, invCierre: true, invRemitidaArl: true, reporteMinisterio: true } },
       acciones: { where: { estado: "abierta", fechaLimite: { lt: hoy } }, select: { id: true } },
       peligros: { select: { estado: true, nd: true, ne: true, nc: true } },
       matrizVersiones: { orderBy: { numero: "desc" }, take: 1, select: { fecha: true } },

@@ -43,6 +43,7 @@ export function camposCondicion(c: Condicion | null | undefined, ctx: ContextoRe
     if (k.claseRiesgoIn || k.nivelMin != null) add({ campo: "Clase de riesgo", valor: R[ctx.claseRiesgo] ?? String(ctx.claseRiesgo), donde: "Datos → Actividad económica", href: datos });
     for (const d of [k.disparador, ...(k.disparadorAlguno ?? [])].filter(Boolean) as Disparador[]) {
       const origen = ctx.origenDisparadores?.[d];
+      if (d === "serviciosSalud" && origen) { add({ campo: `Peligro especial: ${etiqueta(d)}`, valor: "activado por la actividad económica (CIIU 86 u 87)", donde: "Datos → Actividad económica", href: datos }); continue; }
       add({ campo: `Peligro especial: ${etiqueta(d)}`, valor: ctx.disparadores[d] ? (origen ? "activado por la matriz de peligros" : "marcado") : "no marcado", donde: origen ? "Cargos y matriz" : "Datos → Peligros especiales", href: origen ? `${base}/matriz` : datos });
     }
     if (k.vehiculosMin != null) add({ campo: "Vehículos", valor: String(ctx.vehiculos), donde: "Datos → Personas y vehículos", href: datos });

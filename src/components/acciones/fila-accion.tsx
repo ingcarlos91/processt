@@ -12,8 +12,9 @@ import { Field, FieldLabel } from "@/components/ui/field";
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Pedir } from "@/components/app/confirmar";
 import { actualizarCausaAccion, cerrarAccion } from "@/app/actions/eventos";
+import { DIRIGIDA_A } from "@/lib/eventos";
 
-export type AccionUI = { id: string; descripcion: string; estado: string; responsable: string; fechaLimite: string; causa?: string; hallazgo?: string };
+export type AccionUI = { id: string; descripcion: string; estado: string; responsable: string; fechaLimite: string; causa?: string; hallazgo?: string; dirigidaA?: string };
 const fecha = (iso: string) => (iso ? new Date(iso + "T12:00:00").toLocaleDateString("es-CO", { day: "numeric", month: "short", year: "numeric" }) : "");
 
 /** Acción de FOR-06 con su causa raíz y cierre con verificación de eficacia (Decreto 1072/2015 art. 2.2.4.6.33). */
@@ -29,7 +30,7 @@ export function FilaAccion({ empresaId, a, conHallazgo }: { empresaId: string; a
       <Badge variant={abierta ? "outline" : "default"}>{abierta ? "Abierta" : "Cerrada"}</Badge>
       <div className="min-w-0 flex-1">
         <div>{a.descripcion}</div>
-        <div className="text-xs text-muted-foreground">{[conHallazgo ? a.hallazgo : "", a.responsable, a.fechaLimite ? `límite ${fecha(a.fechaLimite)}` : ""].filter(Boolean).join(" · ")}</div>
+        <div className="text-xs text-muted-foreground">{[conHallazgo ? a.hallazgo : "", a.dirigidaA && DIRIGIDA_A[a.dirigidaA] ? `dirigida a ${DIRIGIDA_A[a.dirigidaA].toLowerCase()}` : "", a.responsable, a.fechaLimite ? `límite ${fecha(a.fechaLimite)}` : ""].filter(Boolean).join(" · ")}</div>
         <div className="text-xs">{a.causa ? <><span className="text-muted-foreground">Causa raíz:</span> {a.causa}</> : <span className="text-amber-700">Sin causa raíz</span>}</div>
       </div>
       {abierta && (

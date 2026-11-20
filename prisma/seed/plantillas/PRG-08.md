@@ -27,7 +27,7 @@ Roles que exige la Resolución 4272 de 2021 (art. 5 literal d, art. 6 Tabla 1 y 
 
 | Rol | Responsabilidad | Perfil | Designado |
 |---|---|---|---|
-| Administrador del programa | Diseñar, administrar y asegurar el programa | Profesional, especialista o magíster en SST con licencia vigente, curso de coordinador de alturas y curso de 50 o 20 horas en SST | |
+| Administrador del programa | Diseñar, administrar y asegurar el programa | Profesional, especialista o magíster en SST con licencia vigente, curso de coordinador de alturas y curso de 50 o 20 horas en SST | {{op.administradorAlturas.nombre}} |
 | Persona calificada | Calcular, diseñar, evaluar y autorizar puntos de anclaje y estructuras de protección contra caídas | Profesional con el perfil de ingeniería que remite el art. 6 de la Resolución 4272 de 2021 | |
 | Coordinador de trabajo en alturas | Identificar peligros en el sitio y aplicar medidas correctivas inmediatas; revisar y firmar cada permiso | Curso de coordinador y curso de 50 o 20 horas en SST | {{op.coordinadorAlturas.nombre}} |
 | Trabajador autorizado | Realizar las tareas en alturas cumpliendo las medidas del programa | Curso de trabajador autorizado con reentrenamiento vigente | |

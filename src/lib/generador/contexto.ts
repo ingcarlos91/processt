@@ -1,21 +1,23 @@
 import { abrevDoc, docTexto, RE_DOC } from "@/lib/documento-identidad";
-import { CONCEPTOS_APTITUD } from "@/lib/examenes";
+import { CONCEPTOS_APTITUD, TIPOS_EXAMEN, requiereAdaptacion, limiteAdaptacion, textoPeriodicidad } from "@/lib/examenes";
 import { ROLES_EQUIPO, TIPO_ACCIDENTE, rolesExigidos, type Integrante } from "@/lib/eventos";
 import { db, consultoraActual } from "@/lib/db";
 import { evaluarEmpresa, composicionCopasst, type ResultadoReglas } from "@/lib/reglas/motor";
 import { calcular, CLASIFICACION_ETIQUETA } from "@/lib/gtc45";
-import { INDICADORES } from "@/lib/indicadores";
-import { calificar } from "@/lib/evaluacion";
+import { INDICADORES, calcularMensuales, calcularAnuales } from "@/lib/indicadores";
+import { calificar, sumaPuntos } from "@/lib/evaluacion";
 import { generarPlan, MESES, anioPlanDefecto } from "@/lib/plan/generar";
 import { disparadoresDesdeMatriz } from "@/lib/reglas/matriz-disparadores";
 import { contexto as ctxReglas } from "@/lib/reglas/motor";
 import { composicionCcl, nivelPesv } from "@/lib/reglas/condicion";
 import { TURNOS } from "@/lib/ayuda";
 import type { Complementarios, Persona } from "@/lib/complementarios";
+import { seguimientoTexto } from "@/lib/matriz/seguimiento";
+import { calidadDe, cargoComiteDe, rolTextoComite, composicionGuardada } from "@/lib/comites";
 
 const ROMANO = ["", "I", "II", "III", "IV", "V"];
 const PERFIL_TEXTO: Record<string, string> = { tecnico: "Técnico en SST", tecnologo: "Tecnólogo en SST", profesional: "Profesional en SST", especialista: "Profesional con posgrado en SST" };
-const PVE_NOMBRE: Record<string, string> = { osteomuscular: "Prevención de desórdenes musculoesqueléticos", auditivo: "Conservación auditiva", visual: "Conservación visual", quimico: "Riesgo químico", psicosocial: "Riesgo psicosocial", respiratorio: "Protección respiratoria", biologico: "Riesgo biológico" };
+const PVE_NOMBRE: Record<string, string> = { dermatologico: "Prevención de enfermedades de la piel", osteomuscular: "Prevención de desórdenes musculoesqueléticos", auditivo: "Conservación auditiva", visual: "Conservación visual", quimico: "Riesgo químico", psicosocial: "Riesgo psicosocial", respiratorio: "Protección respiratoria", biologico: "Riesgo biológico" };
 const fmt = (d?: Date | null) => (d ? d.toLocaleDateString("es-CO", { day: "numeric", month: "long", year: "numeric" }) : "");
 /** Fechas guardadas sin hora (solo día): se muestran en UTC para no correrse un día por la zona horaria. */
 const fmtDia = (d?: Date | null) => (d ? d.toLocaleDateString("es-CO", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" }) : "");
@@ -85,6 +87,7 @@ export function filasMatriz(e: EmpresaCompleta) {
         requisitoLegal: p.requisitoLegal ? "Sí" : "No",
         eliminacion: p.medidaEliminacion ?? "", sustitucion: p.medidaSustitucion ?? "", ingenieria: p.medidaIngenieria ?? "", administrativa: p.medidaAdministrativa ?? "", epp: p.medidaEpp ?? "",
         catalogo: p.peligro,
+        seguimiento: seguimientoTexto(p.seguimiento), // Res. 0312/2019 est. 4.2.1 y 4.2.2
       };
     })
     .sort((a, b) => b.nr - a.nr);
@@ -118,6 +121,13 @@ export async function construirContexto(empresaId: string) {
       examenes: examenes.filter((x, i) => !(x.startsWith("Examen médico ocupacional (ingreso") && examenes.some((y, j) => j !== i && y.startsWith("Examen médico ocupacional (ingreso, periódico, retiro) con")))),
       capacitaciones: uniq(catalogos.flatMap((p) => p!.capacitacionesSugeridas)),
       altoRiesgo: uniq(c.tareas.map((t) => t.tarea.altoRiesgo ?? "")),
+      // Periodicidad de las evaluaciones periódicas definida por la empresa (Res. 1843/2025 art. 15).
+      periodicidadMeses: c.periodicidadMeses ?? null, periodicidad: textoPeriodicidad(c.periodicidadMeses), periodicidadMotivo: c.periodicidadMotivo?.trim() ?? "",
+      // Medidas preventivas de la matriz para el perfil de cargo (Res. 1843/2025 art. 16 lit. a num. vii).
+      controles: propias.map((f) => ({
+        peligro: f.descripcion, fuente: f.controlesFuente, medio: f.controlesMedio, individuo: f.controlesIndividuo,
+        medidas: [f.eliminacion && `Eliminación: ${f.eliminacion}`, f.sustitucion && `Sustitución: ${f.sustitucion}`, f.ingenieria && `Ingeniería: ${f.ingenieria}`, f.administrativa && `Administrativas: ${f.administrativa}`, f.epp && `EPP: ${f.epp}`].filter(Boolean).join("; "),
+      })).filter((x, i, xs) => (x.fuente || x.medio || x.individuo || x.medidas) && xs.findIndex((y) => JSON.stringify(y) === JSON.stringify(x)) === i),
     };
   });
 
@@ -142,7 +152,7 @@ export async function construirContexto(empresaId: string) {
   // PVE
   const pveMap = new Map<string, { peligros: Set<string>; cargos: Set<string>; examenes: Set<string> }>();
   for (const f of prioritarios.concat(filas.filter((x) => x.catalogo?.pveAsociado && x.nivelRiesgo === "III"))) {
-    const k = f.catalogo?.pveAsociado; if (!k) continue;
+    const k = f.catalogo?.pveAsociado; if (!k || k === "ninguno") continue;
     if (!pveMap.has(k)) pveMap.set(k, { peligros: new Set(), cargos: new Set(), examenes: new Set() });
     const v = pveMap.get(k)!; v.peligros.add(f.descripcion); f.cargos.forEach((c) => v.cargos.add(c)); f.catalogo!.examenesSugeridos.forEach((x) => v.examenes.add(x));
   }
@@ -167,21 +177,15 @@ export async function construirContexto(empresaId: string) {
     return { tipo, tareas: ts.map((t) => t.nombre).join(", "), cargos: [...new Set(ts.flatMap((t) => t.cargos.map((c) => c.cargo.nombre)))].join(", "), norma: tiposAR[tipo] };
   }).filter((x) => x.tareas);
 
-  // Evaluación
+  // Evaluación: la última (PLN-02, ACT-06…) y la inicial (DOC-05, Decreto 1072 art. 2.2.4.6.16).
+  const todosEstandares = await db.estandar.findMany({ orderBy: { orden: "asc" } });
   const ev = e.evaluaciones[0];
-  let evaluacion: Record<string, unknown> = { existe: false, items: [] };
-  let planMejora: { estandar: string; actividad: string; responsable: string; fecha: string; recursos: string; soporte: string }[] = [];
-  if (ev) {
-    const items = ev.items.filter((i) => rr.estandares.includes(i.estandar.codigo)).sort((a, b) => a.estandar.orden - b.estandar.orden);
-    const cal = calificar(items.map((i) => ({ codigo: i.estandar.codigo, puntaje: i.estandar.puntaje, estado: i.estado })), rr.nivel);
-    const ET: Record<string, string> = { CUMPLE: "Cumple", NO_CUMPLE: "No cumple", NO_APLICA: "No aplica", PENDIENTE: "Sin evaluar" };
-    evaluacion = {
-      existe: true, fecha: fmt(ev.fecha), tipo: ev.tipo === "inicial" ? "evaluación inicial" : `autoevaluación ${ev.anio}`,
-      puntaje: cal.puntaje, valoracion: cal.valoracion, accion: cal.accion,
-      items: items.map((i) => ({ codigo: i.estandar.codigo, descripcion: i.estandar.descripcion, estado: ET[i.estado], puntaje: i.estandar.puntaje, obtenido: i.estado === "CUMPLE" || i.estado === "NO_APLICA" ? i.estandar.puntaje : 0, observacion: i.observacion ?? "" })),
-    };
-    planMejora = ev.planMejora.map((p) => ({ estandar: p.estandarCodigo, actividad: p.actividad, responsable: p.responsable ?? "", fecha: fmt(p.fechaLimite), recursos: p.recursos ?? "", soporte: p.soporte ?? "" }));
-  }
+  const evaluacion = contextoEvaluacion(ev, todosEstandares);
+  const evInicial = e.evaluaciones.find((x) => x.tipo === "inicial");
+  const evaluacionInicial = contextoEvaluacion(evInicial, todosEstandares);
+  const aPlanMejora = (x?: typeof ev) => (x?.planMejora ?? []).map((p) => ({ estandar: p.estandarCodigo, actividad: p.actividad, responsable: p.responsable ?? "", fecha: fmt(p.fechaLimite), recursos: p.recursos ?? "", soporte: p.soporte ?? "" }));
+  const planMejora = aPlanMejora(ev);
+  const planMejoraInicial = aPlanMejora(evInicial);
 
   // Plan anual: persistido o generado en memoria
   const anioObjetivo = anioPlanDefecto();
@@ -198,7 +202,7 @@ export async function construirContexto(empresaId: string) {
   ).map((a) => ({ mes: a.mes, mesNombre: MESES[a.mes - 1], actividad: a.nombre, estandar: a.estandarCodigo ?? "", responsable: a.responsable, recursos: a.recursos ?? "", normaRef: a.normaRef }));
 
   const presupuesto = [
-    { rubro: "Evaluaciones médicas ocupacionales", descripcion: "Ingreso, periódicas, retiro y complementarios según profesiograma", estandar: "3.1.4" },
+    { rubro: "Evaluaciones médicas ocupacionales", descripcion: "Pre-ingreso, periódicas, egreso y complementarias según el perfil de cargo (Res. 1843/2025)", estandar: "3.1.4" },
     { rubro: "Elementos de protección personal", descripcion: "Dotación y reposición según matriz de EPP", estandar: "4.2.6" },
     { rubro: "Capacitación", descripcion: "Programa anual, brigada, COPASST/Vigía, certificaciones", estandar: "1.2.1" },
     { rubro: "Emergencias", descripcion: "Extintores (recarga), botiquín, camilla, señalización", estandar: "5.1.1" },
@@ -240,20 +244,28 @@ export async function construirContexto(empresaId: string) {
   const brigadaPlan = { capacitacion: mesDe(/capacitaci[oó]n de la brigada/i, 5), simulacro: mesDe(/simulacro/i, 10) };
   const op = {
     arlLinea: txt("arlLinea"), telefonoSst: txt("telefonoSst", consultora.telefono || B), correoQuejas: txt("correoQuejas", e.correo || B),
-    acosoSexual: persona("acosoSexual"), ips: txt("ips"), medicoIps: persona("medicoIps"), puntoEncuentro: txt("puntoEncuentro"), alarma: txt("alarma"),
-    brigadaPlan, recursosEmergencia: tabla("recursosEmergencia"), coordinadorAlturas: persona("coordinadorAlturas"),
+    acosoSexual: persona("acosoSexual"), ips: txt("ips"), medicoIps: { ...persona("medicoIps"), licencia: txt("medicoIpsLicencia", "") }, puntoEncuentro: txt("puntoEncuentro"), alarma: txt("alarma"),
+    brigadaPlan, recursosEmergencia: tabla("recursosEmergencia"), coordinadorAlturas: persona("coordinadorAlturas"), administradorAlturas: persona("administradorAlturas"), supervisorConfinados: persona("supervisorConfinados"), vigiaConfinados: persona("vigiaConfinados"),
     espaciosConfinados: tabla("espaciosConfinados"), quimicos: tabla("quimicos"), equipos: tabla("equipos"),
     presupuestoTotal: totalPresupuesto ? pesos(totalPresupuesto) : "Por definir",
   };
 
   // ── Comités: integrantes por rol ──
-  const ROL: Record<string, string> = { presidente: "Presidente", secretario: "Secretario", principal: "Principal", suplente: "Suplente", vigia: "Vigía", jefe_brigada: "Jefe de brigada", brigadista: "Brigadista", principal_empleador: "Principal", principal_trabajadores: "Principal", suplente_empleador: "Suplente", suplente_trabajadores: "Suplente" };
+  // Calidad (principal o suplente) separada del cargo en el comité (presidente o secretario): un presidente cuenta como principal.
+  // Con varios CCL (uno por centro de trabajo, Res. 3461/2025 art. 3) las plantillas usan el principal (sin sede o el más antiguo).
+  const comitesOrden = [...e.comites].sort((a, b) => Number(!!a.sede) - Number(!!b.sede) || (a.periodoInicio?.getTime() ?? 0) - (b.periodoInicio?.getTime() ?? 0));
   const comite = (tipos: string[]) => {
-    const c = e.comites.find((x) => tipos.includes(x.tipo));
-    const miembros = (c?.miembros ?? []).map((m) => ({ nombre: m.nombre, cedula: m.cedula ?? "", doc: m.cedula ? docTexto(m.tipoDoc, m.cedula) : "", cargo: m.cargo ?? "", rol: m.rol, rolTexto: ROL[m.rol] ?? m.rol, representa: m.representa === "empleador" ? "Empleador" : m.representa === "trabajadores" ? "Trabajadores" : "" }));
+    const c = comitesOrden.find((x) => tipos.includes(x.tipo));
+    const miembros = (c?.miembros ?? []).map((m) => {
+      const calidad = c?.tipo === "BRIGADA" ? null : calidadDe(m.rol, m.calidad);
+      const cargoComite = cargoComiteDe(m.rol);
+      return { nombre: m.nombre, cedula: m.cedula ?? "", doc: m.cedula ? docTexto(m.tipoDoc, m.cedula) : "", cargo: m.cargo ?? "", rol: m.rol, rolTexto: rolTextoComite(c?.tipo ?? "", m.rol, m.calidad), calidad: calidad ?? "", calidadTexto: calidad === "suplente" ? "Suplente" : calidad === "principal" ? "Principal" : "", cargoComite: cargoComite === "presidente" ? "Presidente" : cargoComite === "secretario" ? "Secretario" : "", representa: m.representa === "empleador" ? "Empleador" : m.representa === "trabajadores" ? "Trabajadores" : "" };
+    });
     const d = (c?.datos ?? {}) as Record<string, unknown>;
     return {
-      registrado: !!c, inicio: fmtDia(c?.periodoInicio) || B, fin: fmtDia(c?.periodoFin) || B, miembros, hayMiembros: miembros.length > 0,
+      registrado: !!c, sede: c?.sede ?? "", inicio: fmtDia(c?.periodoInicio) || B, fin: fmtDia(c?.periodoFin) || B, miembros, hayMiembros: miembros.length > 0,
+      principales: miembros.filter((m) => m.calidad === "principal"), suplentes: miembros.filter((m) => m.calidad === "suplente"),
+      composicionGuardada: composicionGuardada(c?.datos),
       presidente: miembros.find((m) => m.rol === "presidente")?.nombre ?? B, secretario: miembros.find((m) => m.rol === "secretario")?.nombre ?? B,
       empleador: miembros.filter((m) => m.representa === "Empleador"), trabajadores: miembros.filter((m) => m.representa === "Trabajadores"),
       eleccion: {
@@ -266,14 +278,23 @@ export async function construirContexto(empresaId: string) {
       },
     };
   };
-  // Composición del CCL por tramos de la Res. 3461/2025 art. 3.
-  const integrantes = { copasst: comite(["COPASST", "VIGIA"]), ccl: { ...comite(["CCL"]), composicion: composicionCcl(rr.trabajadores) }, brigada: comite(["BRIGADA"]) };
+  // Composición del CCL por tramos de la Res. 3461/2025 art. 3, congelada al conformar el comité (art. 5 par. 1).
+  const cclBase = comite(["CCL"]);
+  const cclCalc = composicionCcl(rr.trabajadores);
+  const cclComp = cclBase.composicionGuardada
+    ? { ...composicionCcl(cclBase.composicionGuardada.trabajadores), trabajadores: cclBase.composicionGuardada.trabajadores, congelada: true }
+    : { ...cclCalc, trabajadores: rr.trabajadores, congelada: false };
+  const otrasSedesCcl = comitesOrden.filter((x) => x.tipo === "CCL" && x.sede).map((x) => ({ sede: x.sede ?? "", inicio: fmtDia(x.periodoInicio) || B, fin: fmtDia(x.periodoFin) || B, integrantes: x.miembros.length }));
+  const integrantes = { copasst: comite(["COPASST", "VIGIA"]), ccl: { ...cclBase, composicion: cclComp, otrasSedes: otrasSedesCcl.filter((x) => x.sede !== cclBase.sede), hayOtrasSedes: otrasSedesCcl.some((x) => x.sede !== cclBase.sede) }, brigada: comite(["BRIGADA"]) };
+  // COPASST: el número de representantes se fija con los trabajadores al conformarlo (Res. 2013/1986 art. 2).
+  const copCongelada = integrantes.copasst.composicionGuardada;
 
   const porClas = new Map<string, { total: number; prioritarios: number }>();
   for (const f of filas) { const v = porClas.get(f.clasificacion) ?? { total: 0, prioritarios: 0 }; v.total++; if (f.nivelRiesgo === "I" || f.nivelRiesgo === "II") v.prioritarios++; porClas.set(f.clasificacion, v); }
 
   const normasSet = new Set(rr.normas.map((n) => n.codigo));
-  for (const f of filas) f.catalogo?.normas.forEach((n) => normasSet.add(n));
+  // El Decreto 2157/2017 (PGRDEPP) entra solo con su disparador (regla del motor), aunque un peligro de la biblioteca lo cite (docs/09).
+  for (const f of filas) f.catalogo?.normas.forEach((n) => { if (n !== "DEC-2157-2017" || normasSet.has(n)) normasSet.add(n); });
   const normasDb = await db.norma.findMany({ where: { codigo: { in: [...normasSet] }, vigente: true }, orderBy: [{ anio: "asc" }] });
   const trabajadores = rr.trabajadores;
   const cop = composicionCopasst(trabajadores);
@@ -311,6 +332,10 @@ export async function construirContexto(empresaId: string) {
         nombre: (r.nombre as string)?.trim() || "______________________", cedula: (r.cedula as string)?.trim() || "______________", doc: docTexto(r.tipoDoc as string, r.cedula as string), cargo: (r.cargo as string) ?? "",
         perfilTexto: PERFIL_TEXTO[(r.perfil as string) ?? ""] ?? "", licencia: (r.licencia as string) ?? "", licenciaFecha: (r.licenciaFecha as string) ?? "",
         curso50hFecha: r.curso50h ? ((r.curso50hFecha as string) || "Aprobado") : "", esConsultora: false,
+        // Perfil para DOC-03 (Res. 0312/2019 arts. 4, 10 y 17; Res. 4927/2016 art. 16).
+        experienciaAnios: r.experienciaAnios !== undefined && r.experienciaAnios !== "" ? String(r.experienciaAnios) : "",
+        rol: (r.rol as string) === "ejecutor" ? "ejecutor" : "disenador", soloEjecuta: (r.rol as string) === "ejecutor",
+        curso20hFecha: /^\d{4}-\d{2}-\d{2}$/.test((r.curso20hFecha as string) ?? "") ? fmt(new Date(`${r.curso20hFecha}T12:00:00`)) : ((r.curso20hFecha as string) ?? ""),
       };
     })(),
     consultora: {
@@ -325,13 +350,59 @@ export async function construirContexto(empresaId: string) {
     matriz: { version: ultimaVersion ? { numero: ultimaVersion.numero, fecha: fmtDia(ultimaVersion.fecha), motivo: ultimaVersion.motivo } : null, filas, prioritarios, porClasificacion: [...porClas.entries()].map(([clasificacion, v]) => ({ clasificacion, ...v })), tieneFilas: filas.length > 0 },
     normas: normasDb.map((n) => ({ codigo: n.codigo, tipo: n.tipo === "Resolucion" ? "Resolución" : n.tipo === "GuiaTecnica" ? "Guía técnica" : n.tipo, numero: n.numero, anio: n.anio, entidad: n.entidad, nombre: n.nombre, articulosClave: n.articulosClave ?? "", resumen: n.resumen, evidenciaCumplimiento: legal[n.codigo]?.evidencia?.trim() || n.evidenciaCumplimiento || "", cumple: legal[n.codigo]?.cumple || "Por evaluar" })),
     estandares: (await db.estandar.findMany({ where: { codigo: { in: rr.estandares } }, orderBy: { orden: "asc" } })).map((s) => ({ codigo: s.codigo, ciclo: s.ciclo, grupo: s.grupo, descripcion: s.descripcion, puntaje: s.puntaje })),
-    comites: { copasst: { aplica: true, esVigia: cop.tipo === "VIGIA", composicion: cop.texto, porParte: cop.porParte }, ccl: { aplica: rr.comites.includes("CCL") }, brigada: { aplica: true } },
-    capacitaciones, plan, evaluacion, planMejora, dis, pesv, indicadores: INDICADORES, pve, amenazas, presupuesto: presupuestoConValor, altoRiesgo, op, integrantes, accidentalidad, acciones: accidentalidad.acciones, nomina, inspecciones, hayInspecciones: inspecciones.length > 0, auditorias, hayAuditorias: auditorias.length > 0, ultimaAuditoria,
+    comites: { copasst: { aplica: true, esVigia: cop.tipo === "VIGIA", ...(copCongelada && copCongelada.tipo === cop.tipo ? { composicion: copCongelada.texto, porParte: copCongelada.porParte, trabajadoresConformacion: copCongelada.trabajadores } : { composicion: cop.texto, porParte: cop.porParte, trabajadoresConformacion: trabajadores }) }, ccl: { aplica: rr.comites.includes("CCL") }, brigada: { aplica: true } },
+    capacitaciones, plan, planEjecucion: ejecucionPlan(e.actividades), evaluacion, evaluacionInicial, planMejora, planMejoraInicial, dis, pesv, indicadores: INDICADORES, pve, amenazas, presupuesto: presupuestoConValor, altoRiesgo, op, integrantes, accidentalidad, acciones: accidentalidad.acciones, nomina, inspecciones, hayInspecciones: inspecciones.length > 0, auditorias, hayAuditorias: auditorias.length > 0, ultimaAuditoria,
     documentosLista: plantillas.map((p) => ({ codigo: p.codigo, nombre: p.nombre, version: e.documentos.find((d) => d.codigo === p.codigo)?.version ?? 1, carpeta: p.carpeta ?? "" })),
     _reglas: rr,
   };
 }
 export type Contexto = Awaited<ReturnType<typeof construirContexto>>;
+
+const ESTADO_TEXTO: Record<string, string> = { CUMPLE: "Cumple", NO_CUMPLE: "No cumple", NO_APLICA: "No aplica", PENDIENTE: "Sin evaluar" };
+type EstandarFila = { codigo: string; ciclo: string; grupo: string; subgrupo: string; descripcion: string; puntaje: number; orden: number };
+
+/**
+ * Evaluación de estándares mínimos para las plantillas y el Excel (Res. 0312/2019 arts. 27 y 28).
+ * `items`: los ítems evaluados; `noCorresponden`: en 7 y 21 estándares, los ítems que no le corresponden al nivel,
+ * que reciben su valor máximo en la columna "No aplica" (art. 27). En 60 un "No aplica" cuenta como no cumplido.
+ */
+export function contextoEvaluacion(ev: EmpresaCompleta["evaluaciones"][number] | undefined, todos: EstandarFila[]) {
+  if (!ev) return { existe: false as const, id: "", fecha: "", tipo: "", nivel: 0, cerrada: false, puntaje: 0, valoracion: "", accion: "", pendientes: 0, items: [] as ReturnType<typeof filaItem>[], noCorresponden: [] as { codigo: string; ciclo: string; grupo: string; subgrupo: string; descripcion: string; puntaje: number }[], puntajeNoCorresponden: 0 };
+  const items = [...ev.items].sort((a, b) => a.estandar.orden - b.estandar.orden);
+  const cal = calificar(items.map((i) => ({ codigo: i.estandar.codigo, puntaje: i.estandar.puntaje, estado: i.estado })), ev.nivel);
+  const evaluados = new Set(items.map((i) => i.estandar.codigo));
+  const noCorresponden = ev.nivel === 60 ? [] : todos.filter((s) => !evaluados.has(s.codigo)).map((s) => ({ codigo: s.codigo, ciclo: s.ciclo, grupo: s.grupo, subgrupo: s.subgrupo, descripcion: s.descripcion, puntaje: s.puntaje }));
+  return {
+    existe: true as const, id: ev.id, fecha: fmt(ev.fecha), tipo: ev.tipo === "inicial" ? "evaluación inicial" : `autoevaluación ${ev.anio}`, nivel: ev.nivel, cerrada: ev.cerrada,
+    puntaje: cal.puntaje, valoracion: cal.valoracion, accion: cal.accion, pendientes: cal.pendientes,
+    items: items.map((i) => filaItem(i, ev.nivel)),
+    noCorresponden, puntajeNoCorresponden: Math.round(noCorresponden.reduce((s, x) => s + x.puntaje, 0) * 100) / 100,
+  };
+}
+function filaItem(i: EmpresaCompleta["evaluaciones"][number]["items"][number], nivel: number) {
+  const s = i.estandar;
+  const naInvalido = nivel === 60 && i.estado === "NO_APLICA";
+  return {
+    codigo: s.codigo, ciclo: s.ciclo, grupo: s.grupo, subgrupo: s.subgrupo, descripcion: s.descripcion, puntaje: s.puntaje,
+    estado: naInvalido ? "No aplica (no válido en 60 estándares: cuenta como no cumple)" : ESTADO_TEXTO[i.estado] ?? i.estado,
+    obtenido: sumaPuntos(i.estado, nivel) ? s.puntaje : 0,
+    observacion: i.observacion ?? "", justificacion: i.estado === "NO_APLICA" ? i.justificacion ?? "" : "",
+  };
+}
+
+/** Actividades del plan anual del año en curso: ejecutadas frente a programadas (Decreto 1072/2015 art. 2.2.4.6.31 num. 2). */
+function ejecucionPlan(actividades: EmpresaCompleta["actividades"], hoy = new Date()) {
+  const anio = hoy.getFullYear(), mes = hoy.getMonth() + 1;
+  const delAnio = actividades.filter((a) => a.anio === anio && a.estado !== "CANCELADA");
+  const ejecutadas = delAnio.filter((a) => a.estado === "EJECUTADA").length;
+  const programadasALaFecha = delAnio.filter((a) => a.mes <= mes).length;
+  const ejecutadasALaFecha = delAnio.filter((a) => a.mes <= mes && a.estado === "EJECUTADA").length;
+  const pct = programadasALaFecha ? Math.round((ejecutadasALaFecha / programadasALaFecha) * 100) : null;
+  return {
+    anio, hay: delAnio.length > 0, programadas: delAnio.length, ejecutadas, programadasALaFecha, ejecutadasALaFecha, pct: pct == null ? "" : `${pct} %`,
+    texto: delAnio.length ? `${ejecutadasALaFecha} de ${programadasALaFecha} actividades programadas hasta ${MESES[mes - 1].toLowerCase()} de ${anio} ejecutadas${pct == null ? "" : ` (${pct} %)`}; ${ejecutadas} de ${delAnio.length} en todo el año.` : `Sin plan anual ${anio} registrado.`,
+  };
+}
 
 /** Los 24 pasos de la metodología del PESV (Res. 40595/2022, anexo) y el nivel mínimo en que cada uno aplica. */
 const PASOS_PESV: { n: number; fase: string; nombre: string; desde: "basico" | "estandar" | "avanzado" }[] = [
@@ -343,7 +414,7 @@ const PASOS_PESV: { n: number; fase: string; nombre: string; desde: "basico" | "
   { n: 6, fase: "Planificación", nombre: "Caracterización, evaluación y control de riesgos viales", desde: "basico" },
   { n: 7, fase: "Planificación", nombre: "Objetivos y metas del PESV", desde: "basico" },
   { n: 8, fase: "Planificación", nombre: "Programas de gestión de riesgos críticos y factores de desempeño", desde: "basico" },
-  { n: 9, fase: "Planificación", nombre: "Plan anual de trabajo", desde: "basico" },
+  { n: 9, fase: "Implementación", nombre: "Plan anual de trabajo", desde: "basico" },
   { n: 10, fase: "Implementación", nombre: "Competencia y plan anual de formación", desde: "basico" },
   { n: 11, fase: "Implementación", nombre: "Responsabilidad y comportamiento seguro", desde: "avanzado" },
   { n: 12, fase: "Implementación", nombre: "Plan de preparación y respuesta ante emergencias viales", desde: "basico" },
@@ -357,8 +428,8 @@ const PASOS_PESV: { n: number; fase: string; nombre: string; desde: "basico" | "
   { n: 20, fase: "Seguimiento", nombre: "Indicadores y reporte de autogestión", desde: "basico" },
   { n: 21, fase: "Seguimiento", nombre: "Registro y análisis estadístico de siniestros viales", desde: "avanzado" },
   { n: 22, fase: "Seguimiento", nombre: "Auditoría anual", desde: "basico" },
-  { n: 23, fase: "Mejora", nombre: "Mecanismos de comunicación y participación", desde: "basico" },
-  { n: 24, fase: "Mejora", nombre: "Mejora continua: acciones preventivas y correctivas", desde: "basico" },
+  { n: 23, fase: "Mejora", nombre: "Mejora continua, acciones preventivas y correctivas", desde: "basico" },
+  { n: 24, fase: "Mejora", nombre: "Mecanismos de comunicación y participación", desde: "basico" },
 ];
 const ORDEN_NIVEL = { basico: 0, estandar: 1, avanzado: 2 } as const;
 const NIVEL_PESV_TEXTO = { basico: "Básico", estandar: "Estándar", avanzado: "Avanzado" } as const;
@@ -388,44 +459,117 @@ function contar<T>(xs: T[], k: (x: T) => string | null | undefined) {
   return [...m.entries()].sort((a, b) => b[1] - a[1]).map(([nombre, n]) => ({ nombre, n }));
 }
 
+const DIRIGIDA: Record<string, string> = { fuente: "Fuente", medio: "Medio", trabajador: "Trabajador" };
+const MES_NOMBRE = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+const num = (v: number | null | undefined, dec = 2) => (v == null || !Number.isFinite(v) ? "Sin dato" : v.toLocaleString("es-CO", { maximumFractionDigits: dec }));
+type EvInd = Parameters<typeof calcularMensuales>[0][number];
+type TmInd = Parameters<typeof calcularMensuales>[1][number];
+/**
+ * Indicadores mínimos del año con src/lib/indicadores (Res. 0312/2019 art. 30): mensuales y su resumen anual.
+ * Frecuencia y severidad anuales = promedio de los meses con trabajadores; ausentismo anual = días de ausencia / días programados del año.
+ */
+function indicadoresAnio(eventos: EvInd[], tm: TmInd[], anio: number, base: number) {
+  // Un año anterior sin trabajadores ni eventos registrados no se estima: se informa "Sin registros" (no se presenta como cero).
+  const registrado = anio >= new Date().getFullYear() || tm.some((x) => x.anio === anio) || eventos.some((e) => e.fecha.getFullYear() === anio);
+  if (!registrado) {
+    const S = "Sin registros";
+    return { anio, hayDatos: false, mesesConDatos: 0, estimado: false, frecuencia: S, severidad: S, mortalidad: S, prevalencia: S, incidencia: S, ausentismo: S, promedioTrabajadores: S,
+      meses: MES_NOMBRE.map((mes) => ({ mes, trabajadores: "", accidentes: "" as number | "", diasIncapacidad: "" as number | "", diasCargados: "" as number | "", diasAusencia: "" as number | "", diasProgramados: "", frecuencia: "", severidad: "", ausentismo: "" })) };
+  }
+  const mensuales = calcularMensuales(eventos, tm, anio, base);
+  const anual = calcularAnuales(eventos, tm, anio, base);
+  const conDatos = mensuales.filter((m) => m.trabajadores > 0);
+  const prom = (xs: (number | null)[]) => { const v = xs.filter((x): x is number => x != null); return v.length ? v.reduce((s, x) => s + x, 0) / v.length : null; };
+  const delMes = (m: number) => eventos.filter((e) => e.vinculacion !== "visitante" && e.fecha.getFullYear() === anio && e.fecha.getMonth() + 1 === m);
+  const meses = mensuales.map((m) => {
+    const ev = delMes(m.mes), at = ev.filter((e) => e.tipo === "AT");
+    const t = tm.find((x) => x.anio === anio && x.mes === m.mes);
+    const diasAus = ev.filter((e) => e.tipo === "AT" || e.tipo === "AUSENTISMO" || e.tipo === "EL").reduce((s, e) => s + e.diasIncapacidad, 0);
+    const diasProg = t?.diasProgramados ?? m.trabajadores * 24;
+    return {
+      mes: MES_NOMBRE[m.mes - 1], trabajadores: m.trabajadores ? `${m.trabajadores}${m.estimado ? " (estimado)" : ""}` : "", accidentes: m.trabajadores ? m.accidentes : "",
+      diasIncapacidad: m.trabajadores ? at.reduce((s, e) => s + e.diasIncapacidad, 0) : "", diasCargados: m.trabajadores ? at.reduce((s, e) => s + e.diasCargados, 0) : "",
+      diasAusencia: m.trabajadores ? diasAus : "", diasProgramados: m.trabajadores ? `${diasProg}${m.diasEstimados ? " (estimado)" : ""}` : "",
+      frecuencia: m.trabajadores ? num(m.frecuencia) : "", severidad: m.trabajadores ? num(m.severidad) : "", ausentismo: m.trabajadores ? num(m.ausentismo) : "",
+    };
+  });
+  const diasAus = conDatos.reduce((s, m) => s + delMes(m.mes).filter((e) => e.tipo === "AT" || e.tipo === "AUSENTISMO" || e.tipo === "EL").reduce((t, e) => t + e.diasIncapacidad, 0), 0);
+  const diasProg = conDatos.reduce((s, m) => s + (tm.find((x) => x.anio === anio && x.mes === m.mes)?.diasProgramados ?? m.trabajadores * 24), 0);
+  return {
+    anio, hayDatos: conDatos.length > 0, mesesConDatos: conDatos.length, estimado: conDatos.some((m) => m.estimado || m.diasEstimados),
+    frecuencia: num(prom(conDatos.map((m) => m.frecuencia))), severidad: num(prom(conDatos.map((m) => m.severidad))),
+    mortalidad: anual.mortalidad == null ? "Sin accidentes" : `${num(anual.mortalidad)} %`,
+    prevalencia: num(anual.prevalencia), incidencia: num(anual.incidencia),
+    ausentismo: diasProg ? `${num((diasAus / diasProg) * 100)} %` : "Sin dato",
+    promedioTrabajadores: num(anual.promedioTrabajadores, 1),
+    meses,
+  };
+}
+
 /** Datos de accidentes, incidentes, enfermedades laborales y acciones para las plantillas. */
 export async function contextoAccidentalidad(empresaId: string) {
   const anio = new Date().getUTCFullYear();
-  const [eventos, acciones] = await Promise.all([
+  const [eventos, acciones, emp, tm] = await Promise.all([
     db.evento.findMany({ where: { empresaId }, orderBy: { fecha: "desc" }, include: { acciones: true } }),
     db.accion.findMany({ where: { empresaId }, orderBy: { fecha: "asc" }, include: { evento: { select: { fecha: true, tipo: true } } } }),
+    db.empresa.findUniqueOrThrow({ where: { id: empresaId }, select: { nTrabajadoresPlanta: true, nEnMision: true, nContratistas: true, nAprendices: true } }),
+    db.trabajadoresMes.findMany({ where: { empresaId } }),
   ]);
-  const delAnio = eventos.filter((e) => e.fecha.getUTCFullYear() === anio);
-  const lesivos = delAnio.filter((e) => e.tipo === "AT" || e.tipo === "INCIDENTE");
-  const investigables = delAnio.filter((e) => e.invEstado !== "no_aplica");
-  const at = delAnio.filter((e) => e.tipo === "AT");
-  const r = {
-    anio, total: delAnio.length, at: at.length, incidentes: delAnio.filter((e) => e.tipo === "INCIDENTE").length, el: delAnio.filter((e) => e.tipo === "EL").length,
-    graves: at.filter((e) => e.gravedad === "grave").length, mortales: at.filter((e) => e.gravedad === "mortal").length,
-    diasAt: at.reduce((s, e) => s + e.diasIncapacidad + e.diasCargados, 0),
-    diasAusentismo: delAnio.filter((e) => e.tipo === "AUSENTISMO").reduce((s, e) => s + e.diasIncapacidad, 0),
-    investigados: investigables.filter((e) => e.invEstado === "cerrada").length, investigables: investigables.length,
-    reportados: delAnio.filter((e) => (e.tipo === "AT" || e.tipo === "EL") && e.reportadoArl).length, reportables: delAnio.filter((e) => e.tipo === "AT" || e.tipo === "EL").length,
-    // FOR-08 informa solo las acciones de accidentes, incidentes y enfermedades (no las de inspecciones o auditorías).
-    accionesAbiertas: acciones.filter((a) => a.eventoId && a.estado === "abierta").length, accionesCerradas: acciones.filter((a) => a.eventoId && a.estado === "cerrada").length,
+  // Mismo número base que la página de Indicadores: planta + misión + contratistas + aprendices (Res. 0312/2019 art. 30 num. 1).
+  const base = emp.nTrabajadoresPlanta + emp.nEnMision + emp.nContratistas + emp.nAprendices;
+  const resumenDe = (y: number) => {
+    const delAnio = eventos.filter((e) => e.fecha.getUTCFullYear() === y);
+    const investigables = delAnio.filter((e) => e.invEstado !== "no_aplica");
+    const at = delAnio.filter((e) => e.tipo === "AT");
+    const el = delAnio.filter((e) => e.tipo === "EL");
+    const r = {
+      anio: y, total: delAnio.length, at: at.length, incidentes: delAnio.filter((e) => e.tipo === "INCIDENTE").length, el: delAnio.filter((e) => e.tipo === "EL").length,
+      graves: at.filter((e) => e.gravedad === "grave").length, mortales: at.filter((e) => e.gravedad === "mortal").length,
+      diasAt: at.reduce((s, e) => s + e.diasIncapacidad + e.diasCargados, 0),
+      diasAusentismo: delAnio.filter((e) => e.tipo === "AUSENTISMO").reduce((s, e) => s + e.diasIncapacidad, 0),
+      // Enfermedad laboral: días de ausencia y casos nuevos/antiguos para prevalencia e incidencia (Res. 0312/2019 art. 30).
+      diasEl: el.reduce((s, e) => s + e.diasIncapacidad, 0), elNuevas: el.filter((e) => e.casoNuevo).length, elAntiguas: el.filter((e) => !e.casoNuevo).length,
+      elPrevalentes: eventos.filter((e) => e.tipo === "EL" && e.vinculacion !== "visitante" && e.fecha.getUTCFullYear() <= y).length,
+      elMortales: el.filter((e) => e.gravedad === "mortal").length,
+      investigados: investigables.filter((e) => e.invEstado === "cerrada").length, investigables: investigables.length,
+      // Los eventos de visitantes no se reportan a la ARL (no son trabajadores afiliados por la empresa).
+      reportados: delAnio.filter((e) => (e.tipo === "AT" || e.tipo === "EL") && e.vinculacion !== "visitante" && e.reportadoArl).length, reportables: delAnio.filter((e) => (e.tipo === "AT" || e.tipo === "EL") && e.vinculacion !== "visitante").length,
+      // FOR-08 informa solo las acciones de accidentes, incidentes y enfermedades (no las de inspecciones o auditorías).
+      accionesAbiertas: acciones.filter((a) => a.eventoId && a.estado === "abierta").length, accionesCerradas: acciones.filter((a) => a.eventoId && a.estado === "cerrada").length,
+    };
+    const texto = r.total
+      ? `En ${y}: ${r.at} accidente(s) de trabajo${r.graves ? ` (${r.graves} grave(s))` : ""}${r.mortales ? `, ${r.mortales} mortal(es)` : ""}, ${r.incidentes} incidente(s) y ${r.el} enfermedad(es) laboral(es); ${r.diasAt} día(s) perdidos por accidentes. Investigados ${r.investigados} de ${r.investigables}; reportados a la ARL ${r.reportados} de ${r.reportables}. Acciones: ${r.accionesCerradas} cerrada(s) y ${r.accionesAbiertas} abierta(s).`
+      : `En ${y} no se registran accidentes, incidentes ni enfermedades laborales.`;
+    return { ...r, texto, delAnio };
   };
-  const texto = r.total
-    ? `En ${anio}: ${r.at} accidente(s) de trabajo${r.graves ? ` (${r.graves} grave(s))` : ""}${r.mortales ? `, ${r.mortales} mortal(es)` : ""}, ${r.incidentes} incidente(s) y ${r.el} enfermedad(es) laboral(es); ${r.diasAt} día(s) perdidos por accidentes. Investigados ${r.investigados} de ${r.investigables}; reportados a la ARL ${r.reportados} de ${r.reportables}. Acciones: ${r.accionesCerradas} cerrada(s) y ${r.accionesAbiertas} abierta(s).`
-    : `En ${anio} no se registran accidentes, incidentes ni enfermedades laborales.`;
+  const { delAnio, ...r } = resumenDe(anio);
+  const lesivos = delAnio.filter((e) => e.tipo === "AT" || e.tipo === "INCIDENTE");
+  const at = delAnio.filter((e) => e.tipo === "AT");
+  const ant = resumenDe(anio - 1), ant2 = resumenDe(anio - 2);
+  const indicadores = indicadoresAnio(eventos, tm, anio, base), indAnterior = indicadoresAnio(eventos, tm, anio - 1, base), indAnterior2 = indicadoresAnio(eventos, tm, anio - 2, base);
+  const sinDelAnio = <T extends { delAnio: unknown }>({ delAnio: _d, ...x }: T) => x;
+  // Estadísticas de los dos últimos años cerrados (Decreto 1072/2015 art. 2.2.4.6.16 par. 1).
+  const estadistica = (x: typeof ant, i: ReturnType<typeof indicadoresAnio>) => {
+    const v = (n: number) => (i.hayDatos || x.total ? n : "Sin registros");
+    return { anio: x.anio, at: v(x.at), gravesMortales: v(x.graves + x.mortales), diasAt: v(x.diasAt), el: v(x.el), diasAusencia: v(x.diasAusentismo + x.diasEl + x.diasAt), frecuencia: i.frecuencia, severidad: i.severidad, hayDatos: i.hayDatos || x.total > 0 };
+  };
   const fila = (e: (typeof eventos)[number]) => ({
     id: e.id, fecha: ddmm(e.fecha), tipo: TIPO_EV[e.tipo] ?? e.tipo, gravedad: e.tipo === "AT" ? (e.gravedad === "grave" ? "Grave" : e.gravedad === "mortal" ? "Mortal" : "Leve") : "",
     trabajador: e.trabajadorNombre ?? "", cargo: e.cargo ?? "", lugar: e.lugar ?? "", mecanismo: e.mecanismo ?? "", lesion: e.lesion ?? "", parteCuerpo: e.parteCuerpo ?? "",
-    dias: e.diasIncapacidad + e.diasCargados, reporte: e.fechaReporte ? ddmm(e.fechaReporte) : e.tipo === "AT" || e.tipo === "EL" ? "Pendiente" : "No aplica",
+    dias: e.diasIncapacidad + e.diasCargados, reporte: e.fechaReporte ? ddmm(e.fechaReporte) : e.vinculacion === "visitante" ? "No aplica (visitante)" : e.tipo === "AT" || e.tipo === "EL" ? "Pendiente" : "No aplica",
     investigacion: INV_EV[e.invEstado] ?? e.invEstado, acciones: e.acciones.length, descripcion: e.descripcion ?? "",
   });
   return {
-    resumen: { ...r, texto }, hay: eventos.length > 0, hayAnio: delAnio.length > 0,
+    resumen: r, hay: eventos.length > 0, hayAnio: delAnio.length > 0,
+    // Indicadores mínimos del año en curso y del anterior (Res. 0312/2019 art. 30; estándar 3.2.3: comparar con el año anterior).
+    indicadores, anterior: { resumen: sinDelAnio(ant), indicadores: indAnterior },
+    ultimosDosAnios: [estadistica(ant2, indAnterior2), estadistica(ant, indAnterior)],
     eventos: eventos.filter((e) => e.tipo !== "AUSENTISMO").slice(0, 200).map(fila),
     pendientes: eventos.filter((e) => e.invEstado === "pendiente" || e.invEstado === "en_curso").map(fila),
     porCargo: contar(lesivos, (e) => e.cargo), porMecanismo: contar(lesivos, (e) => e.mecanismo), porParte: contar(at, (e) => e.parteCuerpo), porLugar: contar(lesivos, (e) => e.lugar),
     acciones: acciones.map((a, i) => ({
       n: i + 1, fecha: ddmm(a.fecha), origen: ORIG[a.origen] ?? a.origen, hallazgo: a.hallazgo, causa: a.causa?.trim() || (a.estado === "cerrada" ? "No registrada" : "Por analizar"), tipo: a.tipo.charAt(0).toUpperCase() + a.tipo.slice(1),
-      jerarquia: a.jerarquia ? JER[a.jerarquia] ?? a.jerarquia : "", descripcion: a.descripcion, responsable: a.responsable ?? "", fechaLimite: ddmm(a.fechaLimite),
+      jerarquia: a.jerarquia ? JER[a.jerarquia] ?? a.jerarquia : "", dirigidaA: DIRIGIDA[a.dirigidaA ?? ""] ?? "", descripcion: a.descripcion, responsable: a.responsable ?? "", fechaLimite: ddmm(a.fechaLimite),
       fechaCierre: ddmm(a.fechaCierre) || (a.estado === "cerrada" ? "Sin fecha" : "Abierta"), eficacia: a.eficacia?.trim() || (a.estado === "cerrada" ? "Sin registrar" : "Pendiente (acción abierta)"), estado: a.estado === "cerrada" ? "Cerrada" : "Abierta",
     })),
     hayAcciones: acciones.length > 0,
@@ -441,13 +585,19 @@ export async function contextoEvento(eventoId: string) {
   const VINC: Record<string, string> = { planta: "Trabajador de planta", contratista: "Contratista", aprendiz: "Aprendiz o practicante", mision: "Trabajador en misión", visitante: "Visitante" };
   const DIAS = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"];
   const esGrave = ev.tipo === "AT" && (ev.gravedad === "grave" || ev.gravedad === "mortal");
+  // Muerte por AT o por EL (Decreto 1072/2015 art. 2.2.4.1.6): investigación con el COPASST o Vigía y remisión a la ARL (Res. 1401/2007 art. 14).
+  const esMortal = (ev.tipo === "AT" || ev.tipo === "EL") && ev.gravedad === "mortal";
+  // Investigación dentro de los 15 días siguientes al evento (Res. 1401/2007 art. 4 num. 2).
+  const venceInv = new Date(ev.fecha.getTime() + 15 * 864e5);
+  const aTiempo = ev.invEstado === "cerrada" && !!ev.invCierre && ev.invCierre.getTime() <= venceInv.getTime() + 864e5 - 1;
+  const SEXO_T: Record<string, string> = { F: "Femenino", M: "Masculino", otro: "Otro" };
   const direccionEmpresa = [base.empresa.direccion, base.empresa.ciudad].filter(Boolean).join(", ");
   return {
     ...base,
     // Variables del informe de investigación (Res. 1401/2007 arts. 9 a 13). Ver _CONTRATO.md.
     ev: {
       tipo: TIPO_EV[ev.tipo] ?? ev.tipo, esAT: ev.tipo === "AT", esIncidente: ev.tipo === "INCIDENTE", esEL: ev.tipo === "EL",
-      gravedad: ev.gravedad === "grave" ? "Grave" : ev.gravedad === "mortal" ? "Mortal" : "Leve", esGrave, esMortal: ev.tipo === "AT" && ev.gravedad === "mortal",
+      gravedad: ev.gravedad === "grave" ? "Grave" : ev.gravedad === "mortal" ? "Mortal" : "Leve", esGrave, esMortal, esVisitante: ev.vinculacion === "visitante",
       fecha: fmtDia(ev.fecha), hora: ev.hora ?? "", diaSemana: DIAS[ev.fecha.getUTCDay()], lugar: ev.lugar ?? "", sitioExacto: ev.sitioExacto ?? "", descripcion: ev.descripcion ?? "",
       tipoAccidente: TIPO_ACCIDENTE[ev.tipoAccidente ?? ""] ?? "", jornadaHabitual: ev.jornadaHabitual === true ? "Sí" : ev.jornadaHabitual === false ? "No" : "", turno: ev.turno ?? "", tiempoLaborado: ev.tiempoLaborado ?? "",
       versionTrabajador: ev.versionTrabajador ?? "", versionTestigos: ev.versionTestigos ?? "",
@@ -457,21 +607,25 @@ export async function contextoEvento(eventoId: string) {
       fechaReporte: ev.fechaReporte ? fmtDia(ev.fechaReporte) : "", furat: ev.furatNumero ?? "", reporteMinisterio: ev.reporteMinisterio ? fmtDia(ev.reporteMinisterio) : "",
       invInicio: ev.invInicio ? fmtDia(ev.invInicio) : "", invCierre: ev.invCierre ? fmtDia(ev.invCierre) : "", remitidaArl: ev.invRemitidaArl ? fmtDia(ev.invRemitidaArl) : "",
       invLugar: ev.invLugar?.trim() || direccionEmpresa, invFechas: ev.invFechas ?? "", invCerrada: ev.invEstado === "cerrada",
-      plazoRemision: esGrave ? fmtDia(new Date(ev.fecha.getTime() + 15 * 864e5)) : "",
+      aTiempo, plazoInvestigacion: fmtDia(venceInv),
+      // Datos FURAT de la persona (Res. 156/2005 anexo; Res. 1401/2007 art. 9) y expuestos (Res. 0312/2019 est. 3.2.2).
+      sexo: SEXO_T[ev.sexo ?? ""] ?? ev.sexo ?? "", fechaNacimiento: ev.fechaNacimiento ? fmtDia(ev.fechaNacimiento) : "", eps: ev.eps ?? "", afp: ev.afp ?? "",
+      sede: ev.sede?.trim() || "", expuestos: ev.expuestos ?? "",
+      plazoRemision: (esGrave || esMortal) && ev.vinculacion !== "visitante" ? fmtDia(venceInv) : "",
       // El documento lleva su tipo para que el bloque de firmas lo reconozca (RE_DOC); si solo escribieron el número, se asume cédula.
       equipo: equipo.map((x) => ({ nombre: x.nombre, cargo: x.cargo ?? "", documento: x.documento?.trim() ? (RE_DOC.test(x.documento.trim()) ? x.documento.trim() : `C.C. ${x.documento.trim()}`) : "", rol: ROLES_EQUIPO[x.rol] ?? x.rol })), hayEquipo: equipo.length > 0,
       rolesMinimos: rolesExigidos(ev.tipo, ev.gravedad).map((r) => ROLES_EQUIPO[r]),
       porques: a.porques ?? [], actos: a.actos ?? [], condiciones: a.condiciones ?? [], personales: a.personales ?? [], trabajo: a.trabajo ?? [], conclusion: a.conclusion ?? "",
       peligro: ev.peligro ? `${ev.peligro.descripcion} (${ev.peligro.clasificacion})` : "",
       lecciones: ev.lecciones ?? "",
-      acciones: ev.acciones.map((x, i) => ({ n: i + 1, descripcion: x.descripcion, tipo: x.tipo, jerarquia: x.jerarquia ? JER[x.jerarquia] ?? x.jerarquia : "", responsable: x.responsable ?? "", fechaLimite: ddmm(x.fechaLimite), estado: x.estado === "cerrada" ? "Cerrada" : "Abierta" })),
+      acciones: ev.acciones.map((x, i) => ({ n: i + 1, descripcion: x.descripcion, tipo: x.tipo, jerarquia: x.jerarquia ? JER[x.jerarquia] ?? x.jerarquia : "", dirigidaA: DIRIGIDA[x.dirigidaA ?? ""] ?? "", causa: x.causa ?? "", responsable: x.responsable ?? "", fechaLimite: ddmm(x.fechaLimite), estado: x.estado === "cerrada" ? "Cerrada" : "Abierta" })),
       soportes: ev.archivos.map((x) => x.descripcion),
     },
   };
 }
 
 
-const TIPO_EXAMEN: Record<string, string> = { ingreso: "Ingreso", periodico: "Periódico", retiro: "Retiro", post_incapacidad: "Post incapacidad", cambio_ocupacion: "Cambio de ocupación" };
+const TIPO_EXAMEN: Record<string, string> = TIPOS_EXAMEN;
 const CONCEPTO: Record<string, string> = CONCEPTOS_APTITUD;
 
 /** Trabajadores, exámenes (solo conceptos), entregas de EPP, capacitaciones y perfil sociodemográfico consolidado. */
@@ -483,6 +637,10 @@ export async function contextoNomina(empresaId: string) {
   const examenes = ts.flatMap((t) => t.examenes.map((x) => ({ t, x }))).sort((a, b) => b.x.fecha.getTime() - a.x.fecha.getTime()).map(({ t, x }, i) => ({
     n: i + 1, trabajador: t.nombres, doc: doc(t), cargo: t.cargo?.nombre ?? "", tipo: TIPO_EXAMEN[x.tipo] ?? x.tipo, fecha: ddmm(x.fecha),
     concepto: CONCEPTO[x.concepto] ?? x.concepto, restricciones: x.restricciones?.trim() || (x.concepto === "apto" ? "Ninguna" : "Sin registrar"), comunicado: ddmm(x.comunicadoTrabajador) || "Sin registrar", proximo: ddmm(x.proximo),
+    // Vigencia de la restricción (Res. 1843/2025 art. 19 par.) y adaptación del puesto en 20 días hábiles (art. 5 lit. f).
+    vigencia: !x.restricciones?.trim() && !requiereAdaptacion(x.concepto) ? "No aplica" : x.restriccionPermanente ? "Permanente" : x.restriccionHasta ? `Temporal hasta ${ddmm(x.restriccionHasta)}` : "Sin registrar",
+    requiereAdaptacion: requiereAdaptacion(x.concepto, x.restricciones), limiteAdaptacion: requiereAdaptacion(x.concepto, x.restricciones) ? ddmm(limiteAdaptacion(x.fecha)) : "No aplica",
+    adaptacion: requiereAdaptacion(x.concepto, x.restricciones) ? ddmm(x.adaptacionFecha) || "Pendiente" : "No requiere",
   }));
   const entregas = ts.flatMap((t) => t.entregasEpp.map((x) => ({ t, x }))).sort((a, b) => b.x.fecha.getTime() - a.x.fecha.getTime()).map(({ t, x }) => ({
     fecha: ddmm(x.fecha), trabajador: t.nombres, doc: doc(t), cargo: t.cargo?.nombre ?? "", elemento: x.elemento, cantidad: x.cantidad, tipo: x.tipo === "reposicion" ? "Reposición" : "Dotación", capacitado: x.capacitado ? "S" : "N", proxima: ddmm(x.proximaReposicion) || "Según desgaste",

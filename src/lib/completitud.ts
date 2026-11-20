@@ -77,7 +77,9 @@ export async function completitud(empresaId: string) {
   const rr = (e.resultadoReglas ?? {}) as { comites?: string[] };
   const requeridos = [...new Set([...(rr.comites ?? []), "BRIGADA"])];
   for (const tipo of requeridos) {
-    const com = e.comites.find((x) => x.tipo === tipo || (tipo === "COPASST" && x.tipo === "VIGIA") || (tipo === "VIGIA" && x.tipo === "COPASST"));
+    // El CCL de nivel central (sin sede) es el que alimenta los documentos; los de sede se revisan en Comités.
+    const candidatos = e.comites.filter((x) => x.tipo === tipo || (tipo === "COPASST" && x.tipo === "VIGIA") || (tipo === "VIGIA" && x.tipo === "COPASST"));
+    const com = candidatos.find((x) => !x.sede) ?? candidatos[0];
     const k = CLAVE_COMITE[tipo] ?? tipo.toLowerCase();
     const re = new RegExp(`integrantes\\.${k}\\b`);
     const nombre = NOMBRE_COMITE[com?.tipo ?? tipo] ?? `del ${tipo}`;
@@ -86,9 +88,11 @@ export async function completitud(empresaId: string) {
     if (tipo !== "BRIGADA" && (!com.periodoInicio || !com.periodoFin)) add({ id: `com-${k}-per`, ...g, dato: `Periodo ${nombre}`, detalle: "Fecha de conformación y vencimiento", re: new RegExp(`integrantes\\.${k}\\.(inicio|fin)`) });
     const sinDoc = com.miembros.filter((m) => vacio(m.cedula));
     if (sinDoc.length) add({ id: `com-${k}-doc`, ...g, dato: `Documento de integrantes ${nombre}`, detalle: sinDoc.map((m) => m.nombre).join(", "), re: new RegExp(`integrantes\\.${k}|each (miembros|empleador|trabajadores)`) });
-    if (k === "copasst" && com.tipo === "COPASST") {
+    // Elección por votación de los trabajadores: COPASST (Res. 2013/1986 art. 2) y CCL (Res. 3461/2025 art. 3).
+    if ((k === "copasst" && com.tipo === "COPASST") || k === "ccl") {
       const d = (com.datos ?? {}) as Record<string, unknown>;
-      if (vacio(d.fechaVotacion) || !(Array.isArray(d.resultados) && d.resultados.length)) add({ id: "com-eleccion", ...g, dato: "Datos de la elección del COPASST", detalle: "Inscripción, votación, resultados y jurados", re: /integrantes\.copasst\.eleccion/ });
+      const sigla = k === "ccl" ? "Comité de Convivencia Laboral" : "COPASST";
+      if (vacio(d.fechaVotacion) || !(Array.isArray(d.resultados) && d.resultados.length)) add({ id: `com-${k}-eleccion`, ...g, dato: `Datos de la elección del ${sigla}`, detalle: "Convocatoria, votación, resultados y escrutinio", re: new RegExp(`integrantes\\.${k}\\.eleccion`) });
     }
   }
 

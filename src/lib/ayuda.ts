@@ -175,8 +175,8 @@ export const AYUDA: Record<string, Ayuda> = {
   calificacion: { titulo: "Calificación del estándar", que: "Si la empresa cumple el ítem, con evidencia que lo demuestre.", para: "Suma los puntos del ítem al puntaje de la autoevaluación.", opciones: [
     { valor: "CUMPLE", etiqueta: "Cumple", explica: "Existe la evidencia que pide el modo de verificación. Suma todos los puntos." },
     { valor: "NO_CUMPLE", etiqueta: "No cumple", explica: "No hay evidencia o está incompleta. Suma cero y genera una acción en el plan de mejoramiento." },
-    { valor: "NO_APLICA", etiqueta: "No aplica", explica: "El ítem no corresponde a la empresa (por ejemplo, no hay sustancias carcinógenas). Exige justificación escrita y suma todos los puntos." },
-  ], normas: ["Res. 0312/2019 art. 27"] },
+    { valor: "NO_APLICA", etiqueta: "No aplica", explica: "El ítem no corresponde a la empresa (por ejemplo, no hay sustancias carcinógenas). Exige justificación escrita y suma todos los puntos. Solo en 7 y 21 estándares: en 60 estándares todos los ítems aplican." },
+  ], normas: ["Res. 0312/2019 arts. 16 y 27"] },
 
   // ── Comités ──
   rolComite: { titulo: "Rol en el comité", que: "Función de la persona en el comité.", opciones: [

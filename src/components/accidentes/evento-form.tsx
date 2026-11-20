@@ -5,15 +5,15 @@ import { Textarea } from "@/components/ui/textarea";
 import { Selector } from "@/components/app/selector";
 import { Field, FieldDescription, FieldGroup, FieldLabel, FieldLegend, FieldSet } from "@/components/ui/field";
 import { Ayuda } from "@/components/app/ayuda";
-import { TIPOS_EVENTO, GRAVEDAD, VINCULACION, TIPO_ACCIDENTE, TURNOS } from "@/lib/eventos";
+import { TIPOS_EVENTO, GRAVEDAD, VINCULACION, TIPO_ACCIDENTE, TURNOS, SEXO, NOTA_VISITANTE, esVisitante } from "@/lib/eventos";
 import { Combo, type GrupoCombo } from "@/components/app/combo";
 import { Buscador } from "@/components/app/buscador";
 import { Button } from "@/components/ui/button";
 import type { CatalogoAccidentes, ItemSimple } from "@/lib/catalogo-accidentes";
 import type { DatosEvento } from "@/app/actions/eventos";
 
-export type PersonaOpcion = { nombre: string; tipoDoc: string; documento: string; vinculacion: string; ingreso: string };
-export type CargoOpcion = { id: string; nombre: string; tareas: string[]; personas?: PersonaOpcion[] };
+export type PersonaOpcion = { nombre: string; tipoDoc: string; documento: string; vinculacion: string; ingreso: string; sexo?: string; nacimiento?: string; eps?: string; afp?: string };
+export type CargoOpcion = { id: string; nombre: string; tareas: string[]; sede?: string; personas?: PersonaOpcion[] };
 
 /** Tiempo entre dos fechas en texto ("2 años y 3 meses"), para la antigüedad que pide el FURAT. */
 function antiguedadTexto(desde: string, hasta: string) {
@@ -53,7 +53,7 @@ function Encabezado({ children, k, nota }: { children: React.ReactNode; k: strin
  * Captura las variables del FURAT (Res. 156/2005) que el informe de investigación debe retomar (Res. 1401/2007 arts. 9 y 10),
  * sin diagnósticos médicos (Ley 1581/2012).
  */
-export function EventoForm({ d, set, cargos, cat, lugares }: { d: DatosEvento; set: (d: DatosEvento) => void; cargos: CargoOpcion[]; cat: CatalogoAccidentes; lugares: string[] }) {
+export function EventoForm({ d, set, cargos, cat, lugares, sedes = [] }: { d: DatosEvento; set: (d: DatosEvento) => void; cargos: CargoOpcion[]; cat: CatalogoAccidentes; lugares: string[]; sedes?: string[] }) {
   const u = <K extends keyof DatosEvento>(k: K, v: DatosEvento[K]) => set({ ...d, [k]: v });
   const cargo = cargos.find((c) => c.id === d.cargoId);
   const tareasOtro = [...new Set(cargos.flatMap((c) => c.tareas))];
@@ -74,6 +74,13 @@ export function EventoForm({ d, set, cargos, cat, lugares }: { d: DatosEvento; s
             <Field>
               <Etiqueta htmlFor="ev-g" k="evGravedad">Gravedad</Etiqueta>
               <Selector id="ev-g" value={d.gravedad ?? "leve"} onChange={(v) => u("gravedad", v)} opciones={Object.entries(GRAVEDAD).map(([k, g]) => ({ valor: k, etiqueta: g.t }))} />
+            </Field>
+          )}
+          {esEL && (
+            <Field>
+              <Etiqueta htmlFor="ev-gm">¿Causó la muerte?</Etiqueta>
+              <Selector id="ev-gm" value={d.gravedad === "mortal" ? "mortal" : "leve"} onChange={(v) => u("gravedad", v)} opciones={[{ valor: "leve", etiqueta: "No" }, { valor: "mortal", etiqueta: "Sí, el trabajador falleció" }]} />
+              {d.gravedad === "mortal" && <FieldDescription className="text-amber-700">Se investiga dentro de los 15 días con el COPASST o Vigía y el informe se remite a la ARL (Decreto 1072/2015 art. 2.2.4.1.6; Res. 1401/2007 art. 14).</FieldDescription>}
             </Field>
           )}
           {esAT && (
@@ -99,7 +106,7 @@ export function EventoForm({ d, set, cargos, cat, lugares }: { d: DatosEvento; s
       </FieldSet>
 
       <FieldSet>
-        <Encabezado k="evTrabajador" nota={esAus ? undefined : "Identificación del trabajador como la pide el FURAT: nombre, documento, vinculación, cargo y antigüedad en el cargo y en la empresa."}>Persona afectada</Encabezado>
+        <Encabezado k="evTrabajador" nota={esAus ? undefined : "Identificación del trabajador como la pide el FURAT: nombre, documento, sexo, fecha de nacimiento, EPS, AFP, vinculación, sede, cargo y antigüedad en el cargo y en la empresa (Res. 156/2005; Res. 1401/2007 art. 9)."}>Persona afectada</Encabezado>
         {cargos.some((c) => c.personas?.length) && (
           <Field>
             <FieldLabel>Elegir de los trabajadores registrados</FieldLabel>
@@ -108,9 +115,10 @@ export function EventoForm({ d, set, cargos, cat, lugares }: { d: DatosEvento; s
               onSelect={(v) => {
                 const [cid, clave] = v.split("|");
                 const c = cargos.find((x) => x.id === cid); const p = c?.personas?.find((x) => (x.documento || x.nombre) === clave);
-                if (c && p) set({ ...d, trabajadorNombre: p.nombre, trabajadorTipoDoc: p.tipoDoc, trabajadorCedula: p.documento, vinculacion: p.vinculacion, cargoId: c.id, cargo: c.nombre, tiempoEmpresa: antiguedadTexto(p.ingreso, d.fecha) || d.tiempoEmpresa });
+                if (c && p) set({ ...d, trabajadorNombre: p.nombre, trabajadorTipoDoc: p.tipoDoc, trabajadorCedula: p.documento, vinculacion: p.vinculacion, cargoId: c.id, cargo: c.nombre, tiempoEmpresa: antiguedadTexto(p.ingreso, d.fecha) || d.tiempoEmpresa,
+                  sexo: p.sexo || d.sexo, fechaNacimiento: p.nacimiento || d.fechaNacimiento, eps: p.eps || d.eps, afp: p.afp || d.afp, sede: c.sede || d.sede });
               }} />
-            <FieldDescription>Llena nombre, documento, vinculación, cargo y antigüedad en la empresa.</FieldDescription>
+            <FieldDescription>Llena nombre, documento, vinculación, cargo, antigüedad en la empresa, sexo, fecha de nacimiento, EPS, AFP y la sede del cargo.</FieldDescription>
           </Field>
         )}
         <div className="grid gap-4 sm:grid-cols-3">
@@ -118,8 +126,9 @@ export function EventoForm({ d, set, cargos, cat, lugares }: { d: DatosEvento; s
           <Field><Etiqueta htmlFor="ev-c" k="documentoIdentidad">Documento</Etiqueta><CampoDocumento id="ev-c" tipo={d.trabajadorTipoDoc} numero={d.trabajadorCedula} onTipo={(v) => u("trabajadorTipoDoc", v)} onNumero={(v) => u("trabajadorCedula", v)} /></Field>
           <Field>
             <Etiqueta htmlFor="ev-v" k="evVinculacion">Vinculación</Etiqueta>
-            <Selector id="ev-v" value={d.vinculacion} onChange={(v) => u("vinculacion", v)} opciones={Object.entries(VINCULACION).map(([k, t]) => ({ valor: k, etiqueta: t }))} />
+            <Selector id="ev-v" value={d.vinculacion} onChange={(v) => u("vinculacion", v)} placeholder="Seleccione la vinculación" opciones={Object.entries(VINCULACION).map(([k, t]) => ({ valor: k, etiqueta: t }))} />
           </Field>
+          {esVisitante(d.vinculacion) && <FieldDescription className="rounded-md border border-sky-200 bg-sky-50 px-3 py-2 text-sky-900 sm:col-span-3">{NOTA_VISITANTE}</FieldDescription>}
           <Field>
             <Etiqueta htmlFor="ev-cg">Cargo</Etiqueta>
             <Selector id="ev-cg" value={d.cargoId} onChange={(v) => set({ ...d, cargoId: v, cargo: cargos.find((c) => c.id === v)?.nombre ?? "" })} opciones={cargos.map((c) => ({ valor: c.id, etiqueta: c.nombre }))} />
@@ -127,6 +136,21 @@ export function EventoForm({ d, set, cargos, cat, lugares }: { d: DatosEvento; s
           </Field>
           {!esAus && <Field><Etiqueta htmlFor="ev-a">Antigüedad en el cargo</Etiqueta><Input id="ev-a" value={d.antiguedad ?? ""} placeholder="Ej.: 8 meses" onChange={(e) => u("antiguedad", e.target.value)} /></Field>}
           {!esAus && <Field><Etiqueta htmlFor="ev-ae">Antigüedad en la empresa</Etiqueta><Input id="ev-ae" value={d.tiempoEmpresa ?? ""} placeholder="Ej.: 2 años y 3 meses" onChange={(e) => u("tiempoEmpresa", e.target.value)} /></Field>}
+          {!esAus && (
+            <Field>
+              <Etiqueta htmlFor="ev-sx">Sexo</Etiqueta>
+              <Selector id="ev-sx" value={d.sexo} onChange={(v) => u("sexo", v)} placeholder="Según el FURAT" opciones={Object.entries(SEXO).map(([k, t]) => ({ valor: k, etiqueta: t }))} />
+            </Field>
+          )}
+          {!esAus && <Field><Etiqueta htmlFor="ev-fn">Fecha de nacimiento</Etiqueta><Input id="ev-fn" type="date" placeholder="AAAA-MM-DD" value={d.fechaNacimiento ?? ""} onChange={(e) => u("fechaNacimiento", e.target.value)} /></Field>}
+          {!esAus && (
+            <Field>
+              <Etiqueta htmlFor="ev-sd">Sede o centro de trabajo</Etiqueta>
+              <Combo id="ev-sd" value={d.sede} onChange={(v) => u("sede", v)} placeholder="Sede donde labora" grupos={[{ titulo: "Sedes de la empresa", opciones: sedes.map((x) => ({ valor: x })) }]} />
+            </Field>
+          )}
+          {!esAus && <Field><Etiqueta htmlFor="ev-eps">EPS</Etiqueta><Input id="ev-eps" value={d.eps ?? ""} placeholder="Ej.: Sanitas" onChange={(e) => u("eps", e.target.value)} /></Field>}
+          {!esAus && <Field><Etiqueta htmlFor="ev-afp">AFP</Etiqueta><Input id="ev-afp" value={d.afp ?? ""} placeholder="Ej.: Porvenir" onChange={(e) => u("afp", e.target.value)} /></Field>}
           {!esAus && <Field className="sm:col-span-3"><Etiqueta htmlFor="ev-ta">Tarea que realizaba</Etiqueta><Combo id="ev-ta" placeholder="Seleccione o escriba la tarea" value={d.tarea} onChange={(v) => u("tarea", v)} grupos={cargo ? [{ titulo: `Tareas del cargo ${cargo.nombre}`, opciones: cargo.tareas.map((t) => ({ valor: t })) }] : [{ opciones: tareasOtro.map((t) => ({ valor: t })) }]} /></Field>}
         </div>
       </FieldSet>
@@ -149,6 +173,11 @@ export function EventoForm({ d, set, cargos, cat, lugares }: { d: DatosEvento; s
             {!esEL && <Field className="sm:col-span-2"><Etiqueta htmlFor="ev-te">Testigos</Etiqueta><Input id="ev-te" value={d.testigos ?? ""} placeholder="Ej.: María López (C.C. 52.000.000), operaria de corte; Pedro Ruiz (C.C. 80.000.000), supervisor" onChange={(e) => u("testigos", e.target.value)} /></Field>}
             {!esEL && <Field><Etiqueta htmlFor="ev-vt">Versión del trabajador</Etiqueta><Textarea id="ev-vt" rows={3} value={d.versionTrabajador ?? ""} placeholder="Ej.: “Estaba cortando la varilla como siempre; se me resbaló y me cortó la mano. Los guantes estaban en el casillero.”" onChange={(e) => u("versionTrabajador", e.target.value)} /></Field>}
             {!esEL && <Field><Etiqueta htmlFor="ev-vts">Versión de los testigos</Etiqueta><Textarea id="ev-vts" rows={3} value={d.versionTestigos ?? ""} placeholder="Ej.: “Vi que la varilla se movió al hacer fuerza; la cizalla no tenía el tope puesto.” — María López" onChange={(e) => u("versionTestigos", e.target.value)} /></Field>}
+            <Field className="sm:col-span-2">
+              <Etiqueta htmlFor="ev-ex">Trabajadores potencialmente expuestos y acciones para ellos</Etiqueta>
+              <Textarea id="ev-ex" rows={2} value={d.expuestos ?? ""} placeholder="Ej.: Los 6 operarios de corte de la planta 1 (turnos diurno y nocturno) usan la misma cizalla: se instala el tope en las dos cizallas y se les entregan guantes anticorte con charla de 15 minutos." onChange={(e) => u("expuestos", e.target.value)} />
+              <FieldDescription>Otros cargos, áreas, turnos o sedes con el mismo peligro y qué se hace por ellos (Res. 0312/2019 estándar 3.2.2).</FieldDescription>
+            </Field>
           </div>
         </FieldSet>
       )}

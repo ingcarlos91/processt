@@ -15,6 +15,7 @@ import { BotonDescarga } from "@/components/app/boton-descarga";
 import { SubirArchivo, ListaArchivos, type ArchivoUI } from "@/components/app/adjuntos";
 import { BotonIniciarSgsst } from "@/components/diagnostico/acciones";
 import { CICLOS, calcularDiagnostico, type EstadoDiag, type ItemDiag } from "@/lib/diagnostico";
+import { permiteNoAplica } from "@/lib/evaluacion";
 import * as A from "@/app/actions/diagnostico";
 import { cn } from "@/lib/utils";
 
@@ -26,7 +27,7 @@ const EST: Record<Exclude<EstadoDiag, "">, { t: string; c: string; i: typeof Che
 };
 const tono = (p: number | null) => (p == null ? undefined : p < 60 ? ("bad" as const) : p <= 85 ? ("warn" as const) : ("ok" as const));
 
-export function DiagnosticoEditor({ empresaId, d, etapa, profesional }: { empresaId: string; d: D; etapa: string; profesional: string }) {
+export function DiagnosticoEditor({ empresaId, d, etapa, profesional, licencia = "" }: { empresaId: string; d: D; etapa: string; profesional: string; licencia?: string }) {
   const router = useRouter();
   const [pend, start] = useTransition();
   const [items, setItems] = useState(d.items);
@@ -51,6 +52,13 @@ export function DiagnosticoEditor({ empresaId, d, etapa, profesional }: { empres
         <Alert>
           <AlertTitle>Empresa en etapa de diagnóstico</AlertTitle>
           <AlertDescription>Evalúe cada estándar, cierre el diagnóstico y descargue el informe en PDF con el membrete de la consultora. Cuando el cliente continúe, inicie el SG-SST desde aquí: las respuestas pasan a la evaluación inicial. También puede iniciarlo sin diagnóstico.</AlertDescription>
+        </Alert>
+      )}
+
+      {!licencia && (
+        <Alert variant="destructive">
+          <AlertTitle>Falta la licencia en SST de quien firma el informe</AlertTitle>
+          <AlertDescription>La evaluación de los estándares la hace personal idóneo con licencia en SST (Res. 0312/2019 art. 16, estándar 2.3.1). Regístrela en Mi consultora; mientras tanto el informe sale con la advertencia.</AlertDescription>
         </Alert>
       )}
 
@@ -96,11 +104,12 @@ export function DiagnosticoEditor({ empresaId, d, etapa, profesional }: { empres
                     <div className="mt-0.5 text-[11px] text-muted-foreground">Peso: {it.puntaje}</div>
                   </div>
                   <div className="flex gap-1">
-                    {(Object.keys(EST) as Exclude<EstadoDiag, "">[]).map((k) => { const E = EST[k]; const on = it.estado === k; return (
+                    {(Object.keys(EST) as Exclude<EstadoDiag, "">[]).filter((k) => k !== "no_aplica" || permiteNoAplica(d.nivel) || it.estado === "no_aplica").map((k) => { const E = EST[k]; const on = it.estado === k; return (
                       <button key={k} type="button" disabled={cerrado} onClick={() => set(it.codigo, { estado: on ? "" : k })} className={cn("inline-flex h-8 items-center gap-1 rounded-md border px-2.5 text-xs font-medium transition-colors disabled:cursor-not-allowed", on ? E.c : "bg-background hover:bg-muted")}><E.i className="size-3.5" />{E.t}</button>
                     ); })}
                   </div>
                 </div>
+                {!permiteNoAplica(d.nivel) && it.estado === "no_aplica" && <p className="mt-2 text-xs text-destructive">En 60 estándares no existe «no aplica» (Res. 0312/2019 arts. 16 y 27): cuenta como no cumplido. Márquelo «cumple» o «no cumple».</p>}
                 {(it.estado && it.estado !== "cumple" || it.observacion) && (
                   <Input className="mt-2" disabled={cerrado} value={it.observacion} placeholder={it.estado === "no_aplica" ? "Justificación (obligatoria para “no aplica”)" : "Qué se encontró (aparece en el informe)"} onChange={(e) => set(it.codigo, { observacion: e.target.value })} />
                 )}

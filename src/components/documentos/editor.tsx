@@ -83,8 +83,8 @@ function Seccion({ s, empresaId, run, pend }: { s: Sec; empresaId: string; run: 
       <CardContent className="space-y-3">
         {s.revisar && (
           <Alert variant="destructive">
-            <AlertTitle>El texto generado cambió</AlertTitle>
-            <AlertDescription>Los datos de la empresa cambiaron después de su edición. Compare y decida si conserva su versión o restaura la generada.</AlertDescription>
+            <AlertTitle>{s.generado === "" ? "Esta sección ya no está en la plantilla" : "El texto generado cambió"}</AlertTitle>
+            <AlertDescription>{s.generado === "" ? "La plantilla cambió el título o retiró esta sección. Se conservó su edición: revise si la mantiene, la pasa a otra sección o la descarta." : "Los datos de la empresa cambiaron después de su edición. Compare y decida si conserva su versión o restaura la generada."}</AlertDescription>
             <AlertAction><Button size="xs" variant="outline" onClick={() => run(() => A.marcarRevisada(empresaId, s.id), "Marcada como revisada")}><Check /> Conservar mi versión</Button></AlertAction>
           </Alert>
         )}

@@ -15,6 +15,8 @@ export type ResultadoReglas = {
   capacitaciones: string[];
   conclusiones: Conclusion[];
   advertencias: string[];
+  /** Disparadores activos (cuestionario, trabajadores o matriz). */
+  disparadores?: string[];
 };
 
 type ReglaIn = { codigo: string; nombre: string; condicion: unknown; efecto: unknown; normaRef: string; prioridad: number; activa: boolean };
@@ -42,6 +44,13 @@ export function contexto(e: EmpresaReglas, nivel?: number): ContextoReglas {
   const origenDisparadores: Partial<Record<Disparador, string>> = {};
   for (const [k, peligro] of Object.entries(e.disparadoresMatriz ?? {}) as [Disparador, string][]) {
     if (!marcados[k]) { disparadores[k] = true; origenDisparadores[k] = /trabajador/i.test(peligro) ? `${peligro}, aunque en el cuestionario no se marcó` : `la matriz de peligros tiene “${peligro}”, aunque en el cuestionario no se marcó`; }
+  }
+  // Servicios de salud humana (CIIU división 86) y asistencia social con alojamiento (87): talento humano que puede atender
+  // salud mental, con acciones de protección especial (Decreto 1072/2015 art. 2.2.4.13.5, Decreto 728/2025). Decisión C1.
+  const ciiu = String(e.ciiu ?? "").replace(/\D/g, "");
+  if (!marcados.serviciosSalud && /^8[67]/.test(ciiu)) {
+    disparadores.serviciosSalud = true;
+    origenDisparadores.serviciosSalud = `la actividad económica registrada (CIIU ${ciiu}) es de atención de la salud humana o de asistencia social (divisiones 86 y 87 del CIIU)`;
   }
   return {
     trabajadores: contarTrabajadores(e),
@@ -142,18 +151,21 @@ export function evaluarEmpresa(
     const nv = nivelPesv(ctx);
     advertencias.push(`Aplica el Plan Estratégico de Seguridad Vial en nivel ${({ basico: "básico", estandar: "estándar", avanzado: "avanzado" } as Record<string, string>)[nv ?? ""] ?? nv} (${ctx.vehiculos} vehículos, ${ctx.conductores} conductores; Res. 40595/2022 Tabla 1). Reporte anual de autogestión al Ministerio del Trabajo antes del 31 de enero (Circular 034/2026).`);
   } else if (ctx.disparadores.conduccion) advertencias.push("Hay conducción en misión sin PESV obligatorio (menos de 11 vehículos y menos de 2 conductores): el peligro vial se gestiona en la matriz (Res. 0312 est. 4.1.2). Si contrata o administra 2 o más conductores, márquelos en Trabajadores (casilla “Conduce”) o registre el número en Datos.");
-  for (const [k, v] of Object.entries(ctx.origenDisparadores ?? {})) advertencias.push(`Se activó “${k}” porque ${v}. Confírmelo en el cuestionario (Datos → Peligros especiales) o ajuste la matriz.`);
+  for (const [k, v] of Object.entries(ctx.origenDisparadores ?? {})) advertencias.push(k === "serviciosSalud"
+    ? `Se activó “${k}” porque ${v}: el personal que atiende salud mental requiere acciones de protección especial (Decreto 1072/2015 art. 2.2.4.13.5). Puede marcarlo en Datos → Peligros especiales para confirmarlo.`
+    : `Se activó “${k}” porque ${v}. Confírmelo en el cuestionario (Datos → Peligros especiales) o ajuste la matriz.`);
   if (e.nContratistas > 0) advertencias.push(`Hay ${e.nContratistas} contratistas: deben incluirse en inducción, capacitación, matriz de peligros e indicadores (Decreto 1072 art. 2.2.4.6.28; Res. 0312 art. 30).`);
 
   return {
     trabajadores: ctx.trabajadores, nivel, nivelNormaRef, estandares,
     comites: [...comites], documentos, normas, capacitaciones: [...capacitaciones], conclusiones, advertencias,
+    disparadores: Object.entries(ctx.disparadores).filter(([, v]) => v).map(([k]) => k),
   };
 }
 
 /** Composición paritaria del COPASST según Res. 2013/1986 art. 2 (Vigía: Decreto Ley 1295/1994 art. 35 par.) */
 export function composicionCopasst(trabajadores: number) {
-  if (trabajadores < 10) return { tipo: "VIGIA", porParte: 1, texto: "Vigía de SST (1 persona designada; el suplente es buena práctica, no exigencia legal)" };
+  if (trabajadores < 10) return { tipo: "VIGIA", porParte: 1, texto: "Vigía de SST (1 persona, elegida por los trabajadores o designada con su participación; el suplente es buena práctica, no exigencia legal)" };
   if (trabajadores <= 49) return { tipo: "COPASST", porParte: 1, texto: "1 representante del empleador y 1 de los trabajadores, con sus suplentes" };
   if (trabajadores <= 499) return { tipo: "COPASST", porParte: 2, texto: "2 representantes del empleador y 2 de los trabajadores, con sus suplentes" };
   if (trabajadores <= 999) return { tipo: "COPASST", porParte: 3, texto: "3 representantes del empleador y 3 de los trabajadores, con sus suplentes" };

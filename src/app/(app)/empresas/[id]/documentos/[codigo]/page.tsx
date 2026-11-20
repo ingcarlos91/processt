@@ -7,7 +7,7 @@ import { completitud, normasMatrizLegal } from "@/lib/completitud";
 import { AvisoFaltantesDocumento } from "@/components/trazabilidad/faltantes";
 import { CumplimientoLegal } from "@/components/trazabilidad/cumplimiento-legal";
 import { SustentoNormativo } from "@/components/trazabilidad/sustento-normativo";
-import { REQUISITOS, coberturaRequisitos } from "@/lib/requisitos";
+import { REQUISITOS, coberturaRequisitos, perfilDe } from "@/lib/requisitos";
 
 export const dynamic = "force-dynamic";
 
@@ -16,7 +16,7 @@ export default async function DocumentoPage({ params }: PageProps<"/empresas/[id
   const d = await db.documento.findUnique({ where: { empresaId_codigo: { empresaId: id, codigo } }, include: { secciones: { orderBy: { orden: "asc" } }, plantilla: true, archivos: { orderBy: { subidoEn: "desc" } } } });
   if (!d) notFound();
   // Solo las normas que el motor aplica a esta empresa (p. ej. el Decreto 2157 o la Res. 4272 no se muestran si no le aplican).
-  const rr = (await db.empresa.findUniqueOrThrow({ where: { id }, select: { resultadoReglas: true } })).resultadoReglas as { normas?: { codigo: string }[] } | null;
+  const rr = (await db.empresa.findUniqueOrThrow({ where: { id }, select: { resultadoReglas: true } })).resultadoReglas as Parameters<typeof perfilDe>[0];
   const aplicables = rr?.normas ? new Set(rr.normas.map((n) => n.codigo)) : undefined;
   const normas = await db.norma.findMany({ where: { codigo: { in: d.plantilla.normas.filter((c) => !aplicables || aplicables.has(c)) } }, select: { codigo: true, nombre: true, tipo: true, numero: true, anio: true } });
   const secciones = await Promise.all(d.secciones.map(async (s) => ({
@@ -24,7 +24,7 @@ export default async function DocumentoPage({ params }: PageProps<"/empresas/[id
     html: await mdAHtml(s.contenidoEditado ?? s.contenidoGenerado),
   })));
   // Requisitos de la norma frente a las secciones vigentes (editadas o generadas).
-  const cobertura = coberturaRequisitos(codigo, d.secciones.map((s) => ({ titulo: s.titulo, contenido: s.contenidoEditado ?? s.contenidoGenerado })), aplicables);
+  const cobertura = coberturaRequisitos(codigo, d.secciones.map((s) => ({ titulo: s.titulo, contenido: s.contenidoEditado ?? s.contenidoGenerado })), perfilDe(rr));
   const normasReq = await db.norma.findMany({ where: { codigo: { in: [...new Set((REQUISITOS[codigo] ?? []).map((r) => r.norma))] } }, select: { codigo: true, tipo: true, numero: true, anio: true } });
   const corta = (c: string) => { const n = normasReq.find((x) => x.codigo === c); return n ? `${n.tipo === "Resolucion" ? "Res." : n.tipo === "GuiaTecnica" ? "GTC" : n.tipo} ${n.numero}/${n.anio}` : c; };
   const comp = await completitud(id);

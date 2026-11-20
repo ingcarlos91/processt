@@ -50,6 +50,10 @@ export async function cerrarDiagnostico(empresaId: string, id: string) {
   const items = (x.items ?? []) as ItemDiag[];
   const sin = items.filter((i) => !i.estado).map((i) => i.codigo);
   if (sin.length) return { error: `Falta evaluar: ${sin.slice(0, 8).join(", ")}${sin.length > 8 ? "…" : ""}.` };
+  if (x.nivel === 60) {
+    const na = items.filter((i) => i.estado === "no_aplica").map((i) => i.codigo);
+    if (na.length) return { error: `En 60 estándares no existe «no aplica» (Res. 0312/2019 arts. 16 y 27). Califique como «cumple» o «no cumple»: ${na.join(", ")}.` };
+  }
   const sinJust = items.filter((i) => i.estado === "no_aplica" && !i.observacion.trim()).map((i) => i.codigo);
   if (sinJust.length) return { error: `Justifique los “no aplica”: ${sinJust.join(", ")}.` };
   const emp = await db.empresa.findUniqueOrThrow({ where: { id: empresaId }, select: { resultadoReglas: true } });

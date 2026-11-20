@@ -16,11 +16,13 @@ import { Section, Stat, NormaRef } from "@/components/app/ui";
 import { Pedir } from "@/components/app/confirmar";
 import { BotonDescarga } from "@/components/app/boton-descarga";
 import { SubirArchivo, ListaArchivos, type ArchivoUI } from "@/components/app/adjuntos";
-import { resumenAuditoria, type ItemAuditoria, type ResultadoAud } from "@/lib/auditoria";
+import { mismaPersona, resumenAuditoria, type ItemAuditoria, type ResultadoAud } from "@/lib/auditoria";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import * as A from "@/app/actions/auditoria";
 import { cn, hoyLocal } from "@/lib/utils";
 
-type Aud = { id: string; anio: number; fechaInicio: string; fechaCierre: string; auditor: string; auditorPerfil: string; participantes: string; alcance: string; estado: string; conclusiones: string; items: ItemAuditoria[]; acciones: AccionUI[]; archivos: ArchivoUI[] };
+type Aud = { id: string; anio: number; fechaInicio: string; fechaCierre: string; auditor: string; auditorPerfil: string; independiente: boolean; comunicadoA: string; comunicadoFecha: string; participantes: string; alcance: string; estado: string; conclusiones: string; items: ItemAuditoria[]; acciones: AccionUI[]; archivos: ArchivoUI[] };
 const RES: Record<Exclude<ResultadoAud, "">, { t: string; c: string; i: typeof Check }> = {
   conforme: { t: "Conforme", c: "border-emerald-500 bg-emerald-500 text-white", i: Check },
   observacion: { t: "Observación", c: "border-amber-500 bg-amber-500 text-white", i: Eye },
@@ -30,18 +32,21 @@ const RES: Record<Exclude<ResultadoAud, "">, { t: string; c: string; i: typeof C
 const en30 = () => hoyLocal(30);
 const fecha = (f: string) => (f ? new Date(f + "T12:00:00Z").toLocaleDateString("es-CO", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" }) : "");
 
-export function AuditoriaDetalle({ empresaId, a, sistema, responsables }: { empresaId: string; a: Aud; sistema: Record<number, string>; responsables: string[] }) {
+export function AuditoriaDetalle({ empresaId, a, sistema, responsables, responsableSst }: { empresaId: string; a: Aud; sistema: Record<number, string>; responsables: string[]; responsableSst: string }) {
   const router = useRouter();
   const [pend, start] = useTransition();
   const [items, setItems] = useState(a.items);
   const [conclusiones, setConclusiones] = useState(a.conclusiones);
+  const [independiente, setIndependiente] = useState(a.independiente);
+  const [com, setCom] = useState({ comunicadoA: a.comunicadoA, comunicadoFecha: a.comunicadoFecha });
+  const cambioCom = com.comunicadoA !== a.comunicadoA || com.comunicadoFecha !== a.comunicadoFecha;
   const cerrada = a.estado === "cerrada";
   const r = resumenAuditoria(items);
   const calificados = items.filter((i) => i.resultado).length;
   const set = (n: number, x: Partial<ItemAuditoria>) => setItems((items) => items.map((i) => (i.n === n ? { ...i, ...x } : i)));
-  const cambio = JSON.stringify(items) !== JSON.stringify(a.items) || conclusiones !== a.conclusiones;
+  const cambio = JSON.stringify(items) !== JSON.stringify(a.items) || conclusiones !== a.conclusiones || independiente !== a.independiente;
   const guardar = (msg = "Auditoría guardada", despues?: () => Promise<void>) => start(async () => {
-    const res = await A.guardarAuditoria(empresaId, a.id, { items, conclusiones });
+    const res = await A.guardarAuditoria(empresaId, a.id, { items, conclusiones, independiente });
     if ("error" in res) { toast.error(res.error); return; }
     if (despues) await despues(); else toast.success(msg);
     router.refresh();
@@ -64,6 +69,13 @@ export function AuditoriaDetalle({ empresaId, a, sistema, responsables }: { empr
         <h2 className="flex flex-wrap items-center gap-2 text-lg font-semibold">Auditoría interna {a.anio} <Badge variant={cerrada ? "default" : "outline"}>{cerrada ? `Cerrada el ${fecha(a.fechaCierre)}` : "En curso"}</Badge></h2>
         <p className="text-sm text-muted-foreground">Inicio {fecha(a.fechaInicio)} · Auditor: {a.auditor}{a.auditorPerfil ? ` (${a.auditorPerfil})` : ""}{a.participantes ? ` · Planificada con: ${a.participantes}` : ""}</p>
       </div>
+
+      <Section title="Independencia del auditor" description="El auditor debe ser idóneo e independiente: no audita su propio trabajo. La declaración va al informe." actions={<NormaRef>Decreto 1072/2015 art. 2.2.4.6.29</NormaRef>} contentClassName="space-y-3">
+        {mismaPersona(a.auditor, responsableSst) && (
+          <Alert variant="destructive"><AlertTitle>El auditor es el responsable del SG-SST</AlertTitle><AlertDescription>Si diseñó o ejecuta el sistema estaría auditando su propio trabajo. Designe a otra persona idónea o deje constancia en el perfil de que no audita lo que él mismo ejecutó.</AlertDescription></Alert>
+        )}
+        <Field orientation="horizontal"><Checkbox id="a-ind" disabled={cerrada} checked={independiente} onCheckedChange={(v) => setIndependiente(!!v)} /><FieldLabel htmlFor="a-ind" className="font-normal">Declaro que {a.auditor} es independiente de lo auditado: no audita su propio trabajo ni las actividades que diseñó o ejecutó. Requerida para cerrar la auditoría.</FieldLabel></Field>
+      </Section>
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <Stat label="Avance" value={`${calificados} / ${items.length}`} hint={<Progress value={(calificados / items.length) * 100} />} />
@@ -110,6 +122,14 @@ export function AuditoriaDetalle({ empresaId, a, sistema, responsables }: { empr
 
       <Section title="Conclusiones">
         <Field><FieldLabel htmlFor="a-con" className="sr-only">Conclusiones</FieldLabel><Textarea id="a-con" rows={4} disabled={cerrada} value={conclusiones} placeholder="Eficacia del SG-SST, fortalezas, principales no conformidades y recomendaciones para la revisión por la alta dirección." onChange={(e) => setConclusiones(e.target.value)} /></Field>
+      </Section>
+
+      <Section title="Comunicación de resultados" description="A quién y cuándo se comunicaron los resultados: a los responsables de adoptar las medidas preventivas, correctivas o de mejora (y al COPASST o Vigía). Se puede registrar con la auditoría cerrada." actions={<NormaRef>Decreto 1072/2015 art. 2.2.4.6.29</NormaRef>}>
+        <div className="grid gap-2 sm:grid-cols-[1fr_11rem_auto]">
+          <Field><FieldLabel htmlFor="a-coma">Comunicado a</FieldLabel><Input id="a-coma" value={com.comunicadoA} placeholder="Ej.: Gerente general, responsable del SG-SST y COPASST" onChange={(e) => setCom({ ...com, comunicadoA: e.target.value })} /></Field>
+          <Field><FieldLabel htmlFor="a-comf">Fecha</FieldLabel><Input id="a-comf" type="date" value={com.comunicadoFecha} onChange={(e) => setCom({ ...com, comunicadoFecha: e.target.value })} /></Field>
+          <div className="flex items-end"><Button variant="outline" disabled={pend || !cambioCom} tooltip="Guarda a quién y cuándo se comunicaron los resultados; aparece en el informe" onClick={() => start(async () => { const res = await A.registrarComunicacion(empresaId, a.id, com); if ("error" in res) toast.error(res.error); else { toast.success("Comunicación registrada"); router.refresh(); } })}><Save /> Guardar</Button></div>
+        </div>
       </Section>
 
       {a.acciones.length > 0 && (

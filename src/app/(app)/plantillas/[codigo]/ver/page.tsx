@@ -10,7 +10,7 @@ import { construirContexto } from "@/lib/generador/contexto";
 import { render, dividirSecciones } from "@/lib/generador/plantilla";
 import { mdAHtml } from "@/lib/generador/exportar";
 import { SustentoNormativo } from "@/components/trazabilidad/sustento-normativo";
-import { REQUISITOS, coberturaRequisitos } from "@/lib/requisitos";
+import { REQUISITOS, coberturaRequisitos, perfilDe, type PerfilRequisitos } from "@/lib/requisitos";
 import { SelectorEmpresaVista } from "@/components/biblioteca/selector-empresa-vista";
 
 export const dynamic = "force-dynamic";
@@ -29,7 +29,7 @@ export default async function VerPlantilla({ params, searchParams }: PageProps<"
 
   let contenido: React.ReactNode;
   let aplica: boolean | null = null;
-  let aplicables: Set<string> | undefined;
+  let perfil: PerfilRequisitos | undefined;
   let secciones: { titulo: string; contenido: string }[] = [];
   if (!empresaId) {
     contenido = <Alert><AlertTitle>No hay empresas para armar la vista</AlertTitle><AlertDescription>La plantilla se muestra con los datos de una empresa. Registre una empresa y vuelva a esta página.</AlertDescription></Alert>;
@@ -38,7 +38,7 @@ export default async function VerPlantilla({ params, searchParams }: PageProps<"
     try {
       const ctx = await construirContexto(empresaId);
       aplica = ctx._reglas.documentos.some((d) => d.codigo === codigo);
-      aplicables = new Set(ctx._reglas.normas.map((n) => n.codigo));
+      perfil = perfilDe(ctx._reglas);
       md = render(p.contenidoMd, ctx);
     } catch (e) {
       md = `**No se pudo armar la plantilla con los datos de esta empresa.** ${e instanceof Error ? e.message : ""}`;
@@ -55,7 +55,7 @@ export default async function VerPlantilla({ params, searchParams }: PageProps<"
       </article>
     );
   }
-  const cobertura = coberturaRequisitos(codigo, secciones, aplicables);
+  const cobertura = coberturaRequisitos(codigo, secciones, perfil);
 
   return (
     <Page>

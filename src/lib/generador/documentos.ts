@@ -37,7 +37,17 @@ export async function generarDocumentos(empresaId: string, codigos?: string[]) {
           await db.documentoSeccion.create({ data: { documentoId: existente.id, orden: i, titulo: s.titulo, contenidoGenerado: s.contenido } });
         }
       }
-      for (const x of existente.secciones) if (!usados.has(x.id) && !x.contenidoEditado) await db.documentoSeccion.delete({ where: { id: x.id } });
+      for (const x of existente.secciones) {
+        if (usados.has(x.id)) continue;
+        if (!x.contenidoEditado) { await db.documentoSeccion.delete({ where: { id: x.id } }); cambio = true; continue; }
+        // Sección editada a mano cuyo título ya no está en la plantilla (renombrada o retirada): se conserva y queda
+        // "para revisar" (decisión F1). Su contenido generado se vacía para marcarla una sola vez: si la consultora la
+        // da por revisada no se vuelve a marcar, y si descarta su edición se elimina en la siguiente generación.
+        if (x.contenidoGenerado !== "") {
+          cambio = true; revisar++;
+          await db.documentoSeccion.update({ where: { id: x.id }, data: { contenidoGenerado: "", requiereRevision: true } });
+        }
+      }
       await db.documento.update({
         where: { id: existente.id },
         // La versión solo sube si la vigente ya fue aprobada o firmada; mientras es borrador, los cambios

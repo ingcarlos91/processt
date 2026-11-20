@@ -36,29 +36,26 @@ Definiciones del art. 30:
 
 ## Registro mensual
 
+Datos de {{accidentalidad.indicadores.anio}} calculados con los eventos registrados y el número de trabajadores de cada mes (planta, misión, contratistas y aprendices; sin visitantes). Los meses aún no transcurridos quedan en blanco.{{#if accidentalidad.indicadores.estimado}} Donde dice "estimado", el mes no se registró y se usó el número de trabajadores de la empresa y 24 días programados por trabajador; se corrige en Indicadores.{{/if}}
+
 | Mes | Trabajadores | Accidentes de trabajo | Días de incapacidad por AT | Días cargados | Días de ausencia por incapacidad | Días programados | Frecuencia | Severidad | Ausentismo (%) |
 |---|---|---|---|---|---|---|---|---|---|
-| Enero | | | | | | | | | |
-| Febrero | | | | | | | | | |
-| Marzo | | | | | | | | | |
-| Abril | | | | | | | | | |
-| Mayo | | | | | | | | | |
-| Junio | | | | | | | | | |
-| Julio | | | | | | | | | |
-| Agosto | | | | | | | | | |
-| Septiembre | | | | | | | | | |
-| Octubre | | | | | | | | | |
-| Noviembre | | | | | | | | | |
-| Diciembre | | | | | | | | | |
+{{#each accidentalidad.indicadores.meses}}
+| {{mes}} | {{trabajadores}} | {{accidentes}} | {{diasIncapacidad}} | {{diasCargados}} | {{diasAusencia}} | {{diasProgramados}} | {{frecuencia}} | {{severidad}} | {{ausentismo}} |
+{{/each}}
+| **Año (promedio mensual)** | {{accidentalidad.indicadores.promedioTrabajadores}} | {{accidentalidad.resumen.at}} | | | | | {{accidentalidad.indicadores.frecuencia}} | {{accidentalidad.indicadores.severidad}} | {{accidentalidad.indicadores.ausentismo}} |
 
 ## Resultado anual
 
-| Indicador | Resultado {{anio}} | Interpretación |
-|---|---|---|
-| Proporción de accidentes de trabajo mortales | | En el año, el ___ % de los accidentes de trabajo fueron mortales |
-| Prevalencia de la enfermedad laboral | | Por cada 100.000 trabajadores existen ___ casos de enfermedad laboral |
-| Incidencia de la enfermedad laboral | | Por cada 100.000 trabajadores existen ___ casos nuevos de enfermedad laboral |
-| Promedio de trabajadores del año | | |
+| Indicador | Resultado {{accidentalidad.indicadores.anio}} | Año anterior ({{accidentalidad.anterior.indicadores.anio}}) | Interpretación |
+|---|---|---|---|
+| Frecuencia de accidentalidad (promedio mensual) | {{accidentalidad.indicadores.frecuencia}} | {{accidentalidad.anterior.indicadores.frecuencia}} | Por cada 100 trabajadores que laboraron en el mes se presentaron {{accidentalidad.indicadores.frecuencia}} accidentes de trabajo |
+| Severidad de accidentalidad (promedio mensual) | {{accidentalidad.indicadores.severidad}} | {{accidentalidad.anterior.indicadores.severidad}} | Por cada 100 trabajadores que laboraron en el mes se perdieron {{accidentalidad.indicadores.severidad}} días por accidente de trabajo |
+| Proporción de accidentes de trabajo mortales | {{accidentalidad.indicadores.mortalidad}} | {{accidentalidad.anterior.indicadores.mortalidad}} | En el año, el {{accidentalidad.indicadores.mortalidad}} de los accidentes de trabajo fueron mortales |
+| Prevalencia de la enfermedad laboral | {{accidentalidad.indicadores.prevalencia}} | {{accidentalidad.anterior.indicadores.prevalencia}} | Por cada 100.000 trabajadores existen {{accidentalidad.indicadores.prevalencia}} casos de enfermedad laboral ({{accidentalidad.resumen.elPrevalentes}} caso(s) nuevos y antiguos) |
+| Incidencia de la enfermedad laboral | {{accidentalidad.indicadores.incidencia}} | {{accidentalidad.anterior.indicadores.incidencia}} | Por cada 100.000 trabajadores existen {{accidentalidad.indicadores.incidencia}} casos nuevos de enfermedad laboral |
+| Ausentismo por causa médica | {{accidentalidad.indicadores.ausentismo}} | {{accidentalidad.anterior.indicadores.ausentismo}} | Porcentaje de los días programados que se perdió por incapacidad laboral o común |
+| Promedio de trabajadores del año | {{accidentalidad.indicadores.promedioTrabajadores}} | {{accidentalidad.anterior.indicadores.promedioTrabajadores}} | |
 
 Resumen de eventos registrados: {{accidentalidad.resumen.texto}}
 

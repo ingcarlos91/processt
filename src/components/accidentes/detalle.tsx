@@ -24,16 +24,16 @@ import { BotonDescarga } from "@/components/app/boton-descarga";
 import { SubirArchivo, ListaArchivos, type ArchivoUI } from "@/components/app/adjuntos";
 import { EventoForm, type CargoOpcion } from "@/components/accidentes/evento-form";
 import { Semaforo } from "@/components/accidentes/lista";
-import { TIPOS_EVENTO, GRAVEDAD, JERARQUIA, ROLES_EQUIPO, rolesExigidos, rolMin, faltasParaCerrar, type Analisis, type Integrante } from "@/lib/eventos";
+import { TIPOS_EVENTO, GRAVEDAD, JERARQUIA, DIRIGIDA_A, NOTA_VISITANTE, esVisitante, ROLES_EQUIPO, rolesExigidos, rolMin, faltasParaCerrar, type Analisis, type Integrante } from "@/lib/eventos";
 import type { PlazoUI } from "@/lib/eventos-ui";
 import * as A from "@/app/actions/eventos";
 import type { SugerenciaInvestigacion } from "@/lib/ia/investigacion";
 import type { CatalogoAccidentes } from "@/lib/catalogo-accidentes";
 import { Combo } from "@/components/app/combo";
 
-type Accion = { id: string; hallazgo: string; causa: string; tipo: string; jerarquia: string; descripcion: string; responsable: string; fechaLimite: string; estado: string; fechaCierre: string; eficacia: string; enPlan: string };
+type Accion = { id: string; hallazgo: string; causa: string; tipo: string; jerarquia: string; dirigidaA: string; descripcion: string; responsable: string; fechaLimite: string; estado: string; fechaCierre: string; eficacia: string; enPlan: string };
 type Ev = {
-  id: string; tipo: string; gravedad: string; datos: A.DatosEvento;
+  id: string; tipo: string; gravedad: string; vinculacion: string; datos: A.DatosEvento;
   reporte: { fechaReporte: string; furatNumero: string; reporteMinisterio: string; invRemitidaArl: string };
   inv: { estado: string; inicio: string; cierre: string; lugar: string; fechas: string; equipo: Integrante[]; analisis: Analisis; lecciones: string; peligroId: string };
   acciones: Accion[]; archivos: ArchivoUI[]; plazos: PlazoUI[];
@@ -78,8 +78,8 @@ function ListaTexto({ items, onChange, placeholder, numerada, sugeridos }: { ite
   );
 }
 
-export function EventoDetalle({ empresaId, ev, cargos, peligros, peligrosEnMatriz, equipoSugerido, responsable, iaActiva, cat, lugares, personas, avisoMatriz, direccionEmpresa }: {
-  empresaId: string; ev: Ev; cargos: CargoOpcion[]; peligros: OpcionBuscador[]; peligrosEnMatriz: string[]; equipoSugerido: Integrante[]; responsable: string; iaActiva: boolean; cat: CatalogoAccidentes; lugares: string[]; personas: string[]; avisoMatriz: "obligatorio" | "recomendado" | null; direccionEmpresa: string;
+export function EventoDetalle({ empresaId, ev, cargos, peligros, peligrosEnMatriz, equipoSugerido, responsable, iaActiva, cat, lugares, sedes, personas, avisoMatriz, direccionEmpresa }: {
+  empresaId: string; ev: Ev; cargos: CargoOpcion[]; peligros: OpcionBuscador[]; peligrosEnMatriz: string[]; equipoSugerido: Integrante[]; responsable: string; iaActiva: boolean; cat: CatalogoAccidentes; lugares: string[]; sedes: string[]; personas: string[]; avisoMatriz: "obligatorio" | "recomendado" | null; direccionEmpresa: string;
 }) {
   const router = useRouter();
   const [pend, start] = useTransition();
@@ -90,6 +90,11 @@ export function EventoDetalle({ empresaId, ev, cargos, peligros, peligrosEnMatri
   const t = TIPOS_EVENTO[ev.tipo];
   const grave = ev.tipo === "AT" && ev.gravedad !== "leve";
   const mortal = ev.tipo === "AT" && ev.gravedad === "mortal";
+  // Visitante: sin FURAT, aviso a la Dirección Territorial ni remisión a la ARL; se registra para la estadística interna.
+  const visitante = esVisitante(ev.vinculacion);
+  const reporta = (t.reporta || grave) && !visitante;
+  const avisoMin = !visitante && (grave || ev.tipo === "EL");
+  const remite = !visitante && (grave || (ev.tipo === "EL" && ev.gravedad === "mortal"));
   const cerrada = ev.inv.estado === "cerrada";
 
   // 1. Registro
@@ -107,7 +112,7 @@ export function EventoDetalle({ empresaId, ev, cargos, peligros, peligrosEnMatri
   const [sugiriendo, startSug] = useTransition();
   // 4. Acciones
   const en30 = () => hoyLocal(30);
-  const vacia = () => ({ id: "", hallazgo: "", causa: "", tipo: "correctiva", jerarquia: "administrativo", descripcion: "", responsable, fechaLimite: en30() });
+  const vacia = () => ({ id: "", hallazgo: "", causa: "", tipo: "correctiva", jerarquia: "administrativo", dirigidaA: "", descripcion: "", responsable, fechaLimite: en30() });
   const [acc, setAcc] = useState<ReturnType<typeof vacia> | null>(null);
 
   const datosInv = (): A.DatosInvestigacion => ({ equipo, analisis: an, lecciones, peligroId: peligroId || null, invInicio: invDatos.inicio || undefined, invLugar: invDatos.lugar, invFechas: invDatos.fechas });
@@ -155,18 +160,25 @@ export function EventoDetalle({ empresaId, ev, cargos, peligros, peligrosEnMatri
         </Alert>
       )}
 
+      {visitante && ev.tipo !== "AUSENTISMO" && (
+        <Alert>
+          <AlertTitle>Visitante: se registra para la estadística interna</AlertTitle>
+          <AlertDescription>{NOTA_VISITANTE}</AlertDescription>
+        </Alert>
+      )}
+
       <Paso n={1} titulo="Registro del evento" descripcion="Los datos del FURAT (Res. 156/2005) que el informe de investigación debe retomar: identificación del trabajador, información del evento y descripción. Sin diagnósticos médicos (dato sensible)." normas={["Res. 1401/2007 arts. 9 y 10", "Ley 1581/2012"]}
         accion={cambioDatos && <Button size="sm" disabled={pend} onClick={() => run(() => A.actualizarEvento(empresaId, ev.id, datos), "Registro actualizado")}><Save /> Guardar registro</Button>}>
-        <EventoForm d={datos} set={setDatos} cargos={cargos} cat={cat} lugares={lugares} />
+        <EventoForm d={datos} set={setDatos} cargos={cargos} cat={cat} lugares={lugares} sedes={sedes} />
         {cambioDatos && <div className="flex justify-end gap-2"><Button variant="ghost" onClick={() => setDatos(ev.datos)}>Descartar</Button><Button disabled={pend} onClick={() => run(() => A.actualizarEvento(empresaId, ev.id, datos), "Registro actualizado")}>{pend ? <Spinner /> : <Save />} Guardar registro</Button></div>}
       </Paso>
 
-      {(t.reporta || grave) && (
+      {reporta && (
         <Paso n={2} titulo={ev.tipo === "EL" ? "Reporte FUREL" : "Reporte a la ARL y autoridades"} descripcion="Dentro de los dos días hábiles siguientes. Guarde la fecha de radicado y suba el soporte." normas={["Decreto Ley 1295/1994 art. 62"]}>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <Field><FieldLabel htmlFor="r-f" className="flex items-center gap-1">Fecha de radicado {ev.tipo === "EL" ? "FUREL" : "FURAT"} <Ayuda k="evFurat" /></FieldLabel><Input id="r-f" type="date" value={rep.fechaReporte} onChange={(e) => setRep({ ...rep, fechaReporte: e.target.value })} /></Field>
             <Field><FieldLabel htmlFor="r-n">Número de radicado</FieldLabel><Input id="r-n" placeholder="Ej.: 2026-004512" value={rep.furatNumero} onChange={(e) => setRep({ ...rep, furatNumero: e.target.value })} /></Field>
-            {grave && <Field><FieldLabel htmlFor="r-m">Aviso al Ministerio del Trabajo</FieldLabel><Input id="r-m" type="date" value={rep.reporteMinisterio} onChange={(e) => setRep({ ...rep, reporteMinisterio: e.target.value })} /><FieldDescription>Accidente {GRAVEDAD[ev.gravedad].t.toLowerCase()} (ver PRC-08).</FieldDescription></Field>}
+            {avisoMin && <Field><FieldLabel htmlFor="r-m">Aviso al Ministerio del Trabajo</FieldLabel><Input id="r-m" type="date" value={rep.reporteMinisterio} onChange={(e) => setRep({ ...rep, reporteMinisterio: e.target.value })} /><FieldDescription>{ev.tipo === "EL" ? "Enfermedad laboral diagnosticada" : `Accidente ${GRAVEDAD[ev.gravedad].t.toLowerCase()}`} (Decreto 1072/2015 art. 2.2.4.1.7; ver PRC-08).</FieldDescription></Field>}
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <Button disabled={pend} onClick={() => run(() => A.guardarReporte(empresaId, ev.id, rep), "Reporte guardado")}><Save /> Guardar reporte</Button>
@@ -176,7 +188,7 @@ export function EventoDetalle({ empresaId, ev, cargos, peligros, peligrosEnMatri
       )}
 
       {t.investiga && (
-        <Paso n={(t.reporta || grave) ? 3 : 2} titulo="Investigación"
+        <Paso n={reporta ? 3 : 2} titulo="Investigación"
           estado={<Badge variant={cerrada ? "default" : "outline"}>{cerrada ? `Cerrada el ${fechaLarga(ev.inv.cierre)}` : ev.inv.estado === "en_curso" ? "En curso" : "Sin iniciar"}</Badge>}
           descripcion="Dentro de los quince días siguientes al evento (art. 4 num. 2), con el equipo investigador (art. 7). Identifique causas inmediatas y básicas (art. 11) y defina medidas con responsable y fecha (art. 12)." normas={["Res. 1401/2007", "Decreto 1072/2015 art. 2.2.4.6.32"]}
           accion={<Button size="sm" variant="outline" disabled={sugiriendo || cerrada} onClick={sugerir} tooltip={iaActiva ? "La IA analiza el relato y la matriz de peligros del cargo y propone causas y medidas; usted decide qué usar" : "Propone causas típicas según la forma del evento y medidas tomadas de la matriz de peligros del cargo"}>{sugiriendo ? <Spinner /> : <Sparkles />} {iaActiva ? "Sugerir con IA" : "Sugerir causas y medidas"}</Button>}>
@@ -279,7 +291,7 @@ export function EventoDetalle({ empresaId, ev, cargos, peligros, peligrosEnMatri
       )}
 
       {t.investiga && (
-        <Paso n={(t.reporta || grave) ? 4 : 3} titulo="Medidas de intervención y acciones" descripcion="Cada medida con responsable y fecha de ejecución, dirigida a la fuente, el medio o el trabajador y ligada a una causa básica (art. 12), según la jerarquía de controles. Se registran en FOR-06 y se pueden llevar al plan anual." normas={["Res. 1401/2007 art. 12", "Decreto 1072/2015 arts. 2.2.4.6.24 y 2.2.4.6.33"]}
+        <Paso n={reporta ? 4 : 3} titulo="Medidas de intervención y acciones" descripcion="Cada medida con responsable y fecha de ejecución, dirigida a la fuente, el medio o el trabajador y ligada a una causa básica (art. 12), según la jerarquía de controles. Se registran en FOR-06 y se pueden llevar al plan anual." normas={["Res. 1401/2007 art. 12", "Decreto 1072/2015 arts. 2.2.4.6.24 y 2.2.4.6.33"]}
           accion={<Button size="sm" onClick={() => setAcc({ ...vacia(), hallazgo: datos.mecanismo ? `${datos.mecanismo} — ${datos.cargo ?? ""}` : "Hallazgo de la investigación" })}><Plus /> Agregar acción</Button>}>
           {sug && sug.s.acciones.length > 0 && (
             <div className="space-y-1.5 rounded-lg border border-violet-200 bg-violet-50/50 p-3">
@@ -294,14 +306,15 @@ export function EventoDetalle({ empresaId, ev, cargos, peligros, peligrosEnMatri
           )}
           {ev.acciones.length === 0 ? <p className="text-sm text-muted-foreground">Sin acciones. Para cerrar la investigación se necesita al menos una.</p> : (
             <Table className="[&_td]:align-top [&_td]:whitespace-normal">
-              <TableHeader><TableRow><TableHead>Medida</TableHead><TableHead>Jerarquía</TableHead><TableHead>Responsable</TableHead><TableHead>Fecha límite</TableHead><TableHead>Estado</TableHead><TableHead className="w-40" /></TableRow></TableHeader>
+              <TableHeader><TableRow><TableHead>Medida</TableHead><TableHead>Jerarquía</TableHead><TableHead>Dirigida a</TableHead><TableHead>Responsable</TableHead><TableHead>Fecha límite</TableHead><TableHead>Estado</TableHead><TableHead className="w-40" /></TableRow></TableHeader>
               <TableBody>
                 {ev.acciones.map((a) => {
                   const vencida = a.estado === "abierta" && a.fechaLimite && a.fechaLimite < hoy();
                   return (
                     <TableRow key={a.id}>
-                      <TableCell><div>{a.descripcion}</div><div className="text-xs text-muted-foreground">{a.tipo}{a.causa ? ` · causa: ${a.causa}` : ""}</div>{a.eficacia && <div className="mt-1 text-xs text-emerald-700">Eficacia: {a.eficacia}</div>}</TableCell>
+                      <TableCell><div>{a.descripcion}</div><div className="text-xs text-muted-foreground">{a.tipo}{a.causa ? ` · causa básica: ${a.causa}` : ""}</div>{a.eficacia && <div className="mt-1 text-xs text-emerald-700">Eficacia: {a.eficacia}</div>}</TableCell>
                       <TableCell>{JERARQUIA[a.jerarquia] ?? "—"}</TableCell>
+                      <TableCell>{DIRIGIDA_A[a.dirigidaA] ?? <span className="text-amber-700">Sin definir</span>}</TableCell>
                       <TableCell>{a.responsable || "—"}</TableCell>
                       <TableCell className={vencida ? "text-destructive" : ""}>{a.fechaLimite ? fechaLarga(a.fechaLimite) : "—"}{vencida && <div className="text-xs">Vencida</div>}</TableCell>
                       <TableCell><Badge variant={a.estado === "cerrada" ? "default" : "outline"}>{a.estado === "cerrada" ? `Cerrada ${fechaLarga(a.fechaCierre)}` : "Abierta"}</Badge>{a.enPlan && <div className="mt-1 text-xs text-muted-foreground">En plan anual ({a.enPlan})</div>}</TableCell>
@@ -309,7 +322,7 @@ export function EventoDetalle({ empresaId, ev, cargos, peligros, peligrosEnMatri
                         <div className="flex justify-end gap-0.5">
                           {a.estado === "abierta" && <Pedir trigger={<Button size="icon-sm" variant="ghost" aria-label="Cerrar acción y verificar eficacia" />} titulo="Cerrar acción" descripcion="Describa cómo verificó que la acción funcionó: inspección, medición, seguimiento sin repetición del evento." label="Verificación de eficacia" placeholder="Describa cómo verificó que la acción funcionó" accion="Cerrar acción" onConfirm={(v) => run(() => A.cerrarAccion(empresaId, a.id, { fechaCierre: hoy(), eficacia: v }), "Acción cerrada")}><CheckCircle2 /></Pedir>}
                           {!a.enPlan && a.estado === "abierta" && <Button size="icon-sm" variant="ghost" aria-label="Llevar al plan anual de trabajo" disabled={pend} onClick={() => run(() => A.enviarAccionAlPlan(empresaId, a.id), "Acción agregada al plan anual")}><CalendarPlus /></Button>}
-                          <Button size="icon-sm" variant="ghost" aria-label="Editar acción" onClick={() => setAcc({ id: a.id, hallazgo: a.hallazgo, causa: a.causa, tipo: a.tipo, jerarquia: a.jerarquia, descripcion: a.descripcion, responsable: a.responsable, fechaLimite: a.fechaLimite })}><Pencil /></Button>
+                          <Button size="icon-sm" variant="ghost" aria-label="Editar acción" onClick={() => setAcc({ id: a.id, hallazgo: a.hallazgo, causa: a.causa, tipo: a.tipo, jerarquia: a.jerarquia, dirigidaA: a.dirigidaA, descripcion: a.descripcion, responsable: a.responsable, fechaLimite: a.fechaLimite })}><Pencil /></Button>
                           <Confirmar trigger={<Button size="icon-sm" variant="ghost" aria-label="Eliminar acción" />} titulo="Eliminar acción" descripcion="Se quita del registro FOR-06." accion="Eliminar" destructivo onConfirm={() => run(() => A.eliminarAccion(empresaId, a.id), "Acción eliminada")}><Trash2 /></Confirmar>
                         </div>
                       </TableCell>
@@ -322,13 +335,13 @@ export function EventoDetalle({ empresaId, ev, cargos, peligros, peligrosEnMatri
         </Paso>
       )}
 
-      <Paso n={t.investiga ? ((t.reporta || grave) ? 5 : 4) : (t.reporta || grave) ? 3 : 2} titulo="Informe y soportes" descripcion="Descargue el informe, hágalo firmar por el equipo investigador y súbalo. Todo queda en Evidencias, en el estándar que corresponde." normas={["Res. 0312/2019 estándares 3.2.1 y 3.2.2"]}
+      <Paso n={t.investiga ? (reporta ? 5 : 4) : reporta ? 3 : 2} titulo="Informe y soportes" descripcion="Descargue el informe, hágalo firmar por el equipo investigador y súbalo. Todo queda en Evidencias, en el estándar que corresponde." normas={["Res. 0312/2019 estándares 3.2.1 y 3.2.2"]}
         accion={t.investiga && <><BotonDescarga href={`/api/empresas/${empresaId}/eventos/${ev.id}/informe`} size="sm" tooltip="Informe de investigación (FOR-07) en Word"><Download /> FOR-07 Word</BotonDescarga><BotonDescarga href={`/api/empresas/${empresaId}/eventos/${ev.id}/informe?formato=pdf`} size="sm" variant="outline" texto="Generando PDF…" tooltip="Informe de investigación (FOR-07) en PDF"><FileDown /> PDF</BotonDescarga></>}>
-        {grave && cerrada && (
+        {remite && cerrada && (
           <div className="flex flex-wrap items-end gap-2">
             <Field className="w-56"><FieldLabel htmlFor="r-a">Fecha de remisión del informe a la ARL</FieldLabel><Input id="r-a" type="date" value={rep.invRemitidaArl} onChange={(e) => setRep({ ...rep, invRemitidaArl: e.target.value })} /></Field>
             <Button variant="outline" disabled={pend} onClick={() => run(() => A.guardarReporte(empresaId, ev.id, rep), "Remisión guardada")}><Check /> Guardar</Button>
-            <span className="pb-2 text-xs text-muted-foreground">Accidente {GRAVEDAD[ev.gravedad].t.toLowerCase()}: el informe, firmado por el representante legal, se remite a la ARL dentro de los 15 días siguientes al evento (Res. 1401/2007 arts. 4 num. 9 y 14).</span>
+            <span className="pb-2 text-xs text-muted-foreground">{ev.tipo === "EL" ? "Muerte por enfermedad laboral" : `Accidente ${GRAVEDAD[ev.gravedad].t.toLowerCase()}`}: el informe, firmado por el representante legal, se remite a la ARL dentro de los 15 días siguientes al evento (Res. 1401/2007 arts. 4 num. 9 y 14).</span>
           </div>
         )}
         <div className="flex flex-wrap gap-2">
@@ -345,7 +358,7 @@ export function EventoDetalle({ empresaId, ev, cargos, peligros, peligrosEnMatri
             <div className="grid gap-4 sm:grid-cols-2">
               <Field className="sm:col-span-2"><FieldLabel htmlFor="a-d">Medida</FieldLabel><Textarea id="a-d" rows={2} placeholder="Ej.: Instalar guarda de protección en la sierra circular" value={acc.descripcion} onChange={(e) => setAcc({ ...acc, descripcion: e.target.value })} /></Field>
               <Field className="sm:col-span-2"><FieldLabel htmlFor="a-h">Hallazgo</FieldLabel><Input id="a-h" placeholder="Ej.: Sierra circular sin guarda de protección" value={acc.hallazgo} onChange={(e) => setAcc({ ...acc, hallazgo: e.target.value })} /></Field>
-              <Field className="sm:col-span-2"><FieldLabel htmlFor="a-c">Causa que ataca</FieldLabel><Combo id="a-c" placeholder="Seleccione la causa o escriba una" value={acc.causa} onChange={(v) => setAcc({ ...acc, causa: v })} grupos={(() => {
+              <Field className="sm:col-span-2"><FieldLabel htmlFor="a-c">Causa básica que ataca</FieldLabel><Combo id="a-c" placeholder="Seleccione la causa o escriba una" value={acc.causa} onChange={(v) => setAcc({ ...acc, causa: v })} grupos={(() => {
                 const forma = cat.formas.find((f) => f.nombre === datos.mecanismo);
                 const propias = [...(an.personales ?? []), ...(an.trabajo ?? []), ...(an.actos ?? []), ...(an.condiciones ?? [])].filter(Boolean);
                 const tipicas = forma ? [...forma.personales, ...forma.trabajo, ...forma.actos, ...forma.condiciones].filter((c) => !propias.includes(c)) : [];
@@ -356,6 +369,11 @@ export function EventoDetalle({ empresaId, ev, cargos, peligros, peligrosEnMatri
               })()} /></Field>
               <Field><FieldLabel htmlFor="a-t">Tipo</FieldLabel><Selector id="a-t" value={acc.tipo} onChange={(v) => setAcc({ ...acc, tipo: v })} opciones={[{ valor: "correctiva", etiqueta: "Correctiva" }, { valor: "preventiva", etiqueta: "Preventiva" }, { valor: "mejora", etiqueta: "De mejora" }]} /></Field>
               <Field><FieldLabel htmlFor="a-j" className="flex items-center gap-1">Jerarquía <Ayuda k="evJerarquia" /></FieldLabel><Selector id="a-j" value={acc.jerarquia} onChange={(v) => setAcc({ ...acc, jerarquia: v })} opciones={Object.entries(JERARQUIA).map(([k, v]) => ({ valor: k, etiqueta: v }))} /></Field>
+              <Field className="sm:col-span-2">
+                <FieldLabel htmlFor="a-da">Dirigida a</FieldLabel>
+                <Selector id="a-da" value={acc.dirigidaA} onChange={(v) => setAcc({ ...acc, dirigidaA: v })} placeholder="¿La fuente, el medio o el trabajador?" opciones={Object.entries(DIRIGIDA_A).map(([k, v]) => ({ valor: k, etiqueta: v }))} />
+                <FieldDescription>Fuente: el equipo, la máquina o el material que genera el peligro. Medio: el entorno entre la fuente y la persona. Trabajador: capacitación, procedimiento o EPP (Res. 1401/2007 art. 12).</FieldDescription>
+              </Field>
               <Field><FieldLabel htmlFor="a-r">Responsable</FieldLabel><Combo id="a-r" placeholder="Seleccione o escriba el responsable" value={acc.responsable} onChange={(v) => setAcc({ ...acc, responsable: v })} grupos={[{ titulo: "Personas registradas", opciones: personas.map((p) => ({ valor: p })) }]} /></Field>
               <Field><FieldLabel htmlFor="a-f">Fecha límite</FieldLabel><Input id="a-f" type="date" value={acc.fechaLimite} onChange={(e) => setAcc({ ...acc, fechaLimite: e.target.value })} /></Field>
             </div>

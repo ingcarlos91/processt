@@ -30,7 +30,7 @@ export function Semaforo({ p, compacto }: { p: PlazoUI; compacto?: boolean }) {
   return <Badge variant={c.v} className={cn("font-normal", c.c)} title={`${p.t} · vence ${fechaCorta(p.vence)} · ${p.normaRef}`}>{compacto ? p.t.split(" ")[0] : p.t}: {c.t}{!p.hecho && p.estado !== "vencido" ? ` (${fechaCorta(p.vence)})` : ""}</Badge>;
 }
 
-export function EventosLista({ empresaId, anio, anios, eventos, cargos, acciones, cat, lugares }: { empresaId: string; anio: number; anios: number[]; eventos: Ev[]; cargos: CargoOpcion[]; acciones: { abiertas: number; vencidas: number }; cat: CatalogoAccidentes; lugares: string[] }) {
+export function EventosLista({ empresaId, anio, anios, eventos, cargos, acciones, cat, lugares, sedes }: { empresaId: string; anio: number; anios: number[]; eventos: Ev[]; cargos: CargoOpcion[]; acciones: { abiertas: number; vencidas: number }; cat: CatalogoAccidentes; lugares: string[]; sedes: string[] }) {
   const router = useRouter();
   const [abierto, setAbierto] = useState(false);
   const [d, setD] = useState<DatosEvento>(nuevo);
@@ -120,7 +120,7 @@ export function EventosLista({ empresaId, anio, anios, eventos, cargos, acciones
             <DialogTitle>Registrar evento</DialogTitle>
             <DialogDescription>Lo que sepa ahora; puede completarlo después. Al guardar, el sistema calcula los plazos de reporte e investigación.</DialogDescription>
           </DialogHeader>
-          <EventoForm d={d} set={setD} cargos={cargos} cat={cat} lugares={lugares} />
+          <EventoForm d={d} set={setD} cargos={cargos} cat={cat} lugares={lugares} sedes={sedes} />
           <DialogFooter>
             <Button variant="outline" onClick={() => setAbierto(false)}>Cancelar</Button>
             <Button disabled={pend || !d.fecha} onClick={crear}>{pend ? <Spinner /> : <Plus />} Registrar</Button>

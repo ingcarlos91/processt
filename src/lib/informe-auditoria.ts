@@ -12,6 +12,16 @@ export async function informeAuditoria(auditoriaId: string) {
   const e = a.empresa;
   const items = (a.items ?? []) as ItemAuditoria[];
   const r = resumenAuditoria(items);
+  // Auditoría anterior: sus no conformidades y el estado de sus acciones (Decreto 1072/2015 art. 2.2.4.6.29 par.).
+  const prev = await db.auditoria.findFirst({ where: { empresaId: a.empresaId, id: { not: a.id }, fechaInicio: { lt: a.fechaInicio } }, orderBy: { fechaInicio: "desc" }, include: { acciones: { orderBy: { fecha: "asc" } } } });
+  const prevNc = prev ? ((prev.items ?? []) as ItemAuditoria[]).filter((i) => i.resultado === "no_conforme") : [];
+  const anterior = !prev ? "No hay auditoría anterior registrada en el sistema." : `Auditoría interna ${prev.anio}${prev.fechaCierre ? `, cerrada el ${fecha(prev.fechaCierre)}` : " (sin cerrar)"}: ${prevNc.length} no conformidad(es).
+
+${prevNc.length ? `| Aspecto | No conformidad | Acción | Estado de la acción |
+|---|---|---|---|
+${prevNc.map((i) => { const ac = prev.acciones.find((x) => x.hallazgo.startsWith(`Auditoría ${prev.anio} — ${i.aspecto}`)); return `| ${i.n}. ${c(i.aspecto)} | ${c(i.hallazgo)} | ${c(ac?.descripcion ?? i.accion?.descripcion ?? "Sin acción registrada")} | ${ac ? (ac.estado === "cerrada" ? `Cerrada${ac.fechaCierre ? ` el ${fecha(ac.fechaCierre)}` : ""}` : `Abierta${ac.fechaLimite ? ` (fecha límite ${fecha(ac.fechaLimite)})` : ""}`) : "Sin acción"} |`; }).join("\n")}` : "No dejó no conformidades."}
+
+Los resultados de la auditoría anterior se tuvieron en cuenta para definir el alcance y verificar el cierre de sus acciones.`;
   const md = `## Datos de la auditoría
 
 | Campo | Información |
@@ -21,6 +31,7 @@ export async function informeAuditoria(auditoriaId: string) {
 | Fecha de inicio | ${fecha(a.fechaInicio)} |
 | Fecha de cierre | ${fecha(a.fechaCierre)} |
 | Auditor | ${c(a.auditor)}${a.auditorPerfil ? ` — ${c(a.auditorPerfil)}` : ""} |
+| Independencia del auditor | ${a.independiente ? "Declarada: no audita su propio trabajo" : "Sin declarar"} |
 | Planificada con | ${c(a.participantes || "______")} |
 
 ## Objetivo y alcance
@@ -30,6 +41,14 @@ Verificar el cumplimiento del SG-SST de **${c(e.razonSocial)}** y su eficacia, s
 ${a.alcance ? `Alcance definido: ${c(a.alcance)}` : ""}
 
 ${a.metodologia ? `Metodología: ${c(a.metodologia)}` : "Metodología: revisión documental, entrevistas y observación en campo."}
+
+## Independencia del auditor
+
+${a.independiente ? `${c(a.auditor)} declara que es independiente de las actividades auditadas: no audita su propio trabajo ni las actividades del SG-SST que diseñó o ejecutó (Decreto 1072 de 2015, art. 2.2.4.6.29).` : "**Pendiente:** no se ha registrado la declaración de independencia del auditor, que exige el Decreto 1072 de 2015 (art. 2.2.4.6.29)."}
+
+## Auditoría anterior
+
+${anterior}
 
 ## Resumen de resultados
 
@@ -49,9 +68,9 @@ ${items.map((i) => `| ${i.n} | ${c(i.aspecto)} | ${RES[i.resultado] ?? i.resulta
 
 ## Acciones correctivas y de mejora
 
-${a.acciones.length ? `| Hallazgo | Acción | Responsable | Fecha límite | Estado |
-|---|---|---|---|---|
-${a.acciones.map((x) => `| ${c(x.hallazgo)} | ${c(x.descripcion)} | ${c(x.responsable)} | ${fecha(x.fechaLimite)} | ${x.estado === "cerrada" ? "Cerrada" : "Abierta"} |`).join("\n")}
+${a.acciones.length ? `| Hallazgo | Causa raíz | Acción | Responsable | Fecha límite | Estado |
+|---|---|---|---|---|---|
+${a.acciones.map((x) => `| ${c(x.hallazgo)} | ${c(x.causa || "Sin registrar")} | ${c(x.descripcion)} | ${c(x.responsable)} | ${fecha(x.fechaLimite)} | ${x.estado === "cerrada" ? "Cerrada" : "Abierta"} |`).join("\n")}
 
 Las acciones se registran en el formato de acciones correctivas, preventivas y de mejora (FOR-06).` : "No se generaron acciones."}
 
@@ -59,7 +78,9 @@ Las acciones se registran en el formato de acciones correctivas, preventivas y d
 
 ${c(a.conclusiones || "______")}
 
-Los resultados se comunican a los responsables de adoptar las medidas correctivas y alimentan la revisión por la alta dirección (Decreto 1072 de 2015, art. 2.2.4.6.31).
+## Comunicación de resultados
+
+${a.comunicadoA ? `Los resultados se comunicaron el ${fecha(a.comunicadoFecha)} a: ${c(a.comunicadoA)}.` : "**Pendiente:** registrar a quién y cuándo se comunicaron los resultados."} Se comunican a los responsables de adoptar las medidas preventivas, correctivas o de mejora (Decreto 1072 de 2015, art. 2.2.4.6.29) y alimentan la revisión por la alta dirección (art. 2.2.4.6.31).
 
 ______________________________________
 **${c(a.auditor)}** — Auditor

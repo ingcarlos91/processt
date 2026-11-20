@@ -38,7 +38,7 @@ export const REQUISITOS_B: Record<string, Requisito[]> = {
     { id: "PRG-10-R4", texto: "El programa define competencia del auditor, alcance, periodicidad, metodología e informes, y tiene en cuenta las auditorías previas.", norma: D, articulo: "art. 2.2.4.6.29 par.", seccion: "Planificación", clave: "auditorias previas" },
     { id: "PRG-10-R5", texto: "La auditoría cubre como mínimo los 13 aspectos del alcance.", norma: D, articulo: "art. 2.2.4.6.30 nums. 1-13", seccion: "Alcance (art. 2.2.4.6.30)", clave: "evaluacion por parte de la alta direccion" },
     { id: "PRG-10-R6", texto: "Los resultados se comunican a los responsables de las medidas preventivas, correctivas o de mejora.", norma: D, articulo: "art. 2.2.4.6.29", seccion: "Informe", clave: "se comunican" },
-    { id: "PRG-10-R7", texto: "Estándares 6.1.2 (auditoría anual) y 6.1.4 (planificada con el COPASST) para empresas de 60 estándares.", norma: R, articulo: "art. 16, estándares 6.1.2 y 6.1.4", seccion: "Objetivo", clave: "resolucion 0312" },
+    { id: "PRG-10-R7", texto: "Estándares 6.1.2 (auditoría anual) y 6.1.4 (planificada con el COPASST) para empresas de 60 estándares.", norma: R, articulo: "art. 16, estándares 6.1.2 y 6.1.4", seccion: "Objetivo", clave: "resolucion 0312", si: "nivel60" },
   ],
   "ACT-06": [
     { id: "ACT-06-R1", texto: "Revisión por la alta dirección al menos una vez al año, cualquiera que sea el tamaño de la empresa.", norma: D, articulo: "art. 2.2.4.6.31", seccion: "Datos de la revisión", clave: "una vez al ano" },

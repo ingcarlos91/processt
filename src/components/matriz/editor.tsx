@@ -27,14 +27,16 @@ import { Ayuda } from "@/components/app/ayuda";
 import * as A from "@/app/actions/matriz";
 import type { Sugerencia } from "@/lib/ia";
 import { cn } from "@/lib/utils";
+import { avisoPeriodicidad } from "@/lib/examenes";
+import { ESTADOS_MEDIDA, EFICAZ, type Seguimiento } from "@/lib/matriz/seguimiento";
 
-type Cargo = { id: string; nombre: string; nPersonas: number; funciones: string; tipo: string | null; zonaId: string | null; tareaIds: string[] };
+type Cargo = { id: string; nombre: string; nPersonas: number; funciones: string; periodicidadMeses: number | null; periodicidadMotivo: string; tipo: string | null; zonaId: string | null; tareaIds: string[] };
 type Tarea = { id: string; nombre: string; procesoId: string | null; zonaId: string | null; rutinaria: boolean; altoRiesgo: string | null; estado: string; fuente: string; tareaTipoId: string | null; cargoIds: string[] };
 type Peligro = {
   id: string; origen: "tarea" | "zona" | "cargo"; tareaId: string | null; zonaId: string | null; cargoId: string | null; peligroId: string | null;
   clasificacion: string; descripcion: string; efectosPosibles: string; controlesFuente: string; controlesMedio: string; controlesIndividuo: string;
   nd: number; ne: number; nc: number; medidaEliminacion: string; medidaSustitucion: string; medidaIngenieria: string; medidaAdministrativa: string; medidaEpp: string;
-  requisitoLegal: boolean; estado: string; fuente: string;
+  requisitoLegal: boolean; estado: string; fuente: string; seguimiento: Seguimiento;
 };
 type Item = { id: string; nombre: string };
 type CT = { id: string; nombre: string; sectorTipoId: string | null; empresaId: string | null; relevancia: Relevancia };
@@ -148,14 +150,14 @@ export function MatrizEditor(props: {
                         <TableCell><NativeSelect size="sm" className="w-14" value={p.ne} onChange={(e) => run(() => A.actualizarPeligro(empresaId, p.id, { ne: Number(e.target.value) }))}>{NE.map((x) => <NativeSelectOption key={x.valor} value={x.valor} title={x.etiqueta}>{x.valor}</NativeSelectOption>)}</NativeSelect></TableCell>
                         <TableCell><NativeSelect size="sm" className="w-18" value={p.nc} onChange={(e) => run(() => A.actualizarPeligro(empresaId, p.id, { nc: Number(e.target.value) }))}>{NC.map((x) => <NativeSelectOption key={x.valor} value={x.valor} title={x.etiqueta}>{x.valor}</NativeSelectOption>)}</NativeSelect></TableCell>
                         <TableCell className="tabular-nums">{c.nr}</TableCell>
-                        <TableCell className="whitespace-nowrap"><Tip texto={<ul className="space-y-0.5">{explicarRiesgo(p.nd, p.ne, p.nc).pasos.map((x) => <li key={x}>{x}</li>)}</ul>}><span className={cn("px-2 py-0.5 rounded font-semibold", COLOR_NIVEL[c.nivel])}>{c.nivel}</span></Tip></TableCell>
+                        <TableCell className="whitespace-nowrap"><Tip texto={<ul className="space-y-0.5">{explicarRiesgo(p.nd, p.ne, p.nc).pasos.map((x) => <li key={x}>{x}</li>)}</ul>}><span className={cn("px-2 py-0.5 rounded font-semibold", COLOR_NIVEL[c.nivel])}>{c.nivel}</span></Tip>{(c.nivel === "I" || c.nivel === "II") && p.seguimiento.estado !== "implementada" && <Tip texto="Falta registrar la implementación o la verificación de las medidas de este riesgo prioritario. Ábralo para completarlas (Res. 0312/2019 est. 4.2.1 y 4.2.2)."><AlertTriangle className="ml-1 inline size-3.5 text-amber-600" aria-label="Medidas sin implementar" /></Tip>}</TableCell>
                         <TableCell className="tabular-nums whitespace-nowrap"><Tip texto={<>{`Suma de las personas de: ${cargos.filter((x) => cargoIds.includes(x.id)).map((x) => `${x.nombre} (${x.nPersonas})`).join(", ") || "ningún cargo asociado"}.`} {p.origen === "zona" ? "Son los cargos con alguna tarea en esta zona." : p.origen === "tarea" ? "Son los cargos que hacen esta tarea." : "Es el cargo dueño del peligro."}</>}><span className="underline decoration-dotted decoration-muted-foreground/50 underline-offset-4">{exp}</span></Tip></TableCell>
                         <TableCell className="whitespace-nowrap">
                           {p.estado === "sugerido" && <Button size="icon-xs" variant="outline" aria-label="Aprobar peligro sugerido" onClick={() => run(() => A.actualizarPeligro(empresaId, p.id, { estado: "aprobado" }))}><Check /></Button>}
                           <Button size="icon-xs" variant="ghost" aria-label="Quitar peligro de la matriz" onClick={() => run(() => A.eliminarPeligro(empresaId, p.id))}><Trash2 /></Button>
                         </TableCell>
                       </TableRow>
-                      {abierto === p.id && <DetallePeligro p={p} empresaId={empresaId} run={run} />}
+                      {abierto === p.id && <DetallePeligro p={p} nivel={c.nivel} empresaId={empresaId} run={run} />}
                     </Fragment>
                   );
                 })}
@@ -179,7 +181,7 @@ const EJ_PELIGRO: Record<string, string> = {
 
 type Run = (fn: () => Promise<unknown>, ok?: string) => void;
 
-function DetallePeligro({ p, empresaId, run }: { p: Peligro; empresaId: string; run: Run }) {
+function DetallePeligro({ p, nivel, empresaId, run }: { p: Peligro; nivel: string; empresaId: string; run: Run }) {
   const campo = (k: keyof Peligro, label: string) => (
     <Field>
       <FieldLabel htmlFor={`${String(k)}-${p.id}`} className="text-xs gap-1">{label} <Ayuda k={({ descripcion: "descripcionPeligro", efectosPosibles: "efectos" } as Record<string, string>)[String(k)] ?? String(k)} /></FieldLabel>
@@ -209,8 +211,47 @@ function DetallePeligro({ p, empresaId, run }: { p: Peligro; empresaId: string; 
             {!p.peligroId && <GuardarEnBiblioteca que="este peligro" trigger={<Button size="sm" variant="outline" />} onGuardar={(a) => run(() => A.guardarPeligroEnBiblioteca(empresaId, p.id, a), a === "empresa" ? "Guardado en la biblioteca de esta empresa" : "Guardado en la biblioteca general")} />}
           </div>
         </div>
+        <SeguimientoMedidas p={p} nivel={nivel} empresaId={empresaId} run={run} />
       </TableCell>
     </TableRow>
+  );
+}
+
+/** Implementación y verificación de las medidas (Res. 0312/2019 est. 4.2.1 y 4.2.2); alimenta la tabla del MTZ-02. */
+function SeguimientoMedidas({ p, nivel, empresaId, run }: { p: Peligro; nivel: string; empresaId: string; run: Run }) {
+  const s = p.seguimiento;
+  const guardar = (k: keyof Seguimiento, v: string) => v !== (s[k] ?? "") && run(() => A.actualizarSeguimiento(empresaId, p.id, { [k]: v }));
+  const prioritario = nivel === "I" || nivel === "II";
+  const id = (k: string) => `seg-${k}-${p.id}`;
+  return (
+    <div className="mt-4 rounded-md border bg-background p-3 space-y-3">
+      <div className="flex flex-wrap items-center gap-2 text-xs">
+        <span className="font-medium">Implementación y verificación de las medidas</span>
+        <NormaRef>Res. 0312/2019 est. 4.2.1 y 4.2.2</NormaRef>
+        <span className="text-muted-foreground">{prioritario ? "Riesgo prioritario: registre responsable, fecha, estado y la verificación en sitio de que los trabajadores aplican los controles." : "Opcional para riesgos de nivel III y IV."}</span>
+      </div>
+      <div className="grid gap-3 md:grid-cols-4">
+        <Field><FieldLabel htmlFor={id("resp")} className="text-xs">Responsable</FieldLabel>
+          <Input id={id("resp")} className="text-xs" placeholder="Ej.: Jefe de mantenimiento" defaultValue={s.responsable ?? ""} onBlur={(e) => guardar("responsable", e.target.value)} /></Field>
+        <Field><FieldLabel htmlFor={id("fecha")} className="text-xs">Fecha de implementación</FieldLabel>
+          <Input id={id("fecha")} type="date" className="text-xs" placeholder="AAAA-MM-DD" defaultValue={s.fecha ?? ""} onBlur={(e) => guardar("fecha", e.target.value)} /></Field>
+        <Field><FieldLabel htmlFor={id("estado")} className="text-xs">Estado</FieldLabel>
+          <NativeSelect id={id("estado")} className="w-full" defaultValue={s.estado ?? ""} onChange={(e) => guardar("estado", e.target.value)}>
+            <NativeSelectOption value="">Sin registrar</NativeSelectOption>{ESTADOS_MEDIDA.map((x) => <NativeSelectOption key={x.valor} value={x.valor}>{x.etiqueta}</NativeSelectOption>)}
+          </NativeSelect></Field>
+        <Field><FieldLabel htmlFor={id("verif")} className="text-xs">Fecha de verificación</FieldLabel>
+          <Input id={id("verif")} type="date" className="text-xs" placeholder="AAAA-MM-DD" defaultValue={s.verificadoFecha ?? ""} onBlur={(e) => guardar("verificadoFecha", e.target.value)} /></Field>
+        <Field><FieldLabel htmlFor={id("metodo")} className="text-xs">Método de verificación</FieldLabel>
+          <Input id={id("metodo")} className="text-xs" placeholder="Ej.: Observación directa en la inspección" defaultValue={s.metodo ?? ""} onBlur={(e) => guardar("metodo", e.target.value)} /></Field>
+        <Field className="md:col-span-2"><FieldLabel htmlFor={id("res")} className="text-xs">Resultado</FieldLabel>
+          <Input id={id("res")} className="text-xs" placeholder="Ej.: 5 de 5 trabajadores usan el protector auditivo" defaultValue={s.resultado ?? ""} onBlur={(e) => guardar("resultado", e.target.value)} /></Field>
+        <Field><FieldLabel htmlFor={id("eficaz")} className="text-xs">¿Eficaz?</FieldLabel>
+          <NativeSelect id={id("eficaz")} className="w-full" defaultValue={s.eficaz ?? ""} onChange={(e) => guardar("eficaz", e.target.value)}>
+            <NativeSelectOption value="">Sin evaluar</NativeSelectOption>{EFICAZ.map((x) => <NativeSelectOption key={x.valor} value={x.valor}>{x.etiqueta}</NativeSelectOption>)}
+          </NativeSelect></Field>
+      </div>
+      {s.eficaz === "no" || s.eficaz === "parcial" ? <p className="text-xs text-amber-700">La medida no fue eficaz: registre una acción correctiva en el FOR-06 (Decreto 1072/2015 art. 2.2.4.6.33).</p> : null}
+    </div>
   );
 }
 
@@ -236,6 +277,21 @@ function Estructura({ empresaId, procesos, zonas, zonasTipo, run, pend }: { empr
         </Field>
       </div>
     </Section>
+  );
+}
+
+/** Periodicidad de las evaluaciones médicas periódicas del cargo: la define la empresa con justificación técnica (Res. 1843/2025 art. 15). */
+function PeriodicidadCargo({ c, empresaId, run }: { c: Cargo; empresaId: string; run: Run }) {
+  const [meses, setMeses] = useState(c.periodicidadMeses ? String(c.periodicidadMeses) : "");
+  const [motivo, setMotivo] = useState(c.periodicidadMotivo);
+  const aviso = avisoPeriodicidad(Number(meses) || null, motivo);
+  const guardar = (m: string, mo: string) => { if ((Number(m) || null) !== c.periodicidadMeses || mo.trim() !== c.periodicidadMotivo) run(() => A.actualizarCargo(empresaId, c.id, { periodicidadMeses: Number(m) || null, periodicidadMotivo: mo }), "Periodicidad guardada"); };
+  return (
+    <div className="grid grid-cols-[110px_1fr] gap-2">
+      <Field><FieldLabel htmlFor={`pm-${c.id}`} className="text-xs">Examen periódico cada (meses)</FieldLabel><Input id={`pm-${c.id}`} type="number" min={1} max={36} placeholder="Ej.: 12" value={meses} onChange={(e) => setMeses(e.target.value)} onBlur={() => guardar(meses, motivo)} /></Field>
+      <Field><FieldLabel htmlFor={`pj-${c.id}`} className="text-xs">Justificación técnica <NormaRef>Res. 1843/2025 art. 15</NormaRef></FieldLabel><Textarea id={`pj-${c.id}`} className="text-xs min-h-9" placeholder="Ej.: ruido 85 dB(A) nivel de riesgo II; PVE auditivo pide audiometría anual" value={motivo} onChange={(e) => setMotivo(e.target.value)} onBlur={() => guardar(meses, motivo)} /></Field>
+      <p className={cn("col-span-2 text-[11px]", aviso || !meses ? "text-amber-700" : "text-muted-foreground")}>{aviso ?? (!meses ? "Sin periodicidad: el próximo examen de los trabajadores de este cargo queda sin fecha. La define la empresa según el tipo, la magnitud y la frecuencia de la exposición; tres (3) años solo en caso excepcional." : "Con esta periodicidad se calcula el próximo examen de los trabajadores del cargo.")}</p>
+    </div>
   );
 }
 
@@ -268,6 +324,7 @@ function CargoCard({ c, empresaId, tareas, tareasTipo, cargosTipo, procesos, zon
               <Field><FieldLabel htmlFor={`cn-${c.id}`} className="text-xs">Nombre</FieldLabel><Input id={`cn-${c.id}`} placeholder="Ej.: Auxiliar de bodega" defaultValue={c.nombre} onBlur={(e) => e.target.value !== c.nombre && run(() => A.actualizarCargo(empresaId, c.id, { nombre: e.target.value }))} /></Field>
               <Field><FieldLabel htmlFor={`cp-${c.id}`} className="text-xs gap-1">Personas <Ayuda k="nPersonas" /></FieldLabel><Input id={`cp-${c.id}`} placeholder="Ej.: 4" type="number" min={1} defaultValue={c.nPersonas} onBlur={(e) => Number(e.target.value) !== c.nPersonas && run(() => A.actualizarCargo(empresaId, c.id, { nPersonas: Number(e.target.value) }))} /></Field>
             </div>
+            <PeriodicidadCargo c={c} empresaId={empresaId} run={run} />
             <Buscador className="w-full" placeholder="Buscar cargo tipo…" textoBoton="Aplicar tareas de un cargo tipo" opciones={opcCargos(cargosTipo)} onSelect={(v) => run(() => A.aplicarTipo(empresaId, c.id, v), "Tareas y peligros del cargo tipo agregados")} />
 
             <Field>
