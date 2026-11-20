@@ -28,7 +28,7 @@ function graficaGlobal(pct: number, valoracion: string) {
 
 export async function informeDiagnostico(diagnosticoId: string) {
   const dg = await db.diagnostico.findUniqueOrThrow({ where: { id: diagnosticoId }, include: { empresa: { include: { consultora: true, sedes: true } }, archivos: { where: { activo: true }, orderBy: { subidoEn: "asc" } } } });
-  const e = dg.empresa, co = e.consultora ?? (await db.consultora.findFirst());
+  const e = dg.empresa, co = e.consultora;
   const items = (dg.items ?? []) as ItemDiag[];
   const cal = calcularDiagnostico(items, dg.nivel);
   const v = valorar(cal.puntaje);

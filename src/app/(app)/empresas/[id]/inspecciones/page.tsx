@@ -1,3 +1,5 @@
+import { alcanceBiblioteca } from "@/lib/auth/acceso";
+import { usuarioActual } from "@/lib/auth/sesion";
 import { parametrosPlazos } from "@/lib/plazos-servidor";
 import { valorPlazo } from "@/lib/plazos";
 import { db } from "@/lib/db";
@@ -11,7 +13,7 @@ export default async function Inspecciones({ params }: PageProps<"/empresas/[id]
   const { id } = await params;
   const [ins, listas, e] = await Promise.all([
     db.inspeccion.findMany({ where: { empresaId: id }, orderBy: { fecha: "desc" }, include: { acciones: { select: { id: true, descripcion: true, estado: true, responsable: true, fechaLimite: true, causa: true } }, archivos: { orderBy: { subidoEn: "desc" } } } }),
-    db.catalogoItem.findMany({ where: { tipo: "LISTA_INSPECCION", OR: [{ empresaId: null }, { empresaId: id }] }, orderBy: { nombre: "asc" } }),
+    db.catalogoItem.findMany({ where: { tipo: "LISTA_INSPECCION", ...alcanceBiblioteca((await usuarioActual()).consultoraId, id) }, orderBy: { nombre: "asc" } }),
     db.empresa.findUniqueOrThrow({ where: { id }, select: { responsableSst: true, resultadoReglas: true, sedes: { select: { nombre: true } }, zonas: { select: { nombre: true } }, comites: { select: { miembros: { select: { nombre: true } } } } } }),
   ]);
   const resp = (e.responsableSst ?? {}) as { nombre?: string };
@@ -20,7 +22,7 @@ export default async function Inspecciones({ params }: PageProps<"/empresas/[id]
   const pertinente = (l: (typeof listas)[number]) => l.normas.some((n) => n !== "RES-0312-2019" && aplican.has(n));
   listas.sort((x, y) => Number(pertinente(y)) - Number(pertinente(x)));
   return (
-    <InspeccionesEditor diasAccionDefecto={valorPlazo("accion_limite", await parametrosPlazos())}
+    <InspeccionesEditor diasAccionDefecto={valorPlazo("accion_limite", await parametrosPlazos((await usuarioActual()).consultoraId))}
       empresaId={id}
       listas={listas.map((l) => { const d = (l.detalle ?? {}) as { items?: string[]; frecuenciaDias?: number }; return { nombre: l.nombre, descripcion: l.descripcion ?? "", items: d.items ?? [], frecuenciaDias: d.frecuenciaDias ?? 0 }; })}
       lugares={[...new Set([...e.zonas, ...e.sedes].map((x) => x.nombre))]}

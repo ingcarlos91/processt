@@ -1,3 +1,4 @@
+import { usuarioActual } from "@/lib/auth/sesion";
 import { parametrosPlazos } from "@/lib/plazos-servidor";
 import { valorPlazo } from "@/lib/plazos";
 import Link from "next/link";
@@ -21,10 +22,10 @@ const corta = (s: string) => new Date(s).toLocaleDateString("es-CO", { day: "num
 
 export default async function Home() {
   const hoy = new Date();
-  const diasAtencion = valorPlazo("aviso_tablero", await parametrosPlazos());
+  const diasAtencion = valorPlazo("aviso_tablero", await parametrosPlazos((await usuarioActual()).consultoraId));
   const [{ filas, cartera, prioridad }, fechas] = await Promise.all([
-    tableroConsultora(hoy),
-    fechasPlaneador({ desde: hoy, hasta: new Date(hoy.getTime() + diasAtencion * 864e5), hoy }),
+    tableroConsultora((await usuarioActual()).consultoraId, hoy),
+    fechasPlaneador({ consultoraId: (await usuarioActual()).consultoraId, desde: hoy, hasta: new Date(hoy.getTime() + diasAtencion * 864e5), hoy }),
   ]);
   const atencion = fechas.filter((f) => f.estado !== "hecho" && !f.mesCompleto).slice(0, 10);
   const vencidosPlaneador = fechas.filter((f) => f.estado === "vencido").length;

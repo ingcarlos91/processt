@@ -1,3 +1,4 @@
+import { usuarioActual } from "@/lib/auth/sesion";
 import { db } from "@/lib/db";
 import { fechasPlaneador } from "@/lib/planeador";
 import { Planeador } from "@/components/planeador/planeador";
@@ -10,7 +11,7 @@ export default async function PlaneadorEmpresa({ params }: PageProps<"/empresas/
   const { id } = await params;
   const hoy = new Date();
   const [fechas, e] = await Promise.all([
-    fechasPlaneador({ empresaId: id, desde: new Date(Date.UTC(hoy.getUTCFullYear(), hoy.getUTCMonth() - 3, 1)), hasta: new Date(Date.UTC(hoy.getUTCFullYear() + 1, 11, 31)) }),
+    fechasPlaneador({ consultoraId: (await usuarioActual()).consultoraId, empresaId: id, desde: new Date(Date.UTC(hoy.getUTCFullYear(), hoy.getUTCMonth() - 3, 1)), hasta: new Date(Date.UTC(hoy.getUTCFullYear() + 1, 11, 31)) }),
     db.empresa.findUniqueOrThrow({ where: { id }, select: { contratoHorasMes: true, contratoValorMes: true, representanteLegal: true, responsableSst: true, visitas: { orderBy: { fecha: "desc" } }, comites: { select: { miembros: { select: { nombre: true } } } }, trabajadores: { where: { activo: true }, select: { nombres: true } } } }),
   ]);
   const personas = [...new Set([e.representanteLegal, (e.responsableSst as { nombre?: string } | null)?.nombre, ...e.comites.flatMap((c) => c.miembros.map((m) => m.nombre)), ...e.trabajadores.map((t) => t.nombres)].filter(Boolean) as string[])];

@@ -29,13 +29,13 @@ const fechaHora = (f: string | null) => (f ? new Date(f).toLocaleString("es-CO",
 const iniciales = (n: string) => n.split(/\s+/).map((x) => x[0]).slice(0, 2).join("").toUpperCase();
 
 /** Genera una contraseña temporal que cumple la política (letras y números). */
-function generarClave() {
+export function generarClave() {
   const letras = "abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ", nums = "23456789";
   const r = (s: string) => s[crypto.getRandomValues(new Uint32Array(1))[0] % s.length];
   return Array.from({ length: 8 }, () => r(letras)).join("") + r(nums) + r(nums) + r(nums);
 }
 
-function CampoClave({ value, onChange, id }: { value: string; onChange: (v: string) => void; id: string }) {
+export function CampoClave({ value, onChange, id }: { value: string; onChange: (v: string) => void; id: string }) {
   const [ver, setVer] = useState(false);
   return (
     <InputGroup>

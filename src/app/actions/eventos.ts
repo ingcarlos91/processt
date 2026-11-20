@@ -4,6 +4,7 @@ import { parametrosPlazos } from "@/lib/plazos-servidor";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { requiereUsuario } from "@/lib/auth/sesion";
+import { requiereEmpresa } from "@/lib/auth/acceso";
 import { actualizarDocumentos } from "@/lib/generador/documentos";
 import { agregarPeligroCatalogo } from "@/lib/matriz/instanciar";
 import { TIPOS_EVENTO, faltasParaCerrar, type Analisis, type Integrante } from "@/lib/eventos";
@@ -61,10 +62,10 @@ function datos(d: DatosEvento) {
 }
 
 export async function crearEvento(empresaId: string, d: DatosEvento) {
-  await requiereUsuario();
+  await requiereEmpresa(empresaId);
   try {
     const x = datos(d);
-    if (x.cargoId) x.cargo = (await db.cargo.findUnique({ where: { id: x.cargoId } }))?.nombre ?? x.cargo;
+    if (x.cargoId) x.cargo = (await db.cargo.findFirst({ where: { id: x.cargoId, empresaId } }))?.nombre ?? x.cargo;
     const ev = await db.evento.create({ data: { empresaId, ...x, invEstado: TIPOS_EVENTO[d.tipo].investiga ? "pendiente" : "no_aplica" } });
     await listo(empresaId);
     return { ok: true as const, id: ev.id };
@@ -72,11 +73,11 @@ export async function crearEvento(empresaId: string, d: DatosEvento) {
 }
 
 export async function actualizarEvento(empresaId: string, eventoId: string, d: DatosEvento) {
-  await requiereUsuario();
+  await requiereEmpresa(empresaId);
   const prev = await delaEmpresa(empresaId, eventoId);
   try {
     const x = datos(d);
-    if (x.cargoId) x.cargo = (await db.cargo.findUnique({ where: { id: x.cargoId } }))?.nombre ?? x.cargo;
+    if (x.cargoId) x.cargo = (await db.cargo.findFirst({ where: { id: x.cargoId, empresaId } }))?.nombre ?? x.cargo;
     const invEstado = !TIPOS_EVENTO[d.tipo].investiga ? "no_aplica" : prev.invEstado === "no_aplica" ? "pendiente" : prev.invEstado;
     await db.evento.update({ where: { id: eventoId }, data: { ...x, invEstado } });
     await listo(empresaId, eventoId);
@@ -85,7 +86,7 @@ export async function actualizarEvento(empresaId: string, eventoId: string, d: D
 }
 
 export async function eliminarEventoCompleto(empresaId: string, eventoId: string) {
-  await requiereUsuario();
+  await requiereEmpresa(empresaId);
   await delaEmpresa(empresaId, eventoId);
   await db.evento.delete({ where: { id: eventoId } });
   await listo(empresaId);
@@ -93,7 +94,7 @@ export async function eliminarEventoCompleto(empresaId: string, eventoId: string
 }
 
 export async function guardarReporte(empresaId: string, eventoId: string, d: { fechaReporte?: string; furatNumero?: string; reporteMinisterio?: string; invRemitidaArl?: string }) {
-  await requiereUsuario();
+  await requiereEmpresa(empresaId);
   await delaEmpresa(empresaId, eventoId);
   const fechaReporte = dia(d.fechaReporte);
   await db.evento.update({ where: { id: eventoId }, data: { fechaReporte, reportadoArl: !!fechaReporte, furatNumero: d.furatNumero || null, reporteMinisterio: dia(d.reporteMinisterio), invRemitidaArl: dia(d.invRemitidaArl) } });
@@ -104,7 +105,7 @@ export async function guardarReporte(empresaId: string, eventoId: string, d: { f
 export type DatosInvestigacion = { equipo: Integrante[]; analisis: Analisis; lecciones?: string; peligroId?: string | null; invInicio?: string; invLugar?: string; invFechas?: string };
 
 export async function guardarInvestigacion(empresaId: string, eventoId: string, d: DatosInvestigacion) {
-  await requiereUsuario();
+  await requiereEmpresa(empresaId);
   const ev = await delaEmpresa(empresaId, eventoId);
   const limpio = (xs?: string[]) => (xs ?? []).map((x) => x.trim()).filter(Boolean);
   const analisis: Analisis = { porques: limpio(d.analisis.porques), actos: limpio(d.analisis.actos), condiciones: limpio(d.analisis.condiciones), personales: limpio(d.analisis.personales), trabajo: limpio(d.analisis.trabajo), conclusion: d.analisis.conclusion?.trim() || "" };
@@ -123,7 +124,7 @@ export async function guardarInvestigacion(empresaId: string, eventoId: string, 
  * con identificación (arts. 7 y 13), causas inmediatas y básicas (art. 11) y medidas con responsable y fecha (art. 12).
  */
 export async function cerrarInvestigacion(empresaId: string, eventoId: string, fechaCierre: string) {
-  await requiereUsuario();
+  await requiereEmpresa(empresaId);
   const ev = await db.evento.findUniqueOrThrow({ where: { id: eventoId }, include: { acciones: true } });
   if (ev.empresaId !== empresaId) return { error: "Evento no encontrado." };
   const faltas = faltasParaCerrar(ev);
@@ -136,7 +137,7 @@ export async function cerrarInvestigacion(empresaId: string, eventoId: string, f
 }
 
 export async function reabrirInvestigacion(empresaId: string, eventoId: string) {
-  await requiereUsuario();
+  await requiereEmpresa(empresaId);
   await delaEmpresa(empresaId, eventoId);
   await db.evento.update({ where: { id: eventoId }, data: { invEstado: "en_curso", investigado: false, invCierre: null } });
   await listo(empresaId, eventoId);
@@ -144,14 +145,14 @@ export async function reabrirInvestigacion(empresaId: string, eventoId: string) 
 }
 
 export async function sugerirAnalisis(empresaId: string, eventoId: string) {
-  await requiereUsuario();
+  await requiereEmpresa(empresaId);
   await delaEmpresa(empresaId, eventoId);
   return sugerirInvestigacion(eventoId);
 }
 
 /** Agrega el peligro identificado a la matriz del cargo (retroalimentación de la investigación, GTC 45). */
 export async function agregarPeligroDelEvento(empresaId: string, eventoId: string) {
-  await requiereUsuario();
+  await requiereEmpresa(empresaId);
   const ev = await delaEmpresa(empresaId, eventoId);
   if (!ev.peligroId) return { error: "Seleccione primero el peligro relacionado." };
   if (!ev.cargoId) return { error: "El evento no tiene un cargo de la empresa asociado." };
@@ -166,7 +167,8 @@ export async function agregarPeligroDelEvento(empresaId: string, eventoId: strin
 export type DatosAccion = { hallazgo: string; causa?: string; tipo: string; jerarquia?: string; dirigidaA?: string; descripcion: string; responsable?: string; fechaLimite?: string; origen?: string };
 
 export async function guardarAccion(empresaId: string, d: DatosAccion & { id?: string; eventoId?: string }) {
-  await requiereUsuario();
+  await requiereEmpresa(empresaId);
+  if (d.eventoId) await delaEmpresa(empresaId, d.eventoId);
   if (!d.descripcion?.trim()) return { error: "Describa la acción." };
   const data = {
     hallazgo: d.hallazgo?.trim() || "Hallazgo de investigación", causa: d.causa || null, tipo: d.tipo || "correctiva", jerarquia: d.jerarquia || null, dirigidaA: d.dirigidaA || null,
@@ -182,7 +184,7 @@ export async function guardarAccion(empresaId: string, d: DatosAccion & { id?: s
 }
 
 export async function cerrarAccion(empresaId: string, id: string, d: { fechaCierre: string; eficacia: string }) {
-  await requiereUsuario();
+  await requiereEmpresa(empresaId);
   const a = await db.accion.findUniqueOrThrow({ where: { id } });
   if (a.empresaId !== empresaId) return { error: "Acción no encontrada." };
   if (!d.eficacia?.trim()) return { error: "Describa cómo se verificó la eficacia de la acción (Decreto 1072/2015 art. 2.2.4.6.33)." };
@@ -193,7 +195,7 @@ export async function cerrarAccion(empresaId: string, id: string, d: { fechaCier
 }
 
 export async function eliminarAccion(empresaId: string, id: string) {
-  await requiereUsuario();
+  await requiereEmpresa(empresaId);
   const a = await db.accion.findUniqueOrThrow({ where: { id } });
   if (a.empresaId !== empresaId) return { error: "Acción no encontrada." };
   await db.accion.delete({ where: { id } });
@@ -203,11 +205,11 @@ export async function eliminarAccion(empresaId: string, id: string) {
 
 /** Lleva la acción al plan anual de trabajo, en el mes de su fecha límite. */
 export async function enviarAccionAlPlan(empresaId: string, id: string) {
-  await requiereUsuario();
+  const u = await requiereEmpresa(empresaId);
   const a = await db.accion.findUniqueOrThrow({ where: { id }, include: { evento: true } });
   if (a.empresaId !== empresaId) return { error: "Acción no encontrada." };
   if (a.actividadId) return { error: "Esta acción ya está en el plan anual." };
-  const f = a.fechaLimite ?? new Date(Date.now() + valorPlazo("accion_limite", await parametrosPlazos()) * 864e5);
+  const f = a.fechaLimite ?? new Date(Date.now() + valorPlazo("accion_limite", await parametrosPlazos(u.consultoraId)) * 864e5);
   const act = await db.actividadPlan.create({ data: {
     empresaId, anio: f.getUTCFullYear(), mes: f.getUTCMonth() + 1, nombre: `Acción ${a.tipo}: ${a.descripcion}`.slice(0, 250),
     descripcion: a.evento ? `Derivada de la investigación del evento del ${a.evento.fecha.toISOString().slice(0, 10)}` : a.hallazgo,
@@ -221,7 +223,7 @@ export async function enviarAccionAlPlan(empresaId: string, id: string) {
 
 /** Registra o corrige la causa raíz de una acción (de cualquier origen: inspección, auditoría, evento). */
 export async function actualizarCausaAccion(empresaId: string, id: string, causa: string) {
-  await requiereUsuario();
+  await requiereEmpresa(empresaId);
   const a = await db.accion.findUniqueOrThrow({ where: { id } });
   if (a.empresaId !== empresaId) return { error: "Acción no encontrada." };
   await db.accion.update({ where: { id }, data: { causa: causa.trim() || null } });

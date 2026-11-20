@@ -2,6 +2,7 @@
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { requiereUsuario } from "@/lib/auth/sesion";
+import { requiereEmpresa } from "@/lib/auth/acceso";
 import { recalcularEmpresa } from "@/lib/empresa";
 import { prepararEstructura, aplicarCargoTipo, sugerirCargoTipo } from "@/lib/matriz/instanciar";
 import { MAPA_ESTADO_ACTUAL, calcularDiagnostico, aEstadoEvaluacion, noAplicaInvalidos, type ItemDiag } from "@/lib/diagnostico";
@@ -16,7 +17,7 @@ async function delaEmpresa(empresaId: string, id: string) {
 
 /** Crea el diagnóstico con los estándares que aplican; lo marcado en “Estado actual” se precarga como “cumple”. */
 export async function crearDiagnostico(empresaId: string) {
-  await requiereUsuario();
+  await requiereEmpresa(empresaId);
   const rr = await recalcularEmpresa(empresaId);
   const e = await db.empresa.findUniqueOrThrow({ where: { id: empresaId } });
   const est = (e.estadoActual ?? {}) as Record<string, boolean>;
@@ -30,7 +31,7 @@ export async function crearDiagnostico(empresaId: string) {
 }
 
 export async function guardarDiagnostico(empresaId: string, id: string, d: { items: ItemDiag[]; conclusiones?: string; fecha?: string }) {
-  await requiereUsuario();
+  await requiereEmpresa(empresaId);
   const x = await delaEmpresa(empresaId, id);
   if (x.estado === "cerrado") return { error: "El diagnóstico está cerrado; reábralo para editarlo." };
   const cal = calcularDiagnostico(d.items, x.nivel);
@@ -44,7 +45,7 @@ export async function guardarDiagnostico(empresaId: string, id: string, d: { ite
 
 /** Cierra el diagnóstico: todos los estándares evaluados y los “no aplica” justificados (Res. 0312/2019 art. 27). */
 export async function cerrarDiagnostico(empresaId: string, id: string) {
-  await requiereUsuario();
+  await requiereEmpresa(empresaId);
   const x = await delaEmpresa(empresaId, id);
   const items = (x.items ?? []) as ItemDiag[];
   const sin = items.filter((i) => !i.estado).map((i) => i.codigo);
@@ -67,7 +68,7 @@ export async function cerrarDiagnostico(empresaId: string, id: string) {
 }
 
 export async function reabrirDiagnostico(empresaId: string, id: string) {
-  await requiereUsuario();
+  await requiereEmpresa(empresaId);
   const x = await delaEmpresa(empresaId, id);
   if (x.evaluacionId) return { error: "Este diagnóstico ya dio inicio al SG-SST; los cambios se hacen en la evaluación." };
   await db.diagnostico.update({ where: { id }, data: { estado: "borrador", cerradoEn: null } });
@@ -80,7 +81,7 @@ export async function reabrirDiagnostico(empresaId: string, id: string) {
  * del diagnóstico (y su plan de mejoramiento), genera el plan anual y todos los documentos.
  */
 export async function iniciarSgsst(empresaId: string, diagnosticoId?: string) {
-  await requiereUsuario();
+  await requiereEmpresa(empresaId);
   const e = await db.empresa.findUniqueOrThrow({ where: { id: empresaId }, include: { cargos: { include: { tareas: true } } } });
   await prepararEstructura(empresaId, "aprobado");
   for (const c of e.cargos.filter((x) => !x.tareas.length)) {

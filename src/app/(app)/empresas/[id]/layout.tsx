@@ -1,3 +1,4 @@
+import { empresaVisible } from "@/lib/auth/acceso";
 import { rutaEmpresa } from "@/lib/ruta";
 import { AvisoPasoRuta } from "@/components/empresa/ruta";
 import { notFound } from "next/navigation";
@@ -10,6 +11,7 @@ import { Porque } from "@/components/app/porque";
 
 export default async function EmpresaLayout({ children, params }: LayoutProps<"/empresas/[id]">) {
   const { id } = await params;
+  await empresaVisible(id);
   const e = await db.empresa.findUnique({ where: { id }, select: { etapa: true, _count: { select: { diagnosticos: true } }, logoUrl: true, razonSocial: true, nit: true, digitoVerificacion: true, nivelEstandares: true, claseRiesgo: true, ciudad: true, nTrabajadoresPlanta: true, nEnMision: true } });
   if (!e) notFound();
   const [decisiones, ruta] = await Promise.all([construirDecisiones(id), rutaEmpresa(id)]);

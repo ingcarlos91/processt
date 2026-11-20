@@ -30,7 +30,7 @@ export function InspeccionesTab({ listas }: { listas: { id: string; nombre: stri
         <div key={l.id} className="flex items-start gap-3 rounded-lg border p-3">
           <div className="flex-1"><div className="font-medium">{l.nombre} <Badge variant="outline" className="ml-1">cada {l.frecuenciaDias} días</Badge></div><div className="text-sm text-muted-foreground">{l.descripcion}</div><div className="mt-1 text-xs text-muted-foreground">{l.items.length} ítems</div></div>
           <Button size="icon-sm" variant="ghost" aria-label="Editar lista" onClick={() => setF({ ...l, items: l.items.join("\n") })}><Pencil /></Button>
-          <Confirmar trigger={<Button size="icon-sm" variant="ghost" aria-label="Eliminar lista" />} titulo={`Eliminar «${l.nombre}»`} descripcion="Las inspecciones ya realizadas se conservan." accion="Eliminar" destructivo onConfirm={() => start(async () => { await A.eliminarCatalogoItem(l.id); toast.success("Lista eliminada"); })}><Trash2 /></Confirmar>
+          <Confirmar trigger={<Button size="icon-sm" variant="ghost" aria-label="Eliminar lista" />} titulo={`Eliminar «${l.nombre}»`} descripcion="Las inspecciones ya realizadas se conservan." accion="Eliminar" destructivo onConfirm={() => start(async () => { const r = await A.eliminarCatalogoItem(l.id); if (r && "error" in r) toast.error(r.error); else toast.success("Lista eliminada"); })}><Trash2 /></Confirmar>
         </div>
       ))}
       <PanelFormulario open={!!f} onOpenChange={(o) => !o && setF(null)}

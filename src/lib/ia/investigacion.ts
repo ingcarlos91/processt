@@ -1,4 +1,5 @@
 import { generateText, Output } from "ai";
+import { alcanceBiblioteca } from "@/lib/alcance-biblioteca";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { MODELO, iaDisponible } from "@/lib/ia";
@@ -30,7 +31,7 @@ export async function sugerirInvestigacion(eventoId: string): Promise<{ fuente: 
   const delCargo = filas.filter((f) => !ev.cargo || f.cargos.includes(ev.cargo));
   const relato = [ev.descripcion, ev.versionTrabajador && `Versión del trabajador: ${ev.versionTrabajador}`, ev.versionTestigos && `Versión de los testigos: ${ev.versionTestigos}`, ev.sitioExacto && `Sitio exacto: ${ev.sitioExacto}`, ev.tarea, ev.mecanismo, ev.agente, ev.lesion, ev.parteCuerpo].filter(Boolean).join(". ");
   // Biblioteca global (Biblioteca → Accidentes): causas, medidas y palabras clave por forma del evento.
-  const forma = (await cargarCatalogoAccidentes()).formas.find((f) => f.nombre === ev.mecanismo);
+  const forma = (await cargarCatalogoAccidentes((await db.empresa.findUniqueOrThrow({ where: { id: ev.empresaId }, select: { consultoraId: true } })).consultoraId)).formas.find((f) => f.nombre === ev.mecanismo);
 
   if (iaDisponible()) {
     try {
@@ -59,7 +60,7 @@ export async function sugerirInvestigacion(eventoId: string): Promise<{ fuente: 
     return ws.filter((w) => pr.has(w)).length + (pista ? ws.filter((w) => pista.claves.some((k) => w.startsWith(k))).length * 2 : 0);
   };
   const enMatriz = delCargo.map((f) => ({ f, s: puntaje(`${f.descripcion} ${f.tarea}`, f.clasificacionClave) })).sort((x, y) => y.s - x.s)[0];
-  const catalogo = await db.peligroCatalogo.findMany({ where: { OR: [{ empresaId: null }, { empresaId: ev.empresaId }] } });
+  const catalogo = await db.peligroCatalogo.findMany({ where: alcanceBiblioteca((await db.empresa.findUniqueOrThrow({ where: { id: ev.empresaId }, select: { consultoraId: true } })).consultoraId, ev.empresaId) });
   const enCatalogo = catalogo.map((c) => ({ c, s: puntaje(`${c.descripcion} ${c.subclasificacion ?? ""}`, c.clasificacion) })).sort((x, y) => y.s - x.s)[0];
   // La matriz del cargo manda: basta una coincidencia razonable (la mitad del mejor puntaje de la biblioteca).
   const usarMatriz = enMatriz && enMatriz.s >= 2 && enMatriz.s * 2 >= (enCatalogo?.s ?? 0);

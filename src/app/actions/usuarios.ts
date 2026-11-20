@@ -1,7 +1,7 @@
 "use server";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
-import { requiereUsuario, crearSesion } from "@/lib/auth/sesion";
+import { requiereSesion, requiereUsuario, crearSesion } from "@/lib/auth/sesion";
 import { cifrarPassword, validarPassword, verificarPassword } from "@/lib/auth/password";
 
 const ROLES = ["admin", "consultor"];
@@ -92,7 +92,7 @@ export async function eliminarUsuario(id: string) {
 
 /** Cada usuario puede cambiar su propia contraseña; se cierran sus otras sesiones y esta sigue abierta. */
 export async function cambiarMiPassword(actual: string, nueva: string) {
-  const u = await requiereUsuario();
+  const u = await requiereSesion();
   const full = await db.usuario.findUniqueOrThrow({ where: { id: u.id } });
   if (!(await verificarPassword(actual, full.passwordHash))) return { error: "La contraseña actual no es correcta." };
   const e = validarPassword(nueva); if (e) return { error: e };
@@ -103,7 +103,7 @@ export async function cambiarMiPassword(actual: string, nueva: string) {
 
 /** Cada usuario puede cambiar su nombre y correo. */
 export async function actualizarMiPerfil(d: { nombre: string; email: string }) {
-  const u = await requiereUsuario();
+  const u = await requiereSesion();
   const email = d.email.trim().toLowerCase();
   if (!d.nombre.trim() || !EMAIL.test(email)) return { error: "Escriba un nombre y un correo válido." };
   const otro = await db.usuario.findUnique({ where: { email } });

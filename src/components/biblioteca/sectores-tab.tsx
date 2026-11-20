@@ -23,7 +23,8 @@ type Cargo = { id: string; nombre: string; descripcion: string; validado: boolea
 type S = { id: string; nombre: string; descripcion: string; ciius: string[]; validado: boolean; empresas: number; procesos: string[]; zonaIds: string[]; cargos: Cargo[] };
 type It = { id: string; nombre: string };
 
-export function SectoresTab({ sectores, tareas, zonas, iaActiva }: { sectores: S[]; tareas: It[]; zonas: It[]; iaActiva: boolean }) {
+/** `editable`: crear sectores y cambiar sus procesos y zonas (base común; solo el super administrador). */
+export function SectoresTab({ sectores, tareas, zonas, iaActiva, editable = false }: { sectores: S[]; tareas: It[]; zonas: It[]; iaActiva: boolean; editable?: boolean }) {
   const [pend, start] = useTransition();
   const [q, setQ] = useState("");
   const [nuevo, setNuevo] = useState({ nombre: "", descripcion: "", ciius: "" });
@@ -36,7 +37,7 @@ export function SectoresTab({ sectores, tareas, zonas, iaActiva }: { sectores: S
       <div className="flex flex-wrap gap-2 items-center">
         <InputGroup className="w-80"><InputGroupAddon><Search /></InputGroupAddon><InputGroupInput placeholder="Buscar sector o cargo…" value={q} onChange={(e) => setQ(e.target.value)} /></InputGroup>
         <div className="flex-1" />
-        <Dialog>
+        {editable && <Dialog>
           <DialogTrigger render={<Button />}><Plus /> Nuevo sector</DialogTrigger>
           <DialogContent className="sm:max-w-lg">
             <DialogHeader><DialogTitle>Nuevo sector</DialogTitle><DialogDescription>Un sector agrupa procesos, zonas y cargos típicos. Al elegir el código CIIU de una empresa, el sistema propone el sector que tenga ese código.</DialogDescription></DialogHeader>
@@ -48,14 +49,14 @@ export function SectoresTab({ sectores, tareas, zonas, iaActiva }: { sectores: S
               <DialogClose render={<Button disabled={!nuevo.nombre} onClick={() => run(() => A.crearSector({ nombre: nuevo.nombre, descripcion: nuevo.descripcion, ciius: nuevo.ciius.split(",").map((x) => x.trim()).filter(Boolean) }), "Sector creado")} />}>Crear sector</DialogClose>
             </DialogFooter>
           </DialogContent>
-        </Dialog>
+        </Dialog>}
       </div>
-      {lista.map((s) => <SectorCard key={s.id} s={s} tareas={tareas} zonas={zonas} iaActiva={iaActiva} run={run} pend={pend} />)}
+      {lista.map((s) => <SectorCard key={s.id} s={s} tareas={tareas} zonas={zonas} iaActiva={iaActiva} run={run} pend={pend} editable={editable} />)}
     </div>
   );
 }
 
-function SectorCard({ s, tareas, zonas, iaActiva, run, pend }: { s: S; tareas: It[]; zonas: It[]; iaActiva: boolean; run: (fn: () => Promise<unknown>, ok?: string) => void; pend: boolean }) {
+function SectorCard({ s, tareas, zonas, iaActiva, run, pend, editable }: { s: S; tareas: It[]; zonas: It[]; iaActiva: boolean; run: (fn: () => Promise<unknown>, ok?: string) => void; pend: boolean; editable: boolean }) {
   const [abierto, setAbierto] = useState(false);
   const [proceso, setProceso] = useState("");
   const [cargo, setCargo] = useState({ nombre: "", descripcion: "" });
@@ -95,12 +96,12 @@ function SectorCard({ s, tareas, zonas, iaActiva, run, pend }: { s: S; tareas: I
               <Field>
                 <FieldLabel className="gap-1">Procesos <Ayuda ayuda={{ titulo: "Procesos del sector", que: "Grandes bloques de actividad de la empresa (dirección, producción, logística…).", para: "Encabezan la matriz GTC 45 y agrupan las tareas." }} /></FieldLabel>
                 <div className="flex flex-wrap gap-1">{s.procesos.map((p) => <Badge key={p} variant="secondary">{p}</Badge>)}</div>
-                <div className="flex gap-1"><Input placeholder="Nuevo proceso" value={proceso} onChange={(e) => setProceso(e.target.value)} /><Button size="icon" variant="outline" aria-label="Agregar proceso" disabled={!proceso || pend} onClick={() => { run(() => A.agregarProcesoSector(s.id, proceso), "Proceso agregado"); setProceso(""); }}><Plus /></Button></div>
+                {editable && <div className="flex gap-1"><Input placeholder="Nuevo proceso" value={proceso} onChange={(e) => setProceso(e.target.value)} /><Button size="icon" variant="outline" aria-label="Agregar proceso" disabled={!proceso || pend} onClick={() => { run(() => A.agregarProcesoSector(s.id, proceso), "Proceso agregado"); setProceso(""); }}><Plus /></Button></div>}
               </Field>
               <Field>
                 <FieldLabel className="gap-1">Zonas <Ayuda ayuda={{ titulo: "Zonas del sector", que: "Lugares típicos de trabajo en este sector.", para: "Al crear una empresa del sector se crean estas zonas con sus peligros de lugar." }} /></FieldLabel>
-                <div className="flex flex-wrap gap-1">{s.zonaIds.map((id) => <Badge key={id} variant="secondary" className="gap-1 pr-1">{zonas.find((z) => z.id === id)?.nombre}<Button variant="ghost" size="icon-xs" className="size-4" aria-label="Quitar" onClick={() => run(() => A.vincularZonaSector(s.id, id, true))}><X /></Button></Badge>)}</div>
-                <Buscador className="w-full" placeholder="Buscar zona…" textoBoton="Agregar zona" opciones={zonas.filter((z) => !s.zonaIds.includes(z.id)).map((z) => ({ valor: z.id, etiqueta: z.nombre }))} onSelect={(v) => run(() => A.vincularZonaSector(s.id, v), "Zona agregada")} />
+                <div className="flex flex-wrap gap-1">{s.zonaIds.map((id) => <Badge key={id} variant="secondary" className="gap-1 pr-1">{zonas.find((z) => z.id === id)?.nombre}{editable && <Button variant="ghost" size="icon-xs" className="size-4" aria-label="Quitar" onClick={() => run(() => A.vincularZonaSector(s.id, id, true))}><X /></Button>}</Badge>)}</div>
+                {editable && <Buscador className="w-full" placeholder="Buscar zona…" textoBoton="Agregar zona" opciones={zonas.filter((z) => !s.zonaIds.includes(z.id)).map((z) => ({ valor: z.id, etiqueta: z.nombre }))} onSelect={(v) => run(() => A.vincularZonaSector(s.id, v), "Zona agregada")} />}
               </Field>
             </div>
             <div className="space-y-2">

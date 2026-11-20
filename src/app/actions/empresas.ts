@@ -1,9 +1,10 @@
 "use server";
 import { requiereUsuario } from "@/lib/auth/sesion";
+import { requiereBibliotecaVisible, requiereEmpresa, requiereRegistro } from "@/lib/auth/acceso";
 import { revalidatePath } from "next/cache";
 import { actualizarDocumentosExistentes } from "@/lib/generador/documentos";
 import { redirect } from "next/navigation";
-import { db, consultoraActual } from "@/lib/db";
+import { db } from "@/lib/db";
 import { recalcularEmpresa } from "@/lib/empresa";
 import { prepararEstructura, aplicarCargoTipo, sugerirCargoTipo } from "@/lib/matriz/instanciar";
 import { guardarLogo, borrarLogo } from "@/lib/logos";
@@ -41,9 +42,10 @@ function datosEmpresa(d: IntakeData) {
  * ni se generan documentos; se crea el diagnóstico inicial y se inicia el SG-SST después desde él.
  */
 export async function crearEmpresa(d: IntakeData, modo: "completo" | "diagnostico" = "completo") {
-  await requiereUsuario();
+  const u = await requiereUsuario();
   if (!d.razonSocial?.trim() || !d.nit?.trim()) return { error: "Razón social y NIT son obligatorios." };
-  const c = await consultoraActual();
+  for (const cg of d.cargos) if (cg.cargoTipoId) await requiereBibliotecaVisible("cargoTipo", cg.cargoTipoId);
+  const c = { id: u.consultoraId };
   const sedes = d.sedes.filter((s) => s.nombre?.trim());
   const e = await db.empresa.create({
     data: {
@@ -53,7 +55,7 @@ export async function crearEmpresa(d: IntakeData, modo: "completo" | "diagnostic
   });
   if (modo === "completo") await prepararEstructura(e.id, "aprobado");
   for (const cg of d.cargos.filter((x) => x.nombre?.trim())) {
-    const tipoId = cg.cargoTipoId || (await sugerirCargoTipo(cg.nombre, e.sectorTipoId))?.id;
+    const tipoId = cg.cargoTipoId || (await sugerirCargoTipo(cg.nombre, e.sectorTipoId, e.id))?.id;
     const cargo = await db.cargo.create({ data: { empresaId: e.id, nombre: cg.nombre.trim(), nPersonas: Math.max(1, n(cg.nPersonas)), descripcionFunciones: cg.funciones || null, cargoTipoId: modo === "diagnostico" ? tipoId ?? null : undefined } });
     if (modo === "completo" && tipoId) await aplicarCargoTipo(e.id, cargo.id, tipoId, "aprobado");
   }
@@ -64,7 +66,7 @@ export async function crearEmpresa(d: IntakeData, modo: "completo" | "diagnostic
 
 /** Sube o reemplaza el logo de la empresa. Se usa en los encabezados de los documentos. */
 export async function subirLogo(empresaId: string, fd: FormData) {
-  await requiereUsuario();
+  await requiereEmpresa(empresaId);
   const file = fd.get("logo");
   if (!(file instanceof File) || file.size === 0) return { error: "Seleccione un archivo." };
   try {
@@ -78,14 +80,14 @@ export async function subirLogo(empresaId: string, fd: FormData) {
 }
 
 export async function quitarLogo(empresaId: string) {
-  await requiereUsuario();
+  await requiereEmpresa(empresaId);
   await borrarLogo(empresaId);
   await db.empresa.update({ where: { id: empresaId }, data: { logoUrl: null } });
   revalidatePath(`/empresas/${empresaId}`, "layout");
 }
 
 export async function actualizarEmpresa(id: string, d: IntakeData) {
-  await requiereUsuario();
+  await requiereEmpresa(id);
   const prev = await db.empresa.findUniqueOrThrow({ where: { id } });
   await db.empresa.update({ where: { id }, data: datosEmpresa(d) });
   if (d.sectorTipoId && d.sectorTipoId !== prev.sectorTipoId) await prepararEstructura(id, "aprobado");
@@ -97,14 +99,15 @@ export async function actualizarEmpresa(id: string, d: IntakeData) {
 
 
 export async function eliminarEmpresa(id: string) {
-  await requiereUsuario();
+  await requiereEmpresa(id);
   await db.empresa.delete({ where: { id } });
   revalidatePath("/");
   redirect("/");
 }
 
 export async function guardarSede(empresaId: string, s: { id?: string; nombre: string; direccion?: string; ciudad?: string }) {
-  await requiereUsuario();
+  await requiereEmpresa(empresaId);
+  if (s.id) await requiereRegistro("sede", s.id, empresaId);
   if (s.id) await db.sede.update({ where: { id: s.id }, data: { nombre: s.nombre, direccion: s.direccion, ciudad: s.ciudad } });
   else await db.sede.create({ data: { empresaId, nombre: s.nombre, direccion: s.direccion, ciudad: s.ciudad } });
   revalidatePath(`/empresas/${empresaId}`, "layout");
@@ -113,8 +116,9 @@ export async function guardarSede(empresaId: string, s: { id?: string; nombre: s
 export type DatosConsultora = { nombre: string; nit?: string; profesional?: string; tipoDoc?: string; cedula?: string; cargo?: string; perfil?: string; licenciaSst?: string; licenciaFecha?: string; curso50h?: boolean; curso50hFecha?: string; curso20hFecha?: string; telefono?: string; correo?: string };
 
 export async function guardarConsultora(d: DatosConsultora) {
-  await requiereUsuario();
-  const c = await consultoraActual();
+  const u = await requiereUsuario();
+  if (u.rol !== "admin") return { error: "Solo el administrador de la consultora puede cambiar sus datos." };
+  const c = { id: u.consultoraId };
   await db.consultora.update({ where: { id: c.id }, data: { ...d, licenciaFecha: d.licenciaFecha ? new Date(d.licenciaFecha) : null } });
   // Los datos de la consultora salen en firmas y encabezados: se actualizan los documentos de todas las empresas.
   const { actualizarDocumentosExistentes } = await import("@/lib/generador/documentos");
@@ -125,9 +129,10 @@ export async function guardarConsultora(d: DatosConsultora) {
 
 /** Plazos de criterio de la empresa (src/lib/plazos.ts): solo los editables y dentro de sus límites. */
 export async function guardarParametrosPlazos(valores: Record<string, number>) {
-  await requiereUsuario();
+  const u = await requiereUsuario();
+  if (u.rol !== "admin") return { error: "Solo el administrador de la consultora puede cambiar los plazos." };
   const { PLAZOS } = await import("@/lib/plazos");
-  const c = await consultoraActual();
+  const c = await db.consultora.findUniqueOrThrow({ where: { id: u.consultoraId } });
   const actuales = ((c as { parametros?: unknown }).parametros ?? {}) as Record<string, number>;
   const nuevos: Record<string, number> = { ...actuales };
   for (const [k, v] of Object.entries(valores)) {
@@ -144,7 +149,7 @@ export async function guardarParametrosPlazos(valores: Record<string, number>) {
 
 /** Observaciones de la consultora para el informe de gestión de un periodo (se guardan por empresa y periodo). */
 export async function guardarObservacionesInforme(empresaId: string, periodo: string, texto: string) {
-  await requiereUsuario();
+  await requiereEmpresa(empresaId);
   const e = await db.empresa.findUniqueOrThrow({ where: { id: empresaId }, select: { datosComplementarios: true } });
   const dc = (e.datosComplementarios ?? {}) as Record<string, unknown>;
   const obs = { ...((dc.observacionesInforme ?? {}) as Record<string, string>), [periodo]: texto.trim() };

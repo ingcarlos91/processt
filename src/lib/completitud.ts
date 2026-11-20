@@ -2,6 +2,7 @@
 // y qué documentos lo usan. Los documentos se calculan leyendo las plantillas (no a mano), así que
 // si una plantilla empieza a usar un dato, aparece sola en la lista.
 import { db } from "@/lib/db";
+import { plantillasDe } from "@/lib/plantillas";
 import { camposAplicables, type Complementarios, type Persona } from "@/lib/complementarios";
 
 export type Faltante = { id: string; grupo: string; dato: string; detalle?: string; href: string; boton: string; docs: string[] };
@@ -21,7 +22,7 @@ export async function completitud(empresaId: string) {
     },
   });
   const aplicables = ((e.resultadoReglas as { documentos?: { codigo: string }[] } | null)?.documentos ?? []).map((d) => d.codigo);
-  const plantillas = await db.plantilla.findMany({ where: { codigo: { in: aplicables } }, select: { codigo: true, contenidoMd: true } });
+  const plantillas = await plantillasDe(e.consultoraId, { codigo: { in: aplicables } });
   const usan = (re: RegExp) => plantillas.filter((p) => re.test(p.contenidoMd)).map((p) => p.codigo).sort();
   const B = `/empresas/${empresaId}`;
   const out: Faltante[] = [];

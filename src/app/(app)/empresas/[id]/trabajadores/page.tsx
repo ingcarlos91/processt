@@ -1,3 +1,5 @@
+import { usuarioActual } from "@/lib/auth/sesion";
+import { alcanceBiblioteca } from "@/lib/auth/acceso";
 import { db } from "@/lib/db";
 import { cargarEmpresa, filasMatriz } from "@/lib/generador/contexto";
 import { TrabajadoresEditor } from "@/components/trabajadores/editor";
@@ -12,7 +14,7 @@ export default async function Trabajadores({ params }: PageProps<"/empresas/[id]
   const [ts, caps, catalogo, actividades, e] = await Promise.all([
     db.trabajador.findMany({ where: { empresaId: id }, orderBy: { nombres: "asc" }, include: { cargo: { select: { nombre: true } }, examenes: { orderBy: { fecha: "desc" } }, entregasEpp: { orderBy: { fecha: "desc" } }, asistencias: { select: { capacitacionId: true } } } }),
     db.capacitacion.findMany({ where: { empresaId: id }, orderBy: { fecha: "desc" }, include: { asistentes: { select: { trabajadorId: true } }, actividad: { select: { nombre: true } } } }),
-    db.catalogoItem.findMany({ where: { tipo: { in: ["EPP", "CAPACITACION"] }, OR: [{ empresaId: null }, { empresaId: id }] }, select: { tipo: true, nombre: true }, orderBy: { nombre: "asc" } }),
+    db.catalogoItem.findMany({ where: { tipo: { in: ["EPP", "CAPACITACION"] }, ...alcanceBiblioteca((await usuarioActual()).consultoraId, id) }, select: { tipo: true, nombre: true }, orderBy: { nombre: "asc" } }),
     db.actividadPlan.findMany({ where: { empresaId: id, estado: "PENDIENTE" }, orderBy: [{ anio: "asc" }, { mes: "asc" }], select: { id: true, nombre: true, anio: true, mes: true } }),
     cargarEmpresa(id),
   ]);
@@ -27,7 +29,7 @@ export default async function Trabajadores({ params }: PageProps<"/empresas/[id]
   return (
     <TrabajadoresEditor
       empresaId={id}
-      entidades={await cargarEntidades()}
+      entidades={await cargarEntidades((await usuarioActual()).consultoraId)}
       ipsPorDefecto={String(((e.datosComplementarios ?? {}) as Record<string, unknown>).ips ?? "")}
       cargos={e.cargos.map((c) => ({ id: c.id, nombre: c.nombre, nPersonas: c.nPersonas, periodicidadMeses: c.periodicidadMeses ?? null }))}
       sugeridos={sugeridos}

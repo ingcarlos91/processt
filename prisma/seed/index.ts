@@ -86,7 +86,7 @@ async function sembrarBiblioteca() {
   const todosPeligros = { ...peligros, ...peligrosAmpliacion, ...(Object.assign({}, ...modulosBiblioteca.map((m) => m.peligros ?? {})) as typeof peligros) };
   const pid: Record<string, string> = {};
   for (const [k, p] of Object.entries(todosPeligros)) {
-    const prev = await db.peligroCatalogo.findFirst({ where: { empresaId: null, OR: [{ claveSemilla: k }, { descripcion: p.descripcion }, ...(RENOMBRADOS[k] ? [{ descripcion: { in: RENOMBRADOS[k] } }] : [])] } });
+    const prev = await db.peligroCatalogo.findFirst({ where: { empresaId: null, consultoraId: null, OR: [{ claveSemilla: k }, { descripcion: p.descripcion }, ...(RENOMBRADOS[k] ? [{ descripcion: { in: RENOMBRADOS[k] } }] : [])] } });
     const data = {
       claveSemilla: k,
       clasificacion: p.clasificacion, subclasificacion: p.sub, descripcion: p.descripcion, efectosPosibles: p.efectos,
@@ -119,7 +119,7 @@ async function sembrarBiblioteca() {
   const todasTareas = { ...tareas, ...tareasAmp, ...tareasModulos };
   const tid: Record<string, string> = {};
   for (const [k, t] of Object.entries(todasTareas)) {
-    let tt = await db.tareaTipo.findFirst({ where: { nombre: t.nombre, empresaId: null } });
+    let tt = await db.tareaTipo.findFirst({ where: { nombre: t.nombre, empresaId: null, consultoraId: null } });
     if (!tt) {
       tt = await db.tareaTipo.create({ data: { nombre: t.nombre, actividad: t.actividad, rutinaria: t.rutinaria ?? true, altoRiesgo: t.altoRiesgo, zonasPreferidas: (zonasDeTarea[k] ?? []).map((z) => todasZonas[z].nombre) } });
       conteo.tareas++;
@@ -147,7 +147,7 @@ async function sembrarBiblioteca() {
     for (const c of s.cargos) {
       const ct = todosCargos[c];
       if (!ct) throw new Error(`Cargo tipo no existe: ${c}`);
-      let cargo = await db.cargoTipo.findFirst({ where: { nombre: ct.nombre, sectorTipoId: sector.id, empresaId: null } });
+      let cargo = await db.cargoTipo.findFirst({ where: { nombre: ct.nombre, sectorTipoId: sector.id, empresaId: null, consultoraId: null } });
       if (!cargo) { cargo = await db.cargoTipo.create({ data: { nombre: ct.nombre, descripcion: ct.descripcion, sectorTipoId: sector.id } }); conteo.cargos++; }
       for (const t of ct.tareas) await db.cargoTipoTarea.upsert({ where: { cargoTipoId_tareaTipoId: { cargoTipoId: cargo.id, tareaTipoId: req(tid, t) } }, update: {}, create: { cargoTipoId: cargo.id, tareaTipoId: req(tid, t) } });
       for (const p of ct.peligros ?? []) await db.cargoTipoPeligro.upsert({ where: { cargoTipoId_peligroId: { cargoTipoId: cargo.id, peligroId: req(pid, p) } }, update: {}, create: { cargoTipoId: cargo.id, peligroId: req(pid, p) } });
@@ -156,11 +156,11 @@ async function sembrarBiblioteca() {
 
   // Catálogos (exámenes, EPP, capacitaciones) + cualquier texto usado en peligros que aún no esté en el catálogo
   const items: { tipo: string; nombre: string; descripcion: string; detalle: Record<string, unknown>; normas: string[] }[] = itemsCatalogo();
-  const todos = await db.peligroCatalogo.findMany({ where: { empresaId: null }, select: { eppSugerido: true, examenesSugeridos: true, capacitacionesSugeridas: true } });
+  const todos = await db.peligroCatalogo.findMany({ where: { empresaId: null, consultoraId: null }, select: { eppSugerido: true, examenesSugeridos: true, capacitacionesSugeridas: true } });
   const extra = (tipo: string, xs: string[]) => xs.filter((n) => !/^no aplica/i.test(n) && !items.some((i) => i.tipo === tipo && i.nombre === n)).map((nombre) => ({ tipo, nombre, descripcion: "", detalle: {}, normas: [] as string[] }));
   items.push(...extra("EXAMEN", [...new Set(todos.flatMap((p) => p.examenesSugeridos))]), ...extra("EPP", [...new Set(todos.flatMap((p) => p.eppSugerido))]), ...extra("CAPACITACION", [...new Set(todos.flatMap((p) => p.capacitacionesSugeridas))]));
   for (const it of items) {
-    const prev = await db.catalogoItem.findFirst({ where: { tipo: it.tipo, nombre: it.nombre, empresaId: null } });
+    const prev = await db.catalogoItem.findFirst({ where: { tipo: it.tipo, nombre: it.nombre, empresaId: null, consultoraId: null } });
     if (!prev) { await db.catalogoItem.create({ data: { ...it, detalle: it.detalle as object } }); conteo.catalogo++; }
     else if (it.tipo === "LISTA_INSPECCION") {
       // Se reemplazan los ítems solo si la lista sigue igual a una versión sembrada antes (no se pisa lo editado).

@@ -1,7 +1,7 @@
 "use server";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
-import { requiereUsuario } from "@/lib/auth/sesion";
+import { requiereEmpresa, requiereRegistro } from "@/lib/auth/acceso";
 import { actualizarDocumentos } from "@/lib/generador/documentos";
 
 export type ItemInspeccion = { pregunta: string; resultado: "cumple" | "no_cumple" | "na" | ""; observacion?: string; accion?: { descripcion: string; causa?: string; responsable?: string; fechaLimite?: string } | null };
@@ -9,7 +9,8 @@ const dia = (s?: string | null) => (s && /^\d{4}-\d{2}-\d{2}$/.test(s) ? new Dat
 
 /** Guarda la inspección y crea una acción (FOR-06) por cada hallazgo marcado para seguimiento. */
 export async function guardarInspeccion(empresaId: string, d: { id?: string; lista: string; fecha: string; lugar?: string; responsable?: string; participantes?: string; observaciones?: string; items: ItemInspeccion[] }) {
-  await requiereUsuario();
+  await requiereEmpresa(empresaId);
+  if (d.id) await requiereRegistro("inspeccion", d.id, empresaId);
   const fecha = dia(d.fecha);
   if (!fecha) return { error: "Escriba la fecha de la inspección." };
   if (d.items.some((i) => !i.resultado)) return { error: "Califique todos los ítems (cumple, no cumple o no aplica)." };
@@ -34,7 +35,7 @@ export async function guardarInspeccion(empresaId: string, d: { id?: string; lis
 }
 
 export async function eliminarInspeccion(empresaId: string, id: string) {
-  await requiereUsuario();
+  await requiereEmpresa(empresaId);
   const i = await db.inspeccion.findUniqueOrThrow({ where: { id } });
   if (i.empresaId !== empresaId) return { error: "No encontrada." };
   await db.inspeccion.delete({ where: { id } });

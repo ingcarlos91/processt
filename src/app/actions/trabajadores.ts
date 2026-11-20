@@ -3,6 +3,7 @@ import { revalidatePath } from "next/cache";
 import { recalcularEmpresa } from "@/lib/empresa";
 import { db } from "@/lib/db";
 import { requiereUsuario } from "@/lib/auth/sesion";
+import { requiereEmpresa, requiereRegistro } from "@/lib/auth/acceso";
 import { actualizarDocumentos } from "@/lib/generador/documentos";
 import { puedeBorrarExamen } from "@/lib/examenes";
 
@@ -28,8 +29,9 @@ export type DatosTrabajador = {
 };
 
 export async function guardarTrabajador(empresaId: string, d: DatosTrabajador) {
-  await requiereUsuario();
+  await requiereEmpresa(empresaId);
   if (!d.nombres?.trim()) return { error: "Escriba el nombre." };
+  if (d.cargoId) await requiereRegistro("cargo", d.cargoId, empresaId);
   const documento = d.documento?.trim() || null;
   if (documento) {
     const otro = await db.trabajador.findFirst({ where: { empresaId, documento, NOT: d.id ? { id: d.id } : undefined } });
@@ -48,7 +50,7 @@ export async function guardarTrabajador(empresaId: string, d: DatosTrabajador) {
 }
 
 export async function retirarTrabajador(empresaId: string, id: string, fecha: string) {
-  await requiereUsuario();
+  await requiereEmpresa(empresaId);
   await delaEmpresa(empresaId, id);
   await db.trabajador.update({ where: { id }, data: { activo: false, fechaRetiro: dia(fecha) ?? new Date() } });
   await listo(empresaId);
@@ -56,7 +58,7 @@ export async function retirarTrabajador(empresaId: string, id: string, fecha: st
 }
 
 export async function reactivarTrabajador(empresaId: string, id: string) {
-  await requiereUsuario();
+  await requiereEmpresa(empresaId);
   await delaEmpresa(empresaId, id);
   await db.trabajador.update({ where: { id }, data: { activo: true, fechaRetiro: null } });
   await listo(empresaId);
@@ -64,7 +66,7 @@ export async function reactivarTrabajador(empresaId: string, id: string) {
 }
 
 export async function eliminarTrabajador(empresaId: string, id: string) {
-  await requiereUsuario();
+  await requiereEmpresa(empresaId);
   await delaEmpresa(empresaId, id);
   // Borrar al trabajador borraría sus exámenes, que se conservan 20 años (Decreto 1072/2015 art. 2.2.4.6.13).
   const examenes = await db.examenMedico.findMany({ where: { trabajadorId: id }, select: { creadoEn: true } });
@@ -80,7 +82,7 @@ export async function eliminarTrabajador(empresaId: string, id: string) {
  * Si el documento ya existe, actualiza el registro.
  */
 export async function importarTrabajadores(empresaId: string, texto: string) {
-  await requiereUsuario();
+  await requiereEmpresa(empresaId);
   const cargos = await db.cargo.findMany({ where: { empresaId } });
   const norm = (t: string) => t.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").trim();
   const fecha = (t: string) => { const x = t.trim(); if (/^\d{4}-\d{2}-\d{2}$/.test(x)) return dia(x); const m = x.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{4})$/); return m ? dia(`${m[3]}-${m[2].padStart(2, "0")}-${m[1].padStart(2, "0")}`) : null; };
@@ -103,7 +105,7 @@ export async function importarTrabajadores(empresaId: string, texto: string) {
 
 // ───────── Exámenes médicos ocupacionales (FOR-02) ─────────
 export async function guardarExamen(empresaId: string, d: { id?: string; trabajadorId: string; tipo: string; fecha: string; ips?: string; concepto: string; regimen?: string; restricciones?: string; restriccionHasta?: string; restriccionPermanente?: boolean; adaptacionFecha?: string; comunicadoTrabajador?: string; proximo?: string }) {
-  await requiereUsuario();
+  await requiereEmpresa(empresaId);
   await delaEmpresa(empresaId, d.trabajadorId);
   const fecha = dia(d.fecha);
   if (!fecha) return { error: "Escriba la fecha del examen." };
@@ -120,7 +122,7 @@ export async function guardarExamen(empresaId: string, d: { id?: string; trabaja
   return { ok: true as const };
 }
 export async function eliminarExamen(empresaId: string, id: string) {
-  await requiereUsuario();
+  await requiereEmpresa(empresaId);
   const x = await db.examenMedico.findUniqueOrThrow({ where: { id }, include: { trabajador: true } });
   if (x.trabajador.empresaId !== empresaId) return { error: "No encontrado." };
   // El registro se conserva 20 años (Decreto 1072/2015 art. 2.2.4.6.13): solo se borra un error de captura del mismo día.
@@ -132,7 +134,7 @@ export async function eliminarExamen(empresaId: string, id: string) {
 
 // ───────── Entrega de EPP (MTZ-04) ─────────
 export async function guardarEntregas(empresaId: string, d: { trabajadorIds: string[]; fecha: string; elementos: string[]; cantidad?: number; tipo?: string; capacitado?: boolean; proximaReposicion?: string }) {
-  await requiereUsuario();
+  await requiereEmpresa(empresaId);
   const fecha = dia(d.fecha);
   if (!fecha || !d.trabajadorIds.length || !d.elementos.filter(Boolean).length) return { error: "Elija trabajadores, elementos y fecha." };
   for (const t of d.trabajadorIds) await delaEmpresa(empresaId, t);
@@ -143,7 +145,7 @@ export async function guardarEntregas(empresaId: string, d: { trabajadorIds: str
   return { ok: true as const, n: d.trabajadorIds.length * d.elementos.filter(Boolean).length };
 }
 export async function eliminarEntrega(empresaId: string, id: string) {
-  await requiereUsuario();
+  await requiereEmpresa(empresaId);
   const x = await db.entregaEpp.findUniqueOrThrow({ where: { id }, include: { trabajador: true } });
   if (x.trabajador.empresaId !== empresaId) return { error: "No encontrado." };
   await db.entregaEpp.delete({ where: { id } });
@@ -153,9 +155,12 @@ export async function eliminarEntrega(empresaId: string, id: string) {
 
 // ───────── Capacitaciones ejecutadas (PRG-01) ─────────
 export async function guardarCapacitacion(empresaId: string, d: { id?: string; fecha: string; tema: string; horas?: number; facilitador?: string; modalidad?: string; actividadId?: string; asistentes: string[] }) {
-  await requiereUsuario();
+  await requiereEmpresa(empresaId);
   const fecha = dia(d.fecha);
   if (!fecha || !d.tema.trim()) return { error: "Escriba el tema y la fecha." };
+  if (d.id) await requiereRegistro("capacitacion", d.id, empresaId);
+  if (d.actividadId) await requiereRegistro("actividadPlan", d.actividadId, empresaId);
+  for (const t of d.asistentes) await delaEmpresa(empresaId, t);
   const data = { empresaId, fecha, tema: d.tema.trim(), horas: Math.max(0.5, Number(d.horas) || 1), facilitador: d.facilitador || null, modalidad: d.modalidad || "presencial", actividadId: d.actividadId || null };
   const cap = d.id ? await db.capacitacion.update({ where: { id: d.id }, data }) : await db.capacitacion.create({ data });
   await db.asistenciaCapacitacion.deleteMany({ where: { capacitacionId: cap.id, trabajadorId: { notIn: d.asistentes } } });
@@ -165,7 +170,7 @@ export async function guardarCapacitacion(empresaId: string, d: { id?: string; f
   return { ok: true as const };
 }
 export async function eliminarCapacitacion(empresaId: string, id: string) {
-  await requiereUsuario();
+  await requiereEmpresa(empresaId);
   const c = await db.capacitacion.findUniqueOrThrow({ where: { id } });
   if (c.empresaId !== empresaId) return { error: "No encontrada." };
   await db.capacitacion.delete({ where: { id } });

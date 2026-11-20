@@ -1,3 +1,4 @@
+import { usuarioActual } from "@/lib/auth/sesion";
 import { observacionesInforme } from "@/lib/informe-gestion";
 import { rutaEmpresa } from "@/lib/ruta";
 import { TarjetaRuta } from "@/components/empresa/ruta";
@@ -57,7 +58,7 @@ export default async function Resumen({ params }: PageProps<"/empresas/[id]">) {
   // Plazos de reporte e investigación vencidos o por vencer (Decreto Ley 1295/1994; Res. 1401/2007).
   const eventosAbiertos = await db.evento.findMany({ where: { empresaId: id, OR: [{ invEstado: { in: ["pendiente", "en_curso"] } }, { reportadoArl: false, tipo: { in: ["AT", "EL"] } }] } });
   const [{ razonSocial }, comparativo, ruta] = await Promise.all([db.empresa.findUniqueOrThrow({ where: { id }, select: { razonSocial: true } }), comparativoDiagnostico(id), rutaEmpresa(id)]);
-  const parPlazos = await parametrosPlazos();
+  const parPlazos = await parametrosPlazos((await usuarioActual()).consultoraId);
   const alertasEventos = eventosAbiertos.flatMap((ev) => plazos(ev, new Date(), parPlazos).filter((p) => p.estado === "vencido" || p.estado === "por_vencer").map((p) => ({ ev, p })));
   return (
     <>

@@ -1,4 +1,5 @@
 import { generateText, Output } from "ai";
+import { alcanceBiblioteca } from "@/lib/alcance-biblioteca";
 import { z } from "zod";
 import { db } from "@/lib/db";
 
@@ -35,7 +36,7 @@ export type Sugerencia = z.infer<typeof schema>;
 export async function sugerirTareasYPeligros(empresaId: string, cargoId: string, funciones: string): Promise<{ fuente: "ia" | "biblioteca"; sugerencia: Sugerencia; aviso?: string }> {
   const e = await db.empresa.findUniqueOrThrow({ where: { id: empresaId }, include: { procesos: true, zonas: true, sectorTipo: true } });
   const cargo = await db.cargo.findUniqueOrThrow({ where: { id: cargoId } });
-  const alcance = { OR: [{ empresaId: null }, { empresaId }] };
+  const alcance = alcanceBiblioteca(e.consultoraId, empresaId);
   const tareasTipo = await db.tareaTipo.findMany({ where: alcance, include: { peligros: { include: { peligro: true } } } });
   const catalogo = await db.peligroCatalogo.findMany({ where: alcance });
 

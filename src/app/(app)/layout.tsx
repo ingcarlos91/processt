@@ -1,15 +1,15 @@
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app/app-sidebar";
 import { SiteHeader } from "@/components/app/site-header";
-import { db, consultoraActual } from "@/lib/db";
+import { db } from "@/lib/db";
 import { usuarioActual } from "@/lib/auth/sesion";
 
 /** Zona protegida: exige una sesión válida y verificada contra la base de datos. */
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const usuario = await usuarioActual();
   const [empresas, consultora] = await Promise.all([
-    db.empresa.findMany({ orderBy: { razonSocial: "asc" }, select: { id: true, razonSocial: true } }),
-    consultoraActual(),
+    db.empresa.findMany({ where: { consultoraId: usuario.consultoraId }, orderBy: { razonSocial: "asc" }, select: { id: true, razonSocial: true } }),
+    db.consultora.findUniqueOrThrow({ where: { id: usuario.consultoraId } }),
   ]);
   return (
     <SidebarProvider>

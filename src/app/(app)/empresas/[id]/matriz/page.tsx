@@ -1,3 +1,5 @@
+import { usuarioActual } from "@/lib/auth/sesion";
+import { alcanceBiblioteca } from "@/lib/auth/acceso";
 import { db } from "@/lib/db";
 import { leerSeguimiento } from "@/lib/matriz/seguimiento";
 import { MatrizEditor } from "@/components/matriz/editor";
@@ -18,9 +20,9 @@ export default async function Matriz({ params }: PageProps<"/empresas/[id]/matri
         peligros: { orderBy: { creadoEn: "asc" } },
       },
     }),
-    db.cargoTipo.findMany({ where: { OR: [{ empresaId: null }, { empresaId: id }] }, orderBy: { nombre: "asc" }, select: { id: true, nombre: true, sectorTipoId: true, empresaId: true } }),
-    db.tareaTipo.findMany({ where: { OR: [{ empresaId: null }, { empresaId: id }] }, orderBy: { nombre: "asc" }, select: { id: true, nombre: true, actividad: true, empresaId: true } }),
-    db.peligroCatalogo.findMany({ where: { OR: [{ empresaId: null }, { empresaId: id }] }, orderBy: [{ clasificacion: "asc" }, { descripcion: "asc" }], select: { id: true, clasificacion: true, descripcion: true, empresaId: true } }),
+    db.cargoTipo.findMany({ where: alcanceBiblioteca((await usuarioActual()).consultoraId, id), orderBy: { nombre: "asc" }, select: { id: true, nombre: true, sectorTipoId: true, empresaId: true } }),
+    db.tareaTipo.findMany({ where: alcanceBiblioteca((await usuarioActual()).consultoraId, id), orderBy: { nombre: "asc" }, select: { id: true, nombre: true, actividad: true, empresaId: true } }),
+    db.peligroCatalogo.findMany({ where: alcanceBiblioteca((await usuarioActual()).consultoraId, id), orderBy: [{ clasificacion: "asc" }, { descripcion: "asc" }], select: { id: true, clasificacion: true, descripcion: true, empresaId: true } }),
     db.zonaTipo.findMany({ orderBy: { nombre: "asc" }, select: { id: true, nombre: true } }),
   ]);
   const rel = await relevanciaEmpresa(id);

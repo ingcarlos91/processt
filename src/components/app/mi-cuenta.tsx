@@ -57,7 +57,7 @@ export function MiCuenta({ yo }: { yo: Yo }) {
         <CardContent className="flex flex-wrap items-center gap-5">
           <div className="flex size-16 items-center justify-center rounded-2xl border bg-white p-2.5 shadow-xs"><Isotipo className="size-full" /></div>
           <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center gap-2"><h2 className="truncate text-lg font-semibold">{yo.nombre}</h2><Badge variant={yo.rol === "admin" ? "default" : "outline"}>{yo.rol === "admin" ? "Administrador" : "Consultor"}</Badge></div>
+            <div className="flex flex-wrap items-center gap-2"><h2 className="truncate text-lg font-semibold">{yo.nombre}</h2><Badge variant={yo.rol === "consultor" ? "outline" : "default"}>{yo.rol === "superadmin" ? "Super administrador" : yo.rol === "admin" ? "Administrador" : "Consultor"}</Badge></div>
             <p className="text-sm text-muted-foreground">{yo.email}</p>
           </div>
           <div className="grid grid-cols-2 gap-x-8 gap-y-1 text-sm">

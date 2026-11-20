@@ -1,13 +1,15 @@
 import { db } from "@/lib/db";
 import { usuarioActual } from "@/lib/auth/sesion";
+import { puedeVerEmpresa } from "@/lib/auth/acceso";
 import { construirContexto } from "@/lib/generador/contexto";
 import { matrizXlsx } from "@/lib/generador/excel";
 import { filasDeVersion } from "@/lib/matriz/versiones";
 
 /** Matriz vigente o, con ?version=N, una versión cerrada. */
 export async function GET(req: Request, { params }: RouteContext<"/api/empresas/[id]/matriz.xlsx">) {
-  await usuarioActual();
+  const sesion = await usuarioActual();
   const { id } = await params;
+  if (!(await puedeVerEmpresa(id, sesion.consultoraId))) return new Response("No encontrado", { status: 404 });
   const ctx = await construirContexto(id);
   const n = Number(new URL(req.url).searchParams.get("version")) || 0;
   let buf, nombre = `MTZ-02 Matriz de peligros ${ctx.empresa.razonSocial}`;

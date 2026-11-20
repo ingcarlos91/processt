@@ -1,5 +1,6 @@
 import { db } from "@/lib/db";
 import { usuarioActual } from "@/lib/auth/sesion";
+import { puedeVerEmpresa } from "@/lib/auth/acceso";
 import { leerLogo } from "@/lib/logos";
 import { mdADocx } from "@/lib/generador/exportar";
 import { mdAPdf } from "@/lib/generador/pdf";
@@ -7,8 +8,9 @@ import { informeAuditoria } from "@/lib/informe-auditoria";
 
 /** Informe de auditoría interna en Word o PDF (?formato=pdf). */
 export async function GET(req: Request, { params }: RouteContext<"/api/empresas/[id]/auditorias/[auditoriaId]/informe">) {
-  await usuarioActual();
+  const sesion = await usuarioActual();
   const { id, auditoriaId } = await params;
+  if (!(await puedeVerEmpresa(id, sesion.consultoraId))) return new Response("No encontrado", { status: 404 });
   const a = await db.auditoria.findUnique({ where: { id: auditoriaId } });
   if (!a || a.empresaId !== id) return new Response("No encontrada", { status: 404 });
   const { md, titulo, empresa: e, anio } = await informeAuditoria(auditoriaId);

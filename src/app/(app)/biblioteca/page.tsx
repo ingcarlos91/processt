@@ -1,3 +1,5 @@
+import { usuarioActual } from "@/lib/auth/sesion";
+import { alcanceBiblioteca } from "@/lib/auth/acceso";
 import { db } from "@/lib/db";
 import { iaDisponible } from "@/lib/ia";
 import { Page, PageHeader, Stat } from "@/components/app/ui";
@@ -16,18 +18,18 @@ export const dynamic = "force-dynamic";
 
 export default async function Biblioteca() {
   const [peligros, sectores, tareas, zonas, catalogo] = await Promise.all([
-    db.peligroCatalogo.findMany({ where: { empresaId: null }, orderBy: [{ clasificacion: "asc" }, { descripcion: "asc" }], include: { _count: { select: { tareas: true, evaluados: true } } } }),
-    db.sectorTipo.findMany({ orderBy: { nombre: "asc" }, include: { cargos: { where: { empresaId: null }, orderBy: { nombre: "asc" }, include: { tareas: { select: { tareaTipoId: true } }, _count: { select: { cargos: true } } } }, procesos: { orderBy: { nombre: "asc" } }, zonas: { select: { zonaTipoId: true } }, _count: { select: { empresas: true } } } }),
-    db.tareaTipo.findMany({ where: { empresaId: null }, orderBy: { nombre: "asc" }, include: { peligros: { select: { peligroId: true } }, _count: { select: { tareas: true, cargos: true } } } }),
+    db.peligroCatalogo.findMany({ where: alcanceBiblioteca((await usuarioActual()).consultoraId), orderBy: [{ clasificacion: "asc" }, { descripcion: "asc" }], include: { _count: { select: { tareas: true, evaluados: true } } } }),
+    db.sectorTipo.findMany({ orderBy: { nombre: "asc" }, include: { cargos: { where: alcanceBiblioteca((await usuarioActual()).consultoraId), orderBy: { nombre: "asc" }, include: { tareas: { select: { tareaTipoId: true } }, _count: { select: { cargos: true } } } }, procesos: { orderBy: { nombre: "asc" } }, zonas: { select: { zonaTipoId: true } }, _count: { select: { empresas: { where: { consultoraId: (await usuarioActual()).consultoraId } } } } } }),
+    db.tareaTipo.findMany({ where: alcanceBiblioteca((await usuarioActual()).consultoraId), orderBy: { nombre: "asc" }, include: { peligros: { select: { peligroId: true } }, _count: { select: { tareas: true, cargos: true } } } }),
     db.zonaTipo.findMany({ orderBy: { nombre: "asc" }, select: { id: true, nombre: true } }),
-    db.catalogoItem.findMany({ where: { empresaId: null }, orderBy: [{ tipo: "asc" }, { nombre: "asc" }] }),
+    db.catalogoItem.findMany({ where: alcanceBiblioteca((await usuarioActual()).consultoraId), orderBy: [{ tipo: "asc" }, { nombre: "asc" }] }),
   ]);
   const cuenta = (t: string) => catalogo.filter((c) => c.tipo === t).length;
   const peligrosLite = peligros.map((p) => ({ id: p.id, clasificacion: p.clasificacion, descripcion: p.descripcion }));
   const catalogoLite = catalogo.map((c) => ({ tipo: c.tipo, nombre: c.nombre }));
   return (
     <Page>
-      <PageHeader title="Biblioteca general" description="Sectores, cargos, tareas, peligros, exámenes, EPP, capacitaciones y entidades que comparten todas las empresas. Lo que marque como validado queda listo para usar en cualquier cliente." />
+      <PageHeader title="Biblioteca general" description="Sectores, cargos, tareas, peligros, exámenes, EPP, capacitaciones y entidades para todas sus empresas. Incluye la base común de PROCESST (se actualiza con las normas y no se edita aquí) y lo propio de su consultora, que solo ven sus usuarios. Para ajustar algo de la base, cree uno propio." />
       <div className="grid grid-cols-2 lg:grid-cols-6 gap-4">
         <Stat label="Sectores" value={sectores.length} />
         <Stat label="Cargos tipo" value={sectores.reduce((s, x) => s + x.cargos.length, 0)} />
@@ -64,18 +66,18 @@ export default async function Biblioteca() {
           />
         </TabsContent>
         <TabsContent value="inspecciones" className="mt-4">
-          <InspeccionesTab listas={(await dbEnt.catalogoItem.findMany({ where: { tipo: "LISTA_INSPECCION", empresaId: null } })).map((l) => { const d = (l.detalle ?? {}) as { items?: string[]; frecuenciaDias?: number; orden?: number }; return { id: l.id, nombre: l.nombre, descripcion: l.descripcion ?? "", frecuenciaDias: d.frecuenciaDias ?? 0, items: d.items ?? [], orden: d.orden ?? 99 }; }).sort((a, b) => a.orden - b.orden)} />
+          <InspeccionesTab listas={(await dbEnt.catalogoItem.findMany({ where: { tipo: "LISTA_INSPECCION", ...alcanceBiblioteca((await usuarioActual()).consultoraId) } })).map((l) => { const d = (l.detalle ?? {}) as { items?: string[]; frecuenciaDias?: number; orden?: number }; return { id: l.id, nombre: l.nombre, descripcion: l.descripcion ?? "", frecuenciaDias: d.frecuenciaDias ?? 0, items: d.items ?? [], orden: d.orden ?? 99 }; }).sort((a, b) => a.orden - b.orden)} />
         </TabsContent>
         <TabsContent value="entidades" className="mt-4">
           <EntidadesTab items={await (async () => {
-            const xs = await dbEnt.catalogoItem.findMany({ where: { empresaId: null, tipo: { in: ["ARL", "EPS", "AFP", "ESCOLARIDAD"] } } });
+            const xs = await dbEnt.catalogoItem.findMany({ where: { ...alcanceBiblioteca((await usuarioActual()).consultoraId), tipo: { in: ["ARL", "EPS", "AFP", "ESCOLARIDAD"] } } });
             const orden = (d: unknown) => Number((d as { orden?: number })?.orden ?? 999);
             const de = (t: string) => xs.filter((x) => x.tipo === t).sort((a, b) => orden(a.detalle) - orden(b.detalle) || a.nombre.localeCompare(b.nombre)).map((x) => ({ id: x.id, nombre: x.nombre, descripcion: x.descripcion ?? "" }));
             return { ARL: de("ARL"), EPS: de("EPS"), AFP: de("AFP"), ESCOLARIDAD: de("ESCOLARIDAD") };
           })()} />
         </TabsContent>
         <TabsContent value="accidentes" className="mt-4">
-          <AccidentesTab cat={await cargarCatalogoAccidentes()} />
+          <AccidentesTab cat={await cargarCatalogoAccidentes((await usuarioActual()).consultoraId)} />
         </TabsContent>
         <TabsContent value="catalogos" className="mt-4">
           <CatalogosTab items={catalogo.map((c) => ({ id: c.id, tipo: c.tipo, nombre: c.nombre, descripcion: c.descripcion ?? "", detalle: (c.detalle ?? {}) as Record<string, unknown>, normas: c.normas, validado: c.validado }))} />

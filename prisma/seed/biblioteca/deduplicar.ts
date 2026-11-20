@@ -3,7 +3,7 @@
 import type { PrismaClient } from "@prisma/client";
 
 export async function deduplicarPeligros(db: PrismaClient) {
-  const globales = await db.peligroCatalogo.findMany({ where: { empresaId: null }, select: { id: true, descripcion: true, claveSemilla: true, validado: true } });
+  const globales = await db.peligroCatalogo.findMany({ where: { empresaId: null, consultoraId: null }, select: { id: true, descripcion: true, claveSemilla: true, validado: true } });
   const porDesc = new Map<string, typeof globales>();
   for (const p of globales) { const k = p.descripcion.trim().toLowerCase(); porDesc.set(k, [...(porDesc.get(k) ?? []), p]); }
   let fusionados = 0;

@@ -1,4 +1,6 @@
-import { db, consultoraActual } from "@/lib/db";
+import { usuarioActual } from "@/lib/auth/sesion";
+import { alcanceBiblioteca } from "@/lib/auth/acceso";
+import { db } from "@/lib/db";
 import { cargarEntidades } from "@/lib/entidades";
 import { profesionalDe } from "@/lib/profesional";
 import { IntakeWizard } from "@/components/empresa/intake-wizard";
@@ -15,7 +17,7 @@ export default async function Datos({ params }: PageProps<"/empresas/[id]/datos"
   const [e, sectores, cargosTipo, ciius] = await Promise.all([
     db.empresa.findUniqueOrThrow({ where: { id }, include: { sedes: true, cargos: true } }),
     db.sectorTipo.findMany({ orderBy: { nombre: "asc" }, select: { id: true, nombre: true, ciius: true } }),
-    db.cargoTipo.findMany({ where: { OR: [{ empresaId: null }, { empresaId: id }] }, orderBy: { nombre: "asc" }, select: { id: true, nombre: true, sectorTipoId: true } }),
+    db.cargoTipo.findMany({ where: alcanceBiblioteca((await usuarioActual()).consultoraId, id), orderBy: { nombre: "asc" }, select: { id: true, nombre: true, sectorTipoId: true } }),
     db.ciiuClaseRiesgo.findMany({ orderBy: { codigo: "asc" }, select: { codigo: true, descripcion: true, claseRiesgo: true } }),
   ]);
   const inicial: IntakeData = {
@@ -31,7 +33,7 @@ export default async function Datos({ params }: PageProps<"/empresas/[id]/datos"
   return (
     <>
       <p className="text-sm text-muted-foreground max-w-3xl text-pretty">Datos de la empresa. Al guardar se recalculan el nivel de estándares, los comités y las normas aplicables; luego regenere los documentos.</p>
-      <IntakeWizard sectores={sectores} cargosTipo={cargosTipo} ciius={ciius} profesional={profesionalDe(await consultoraActual())} entidades={await cargarEntidades()} inicial={inicial} empresaId={id} tieneLogo={!!e.logoUrl} />
+      <IntakeWizard sectores={sectores} cargosTipo={cargosTipo} ciius={ciius} profesional={profesionalDe(await db.consultora.findUniqueOrThrow({ where: { id: (await usuarioActual()).consultoraId } }))} entidades={await cargarEntidades((await usuarioActual()).consultoraId)} inicial={inicial} empresaId={id} tieneLogo={!!e.logoUrl} />
       {await (async () => {
         const ctx = await construirContexto(id);
         const secciones = camposAplicables(ctx.dis).map((sec) => ({ ...sec, campos: sec.campos.map((c) => (c.k === "presupuesto" ? { ...c, filasSugeridas: ctx.presupuesto.map((r) => ({ rubro: r.rubro })) } : c)) }));

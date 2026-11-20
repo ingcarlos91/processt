@@ -2,6 +2,7 @@
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { requiereUsuario } from "@/lib/auth/sesion";
+import { requiereEmpresa } from "@/lib/auth/acceso";
 import { actualizarDocumentos } from "@/lib/generador/documentos";
 import { ASPECTOS, type ItemAuditoria } from "@/lib/auditoria";
 
@@ -23,7 +24,7 @@ export type PlanAuditoria = { anio: number; fechaInicio: string; auditor: string
 
 /** Crea la auditoría del año con los 13 aspectos del Decreto 1072/2015 art. 2.2.4.6.30. */
 export async function crearAuditoria(empresaId: string, d: PlanAuditoria) {
-  await requiereUsuario();
+  await requiereEmpresa(empresaId);
   const fechaInicio = dia(d.fechaInicio);
   if (!fechaInicio || !d.auditor.trim()) return { error: "Escriba la fecha y el auditor." };
   const items: ItemAuditoria[] = ASPECTOS.map((a) => ({ ...a, resultado: "", evidencia: "", hallazgo: "" }));
@@ -36,7 +37,7 @@ export async function crearAuditoria(empresaId: string, d: PlanAuditoria) {
 }
 
 export async function guardarAuditoria(empresaId: string, id: string, d: Partial<PlanAuditoria> & { items: ItemAuditoria[]; conclusiones?: string }) {
-  await requiereUsuario();
+  await requiereEmpresa(empresaId);
   const a = await delaEmpresa(empresaId, id);
   if (a.estado === "cerrada") return { error: "La auditoría está cerrada; reábrala para editarla." };
   await db.auditoria.update({ where: { id }, data: {
@@ -52,7 +53,7 @@ export async function guardarAuditoria(empresaId: string, id: string, d: Partial
 
 /** Cierra la auditoría: exige todos los aspectos calificados y crea las acciones de las no conformidades (FOR-06). */
 export async function cerrarAuditoria(empresaId: string, id: string, fechaCierre: string) {
-  await requiereUsuario();
+  await requiereEmpresa(empresaId);
   const a = await delaEmpresa(empresaId, id);
   const items = (a.items ?? []) as ItemAuditoria[];
   const faltan = items.filter((i) => !i.resultado).map((i) => i.n);
@@ -83,7 +84,7 @@ export async function cerrarAuditoria(empresaId: string, id: string, fechaCierre
 
 /** A quién y cuándo se comunicaron los resultados (Decreto 1072/2015 art. 2.2.4.6.29). Se puede registrar con la auditoría cerrada. */
 export async function registrarComunicacion(empresaId: string, id: string, d: { comunicadoA: string; comunicadoFecha: string }) {
-  await requiereUsuario();
+  await requiereEmpresa(empresaId);
   await delaEmpresa(empresaId, id);
   const fecha = dia(d.comunicadoFecha);
   if (d.comunicadoA.trim() && !fecha) return { error: "Escriba la fecha en que se comunicaron los resultados." };
@@ -93,7 +94,7 @@ export async function registrarComunicacion(empresaId: string, id: string, d: { 
 }
 
 export async function reabrirAuditoria(empresaId: string, id: string) {
-  await requiereUsuario();
+  await requiereEmpresa(empresaId);
   await delaEmpresa(empresaId, id);
   await db.auditoria.update({ where: { id }, data: { estado: "en_curso", fechaCierre: null } });
   await listo(empresaId, id);
@@ -101,7 +102,7 @@ export async function reabrirAuditoria(empresaId: string, id: string) {
 }
 
 export async function eliminarAuditoria(empresaId: string, id: string) {
-  await requiereUsuario();
+  await requiereEmpresa(empresaId);
   await delaEmpresa(empresaId, id);
   await db.auditoria.delete({ where: { id } });
   await listo(empresaId);

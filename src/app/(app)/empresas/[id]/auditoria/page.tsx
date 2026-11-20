@@ -1,3 +1,4 @@
+import { usuarioActual } from "@/lib/auth/sesion";
 import { db } from "@/lib/db";
 import { AuditoriasLista } from "@/components/auditoria/lista";
 
@@ -8,7 +9,7 @@ export default async function Auditorias({ params }: PageProps<"/empresas/[id]/a
   const [aud, e, consultora] = await Promise.all([
     db.auditoria.findMany({ where: { empresaId: id }, orderBy: { fechaInicio: "desc" }, include: { _count: { select: { acciones: true } } } }),
     db.empresa.findUniqueOrThrow({ where: { id }, select: { nivelEstandares: true, comites: { where: { tipo: { in: ["COPASST", "VIGIA"] } }, select: { miembros: { select: { nombre: true } } } }, responsableSst: true } }),
-    db.consultora.findFirst(),
+    db.consultora.findUnique({ where: { id: (await usuarioActual()).consultoraId } }),
   ]);
   return (
     <AuditoriasLista empresaId={id} nivel={e.nivelEstandares ?? 7}

@@ -15,48 +15,57 @@ datasource db {
 // ─────────────────────────── Consultora y usuarios ───────────────────────────
 
 model Consultora {
-  id            String    @id @default(cuid())
+  id            String                @id @default(cuid())
   nombre        String
   nit           String?
-  licenciaSst   String?   @map("licencia_sst")
-  licenciaFecha DateTime? @map("licencia_fecha")
+  licenciaSst   String?               @map("licencia_sst")
+  licenciaFecha DateTime?             @map("licencia_fecha")
   profesional   String? // nombre de la profesional que firma
   perfil        String? // tecnico | tecnologo | profesional | especialista
   cargo         String? // p. ej. "Asesora externa en SST"
-  curso50h      Boolean   @default(false) @map("curso_50h")
-  curso50hFecha String?   @map("curso_50h_fecha")
-  curso20hFecha String?   @map("curso_20h_fecha")
+  curso50h      Boolean               @default(false) @map("curso_50h")
+  curso50hFecha String?               @map("curso_50h_fecha")
+  curso20hFecha String?               @map("curso_20h_fecha")
   // Parámetros de criterio de la empresa (plazos editables de src/lib/plazos.ts): { clave: valor }.
-  parametros    Json      @default("{}")
-  tipoDoc       String    @default("CC") @map("tipo_doc") // CC | CE | PA | PPT | PEP | TI
+  parametros    Json                  @default("{}")
+  tipoDoc       String                @default("CC") @map("tipo_doc") // CC | CE | PA | PPT | PEP | TI
   cedula        String?
   telefono      String?
   correo        String?
-  firmaUrl      String?   @map("firma_url")
-  logoUrl       String?   @map("logo_url")
-  creadoEn      DateTime  @default(now()) @map("creado_en")
+  firmaUrl      String?               @map("firma_url")
+  logoUrl       String?               @map("logo_url")
+  creadoEn      DateTime              @default(now()) @map("creado_en")
+  // La desactiva el super administrador: sus usuarios no pueden ingresar (los datos se conservan).
+  activa        Boolean               @default(true)
   empresas      Empresa[]
   usuarios      Usuario[]
+  plantillas    PlantillaConsultora[]
+  peligros      PeligroCatalogo[]
+  tareasTipo    TareaTipo[]
+  cargosTipo    CargoTipo[]
+  catalogo      CatalogoItem[]
+  recordatorios Recordatorio[]
 
   @@map("consultora")
 }
 
 model Usuario {
-  id            String     @id @default(cuid())
-  consultoraId  String     @map("consultora_id")
-  consultora    Consultora @relation(fields: [consultoraId], references: [id], onDelete: Cascade)
+  id            String      @id @default(cuid())
+  // null solo para el super administrador (administra consultoras; no pertenece a ninguna).
+  consultoraId  String?     @map("consultora_id")
+  consultora    Consultora? @relation(fields: [consultoraId], references: [id], onDelete: Cascade)
   // Para el futuro acceso de clientes (rol "cliente"): empresa a la que pertenece.
-  empresaId     String?    @map("empresa_id")
-  empresa       Empresa?   @relation(fields: [empresaId], references: [id], onDelete: Cascade)
-  email         String     @unique
+  empresaId     String?     @map("empresa_id")
+  empresa       Empresa?    @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  email         String      @unique
   nombre        String
-  passwordHash  String     @map("password_hash") // scrypt: sal:hash
-  rol           String     @default("admin") // admin | consultor | cliente
-  activo        Boolean    @default(true)
-  ultimoAcceso  DateTime?  @map("ultimo_acceso")
+  passwordHash  String      @map("password_hash") // scrypt: sal:hash
+  rol           String      @default("admin") // superadmin | admin | consultor | cliente
+  activo        Boolean     @default(true)
+  ultimoAcceso  DateTime?   @map("ultimo_acceso")
   // Sesiones iniciadas antes de esta fecha dejan de valer (al cambiar o restablecer la contraseña, o desactivar).
-  sesionesDesde DateTime?  @map("sesiones_desde")
-  creadoEn      DateTime   @default(now()) @map("creado_en")
+  sesionesDesde DateTime?   @map("sesiones_desde")
+  creadoEn      DateTime    @default(now()) @map("creado_en")
 
   @@map("usuario")
 }
@@ -317,8 +326,11 @@ model CargoTipo {
   cargos       Cargo[]
 
   // Alcance: null = biblioteca general; con valor = solo para esa empresa.
-  empresaId String?  @map("empresa_id")
-  empresa   Empresa? @relation("BibliotecaCargoTipo", fields: [empresaId], references: [id], onDelete: Cascade)
+  empresaId    String?     @map("empresa_id")
+  empresa      Empresa?    @relation("BibliotecaCargoTipo", fields: [empresaId], references: [id], onDelete: Cascade)
+  // Biblioteca de tres niveles: base PROCESST (consultoraId y empresaId en null), propia de la consultora, o de una empresa.
+  consultoraId String?     @map("consultora_id")
+  consultora   Consultora? @relation(fields: [consultoraId], references: [id], onDelete: Cascade)
 
   @@map("cargo_tipo")
 }
@@ -339,8 +351,11 @@ model TareaTipo {
   tareas          Tarea[]
 
   // Alcance: null = biblioteca general; con valor = solo para esa empresa.
-  empresaId String?  @map("empresa_id")
-  empresa   Empresa? @relation("BibliotecaTareaTipo", fields: [empresaId], references: [id], onDelete: Cascade)
+  empresaId    String?     @map("empresa_id")
+  empresa      Empresa?    @relation("BibliotecaTareaTipo", fields: [empresaId], references: [id], onDelete: Cascade)
+  // Biblioteca de tres niveles: base PROCESST (consultoraId y empresaId en null), propia de la consultora, o de una empresa.
+  consultoraId String?     @map("consultora_id")
+  consultora   Consultora? @relation(fields: [consultoraId], references: [id], onDelete: Cascade)
 
   @@map("tarea_tipo")
 }
@@ -387,9 +402,12 @@ model PeligroCatalogo {
   evaluados                PeligroEvaluado[]
 
   // Alcance: null = biblioteca general; con valor = solo para esa empresa.
-  empresaId String?  @map("empresa_id")
-  empresa   Empresa? @relation("BibliotecaPeligroCatalogo", fields: [empresaId], references: [id], onDelete: Cascade)
-  eventos   Evento[]
+  empresaId    String?     @map("empresa_id")
+  empresa      Empresa?    @relation("BibliotecaPeligroCatalogo", fields: [empresaId], references: [id], onDelete: Cascade)
+  // Biblioteca de tres niveles: base PROCESST (consultoraId y empresaId en null), propia de la consultora, o de una empresa.
+  consultoraId String?     @map("consultora_id")
+  consultora   Consultora? @relation(fields: [consultoraId], references: [id], onDelete: Cascade)
+  eventos      Evento[]
 
   @@map("peligro_catalogo")
 }
@@ -609,23 +627,42 @@ model PlanMejoramientoItem {
 // ─────────────────────────── Plantillas y documentos ───────────────────────────
 
 model Plantilla {
-  id                String      @id @default(cuid())
-  codigo            String      @unique // "POL-01"
+  id                String                @id @default(cuid())
+  codigo            String                @unique // "POL-01"
   nombre            String
   tipo              String // POL | DOC | PRG | PRC | FOR | ACT | MTZ | PLN
-  nivelMin          Int         @default(7) @map("nivel_min") // 7 | 21 | 60
+  nivelMin          Int                   @default(7) @map("nivel_min") // 7 | 21 | 60
   condicion         Json? // condición adicional (disparador, trabajadores>=10, etc.)
-  estandares        String[]    @default([])
-  normas            String[]    @default([]) // codigos de Norma
+  estandares        String[]              @default([])
+  normas            String[]              @default([]) // codigos de Norma
   descripcion       String?
-  contenidoMd       String      @map("contenido_md") // Markdown + Handlebars; secciones separadas por "## "
-  version           Int         @default(1)
-  vigenteDesde      DateTime    @default(now()) @map("vigente_desde")
+  contenidoMd       String                @map("contenido_md") // Markdown + Handlebars; secciones separadas por "## "
+  version           Int                   @default(1)
+  vigenteDesde      DateTime              @default(now()) @map("vigente_desde")
   carpeta           String? // carpeta destino en el ZIP (p. ej. "2. Gestion integral")
   documentos        Documento[]
-  editadaPorUsuario Boolean     @default(false) @map("editada_por_usuario") // si la consultora la editó, los despliegues no la sobrescriben
+  editadaPorUsuario Boolean               @default(false) @map("editada_por_usuario") // obsoleto: las ediciones van a PlantillaConsultora
+  ajustes           PlantillaConsultora[]
 
   @@map("plantilla")
+}
+
+/// Versión propia de una plantilla para una consultora. La base (Plantilla) la mantiene PROCESST y se actualiza en cada
+/// despliegue; si la consultora la ajusta, usa su versión hasta que la restaure.
+model PlantillaConsultora {
+  id           String     @id @default(cuid())
+  consultoraId String     @map("consultora_id")
+  consultora   Consultora @relation(fields: [consultoraId], references: [id], onDelete: Cascade)
+  plantillaId  String     @map("plantilla_id")
+  plantilla    Plantilla  @relation(fields: [plantillaId], references: [id], onDelete: Cascade)
+  contenidoMd  String     @map("contenido_md")
+  version      Int        @default(1)
+  vigenteDesde DateTime   @default(now()) @map("vigente_desde")
+  // Versión de la base sobre la que se hizo el ajuste (para avisar cuando la base cambió después).
+  baseVersion  Int        @map("base_version")
+
+  @@unique([consultoraId, plantillaId])
+  @@map("plantilla_consultora")
 }
 
 model Documento {
@@ -831,15 +868,17 @@ model Accion {
 
 // Fechas propias que la consultora agrega al planeador (visitas, entregas, vencimientos externos…).
 model Recordatorio {
-  id        String    @id @default(cuid())
-  empresaId String?   @map("empresa_id") // null = de la consultora, no de una empresa
-  empresa   Empresa?  @relation(fields: [empresaId], references: [id], onDelete: Cascade)
-  fecha     DateTime
-  titulo    String
-  notas     String?
-  hecho     Boolean   @default(false)
-  hechoEn   DateTime? @map("hecho_en")
-  creadoEn  DateTime  @default(now()) @map("creado_en")
+  id           String      @id @default(cuid())
+  empresaId    String?     @map("empresa_id") // null = de la consultora, no de una empresa
+  empresa      Empresa?    @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  consultoraId String?     @map("consultora_id")
+  consultora   Consultora? @relation(fields: [consultoraId], references: [id], onDelete: Cascade)
+  fecha        DateTime
+  titulo       String
+  notas        String?
+  hecho        Boolean     @default(false)
+  hechoEn      DateTime?   @map("hecho_en")
+  creadoEn     DateTime    @default(now()) @map("creado_en")
 
   @@index([fecha])
   @@map("recordatorio")
@@ -1098,18 +1137,21 @@ model Acta {
 
 // Catálogos parametrizables de la biblioteca: exámenes médicos, EPP y capacitaciones.
 model CatalogoItem {
-  id          String   @id @default(cuid())
-  tipo        String // EXAMEN | EPP | CAPACITACION
-  nombre      String
-  descripcion String?
-  detalle     Json     @default("{}") // EXAMEN: { momento: ["ingreso","periodico","retiro"], periodicidad, enfasis } · EPP: { normaTecnica, reposicion, parteCuerpo } · CAPACITACION: { intensidadHoras, dirigidoA, periodicidad, certificacion }
-  normas      String[] @default([])
-  validado    Boolean  @default(false)
-  creadoEn    DateTime @default(now()) @map("creado_en")
+  id           String      @id @default(cuid())
+  tipo         String // EXAMEN | EPP | CAPACITACION
+  nombre       String
+  descripcion  String?
+  detalle      Json        @default("{}") // EXAMEN: { momento: ["ingreso","periodico","retiro"], periodicidad, enfasis } · EPP: { normaTecnica, reposicion, parteCuerpo } · CAPACITACION: { intensidadHoras, dirigidoA, periodicidad, certificacion }
+  normas       String[]    @default([])
+  validado     Boolean     @default(false)
+  creadoEn     DateTime    @default(now()) @map("creado_en")
   // Alcance: null = biblioteca general; con valor = solo para esa empresa.
-  empresaId   String?  @map("empresa_id")
-  empresa     Empresa? @relation("BibliotecaCatalogoItem", fields: [empresaId], references: [id], onDelete: Cascade)
+  empresaId    String?     @map("empresa_id")
+  empresa      Empresa?    @relation("BibliotecaCatalogoItem", fields: [empresaId], references: [id], onDelete: Cascade)
+  // Biblioteca de tres niveles: base PROCESST (consultoraId y empresaId en null), propia de la consultora, o de una empresa.
+  consultoraId String?     @map("consultora_id")
+  consultora   Consultora? @relation(fields: [consultoraId], references: [id], onDelete: Cascade)
 
-  @@unique([tipo, nombre, empresaId])
+  @@unique([tipo, nombre, empresaId, consultoraId])
   @@map("catalogo_item")
 }

@@ -1,3 +1,4 @@
+import { usuarioActual } from "@/lib/auth/sesion";
 import { parametrosPlazos } from "@/lib/plazos-servidor";
 import { db } from "@/lib/db";
 import { plazosUI } from "@/lib/eventos-ui";
@@ -14,12 +15,12 @@ export default async function Accidentes({ params, searchParams }: PageProps<"/e
     db.evento.findMany({ where: { empresaId: id }, orderBy: { fecha: "desc" }, include: { _count: { select: { acciones: true, archivos: true } } } }),
     db.cargo.findMany({ where: { empresaId: id }, orderBy: { nombre: "asc" }, include: { tareas: { include: { tarea: { select: { nombre: true } } } }, trabajadores: { where: { activo: true }, orderBy: { nombres: "asc" }, select: { nombres: true, tipoDoc: true, documento: true, vinculacion: true, fechaIngreso: true, sexo: true, fechaNacimiento: true, eps: true, afp: true } }, sede: { select: { nombre: true } } } }),
     db.accion.findMany({ where: { empresaId: id }, select: { estado: true, fechaLimite: true } }),
-    cargarCatalogoAccidentes(),
+    cargarCatalogoAccidentes((await usuarioActual()).consultoraId),
     db.sede.findMany({ where: { empresaId: id }, select: { nombre: true } }),
     db.zona.findMany({ where: { empresaId: id }, select: { nombre: true } }),
   ]);
   const hoy = new Date();
-  const parPlazos = await parametrosPlazos();
+  const parPlazos = await parametrosPlazos((await usuarioActual()).consultoraId);
   const lista = eventos.map((e) => ({
     id: e.id, tipo: e.tipo, gravedad: e.gravedad, fecha: e.fecha.toISOString(), trabajador: e.trabajadorNombre ?? "", cargo: e.cargo ?? "",
     descripcion: e.descripcion ?? "", dias: e.diasIncapacidad + e.diasCargados, invEstado: e.invEstado, acciones: e._count.acciones, archivos: e._count.archivos,

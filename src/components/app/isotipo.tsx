@@ -1,9 +1,9 @@
 import { cn } from "@/lib/utils";
 
-/** Isotipo de PROCESST (las cinco personas en círculo). */
-export function Isotipo({ className, girando, ...props }: React.ComponentProps<"img"> & { girando?: boolean }) {
+/** Isotipo de PROCESST (las cinco personas en círculo). `blanco`: versión en negativo, para fondos de color. */
+export function Isotipo({ className, girando, blanco, ...props }: React.ComponentProps<"img"> & { girando?: boolean; blanco?: boolean }) {
   // eslint-disable-next-line @next/next/no-img-element
-  return <img src="/brand/icono.png" alt="" aria-hidden draggable={false} className={cn("object-contain select-none", girando && "isotipo-girando", className)} {...props} />;
+  return <img src="/brand/icono.png" alt="" aria-hidden draggable={false} className={cn("object-contain select-none", girando && "isotipo-girando", blanco && "brightness-0 invert", className)} {...props} />;
 }
 
 /** Pantalla de carga: el isotipo gira y respira, con un texto opcional. */

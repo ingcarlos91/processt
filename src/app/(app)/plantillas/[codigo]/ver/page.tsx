@@ -2,6 +2,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PenLine } from "lucide-react";
 import { db } from "@/lib/db";
+import { usuarioActual } from "@/lib/auth/sesion";
+import { plantillaDe } from "@/lib/plantillas";
 import { Page, PageHeader, NormaRef } from "@/components/app/ui";
 import { buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -19,9 +21,10 @@ export const dynamic = "force-dynamic";
 export default async function VerPlantilla({ params, searchParams }: PageProps<"/plantillas/[codigo]/ver">) {
   const { codigo } = await params;
   const sp = await searchParams;
-  const p = await db.plantilla.findUnique({ where: { codigo } });
+  const u = await usuarioActual();
+  const p = await plantillaDe(u.consultoraId, codigo);
   if (!p) notFound();
-  const empresas = await db.empresa.findMany({ orderBy: { razonSocial: "asc" }, select: { id: true, razonSocial: true } });
+  const empresas = await db.empresa.findMany({ where: { consultoraId: u.consultoraId }, orderBy: { razonSocial: "asc" }, select: { id: true, razonSocial: true } });
   const empresaId = (typeof sp.empresa === "string" && empresas.some((e) => e.id === sp.empresa) ? sp.empresa : empresas[0]?.id) ?? null;
 
   const normas = await db.norma.findMany({ where: { codigo: { in: [...new Set([...p.normas, ...(REQUISITOS[codigo] ?? []).map((r) => r.norma)])] } }, select: { codigo: true, tipo: true, numero: true, anio: true } });
@@ -48,7 +51,7 @@ export default async function VerPlantilla({ params, searchParams }: PageProps<"
     contenido = (
       <article className="mx-auto w-full max-w-4xl rounded-lg border bg-white px-6 py-8 shadow-sm sm:px-12 sm:py-10 dark:bg-card">
         <header className="mb-6 border-b pb-4">
-          <p className="font-mono text-xs text-muted-foreground">{p.codigo} · versión {p.version}</p>
+          <p className="font-mono text-xs text-muted-foreground">{p.codigo} · versión {p.version}{p.propia ? " · versión propia de la consultora" : " · base PROCESST"}</p>
           <h1 className="text-xl font-semibold">{p.nombre}</h1>
         </header>
         <div className="prose-doc [&_h2]:mt-6 [&_h2]:border-b [&_h2]:pb-1 [&_h2]:text-base [&_h2]:font-semibold" dangerouslySetInnerHTML={{ __html: html }} />

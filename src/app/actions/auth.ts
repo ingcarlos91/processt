@@ -14,13 +14,15 @@ export async function iniciarSesion(_: EstadoLogin, fd: FormData): Promise<Estad
   const password = String(fd.get("password") ?? "");
   const desde = String(fd.get("desde") ?? "/");
   if (!email || !password) return { error: "Escriba su correo y su contraseña.", email };
-  const u = await db.usuario.findUnique({ where: { email } });
+  const u = await db.usuario.findUnique({ where: { email }, include: { consultora: { select: { activa: true } } } });
   if (!u || !u.activo || !(await verificarPassword(password, u.passwordHash))) {
     await espera();
     return { error: "Correo o contraseña incorrectos.", email };
   }
+  if (u.rol !== "superadmin" && !u.consultora?.activa) return { error: "La consultora de este usuario está desactivada. Comuníquese con el administrador de PROCESST.", email };
   await db.usuario.update({ where: { id: u.id }, data: { ultimoAcceso: new Date() } });
   await crearSesion(u.id, u.rol);
+  if (u.rol === "superadmin") redirect("/admin");
   redirect(desde.startsWith("/") && !desde.startsWith("//") ? desde : "/");
 }
 

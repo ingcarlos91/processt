@@ -3,6 +3,7 @@ import { valorPlazo } from "@/lib/plazos";
 import { MAPA_ESTADO_ACTUAL, noAplicaInvalidos } from "@/lib/diagnostico";
 import { actualizarDocumentosExistentes } from "@/lib/generador/documentos";
 import { requiereUsuario } from "@/lib/auth/sesion";
+import { bibliotecaPropia, requiereEmpresa, requiereRegistro } from "@/lib/auth/acceso";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { recalcularEmpresa } from "@/lib/empresa";
@@ -17,7 +18,7 @@ const rv = (id: string) => revalidatePath(`/empresas/${id}`, "layout");
 // ───────── Evaluación de estándares mínimos (Res. 0312 arts. 27-28) ─────────
 
 export async function crearEvaluacion(empresaId: string, tipo: "inicial" | "anual", anio: number) {
-  await requiereUsuario();
+  await requiereEmpresa(empresaId);
   const rr = await recalcularEmpresa(empresaId);
   const e = await db.empresa.findUniqueOrThrow({ where: { id: empresaId } });
   const est = (e.estadoActual ?? {}) as Record<string, boolean>;
@@ -31,7 +32,7 @@ export async function crearEvaluacion(empresaId: string, tipo: "inicial" | "anua
 }
 
 export async function actualizarItemEvaluacion(empresaId: string, itemId: string, d: { estado?: string; justificacion?: string; observacion?: string }) {
-  await requiereUsuario();
+  await requiereEmpresa(empresaId);
   if (d.estado === "NO_APLICA") {
     const it = await db.evaluacionItem.findUniqueOrThrow({ where: { id: itemId }, select: { evaluacion: { select: { nivel: true, empresaId: true } } } });
     if (it.evaluacion.empresaId !== empresaId) return { error: "Ítem no encontrado." };
@@ -42,7 +43,8 @@ export async function actualizarItemEvaluacion(empresaId: string, itemId: string
 }
 
 export async function cerrarEvaluacion(empresaId: string, evaluacionId: string) {
-  await requiereUsuario();
+  await requiereEmpresa(empresaId);
+  await requiereRegistro("evaluacion", evaluacionId, empresaId);
   const ev = await db.evaluacion.findUniqueOrThrow({ where: { id: evaluacionId }, include: { items: { include: { estandar: true } } } });
   // La autoevaluación se cierra con todos los estándares calificados (Res. 0312/2019 art. 27).
   const pendientes = ev.items.filter((i) => i.estado === "PENDIENTE").map((i) => i.estandar.codigo);
@@ -76,26 +78,29 @@ export async function cerrarEvaluacion(empresaId: string, evaluacionId: string) 
 }
 
 export async function reabrirEvaluacion(empresaId: string, evaluacionId: string) {
-  await requiereUsuario();
+  await requiereEmpresa(empresaId);
+  await requiereRegistro("evaluacion", evaluacionId, empresaId);
   await db.evaluacion.update({ where: { id: evaluacionId }, data: { cerrada: false } });
   rv(empresaId);
 }
 
 export async function eliminarEvaluacion(empresaId: string, evaluacionId: string) {
-  await requiereUsuario();
+  await requiereEmpresa(empresaId);
+  await requiereRegistro("evaluacion", evaluacionId, empresaId);
   await db.evaluacion.delete({ where: { id: evaluacionId } });
   rv(empresaId);
 }
 
 export async function actualizarPlanMejora(empresaId: string, id: string, d: { actividad?: string; responsable?: string; fechaLimite?: string; recursos?: string; soporte?: string; estado?: string; avance?: string }) {
-  await requiereUsuario();
+  await requiereEmpresa(empresaId);
+  await requiereRegistro("planMejoramientoItem", id, empresaId);
   await db.planMejoramientoItem.update({ where: { id }, data: { ...d, fechaLimite: d.fechaLimite ? new Date(d.fechaLimite) : undefined } });
   rv(empresaId);
 }
 
 // ───────── Documentos ─────────
 export async function generarTodo(empresaId: string) {
-  await requiereUsuario();
+  await requiereEmpresa(empresaId);
   await recalcularEmpresa(empresaId);
   const r = await generarDocumentos(empresaId);
   rv(empresaId);
@@ -103,14 +108,15 @@ export async function generarTodo(empresaId: string) {
 }
 
 export async function regenerarDocumento(empresaId: string, codigo: string) {
-  await requiereUsuario();
+  await requiereEmpresa(empresaId);
   const r = await generarDocumentos(empresaId, [codigo]);
   rv(empresaId);
   return r[0];
 }
 
 export async function guardarSeccion(empresaId: string, seccionId: string, contenido: string) {
-  await requiereUsuario();
+  await requiereEmpresa(empresaId);
+  await requiereRegistro("documentoSeccion", seccionId, empresaId);
   const s = await db.documentoSeccion.findUniqueOrThrow({ where: { id: seccionId } });
   const editado = contenido.trim() === s.contenidoGenerado.trim() ? null : contenido;
   await db.documentoSeccion.update({ where: { id: seccionId }, data: { contenidoEditado: editado, requiereRevision: false } });
@@ -118,34 +124,55 @@ export async function guardarSeccion(empresaId: string, seccionId: string, conte
 }
 
 export async function restaurarSeccion(empresaId: string, seccionId: string) {
-  await requiereUsuario();
+  await requiereEmpresa(empresaId);
+  await requiereRegistro("documentoSeccion", seccionId, empresaId);
   await db.documentoSeccion.update({ where: { id: seccionId }, data: { contenidoEditado: null, requiereRevision: false } });
   rv(empresaId);
 }
 
 export async function marcarRevisada(empresaId: string, seccionId: string) {
-  await requiereUsuario();
+  await requiereEmpresa(empresaId);
+  await requiereRegistro("documentoSeccion", seccionId, empresaId);
   await db.documentoSeccion.update({ where: { id: seccionId }, data: { requiereRevision: false } });
   rv(empresaId);
 }
 
 export async function cambiarEstadoDocumento(empresaId: string, documentoId: string, estado: "BORRADOR" | "APROBADO" | "FIRMADO") {
-  await requiereUsuario();
+  await requiereEmpresa(empresaId);
+  await requiereRegistro("documento", documentoId, empresaId);
   await db.documento.update({ where: { id: documentoId }, data: { estado } });
   rv(empresaId);
 }
 
+/**
+ * Guarda la versión de la consultora de una plantilla. La base de PROCESST no se toca (se sigue actualizando con cada
+ * despliegue); si el texto vuelve a ser igual a la base, la consultora vuelve a usar la base.
+ */
 export async function guardarPlantilla(id: string, contenidoMd: string) {
-  await requiereUsuario();
+  const u = await requiereUsuario();
   const p = await db.plantilla.findUniqueOrThrow({ where: { id } });
-  if (p.contenidoMd === contenidoMd) return;
-  await db.plantilla.update({ where: { id }, data: { contenidoMd, version: p.version + 1, vigenteDesde: new Date(), editadaPorUsuario: true } });
+  const prev = await db.plantillaConsultora.findUnique({ where: { consultoraId_plantillaId: { consultoraId: u.consultoraId, plantillaId: id } } });
+  if ((prev?.contenidoMd ?? p.contenidoMd) === contenidoMd) return;
+  if (contenidoMd === p.contenidoMd) {
+    if (prev) await db.plantillaConsultora.delete({ where: { id: prev.id } });
+  } else {
+    const data = { contenidoMd, version: (prev?.version ?? p.version) + 1, vigenteDesde: new Date(), baseVersion: p.version };
+    await db.plantillaConsultora.upsert({ where: { consultoraId_plantillaId: { consultoraId: u.consultoraId, plantillaId: id } }, update: data, create: { consultoraId: u.consultoraId, plantillaId: id, ...data } });
+  }
   revalidatePath("/plantillas", "layout");
+}
+
+/** Deja de usar la versión propia y vuelve a la base de PROCESST. */
+export async function restaurarPlantillaBase(id: string) {
+  const u = await requiereUsuario();
+  await db.plantillaConsultora.deleteMany({ where: { consultoraId: u.consultoraId, plantillaId: id } });
+  revalidatePath("/plantillas", "layout");
+  return { ok: true as const };
 }
 
 // ───────── Plan anual (Res. 0312 art. 26; Decreto 1072 art. 2.2.4.6.17) ─────────
 export async function generarPlanAnual(empresaId: string, anio: number) {
-  await requiereUsuario();
+  await requiereEmpresa(empresaId);
   const ctx = await construirContexto(empresaId);
   // Se reemplazan solo las actividades generadas que siguen pendientes; se conservan las ejecutadas y las manuales.
   await db.actividadPlan.deleteMany({ where: { empresaId, anio, estado: "PENDIENTE", origen: { not: "manual" } } });
@@ -169,19 +196,21 @@ export async function generarPlanAnual(empresaId: string, anio: number) {
 }
 
 export async function actualizarActividad(empresaId: string, id: string, d: { estado?: string; responsable?: string; mes?: number; nombre?: string }) {
-  await requiereUsuario();
+  await requiereEmpresa(empresaId);
+  await requiereRegistro("actividadPlan", id, empresaId);
   await db.actividadPlan.update({ where: { id }, data: { ...d, fechaEjecucion: d.estado === "EJECUTADA" ? new Date() : d.estado ? null : undefined } });
   rv(empresaId);
 }
 
 export async function agregarActividad(empresaId: string, d: { anio: number; mes: number; nombre: string; responsable?: string; estandarCodigo?: string }) {
-  await requiereUsuario();
+  await requiereEmpresa(empresaId);
   await db.actividadPlan.create({ data: { ...d, empresaId, origen: "manual", normaRef: "Definida por la consultora" } });
   rv(empresaId);
 }
 
 export async function eliminarActividad(empresaId: string, id: string) {
-  await requiereUsuario();
+  await requiereEmpresa(empresaId);
+  await requiereRegistro("actividadPlan", id, empresaId);
   await db.actividadPlan.delete({ where: { id } });
   rv(empresaId);
 }
@@ -204,7 +233,7 @@ async function comiteDe(empresaId: string, id: string) {
  * Res. 2013/1986 art. 2). Un solo comité por tipo, salvo el CCL, que puede tener uno por centro de trabajo (Res. 3461/2025 art. 3).
  */
 export async function crearComite(empresaId: string, tipo: string, periodoInicio: string, opciones: { sede?: string; trabajadores?: number } = {}) {
-  await requiereUsuario();
+  await requiereEmpresa(empresaId);
   const sede = tipo === "CCL" ? opciones.sede?.trim() || null : null;
   const existentes = await db.comite.findMany({ where: { empresaId, tipo }, select: { sede: true } });
   if (existentes.some((x) => (x.sede ?? null) === sede)) throw new Error(sede ? `Ya hay un Comité de Convivencia para la sede ${sede}.` : "Ese comité ya está registrado.");
@@ -218,7 +247,7 @@ export async function crearComite(empresaId: string, tipo: string, periodoInicio
 }
 /** Corrige las fechas del periodo del comité y, si se indica, los trabajadores que tenía al conformarse (recalcula la composición congelada). */
 export async function actualizarPeriodoComite(empresaId: string, id: string, inicio: string, fin: string, trabajadoresConformacion?: number) {
-  await requiereUsuario();
+  await requiereEmpresa(empresaId);
   const c = await comiteDe(empresaId, id);
   if (!inicio) throw new Error("La fecha de conformación es obligatoria.");
   if (fin && fin < inicio) throw new Error("La fecha de vencimiento no puede ser anterior a la de conformación.");
@@ -237,7 +266,7 @@ const limpiarMiembro = (tipo: string, d: { rol: string; calidad?: string; repres
   representa: tipo === "BRIGADA" || tipo === "VIGIA" ? null : d.representa || null,
 });
 export async function agregarMiembro(empresaId: string, comiteId: string, d: DatosMiembro) {
-  await requiereUsuario();
+  await requiereEmpresa(empresaId);
   const c = await comiteDe(empresaId, comiteId);
   await db.comiteMiembro.create({ data: { comiteId, nombre: d.nombre.trim(), tipoDoc: d.tipoDoc || "CC", cedula: d.cedula?.trim() || null, cargo: d.cargo?.trim() || null, ...limpiarMiembro(c.tipo, d) } });
   await actualizarDocumentosExistentes(empresaId);
@@ -245,7 +274,7 @@ export async function agregarMiembro(empresaId: string, comiteId: string, d: Dat
 }
 /** Edita un integrante (documento, calidad, cargo en el comité, a quién representa). Los documentos se actualizan solos. */
 export async function actualizarMiembro(empresaId: string, id: string, d: Partial<DatosMiembro> & { nombre: string }) {
-  await requiereUsuario();
+  await requiereEmpresa(empresaId);
   const m = await db.comiteMiembro.findUniqueOrThrow({ where: { id }, include: { comite: true } });
   if (m.comite.empresaId !== empresaId) throw new Error("Integrante no encontrado.");
   const rol = limpiarMiembro(m.comite.tipo, { rol: d.rol || m.rol, calidad: d.calidad ?? m.calidad ?? undefined, representa: d.representa ?? m.representa ?? undefined });
@@ -254,7 +283,7 @@ export async function actualizarMiembro(empresaId: string, id: string, d: Partia
   rv(empresaId);
 }
 export async function eliminarMiembro(empresaId: string, id: string) {
-  await requiereUsuario();
+  await requiereEmpresa(empresaId);
   const m = await db.comiteMiembro.findUniqueOrThrow({ where: { id }, include: { comite: true } });
   if (m.comite.empresaId !== empresaId) throw new Error("Integrante no encontrado.");
   await db.comiteMiembro.delete({ where: { id } });
@@ -262,7 +291,7 @@ export async function eliminarMiembro(empresaId: string, id: string) {
   rv(empresaId);
 }
 export async function eliminarComite(empresaId: string, id: string) {
-  await requiereUsuario();
+  await requiereEmpresa(empresaId);
   await comiteDe(empresaId, id);
   await db.comite.delete({ where: { id } });
   await actualizarDocumentosExistentes(empresaId);
@@ -271,17 +300,18 @@ export async function eliminarComite(empresaId: string, id: string) {
 
 // ───────── Eventos e indicadores (Res. 0312 art. 30) ─────────
 export async function registrarEvento(empresaId: string, d: { tipo: string; fecha: string; descripcion?: string; cargo?: string; diasIncapacidad?: number; diasCargados?: number; mortal?: boolean; casoNuevo?: boolean; reportadoArl?: boolean }) {
-  await requiereUsuario();
+  await requiereEmpresa(empresaId);
   await db.evento.create({ data: { empresaId, tipo: d.tipo, fecha: new Date(d.fecha), descripcion: d.descripcion, cargo: d.cargo, diasIncapacidad: Number(d.diasIncapacidad) || 0, diasCargados: Number(d.diasCargados) || 0, mortal: !!d.mortal, casoNuevo: d.casoNuevo ?? true, reportadoArl: !!d.reportadoArl } });
   rv(empresaId);
 }
 export async function eliminarEvento(empresaId: string, id: string) {
-  await requiereUsuario();
+  await requiereEmpresa(empresaId);
+  await requiereRegistro("evento", id, empresaId);
   await db.evento.delete({ where: { id } });
   rv(empresaId);
 }
 export async function guardarTrabajadoresMes(empresaId: string, anio: number, mes: number, nTrabajadores: number, diasProgramados?: number) {
-  await requiereUsuario();
+  await requiereEmpresa(empresaId);
   await db.trabajadoresMes.upsert({
     where: { empresaId_anio_mes: { empresaId, anio, mes } },
     update: { nTrabajadores, diasProgramados: diasProgramados ?? null },
@@ -292,7 +322,8 @@ export async function guardarTrabajadoresMes(empresaId: string, anio: number, me
 
 // ───────── Biblioteca ─────────
 export async function actualizarPeligroCatalogo(id: string, d: Record<string, string | number | boolean | string[]>) {
-  await requiereUsuario();
+  const v = await bibliotecaPropia("peligroCatalogo", id);
+  if ("error" in v) return v;
   const permitidos = ["clasificacion", "subclasificacion", "descripcion", "efectosPosibles", "ndDefault", "neDefault", "ncDefault", "controlesFuente", "controlesMedio", "controlesIndividuo", "medidaEliminacion", "medidaSustitucion", "medidaIngenieria", "medidaAdministrativa", "medidaEpp", "eppSugerido", "examenesSugeridos", "capacitacionesSugeridas", "normas", "pveAsociado", "requisitoLegalEspecifico", "validado"];
   const data: Record<string, unknown> = {};
   for (const k of permitidos) if (k in d) data[k] = ["ndDefault", "neDefault", "ncDefault"].includes(k) ? Number(d[k]) : d[k];
@@ -302,7 +333,7 @@ export async function actualizarPeligroCatalogo(id: string, d: Record<string, st
 
 // ───────── Datos complementarios y datos de comités ─────────
 export async function guardarComplementarios(empresaId: string, datos: Record<string, unknown>) {
-  await requiereUsuario();
+  await requiereEmpresa(empresaId);
   await db.empresa.update({ where: { id: empresaId }, data: { datosComplementarios: datos as object } });
   await actualizarDocumentosExistentes(empresaId);
   rv(empresaId);
@@ -311,7 +342,7 @@ export async function guardarComplementarios(empresaId: string, datos: Record<st
 
 /** Guarda los datos de la elección (convocatoria, votación, escrutinio). Conserva la composición congelada. */
 export async function guardarDatosComite(empresaId: string, comiteId: string, datos: Record<string, unknown>) {
-  await requiereUsuario();
+  await requiereEmpresa(empresaId);
   const c = await comiteDe(empresaId, comiteId);
   const previos = (c.datos ?? {}) as Record<string, unknown>;
   await db.comite.update({ where: { id: comiteId }, data: { datos: { ...previos, ...datos, ...(previos.composicion ? { composicion: previos.composicion } : {}) } as object } });
@@ -322,7 +353,7 @@ export async function guardarDatosComite(empresaId: string, comiteId: string, da
 
 /** Guarda la evaluación de cumplimiento de la matriz legal (columna «Cumple» de MTZ-01). */
 export async function guardarCumplimientoLegal(empresaId: string, evaluacion: Record<string, { cumple?: string; evidencia?: string }>) {
-  await requiereUsuario();
+  await requiereEmpresa(empresaId);
   const e = await db.empresa.findUniqueOrThrow({ where: { id: empresaId }, select: { datosComplementarios: true } });
   await db.empresa.update({ where: { id: empresaId }, data: { datosComplementarios: { ...((e.datosComplementarios ?? {}) as object), cumplimientoLegal: evaluacion } } });
   await generarDocumentos(empresaId, ["MTZ-01"]).catch(() => null);

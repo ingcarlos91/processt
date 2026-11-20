@@ -3,10 +3,10 @@ import { leerArchivo } from "@/lib/archivos";
 import { usuarioActual } from "@/lib/auth/sesion";
 
 export async function GET(req: Request, { params }: RouteContext<"/api/archivos/[id]">) {
-  await usuarioActual();
+  const sesion = await usuarioActual();
   const { id } = await params;
-  const a = await db.evidencia.findUnique({ where: { id } });
-  if (!a?.archivoUrl) return new Response("No encontrado", { status: 404 });
+  const a = await db.evidencia.findUnique({ where: { id }, include: { empresa: { select: { consultoraId: true } } } });
+  if (!a?.archivoUrl || a.empresa.consultoraId !== sesion.consultoraId) return new Response("No encontrado", { status: 404 });
   const buf = await leerArchivo(a.archivoUrl);
   const descargar = new URL(req.url).searchParams.has("descargar");
   return new Response(new Uint8Array(buf), { headers: {

@@ -1,3 +1,4 @@
+import { usuarioActual } from "@/lib/auth/sesion";
 import { TablaPlazos } from "@/components/plazos/tabla-plazos";
 import { PLAZOS } from "@/lib/plazos";
 import { parametrosPlazos } from "@/lib/plazos-servidor";
@@ -33,7 +34,7 @@ export default async function Normas({ searchParams }: PageProps<"/normas">) {
       <PageHeader title="Normas y estándares" description="Base normativa del sistema. Toda conclusión, documento y actividad cita una de estas normas. Corte: noviembre de 2026." />
       <Tabs defaultValue={tab === "plazos" ? "plazos" : "normas"}>
         <TabsList><TabsTrigger value="normas">Normas ({normas.length})</TabsTrigger><TabsTrigger value="estandares">Estándares mínimos (60)</TabsTrigger><TabsTrigger value="reglas">Reglas de aplicabilidad ({reglas.length})</TabsTrigger><TabsTrigger value="plazos">Plazos y tareas automáticas ({PLAZOS.length})</TabsTrigger></TabsList>
-        <TabsContent value="plazos" className="mt-4"><TablaPlazos parametros={await parametrosPlazos()} /></TabsContent>
+        <TabsContent value="plazos" className="mt-4"><TablaPlazos parametros={await parametrosPlazos((await usuarioActual()).consultoraId)} /></TabsContent>
         <TabsContent value="normas" className="mt-4">
           <Section contentClassName="px-0">
             <Table className="[&_td]:whitespace-normal [&_td]:align-top">

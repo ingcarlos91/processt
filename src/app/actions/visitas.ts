@@ -1,13 +1,13 @@
 "use server";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
-import { requiereUsuario } from "@/lib/auth/sesion";
+import { requiereEmpresa } from "@/lib/auth/acceso";
 
 const dia = (s?: string | null) => (s && /^\d{4}-\d{2}-\d{2}$/.test(s) ? new Date(s + "T12:00:00Z") : null);
 const rv = (id: string) => { revalidatePath(`/empresas/${id}`, "layout"); revalidatePath("/planeador"); revalidatePath("/"); };
 
 export async function guardarVisita(empresaId: string, d: { id?: string; fecha: string; horas: number; modalidad: string; atendio?: string; actividades: string; compromisos?: string }) {
-  await requiereUsuario();
+  await requiereEmpresa(empresaId);
   const fecha = dia(d.fecha);
   if (!fecha || !d.actividades.trim()) return { error: "Escriba la fecha y lo que se hizo." };
   const data = { fecha, horas: Math.max(0.25, Number(d.horas) || 1), modalidad: d.modalidad || "presencial", atendio: d.atendio || null, actividades: d.actividades.trim(), compromisos: d.compromisos?.trim() || null };
@@ -21,7 +21,7 @@ export async function guardarVisita(empresaId: string, d: { id?: string; fecha: 
 }
 
 export async function eliminarVisita(empresaId: string, id: string) {
-  await requiereUsuario();
+  await requiereEmpresa(empresaId);
   const v = await db.visita.findUniqueOrThrow({ where: { id } });
   if (v.empresaId !== empresaId) return { error: "No encontrada." };
   await db.visita.delete({ where: { id } });
@@ -30,7 +30,7 @@ export async function eliminarVisita(empresaId: string, id: string) {
 }
 
 export async function guardarContrato(empresaId: string, d: { horasMes?: number | null; valorMes?: number | null }) {
-  await requiereUsuario();
+  await requiereEmpresa(empresaId);
   await db.empresa.update({ where: { id: empresaId }, data: { contratoHorasMes: d.horasMes ? Number(d.horasMes) : null, contratoValorMes: d.valorMes ? Math.round(Number(d.valorMes)) : null } });
   rv(empresaId);
   return { ok: true as const };

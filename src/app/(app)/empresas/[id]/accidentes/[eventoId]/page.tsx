@@ -1,3 +1,5 @@
+import { alcanceBiblioteca } from "@/lib/auth/acceso";
+import { usuarioActual } from "@/lib/auth/sesion";
 import { valorPlazo } from "@/lib/plazos";
 import { parametrosPlazos } from "@/lib/plazos-servidor";
 import { abrevDoc } from "@/lib/documento-identidad";
@@ -20,11 +22,11 @@ export default async function Evento({ params }: PageProps<"/empresas/[id]/accid
   const [empresa, cargos, peligros, enMatriz, comites, consultora, cat, sedes, zonas] = await Promise.all([
     db.empresa.findUniqueOrThrow({ where: { id }, select: { responsableSst: true, representanteLegal: true, direccion: true, ciudad: true } }),
     db.cargo.findMany({ where: { empresaId: id }, orderBy: { nombre: "asc" }, include: { tareas: { include: { tarea: { select: { nombre: true } } } }, trabajadores: { where: { activo: true }, orderBy: { nombres: "asc" }, select: { nombres: true, tipoDoc: true, documento: true, vinculacion: true, fechaIngreso: true, sexo: true, fechaNacimiento: true, eps: true, afp: true } }, sede: { select: { nombre: true } } } }),
-    db.peligroCatalogo.findMany({ where: { OR: [{ empresaId: null }, { empresaId: id }] }, select: { id: true, descripcion: true, clasificacion: true, subclasificacion: true }, orderBy: { descripcion: "asc" } }),
+    db.peligroCatalogo.findMany({ where: alcanceBiblioteca((await usuarioActual()).consultoraId, id), select: { id: true, descripcion: true, clasificacion: true, subclasificacion: true }, orderBy: { descripcion: "asc" } }),
     ev.cargoId ? db.peligroEvaluado.findMany({ where: { empresaId: id, peligroId: { not: null }, OR: [{ cargoId: ev.cargoId }, { tarea: { cargos: { some: { cargoId: ev.cargoId } } } }] }, select: { peligroId: true } }) : Promise.resolve([]),
     db.comite.findMany({ where: { empresaId: id, tipo: { in: ["COPASST", "VIGIA"] } }, include: { miembros: true } }),
-    db.consultora.findFirst(),
-    cargarCatalogoAccidentes(),
+    db.consultora.findUnique({ where: { id: (await usuarioActual()).consultoraId } }),
+    cargarCatalogoAccidentes((await usuarioActual()).consultoraId),
     db.sede.findMany({ where: { empresaId: id }, select: { nombre: true } }),
     db.zona.findMany({ where: { empresaId: id }, select: { nombre: true } }),
   ]);
@@ -45,7 +47,7 @@ export default async function Evento({ params }: PageProps<"/empresas/[id]/accid
   ];
   const idsMatriz = new Set(enMatriz.map((p) => p.peligroId));
   return (
-    <EventoDetalle diasAccionDefecto={valorPlazo("accion_limite", await parametrosPlazos())}
+    <EventoDetalle diasAccionDefecto={valorPlazo("accion_limite", await parametrosPlazos((await usuarioActual()).consultoraId))}
       empresaId={id} iaActiva={iaDisponible()}
       ev={{
         id: ev.id, tipo: ev.tipo, gravedad: ev.gravedad, vinculacion: ev.vinculacion ?? "",
@@ -62,7 +64,7 @@ export default async function Evento({ params }: PageProps<"/empresas/[id]/accid
         inv: { estado: ev.invEstado, inicio: iso(ev.invInicio), cierre: iso(ev.invCierre), lugar: ev.invLugar ?? "", fechas: ev.invFechas ?? "", equipo: (ev.equipo as Integrante[]) ?? [], analisis: (ev.analisis ?? {}) as Analisis, lecciones: ev.lecciones ?? "", peligroId: ev.peligroId ?? "" },
         acciones: ev.acciones.map((a) => ({ id: a.id, hallazgo: a.hallazgo, causa: a.causa ?? "", tipo: a.tipo, jerarquia: a.jerarquia ?? "", dirigidaA: a.dirigidaA ?? "", descripcion: a.descripcion, responsable: a.responsable ?? "", fechaLimite: iso(a.fechaLimite), estado: a.estado, fechaCierre: iso(a.fechaCierre), eficacia: a.eficacia ?? "", enPlan: a.actividad ? `${a.actividad.mes}/${a.actividad.anio}` : "" })),
         archivos: ev.archivos.map(aArchivoUI),
-        plazos: plazosUI(ev, new Date(), await parametrosPlazos()),
+        plazos: plazosUI(ev, new Date(), await parametrosPlazos((await usuarioActual()).consultoraId)),
       }}
       cargos={cargos.map((c) => ({ id: c.id, nombre: c.nombre, sede: c.sede?.nombre, tareas: c.tareas.map((t) => t.tarea.nombre), personas: c.trabajadores.map((t) => ({ nombre: t.nombres, tipoDoc: t.tipoDoc, documento: t.documento ?? "", vinculacion: t.vinculacion, ingreso: t.fechaIngreso?.toISOString().slice(0, 10) ?? "", sexo: t.sexo ?? "", nacimiento: t.fechaNacimiento?.toISOString().slice(0, 10) ?? "", eps: t.eps ?? "", afp: t.afp ?? "" })) }))}
       peligros={peligros.map((p) => ({ valor: p.id, etiqueta: p.descripcion, detalle: [p.clasificacion, p.subclasificacion].filter(Boolean).join(" · "), grupo: idsMatriz.has(p.id) ? "En la matriz de este cargo" : p.clasificacion, relevancia: idsMatriz.has(p.id) ? "propio" : "otro" }))}

@@ -32,7 +32,7 @@ export function BibliotecaEditor({ peligros, sectores = [], catalogo = [], empre
   const [q, setQ] = useState("");
   const [clas, setClas] = useState("");
   const [abierto, setAbierto] = useState<string | null>(null);
-  const run = (fn: () => Promise<unknown>) => start(async () => { await fn(); toast.success("Biblioteca actualizada"); });
+  const run = (fn: () => Promise<unknown>) => start(async () => { const r = await fn(); if (r && typeof r === "object" && "error" in r) toast.error(String(r.error)); else toast.success("Biblioteca actualizada"); });
   void sectores;
   const lista = useMemo(() => peligros.filter((p) => (!clas || p.clasificacion === clas) && (!q || (p.descripcion + p.efectos).toLowerCase().includes(q.toLowerCase()))), [peligros, q, clas]);
   const upd = (id: string, d: Record<string, string | number | boolean | string[]>) => run(() => actualizarPeligroCatalogo(id, d));

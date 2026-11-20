@@ -19,10 +19,11 @@ export type FilaEmpresa = {
   prioridad: number; motivos: string[]; etapa: string;
 };
 
-export async function tableroConsultora(hoy = new Date()) {
-  const params = await parametrosPlazos();
+export async function tableroConsultora(consultoraId: string, hoy = new Date()) {
+  const params = await parametrosPlazos(consultoraId);
   const anio = hoy.getUTCFullYear();
   const empresas = await db.empresa.findMany({
+    where: { consultoraId },
     orderBy: { razonSocial: "asc" },
     select: {
       id: true, etapa: true, razonSocial: true, nit: true, claseRiesgo: true, nTrabajadoresPlanta: true, nEnMision: true, nivelEstandares: true, resultadoReglas: true,

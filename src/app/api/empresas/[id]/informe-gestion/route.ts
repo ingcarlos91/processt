@@ -1,4 +1,5 @@
 import { usuarioActual } from "@/lib/auth/sesion";
+import { puedeVerEmpresa } from "@/lib/auth/acceso";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { leerLogo } from "@/lib/logos";
@@ -8,8 +9,9 @@ import { informeGestion } from "@/lib/informe-gestion";
 
 /** Informe de gestión para la gerencia del cliente, en Word o PDF (?formato=pdf), del periodo elegido. */
 export async function GET(req: Request, { params }: RouteContext<"/api/empresas/[id]/informe-gestion">) {
-  await usuarioActual();
+  const sesion = await usuarioActual();
   const { id } = await params;
+  if (!(await puedeVerEmpresa(id, sesion.consultoraId))) return new Response("No encontrado", { status: 404 });
   const u = new URL(req.url).searchParams;
   const hoy = new Date();
   // ?p=mes:2026-11 | trim:2026-4 | sem:2026-2 | anio:2026 | inicio  (compatible con ?anio=&mes=)

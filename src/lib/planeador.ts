@@ -1,5 +1,6 @@
 import { valorPlazo } from "@/lib/plazos";
 import { parametrosPlazos } from "@/lib/plazos-servidor";
+import { alcanceBiblioteca } from "@/lib/alcance-biblioteca";
 // Planeador: reúne en un solo calendario todas las fechas que la consultora debe tener en cuenta,
 // por empresa. Cada fecha cita la norma que la origina y enlaza a donde se gestiona.
 import { db } from "@/lib/db";
@@ -46,10 +47,11 @@ function estadoDe(fecha: Date, hecho: boolean, hoy: Date): EstadoFecha {
 }
 
 /** Todas las fechas de una empresa (o de todas) entre `desde` y `hasta`. Los vencidos sin cumplir se incluyen siempre. */
-export async function fechasPlaneador({ empresaId, desde, hasta, hoy = new Date() }: { empresaId?: string; desde: Date; hasta: Date; hoy?: Date }): Promise<Fecha[]> {
-  const params = await parametrosPlazos();
+/** Siempre de una consultora: sus empresas (o una de ellas) y sus recordatorios. */
+export async function fechasPlaneador({ consultoraId, empresaId, desde, hasta, hoy = new Date() }: { consultoraId: string; empresaId?: string; desde: Date; hasta: Date; hoy?: Date }): Promise<Fecha[]> {
+  const params = await parametrosPlazos(consultoraId);
   ventanaProximo = valorPlazo("aviso_proximo", params);
-  const where = empresaId ? { id: empresaId } : {};
+  const where = empresaId ? { id: empresaId, consultoraId } : { consultoraId };
   const empresas = await db.empresa.findMany({
     where, select: {
       id: true, razonSocial: true, responsableSst: true, resultadoReglas: true, creadoEn: true,
@@ -68,7 +70,7 @@ export async function fechasPlaneador({ empresaId, desde, hasta, hoy = new Date(
     },
   });
   const out: Fecha[] = [];
-  const frecuencias = new Map((await db.catalogoItem.findMany({ where: { tipo: "LISTA_INSPECCION" }, select: { nombre: true, detalle: true } })).map((l) => [l.nombre, Number((l.detalle as { frecuenciaDias?: number })?.frecuenciaDias) || 0]));
+  const frecuencias = new Map((await db.catalogoItem.findMany({ where: { tipo: "LISTA_INSPECCION", ...alcanceBiblioteca(consultoraId) }, select: { nombre: true, detalle: true } })).map((l) => [l.nombre, Number((l.detalle as { frecuenciaDias?: number })?.frecuenciaDias) || 0]));
   const dentro = (f: Date, hecho: boolean) => (f >= desde && f <= hasta) || (!hecho && f < desde && f.getTime() > desde.getTime() - 400 * DIA);
   const NOMBRE_COMITE: Record<string, string> = { COPASST: "COPASST", VIGIA: "Vigía de SST", CCL: "Comité de Convivencia Laboral", BRIGADA: "Brigada" };
 
@@ -203,7 +205,7 @@ export async function fechasPlaneador({ empresaId, desde, hasta, hoy = new Date(
   }
   // Recordatorios de la consultora (sin empresa), solo en la vista general.
   if (!empresaId) {
-    for (const rc of await db.recordatorio.findMany({ where: { empresaId: null } })) {
+    for (const rc of await db.recordatorio.findMany({ where: { empresaId: null, consultoraId } })) {
       if (dentro(rc.fecha, rc.hecho)) out.push({ id: `rec-${rc.id}`, recordatorioId: rc.id, empresaId: null, empresa: "Consultora", fecha: iso(rc.fecha), titulo: rc.titulo, detalle: rc.notas ?? undefined, categoria: "recordatorio", estado: estadoDe(rc.fecha, rc.hecho, hoy), href: "/planeador" });
     }
   }

@@ -1,4 +1,5 @@
 import { db } from "@/lib/db";
+import { alcanceBiblioteca } from "@/lib/alcance-biblioteca";
 
 type PeligroBase = {
   id: string; clasificacion: string; descripcion: string; efectosPosibles: string; ndDefault: number; neDefault: number; ncDefault: number;
@@ -118,7 +119,9 @@ export async function agregarPeligroCatalogo(empresaId: string, origen: "tarea" 
 export async function sugerirCargoTipo(nombre: string, sectorTipoId?: string | null, empresaId?: string | null) {
   const norm = (s: string) => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/\(.*?\)/g, "");
   const palabras = norm(nombre).split(/[^a-z]+/).filter((w) => w.length > 3);
-  const tipos = await db.cargoTipo.findMany({ where: { OR: [{ empresaId: null }, ...(empresaId ? [{ empresaId }] : [])] }, orderBy: { nombre: "asc" } });
+  // Solo lo que ve la consultora de la empresa (base PROCESST, su biblioteca y la de la empresa); sin empresa, solo la base.
+  const consultoraId = empresaId ? (await db.empresa.findUnique({ where: { id: empresaId }, select: { consultoraId: true } }))?.consultoraId : null;
+  const tipos = await db.cargoTipo.findMany({ where: consultoraId ? alcanceBiblioteca(consultoraId, empresaId) : { consultoraId: null, empresaId: null }, orderBy: { nombre: "asc" } });
   const puntuar = (t: { nombre: string; sectorTipoId: string | null }) => {
     const n = norm(t.nombre);
     let s = palabras.filter((w) => n.includes(w)).length * 10;

@@ -1,12 +1,14 @@
 import { db } from "@/lib/db";
 import { construirContexto, type Contexto } from "./contexto";
 import { render, dividirSecciones } from "./plantilla";
+import { consultoraDe, plantillasDe } from "@/lib/plantillas";
 
 /** Genera (o regenera) los documentos aplicables de una empresa. Conserva ediciones manuales por sección. */
 export async function generarDocumentos(empresaId: string, codigos?: string[]) {
   const ctx = await construirContexto(empresaId);
   const aplicables = ctx._reglas.documentos.map((d) => d.codigo).filter((c) => !codigos || codigos.includes(c));
-  const plantillas = await db.plantilla.findMany({ where: { codigo: { in: aplicables } } });
+  // Con las plantillas de la consultora de la empresa (su versión propia donde la ajustó).
+  const plantillas = await plantillasDe(await consultoraDe(empresaId), { codigo: { in: aplicables } });
   const resultado: { codigo: string; secciones: number; revisar: number }[] = [];
 
   for (const p of plantillas) {

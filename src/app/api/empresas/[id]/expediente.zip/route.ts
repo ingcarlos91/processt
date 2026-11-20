@@ -1,4 +1,5 @@
 import { usuarioActual } from "@/lib/auth/sesion";
+import { puedeVerEmpresa } from "@/lib/auth/acceso";
 import JSZip from "jszip";
 import { extname } from "node:path";
 import { db } from "@/lib/db";
@@ -12,8 +13,9 @@ const limpio = (t: string) => t.replace(/[\\/:*?"<>|]/g, "").replace(/\s+/g, " "
 
 /** Expediente para visitas del Ministerio o la ARL: una carpeta por estándar con documentos firmados y evidencias. */
 export async function GET(_: Request, { params }: RouteContext<"/api/empresas/[id]/expediente.zip">) {
-  await usuarioActual();
+  const sesion = await usuarioActual();
   const { id } = await params;
+  if (!(await puedeVerEmpresa(id, sesion.consultoraId))) return new Response("No encontrado", { status: 404 });
   const e = await db.empresa.findUniqueOrThrow({ where: { id }, select: { razonSocial: true } });
   const exp = await expedientePorEstandar(id);
   const ctx = await construirContexto(id);

@@ -127,7 +127,7 @@ export async function informeGestion(empresaId: string, p: string) {
   const porFirmar = estados.filter((x) => x.est === "aprobado" || x.est === "volver_a_firmar");
 
   // ── Qué sigue: próximos 60 días ──
-  const proximas = (await fechasPlaneador({ empresaId, desde: hoy, hasta: new Date(hoy.getTime() + 60 * 864e5) })).filter((x) => x.estado !== "hecho" && x.estado !== "vencido");
+  const proximas = (await fechasPlaneador({ consultoraId: e.consultoraId, empresaId, desde: hoy, hasta: new Date(hoy.getTime() + 60 * 864e5) })).filter((x) => x.estado !== "hecho" && x.estado !== "vencido");
 
   // ── Compromisos que dependen de la empresa ──
   const sinExamen = e.trabajadores.filter((t) => !t.examenes.length).length;

@@ -4,6 +4,8 @@
 // 2. Después actualiza las empresas existentes (scripts/actualizar-empresas.ts).
 // 3. Si están ADMIN_EMAIL, ADMIN_NOMBRE y ADMIN_PASSWORD y ese usuario no existe, lo crea como administrador.
 //    Después del primer despliegue se puede borrar ADMIN_PASSWORD de Vercel.
+// 4. Igual con SUPERADMIN_EMAIL, SUPERADMIN_NOMBRE y SUPERADMIN_PASSWORD: crea el super administrador (administra
+//    las consultoras). Después del primer despliegue se puede borrar SUPERADMIN_PASSWORD de Vercel.
 import { execSync } from "node:child_process";
 import { db, consultoraActual } from "../src/lib/db";
 import { cifrarPassword, validarPassword } from "../src/lib/auth/password";
@@ -18,14 +20,19 @@ async function main() {
   console.log("[sembrar] Actualizando empresas existentes…");
   execSync("npx tsx scripts/actualizar-empresas.ts", { stdio: "inherit" });
 
-  const email = process.env.ADMIN_EMAIL?.trim().toLowerCase(), nombre = process.env.ADMIN_NOMBRE?.trim(), password = process.env.ADMIN_PASSWORD;
-  if (email && nombre && password) {
-    if (await db.usuario.findUnique({ where: { email } })) { console.log("[sembrar] El usuario inicial ya existe."); return; }
-    const err = validarPassword(password);
-    if (err) throw new Error(`[sembrar] ADMIN_PASSWORD no es válida: ${err}`);
-    const c = await consultoraActual();
-    await db.usuario.create({ data: { consultoraId: c.id, email, nombre, passwordHash: await cifrarPassword(password), rol: "admin" } });
-    console.log(`[sembrar] Usuario inicial creado: ${email}`);
-  }
+  await usuarioInicial("ADMIN", "admin");
+  await usuarioInicial("SUPERADMIN", "superadmin");
+}
+
+/** Crea el usuario de las variables {PREFIJO}_EMAIL, _NOMBRE y _PASSWORD si no existe (nunca cambia uno existente). */
+async function usuarioInicial(prefijo: string, rol: "admin" | "superadmin") {
+  const email = process.env[`${prefijo}_EMAIL`]?.trim().toLowerCase(), nombre = process.env[`${prefijo}_NOMBRE`]?.trim(), password = process.env[`${prefijo}_PASSWORD`];
+  if (!email || !nombre || !password) return;
+  if (await db.usuario.findUnique({ where: { email } })) { console.log(`[sembrar] El usuario ${rol} inicial ya existe.`); return; }
+  const err = validarPassword(password);
+  if (err) throw new Error(`[sembrar] ${prefijo}_PASSWORD no es válida: ${err}`);
+  const consultoraId = rol === "superadmin" ? null : (await consultoraActual()).id;
+  await db.usuario.create({ data: { consultoraId, email, nombre, passwordHash: await cifrarPassword(password), rol } });
+  console.log(`[sembrar] Usuario ${rol} inicial creado: ${email}`);
 }
 main().then(() => db.$disconnect()).catch(async (e) => { console.error(e); await db.$disconnect(); process.exit(1); });

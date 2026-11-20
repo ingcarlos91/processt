@@ -1,7 +1,7 @@
 import { abrevDoc, docTexto, RE_DOC } from "@/lib/documento-identidad";
 import { CONCEPTOS_APTITUD, TIPOS_EXAMEN, requiereAdaptacion, limiteAdaptacion, textoPeriodicidad } from "@/lib/examenes";
 import { ROLES_EQUIPO, TIPO_ACCIDENTE, rolesExigidos, type Integrante } from "@/lib/eventos";
-import { db, consultoraActual } from "@/lib/db";
+import { db } from "@/lib/db";
 import { evaluarEmpresa, composicionCopasst, type ResultadoReglas } from "@/lib/reglas/motor";
 import { calcular, CLASIFICACION_ETIQUETA } from "@/lib/gtc45";
 import { INDICADORES, calcularMensuales, calcularAnuales } from "@/lib/indicadores";
@@ -98,7 +98,7 @@ function mesPara(i: number) { return [2, 3, 4, 5, 6, 8, 9, 10, 11][i % 9]; }
 
 export async function construirContexto(empresaId: string) {
   const e = await cargarEmpresa(empresaId);
-  const consultora = e.consultora ?? (await consultoraActual());
+  const consultora = e.consultora;
   const rr = await resultadoReglas(e);
   const filas = filasMatriz(e);
   const prioritarios = filas.filter((f) => f.nivelRiesgo === "I" || f.nivelRiesgo === "II");

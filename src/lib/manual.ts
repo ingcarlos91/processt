@@ -357,7 +357,7 @@ export const MANUAL: SeccionManual[] = [
   },
   {
     id: "biblioteca", titulo: "Biblioteca general", ruta: /^\/biblioteca$/,
-    resumen: "Todo lo parametrizable que sirve a todas las empresas: sectores y cargos, tareas, peligros, exámenes, EPP y capacitaciones, guías de accidentes, listas de inspección y entidades (EPS, fondos, ARL). Se puede crear, editar y validar.",
+    resumen: "Todo lo parametrizable que sirve a todas sus empresas: sectores y cargos, tareas, peligros, exámenes, EPP y capacitaciones, guías de accidentes, listas de inspección y entidades (EPS, fondos, ARL). Combina la base común de PROCESST (de solo lectura, se actualiza con las normas) con lo propio de su consultora, que solo ven sus usuarios.",
     partes: [
       { titulo: "Sectores y cargos", que: "Sectores con sus procesos, zonas y cargos tipo.", botones: [{ nombre: "Crear cargo / Ampliar con IA", hace: "Agrega cargos tipo al sector (con IA, propone muchos)." }] },
       { titulo: "Tareas", que: "Tareas tipo con sus peligros.", botones: [{ nombre: "Crear tarea", hace: "Agrega una tarea a la biblioteca." }] },
@@ -367,15 +367,15 @@ export const MANUAL: SeccionManual[] = [
       { titulo: "Inspecciones", que: "Listas de chequeo con sus ítems y frecuencia; se usan en la pestaña Inspecciones de cada empresa.", botones: [{ nombre: "Nueva lista / Editar", hace: "Un ítem por línea; la frecuencia en días define cuándo el planeador avisa la próxima inspección." }] },
       { titulo: "Entidades", que: "EPS, fondos de pensiones, ARL y niveles de escolaridad que se ofrecen al registrar empresas y trabajadores." },
     ],
-    consejos: ["Lo marcado “sin validar” viene de la semilla o de la IA: revíselo.", "Los cambios aplican a lo que se cree desde ahora; no modifican lo ya cargado en las empresas."],
+    consejos: ["Lo marcado “sin validar” viene de la semilla o de la IA: revíselo.", "Lo de la base PROCESST no se edita aquí: cree uno propio con sus ajustes. Lo que cree (o lo que la IA proponga) queda en la biblioteca de su consultora.", "Los sectores con sus procesos y zonas son de la base común: los mantiene el administrador de PROCESST.", "Los cambios aplican a lo que se cree desde ahora; no modifican lo ya cargado en las empresas."],
     relacionadas: ["biblioteca-propia", "plantillas"],
   },
   {
     id: "plantillas", titulo: "Plantillas", ruta: /^\/plantillas(\/[^/]+)?$/,
-    resumen: "Las plantillas con las que el sistema redacta los documentos. Cada una cita sus normas.",
+    resumen: "Las plantillas con las que el sistema redacta los documentos. Cada una cita sus normas. La base la mantiene PROCESST; si ajusta una, su consultora usa su versión propia y las demás consultoras no la ven.",
     partes: [
       { titulo: "Lista", que: "Código, nombre, desde qué nivel aplica, estándares que soporta, versión y cuántas empresas la usan.", botones: [{ nombre: "Editar", hace: "Abre la plantilla para ajustar su texto." }] },
-      { titulo: "Editor", que: "Texto con variables entre {{ }} que se llenan con los datos de cada empresa.", botones: [{ nombre: "Guardar", hace: "Guarda; los documentos se actualizan al regenerarlos." }, { nombre: "Variables disponibles", hace: "Muestra los datos que puede usar en el texto." }] },
+      { titulo: "Editor", que: "Texto con variables entre {{ }} que se llenan con los datos de cada empresa.", botones: [{ nombre: "Guardar", hace: "Guarda la versión propia de su consultora; los documentos se actualizan al regenerarlos." }, { nombre: "Volver a la base", hace: "Descarta su versión propia y usa de nuevo la base de PROCESST (con sus actualizaciones normativas). Si la base cambió después de su ajuste, la plantilla lo avisa." }, { nombre: "Variables disponibles", hace: "Muestra los datos que puede usar en el texto." }] },
     ],
     relacionadas: ["documentos", "normas"],
   },
@@ -390,7 +390,7 @@ export const MANUAL: SeccionManual[] = [
   },
   {
     id: "consultora", titulo: "Mi consultora", ruta: /^\/configuracion$/,
-    resumen: "Datos de la consultora y de la profesional que firma. Se precargan como responsable del SG-SST en cada empresa nueva.",
+    resumen: "Datos de la consultora y de la profesional que firma. Se precargan como responsable del SG-SST en cada empresa nueva. Solo el administrador de la consultora los cambia.",
     partes: [
       { titulo: "Consultora y profesional", que: "Nombre, NIT, profesional, cédula, perfil, licencia y curso de 50 horas.", botones: [{ nombre: "Guardar", hace: "Guarda; las empresas nuevas los toman y las existentes pueden copiarlos en Datos." }] },
       { titulo: "Asistente de IA", que: "Estado de la IA. Sin IA, las sugerencias usan la biblioteca." },
@@ -398,7 +398,7 @@ export const MANUAL: SeccionManual[] = [
   },
   {
     id: "usuarios", titulo: "Usuarios", ruta: /^\/usuarios$/,
-    resumen: "Personas que pueden entrar a PROCESST.",
+    resumen: "Personas de su consultora que pueden entrar a PROCESST (solo ven las empresas de su consultora).",
     partes: [
       { titulo: "Lista", que: "Buscar y filtrar por estado o rol.", botones: [
         { nombre: "Nuevo usuario", hace: "Crea un usuario con contraseña inicial (botón Generar para una segura)." },

@@ -1,7 +1,7 @@
 "use server";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
-import { requiereUsuario } from "@/lib/auth/sesion";
+import { requiereEmpresa, requiereRegistro } from "@/lib/auth/acceso";
 import { guardarArchivo, ESTANDAR_COMITE } from "@/lib/archivos";
 
 const rv = (id: string) => revalidatePath(`/empresas/${id}`, "layout");
@@ -13,7 +13,7 @@ const rv = (id: string) => revalidatePath(`/empresas/${id}`, "layout");
  * - ACTA de un comité: queda asociada al estándar del comité.
  */
 export async function subirArchivo(empresaId: string, fd: FormData) {
-  const u = await requiereUsuario();
+  const u = await requiereEmpresa(empresaId);
   const file = fd.get("archivo");
   if (!(file instanceof File) || file.size === 0) return { error: "Seleccione un archivo." };
   const tipo = String(fd.get("tipo") ?? "EVIDENCIA");
@@ -38,16 +38,19 @@ export async function subirArchivo(empresaId: string, fd: FormData) {
   let documentoVersion: number | null = null;
   if (documentoId) {
     const d = await db.documento.findUniqueOrThrow({ where: { id: documentoId } });
+    if (d.empresaId !== empresaId) return { error: "Documento no encontrado." };
     documentoVersion = d.version;
     descripcion ||= `${d.codigo} ${d.nombre} (firmado, versión ${d.version})`;
   }
   if (actividadId) {
     const a = await db.actividadPlan.findUniqueOrThrow({ where: { id: actividadId } });
+    if (a.empresaId !== empresaId) return { error: "Actividad no encontrada." };
     estandarCodigo ||= a.estandarCodigo;
     descripcion ||= a.nombre;
   }
   if (comiteId) {
     const c = await db.comite.findUniqueOrThrow({ where: { id: comiteId } });
+    if (c.empresaId !== empresaId) return { error: "Comité no encontrado." };
     estandarCodigo ||= c.tipo === "BRIGADA" ? pref("5.1.2", "5.1.1") : c.tipo === "CCL" ? pref("1.1.8", "1.1.6") : pref(ESTANDAR_COMITE[c.tipo] ?? "1.1.6", "1.1.1");
     descripcion ||= `Acta ${c.tipo}`;
   }
@@ -93,14 +96,14 @@ export async function subirArchivo(empresaId: string, fd: FormData) {
 
 /** Retira un archivo sin borrarlo (queda en el historial; la norma exige conservar registros). */
 export async function retirarArchivo(empresaId: string, id: string, motivo: string) {
-  await requiereUsuario();
+  await requiereRegistro("evidencia", id, empresaId);
   await db.evidencia.update({ where: { id }, data: { activo: false, motivoBaja: motivo || "Retirado por el usuario" } });
   rv(empresaId);
   return { ok: true };
 }
 
 export async function restaurarArchivo(empresaId: string, id: string) {
-  await requiereUsuario();
+  await requiereRegistro("evidencia", id, empresaId);
   await db.evidencia.update({ where: { id }, data: { activo: true, motivoBaja: null } });
   rv(empresaId);
   return { ok: true };

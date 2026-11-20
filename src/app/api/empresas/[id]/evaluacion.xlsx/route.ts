@@ -1,12 +1,14 @@
 import { usuarioActual } from "@/lib/auth/sesion";
+import { puedeVerEmpresa } from "@/lib/auth/acceso";
 import { db } from "@/lib/db";
 import { construirContexto, contextoEvaluacion } from "@/lib/generador/contexto";
 import { evaluacionXlsx } from "@/lib/generador/excel";
 
 /** Excel de la autoevaluación. Con `?ev=<id>` exporta esa evaluación; sin él, la última. */
 export async function GET(req: Request, { params }: RouteContext<"/api/empresas/[id]/evaluacion.xlsx">) {
-  await usuarioActual();
+  const sesion = await usuarioActual();
   const { id } = await params;
+  if (!(await puedeVerEmpresa(id, sesion.consultoraId))) return new Response("No encontrado", { status: 404 });
   const ctx = await construirContexto(id);
   const evId = new URL(req.url).searchParams.get("ev");
   let ev = ctx.evaluacion, plan = ctx.planMejora;

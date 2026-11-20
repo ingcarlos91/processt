@@ -1,3 +1,5 @@
+import { usuarioActual } from "@/lib/auth/sesion";
+import { alcanceBiblioteca } from "@/lib/auth/acceso";
 import { db } from "@/lib/db";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -11,7 +13,7 @@ export const dynamic = "force-dynamic";
 
 export default async function BibliotecaPropia({ params }: PageProps<"/empresas/[id]/biblioteca">) {
   const { id } = await params;
-  const alcance = { OR: [{ empresaId: null }, { empresaId: id }] };
+  const alcance = alcanceBiblioteca((await usuarioActual()).consultoraId, id);
   const [e, peligros, tareas, cargos, zonas, catalogo] = await Promise.all([
     db.empresa.findUniqueOrThrow({ where: { id }, select: { razonSocial: true, sectorTipoId: true } }),
     db.peligroCatalogo.findMany({ where: alcance, orderBy: [{ clasificacion: "asc" }, { descripcion: "asc" }], include: { _count: { select: { tareas: true, evaluados: true } } } }),

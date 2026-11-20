@@ -38,7 +38,7 @@ export function LoginForm({ desde }: { desde: string }) {
             </Field>
             <Field>
               <Button type="submit" size="lg" disabled={pend} className="w-full" aria-busy={pend}>
-                {pend ? <Isotipo girando className="size-4 rounded-full bg-white p-px" /> : <LogIn />} {pend ? "Verificando…" : "Ingresar"}
+                {pend ? <Isotipo girando blanco className="size-4" /> : <LogIn />} {pend ? "Verificando…" : "Ingresar"}
               </Button>
               <FieldDescription className="text-center text-xs">¿Olvidó la contraseña? El administrador puede restablecerla.</FieldDescription>
             </Field>

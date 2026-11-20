@@ -70,7 +70,7 @@ export function ConsultoraForm({ inicial, ia }: { inicial: D; ia: { activa: bool
             {campo("correo", "Correo", { tipo: "email", ph: "nombre@empresa.com" })}
           </FieldGroup>
         </CardContent>
-        <CardFooter className="border-t"><Button disabled={pend} onClick={() => start(async () => { await guardarConsultora(d); if (tareasCurso.length) toastTareas("Datos guardados. Los documentos de todas las empresas se actualizaron.", tareasCurso); else toast.success("Datos guardados. Los documentos de todas las empresas se actualizaron."); })}><Save /> Guardar</Button></CardFooter>
+        <CardFooter className="border-t"><Button disabled={pend} onClick={() => start(async () => { const r = await guardarConsultora(d); if (r && "error" in r) { toast.error(r.error); return; } if (tareasCurso.length) toastTareas("Datos guardados. Los documentos de todas las empresas se actualizaron.", tareasCurso); else toast.success("Datos guardados. Los documentos de todas las empresas se actualizaron."); })}><Save /> Guardar</Button></CardFooter>
       </Card>
       <Card>
         <CardHeader><CardTitle className="flex items-center gap-2"><Sparkles className="size-4" /> Asistente de IA</CardTitle><CardDescription>Sugiere tareas y peligros por cargo según la GTC 45, priorizando la biblioteca.</CardDescription></CardHeader>

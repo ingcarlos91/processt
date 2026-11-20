@@ -94,6 +94,13 @@ IA opcional: agregar `AI_GATEWAY_API_KEY=...` en `.env`. Sin clave, “Sugerir t
 
 - Informe de gestión gerencial (src/lib/informe-gestion.ts): periodo mensual, trimestral, semestral, anual o acumulado desde el inicio; resumen ejecutivo con estado general y mensajes clave, en qué punto va la implementación (ruta y PHVA), logros del periodo con fechas, trabajo de la consultora (visitas y horas frente a lo pactado), plan, accidentalidad, qué sigue (60 días) y compromisos de la empresa. PDF con membrete de la consultora o Word editable.
 
+- Varias consultoras (multi-consultora):
+  - Super administrador (rol superadmin, sin consultora) con panel en /admin: crea consultoras con su administrador, activa o desactiva su acceso y gestiona sus usuarios. No ve empresas ni trabajadores (Ley 1581/2012). Se crea con scripts/usuario.ts (rol superadmin) o en el despliegue con SUPERADMIN_EMAIL, SUPERADMIN_NOMBRE y SUPERADMIN_PASSWORD.
+  - Aislamiento: proxy.ts verifica la consultora en /empresas/{id} y /api/empresas/{id}; src/lib/auth/acceso.ts verifica empresa y registro en cada acción del servidor (requiereEmpresa, requiereRegistro); listas, planeador, tablero, calendario, plazos y recordatorios filtran por consultora.
+  - Plantillas: base PROCESST (se actualiza en cada despliegue) + versión propia por consultora (PlantillaConsultora) con aviso si la base cambió y "Volver a la base".
+  - Biblioteca en tres niveles (base PROCESST de solo lectura, consultora, empresa); los sectores son de la base y solo los cambia el super administrador.
+  - Datos existentes: quedan en la consultora original; sus plantillas editadas pasaron a su versión propia.
+
 ## Pendiente
 
 - PDF directo (hoy: Word; PDF desde Word o imprimir).
