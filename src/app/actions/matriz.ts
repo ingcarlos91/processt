@@ -1,4 +1,5 @@
 "use server";
+import { solo } from "@/lib/campos";
 import { cargarEmpresa, filasMatriz } from "@/lib/generador/contexto";
 import { resumenFilas } from "@/lib/matriz/versiones";
 import { actualizarDocumentos } from "@/lib/generador/documentos";
@@ -44,7 +45,7 @@ export async function actualizarCargo(empresaId: string, cargoId: string, d: { n
   // Periodicidad de las evaluaciones periódicas (Res. 1843/2025 art. 15): entero positivo o vacío.
   const periodicidadMeses = d.periodicidadMeses === undefined ? undefined : Number(d.periodicidadMeses) > 0 ? Math.round(Number(d.periodicidadMeses)) : null;
   const periodicidadMotivo = d.periodicidadMotivo === undefined ? undefined : d.periodicidadMotivo?.trim() || null;
-  await db.cargo.update({ where: { id: cargoId, empresaId }, data: { ...d, periodicidadMeses, periodicidadMotivo, nPersonas: d.nPersonas != null ? Math.max(1, Number(d.nPersonas)) : undefined } });
+  await db.cargo.update({ where: { id: cargoId, empresaId }, data: { ...solo(d, ["nombre", "nPersonas", "descripcionFunciones", "zonaId", "area"] as const), periodicidadMeses, periodicidadMotivo, nPersonas: d.nPersonas != null ? Math.max(1, Number(d.nPersonas)) : undefined } });
   rv(empresaId);
 }
 
@@ -96,7 +97,7 @@ export async function actualizarTarea(empresaId: string, tareaId: string, d: { n
   await requiereRegistro("tarea", tareaId, empresaId);
   if (d.procesoId) await requiereRegistro("proceso", d.procesoId, empresaId);
   if (d.zonaId) await requiereRegistro("zona", d.zonaId, empresaId);
-  await db.tarea.update({ where: { id: tareaId }, data: d });
+  await db.tarea.update({ where: { id: tareaId }, data: solo(d, ["nombre", "procesoId", "zonaId", "rutinaria", "altoRiesgo", "actividad"] as const) });
   rv(empresaId);
 }
 
@@ -258,7 +259,11 @@ export async function guardarPeligroEnBiblioteca(empresaId: string, peligroEvalu
     requisitoLegalEspecifico: p.requisitoLegal, validado: true, empresaId: alcance === "empresa" ? empresaId : null, consultoraId: alcance === "empresa" ? null : u.consultoraId,
   } });
   await db.peligroEvaluado.update({ where: { id: p.id }, data: { peligroId: cat.id } });
-  if (p.tarea?.tareaTipoId) await db.tareaTipoPeligro.create({ data: { tareaTipoId: p.tarea.tareaTipoId, peligroId: cat.id } }).catch(() => null);
+  // Solo se vincula a la tarea tipo si es de esta empresa o de esta consultora: nunca a la base PROCESST (la comparten todas).
+  if (p.tarea?.tareaTipoId) {
+    const tt = await db.tareaTipo.findUnique({ where: { id: p.tarea.tareaTipoId }, select: { consultoraId: true, empresaId: true } });
+    if (tt && (tt.empresaId === empresaId || (tt.consultoraId && tt.consultoraId === u.consultoraId))) await db.tareaTipoPeligro.create({ data: { tareaTipoId: p.tarea.tareaTipoId, peligroId: cat.id } }).catch(() => null);
+  }
   rv(empresaId);
 }
 

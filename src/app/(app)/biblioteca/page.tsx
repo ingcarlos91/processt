@@ -17,10 +17,12 @@ import { cargarCatalogoAccidentes } from "@/lib/catalogo-accidentes";
 export const dynamic = "force-dynamic";
 
 export default async function Biblioteca() {
+  const co = (await usuarioActual()).consultoraId;
+  const vis = alcanceBiblioteca(co);
   const [peligros, sectores, tareas, zonas, catalogo] = await Promise.all([
-    db.peligroCatalogo.findMany({ where: alcanceBiblioteca((await usuarioActual()).consultoraId), orderBy: [{ clasificacion: "asc" }, { descripcion: "asc" }], include: { _count: { select: { tareas: true, evaluados: true } } } }),
+    db.peligroCatalogo.findMany({ where: alcanceBiblioteca((await usuarioActual()).consultoraId), orderBy: [{ clasificacion: "asc" }, { descripcion: "asc" }], include: { _count: { select: { tareas: { where: { tareaTipo: vis } }, evaluados: { where: { empresa: { consultoraId: co } } } } } } }),
     db.sectorTipo.findMany({ orderBy: { nombre: "asc" }, include: { cargos: { where: alcanceBiblioteca((await usuarioActual()).consultoraId), orderBy: { nombre: "asc" }, include: { tareas: { select: { tareaTipoId: true } }, _count: { select: { cargos: true } } } }, procesos: { orderBy: { nombre: "asc" } }, zonas: { select: { zonaTipoId: true } }, _count: { select: { empresas: { where: { consultoraId: (await usuarioActual()).consultoraId } } } } } }),
-    db.tareaTipo.findMany({ where: alcanceBiblioteca((await usuarioActual()).consultoraId), orderBy: { nombre: "asc" }, include: { peligros: { select: { peligroId: true } }, _count: { select: { tareas: true, cargos: true } } } }),
+    db.tareaTipo.findMany({ where: alcanceBiblioteca((await usuarioActual()).consultoraId), orderBy: { nombre: "asc" }, include: { peligros: { where: { peligro: vis }, select: { peligroId: true } }, _count: { select: { tareas: { where: { empresa: { consultoraId: co } } }, cargos: { where: { cargoTipo: vis } } } } } }),
     db.zonaTipo.findMany({ orderBy: { nombre: "asc" }, select: { id: true, nombre: true } }),
     db.catalogoItem.findMany({ where: alcanceBiblioteca((await usuarioActual()).consultoraId), orderBy: [{ tipo: "asc" }, { nombre: "asc" }] }),
   ]);

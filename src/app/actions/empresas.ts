@@ -1,4 +1,5 @@
 "use server";
+import { solo } from "@/lib/campos";
 import { requiereUsuario } from "@/lib/auth/sesion";
 import { requiereBibliotecaVisible, requiereEmpresa, requiereRegistro } from "@/lib/auth/acceso";
 import { revalidatePath } from "next/cache";
@@ -119,7 +120,7 @@ export async function guardarConsultora(d: DatosConsultora) {
   const u = await requiereUsuario();
   if (u.rol !== "admin") return { error: "Solo el administrador de la consultora puede cambiar sus datos." };
   const c = { id: u.consultoraId };
-  await db.consultora.update({ where: { id: c.id }, data: { ...d, licenciaFecha: d.licenciaFecha ? new Date(d.licenciaFecha) : null } });
+  await db.consultora.update({ where: { id: c.id }, data: { ...solo(d, ["nombre", "nit", "profesional", "tipoDoc", "cedula", "cargo", "perfil", "licenciaSst", "curso50h", "curso50hFecha", "curso20hFecha", "telefono", "correo"] as const), licenciaFecha: d.licenciaFecha ? new Date(d.licenciaFecha) : null } });
   // Los datos de la consultora salen en firmas y encabezados: se actualizan los documentos de todas las empresas.
   const { actualizarDocumentosExistentes } = await import("@/lib/generador/documentos");
   for (const e of await db.empresa.findMany({ where: { consultoraId: c.id, etapa: "activa" }, select: { id: true } })) await actualizarDocumentosExistentes(e.id);

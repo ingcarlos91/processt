@@ -1,4 +1,5 @@
 "use server";
+import { solo } from "@/lib/campos";
 import { valorPlazo } from "@/lib/plazos";
 import { MAPA_ESTADO_ACTUAL, noAplicaInvalidos } from "@/lib/diagnostico";
 import { actualizarDocumentosExistentes } from "@/lib/generador/documentos";
@@ -33,12 +34,12 @@ export async function crearEvaluacion(empresaId: string, tipo: "inicial" | "anua
 
 export async function actualizarItemEvaluacion(empresaId: string, itemId: string, d: { estado?: string; justificacion?: string; observacion?: string }) {
   await requiereEmpresa(empresaId);
+  const it = await db.evaluacionItem.findUnique({ where: { id: itemId }, select: { evaluacion: { select: { nivel: true, empresaId: true } } } });
+  if (!it || it.evaluacion.empresaId !== empresaId) return { error: "Ítem no encontrado." };
   if (d.estado === "NO_APLICA") {
-    const it = await db.evaluacionItem.findUniqueOrThrow({ where: { id: itemId }, select: { evaluacion: { select: { nivel: true, empresaId: true } } } });
-    if (it.evaluacion.empresaId !== empresaId) return { error: "Ítem no encontrado." };
     if (!permiteNoAplica(it.evaluacion.nivel)) return { error: "En 60 estándares no existe «No aplica»: todos los ítems aplican (Res. 0312/2019 arts. 16 y 27). Califique «Cumple» o «No cumple»." };
   }
-  await db.evaluacionItem.update({ where: { id: itemId }, data: d });
+  await db.evaluacionItem.update({ where: { id: itemId }, data: solo(d, ["estado", "justificacion", "observacion"] as const) });
   rv(empresaId);
 }
 
@@ -94,7 +95,7 @@ export async function eliminarEvaluacion(empresaId: string, evaluacionId: string
 export async function actualizarPlanMejora(empresaId: string, id: string, d: { actividad?: string; responsable?: string; fechaLimite?: string; recursos?: string; soporte?: string; estado?: string; avance?: string }) {
   await requiereEmpresa(empresaId);
   await requiereRegistro("planMejoramientoItem", id, empresaId);
-  await db.planMejoramientoItem.update({ where: { id }, data: { ...d, fechaLimite: d.fechaLimite ? new Date(d.fechaLimite) : undefined } });
+  await db.planMejoramientoItem.update({ where: { id }, data: { ...solo(d, ["actividad", "responsable", "recursos", "soporte", "estado", "avance"] as const), fechaLimite: d.fechaLimite ? new Date(d.fechaLimite) : undefined } });
   rv(empresaId);
 }
 
@@ -198,13 +199,13 @@ export async function generarPlanAnual(empresaId: string, anio: number) {
 export async function actualizarActividad(empresaId: string, id: string, d: { estado?: string; responsable?: string; mes?: number; nombre?: string }) {
   await requiereEmpresa(empresaId);
   await requiereRegistro("actividadPlan", id, empresaId);
-  await db.actividadPlan.update({ where: { id }, data: { ...d, fechaEjecucion: d.estado === "EJECUTADA" ? new Date() : d.estado ? null : undefined } });
+  await db.actividadPlan.update({ where: { id }, data: { ...solo(d, ["estado", "responsable", "mes", "nombre"] as const), fechaEjecucion: d.estado === "EJECUTADA" ? new Date() : d.estado ? null : undefined } });
   rv(empresaId);
 }
 
 export async function agregarActividad(empresaId: string, d: { anio: number; mes: number; nombre: string; responsable?: string; estandarCodigo?: string }) {
   await requiereEmpresa(empresaId);
-  await db.actividadPlan.create({ data: { ...d, empresaId, origen: "manual", normaRef: "Definida por la consultora" } });
+  await db.actividadPlan.create({ data: { anio: Number(d.anio), mes: Number(d.mes), nombre: String(d.nombre), responsable: typeof d.responsable === "string" ? d.responsable : null, estandarCodigo: typeof d.estandarCodigo === "string" ? d.estandarCodigo : null, empresaId, origen: "manual", normaRef: "Definida por la consultora" } });
   rv(empresaId);
 }
 

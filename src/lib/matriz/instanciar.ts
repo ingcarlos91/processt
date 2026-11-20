@@ -63,7 +63,9 @@ export async function agregarTareaTipo(empresaId: string, cargoId: string, tarea
     await db.cargoTarea.upsert({ where: { cargoId_tareaId: { cargoId, tareaId: existente.id } }, update: {}, create: { cargoId, tareaId: existente.id } });
     return existente;
   }
-  const tt = await db.tareaTipo.findUniqueOrThrow({ where: { id: tareaTipoId }, include: { peligros: { include: { peligro: true } }, procesosTipo: true } });
+  const emp = await db.empresa.findUniqueOrThrow({ where: { id: empresaId }, select: { consultoraId: true } });
+  // Solo los peligros que ve la consultora de la empresa (base, suyos o de la empresa).
+  const tt = await db.tareaTipo.findUniqueOrThrow({ where: { id: tareaTipoId }, include: { peligros: { where: { peligro: alcanceBiblioteca(emp.consultoraId, empresaId) }, include: { peligro: true } }, procesosTipo: true } });
   const procesos = await db.proceso.findMany({ where: { empresaId }, orderBy: { orden: "asc" } });
   const norm = (t: string) => t.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
   // Proceso: el del sector que contiene la tarea; si no, uno con el mismo nombre que la actividad de la tarea;

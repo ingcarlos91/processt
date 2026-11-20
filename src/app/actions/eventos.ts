@@ -4,7 +4,7 @@ import { parametrosPlazos } from "@/lib/plazos-servidor";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { requiereUsuario } from "@/lib/auth/sesion";
-import { requiereEmpresa } from "@/lib/auth/acceso";
+import { requiereEmpresa, requiereBibliotecaVisible } from "@/lib/auth/acceso";
 import { actualizarDocumentos } from "@/lib/generador/documentos";
 import { agregarPeligroCatalogo } from "@/lib/matriz/instanciar";
 import { TIPOS_EVENTO, faltasParaCerrar, type Analisis, type Integrante } from "@/lib/eventos";
@@ -65,7 +65,11 @@ export async function crearEvento(empresaId: string, d: DatosEvento) {
   await requiereEmpresa(empresaId);
   try {
     const x = datos(d);
-    if (x.cargoId) x.cargo = (await db.cargo.findFirst({ where: { id: x.cargoId, empresaId } }))?.nombre ?? x.cargo;
+    if (x.cargoId) {
+      const cg = await db.cargo.findFirst({ where: { id: x.cargoId, empresaId } });
+      if (!cg) return { error: "Cargo no encontrado." };
+      x.cargo = cg.nombre;
+    }
     const ev = await db.evento.create({ data: { empresaId, ...x, invEstado: TIPOS_EVENTO[d.tipo].investiga ? "pendiente" : "no_aplica" } });
     await listo(empresaId);
     return { ok: true as const, id: ev.id };
@@ -77,7 +81,11 @@ export async function actualizarEvento(empresaId: string, eventoId: string, d: D
   const prev = await delaEmpresa(empresaId, eventoId);
   try {
     const x = datos(d);
-    if (x.cargoId) x.cargo = (await db.cargo.findFirst({ where: { id: x.cargoId, empresaId } }))?.nombre ?? x.cargo;
+    if (x.cargoId) {
+      const cg = await db.cargo.findFirst({ where: { id: x.cargoId, empresaId } });
+      if (!cg) return { error: "Cargo no encontrado." };
+      x.cargo = cg.nombre;
+    }
     const invEstado = !TIPOS_EVENTO[d.tipo].investiga ? "no_aplica" : prev.invEstado === "no_aplica" ? "pendiente" : prev.invEstado;
     await db.evento.update({ where: { id: eventoId }, data: { ...x, invEstado } });
     await listo(empresaId, eventoId);
@@ -106,6 +114,7 @@ export type DatosInvestigacion = { equipo: Integrante[]; analisis: Analisis; lec
 
 export async function guardarInvestigacion(empresaId: string, eventoId: string, d: DatosInvestigacion) {
   await requiereEmpresa(empresaId);
+  if (d.peligroId) await requiereBibliotecaVisible("peligroCatalogo", d.peligroId);
   const ev = await delaEmpresa(empresaId, eventoId);
   const limpio = (xs?: string[]) => (xs ?? []).map((x) => x.trim()).filter(Boolean);
   const analisis: Analisis = { porques: limpio(d.analisis.porques), actos: limpio(d.analisis.actos), condiciones: limpio(d.analisis.condiciones), personales: limpio(d.analisis.personales), trabajo: limpio(d.analisis.trabajo), conclusion: d.analisis.conclusion?.trim() || "" };

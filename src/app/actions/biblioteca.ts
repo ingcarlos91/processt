@@ -1,4 +1,5 @@
 "use server";
+import { solo } from "@/lib/campos";
 import { requiereSesion, requiereUsuario } from "@/lib/auth/sesion";
 import { alcanceBiblioteca, bibliotecaPropia, requiereBibliotecaVisible, requiereEmpresa } from "@/lib/auth/acceso";
 import { revalidatePath } from "next/cache";
@@ -26,7 +27,7 @@ export async function crearPeligro(d: { clasificacion: string; descripcion: stri
   const { u, data } = await nivelNuevo(d.empresaId);
   if (!d.descripcion.trim()) return { error: "La descripción es obligatoria." };
   if (await db.peligroCatalogo.findFirst({ where: { descripcion: d.descripcion.trim(), ...visible(u.consultoraId, d.empresaId) } })) return { error: "Ya existe un peligro con esa descripción." };
-  const p = await db.peligroCatalogo.create({ data: { ...d, ...data, descripcion: d.descripcion.trim(), validado: true } });
+  const p = await db.peligroCatalogo.create({ data: { clasificacion: String(d.clasificacion), efectosPosibles: String(d.efectosPosibles ?? ""), ndDefault: Number(d.ndDefault), neDefault: Number(d.neDefault), ncDefault: Number(d.ncDefault), ...data, descripcion: d.descripcion.trim(), validado: true } });
   rv(d.empresaId);
   return { id: p.id };
 }
@@ -60,7 +61,7 @@ export async function actualizarTareaTipo(id: string, d: { nombre?: string; acti
   const v = await bibliotecaPropia("tareaTipo", id);
   if ("error" in v) return v;
   const { empresaId } = v;
-  await db.tareaTipo.update({ where: { id }, data: d });
+  await db.tareaTipo.update({ where: { id }, data: solo(d, ["nombre", "actividad", "rutinaria", "altoRiesgo", "zonasPreferidas", "validado"] as const) });
   rv(empresaId);
 }
 
