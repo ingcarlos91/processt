@@ -10,9 +10,13 @@ export default async function Inspecciones({ params }: PageProps<"/empresas/[id]
   const [ins, listas, e] = await Promise.all([
     db.inspeccion.findMany({ where: { empresaId: id }, orderBy: { fecha: "desc" }, include: { acciones: { select: { id: true, descripcion: true, estado: true, responsable: true, fechaLimite: true, causa: true } }, archivos: { orderBy: { subidoEn: "desc" } } } }),
     db.catalogoItem.findMany({ where: { tipo: "LISTA_INSPECCION", OR: [{ empresaId: null }, { empresaId: id }] }, orderBy: { nombre: "asc" } }),
-    db.empresa.findUniqueOrThrow({ where: { id }, select: { responsableSst: true, sedes: { select: { nombre: true } }, zonas: { select: { nombre: true } }, comites: { select: { miembros: { select: { nombre: true } } } } } }),
+    db.empresa.findUniqueOrThrow({ where: { id }, select: { responsableSst: true, resultadoReglas: true, sedes: { select: { nombre: true } }, zonas: { select: { nombre: true } }, comites: { select: { miembros: { select: { nombre: true } } } } } }),
   ]);
   const resp = (e.responsableSst ?? {}) as { nombre?: string };
+  // Las listas cuyas normas aplican a la empresa (p. ej. bioseguridad si genera residuos de salud) van primero.
+  const aplican = new Set(((e.resultadoReglas ?? {}) as { normas?: { codigo: string }[] }).normas?.map((n) => n.codigo) ?? []);
+  const pertinente = (l: (typeof listas)[number]) => l.normas.some((n) => n !== "RES-0312-2019" && aplican.has(n));
+  listas.sort((x, y) => Number(pertinente(y)) - Number(pertinente(x)));
   return (
     <InspeccionesEditor
       empresaId={id}

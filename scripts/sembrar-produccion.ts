@@ -1,6 +1,6 @@
 // Corre en cada build de Vercel (después de las migraciones):
-// 1. Si la base está vacía (sin normas), siembra catálogos, normas, estándares, plantillas y biblioteca.
-//    Si ya tiene datos no toca nada, para no pisar lo que la consultora haya editado.
+// 1. Corre la siembra completa (idempotente y aditiva): lo nuevo de la biblioteca y los catálogos llega a
+//    producción sin pisar lo que la consultora haya editado.
 // 2. Si están ADMIN_EMAIL, ADMIN_NOMBRE y ADMIN_PASSWORD y ese usuario no existe, lo crea como administrador.
 //    Después del primer despliegue se puede borrar ADMIN_PASSWORD de Vercel.
 import { execSync } from "node:child_process";
