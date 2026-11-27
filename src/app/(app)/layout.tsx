@@ -1,6 +1,7 @@
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app/app-sidebar";
 import { SiteHeader } from "@/components/app/site-header";
+import { Asistente } from "@/components/app/asistente";
 import { db } from "@/lib/db";
 import { usuarioActual } from "@/lib/auth/sesion";
 
@@ -18,6 +19,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         <SiteHeader empresas={empresas} />
         {children}
       </SidebarInset>
+      <Asistente empresas={empresas} />
     </SidebarProvider>
   );
 }

@@ -10,10 +10,12 @@
     "db:seed": "prisma db seed",
     "db:migrate": "prisma migrate dev",
     "db:studio": "prisma studio",
-    "validar:requisitos": "tsx scripts/validar-requisitos.ts"
+    "validar:requisitos": "tsx scripts/validar-requisitos.ts",
+    "indexar": "tsx scripts/indexar-conocimiento.ts"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^4.0.107",
+    "@ai-sdk/react": "^4.0.188",
     "@base-ui/react": "^1.9.0",
     "@prisma/client": "^6.19.3",
     "@sparticuz/chromium": "^153.0.0",
@@ -24,7 +26,7 @@
     "@tiptap/starter-kit": "^3.34.0",
     "@types/mdast": "^4.0.4",
     "@vercel/blob": "^2.9.0",
-    "ai": "^7.0.177",
+    "ai": "^7.0.183",
     "class-variance-authority": "^0.7.1",
     "cmdk": "^1.1.1",
     "cn": "^0.5.2",

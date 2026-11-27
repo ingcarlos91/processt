@@ -1176,3 +1176,23 @@ model UsoIa {
   @@index([consultoraId, creadoEn])
   @@map("uso_ia")
 }
+
+/// Base de conocimiento del asistente: fichas citables (requisitos, estándares, normas, manual, plazos, decisiones,
+/// plantillas y artículos oficiales). La llena scripts/indexar-conocimiento.ts en cada despliegue; se busca con la
+/// búsqueda de texto en español de Postgres (configuración es_sin_tildes, ver la migración).
+model Conocimiento {
+  id            String   @id @default(cuid())
+  clave         String   @unique // estable: "req:POL-01-R1", "manual:comites:2", "norma:DEC-1072-2015", "art:DEC-1072-2015:2.2.4.6.15"
+  fuente        String // norma | articulo | requisito | estandar | manual | campo | plazo | decision | plantilla
+  titulo        String
+  texto         String
+  normaCodigo   String?  @map("norma_codigo")
+  articulo      String?
+  href          String? // ruta interna; "{empresa}" donde va el id de la empresa
+  urlOficial    String?  @map("url_oficial")
+  literal       Boolean  @default(false) // true solo si `texto` es texto oficial copiado de la fuente
+  actualizadoEn DateTime @updatedAt @map("actualizado_en")
+
+  @@index([fuente])
+  @@map("conocimiento")
+}

@@ -2,19 +2,12 @@
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { requiereEmpresa } from "@/lib/auth/acceso";
-import { anonimizar, ErrorIA, generarConIA } from "@/lib/ia/motor";
+import { anonimizar, ErrorIA, generarConIA, personasDe } from "@/lib/ia/motor";
 import { informeGestion } from "@/lib/informe-gestion";
 
 // Propuestas de la IA para la consultora (nunca se guardan solas: el formulario las muestra para revisar y editar).
 
 const errorIA = (e: unknown) => ({ error: e instanceof ErrorIA ? e.message : "La IA no respondió. Intente de nuevo." });
-
-/** Nombres y documentos de los trabajadores de la empresa, para quitarlos de lo que se envía a la IA (Ley 1581/2012). */
-async function personasDe(empresaId: string) {
-  const t = await db.trabajador.findMany({ where: { empresaId }, select: { nombres: true, documento: true } });
-  const e = await db.empresa.findUniqueOrThrow({ where: { id: empresaId }, select: { representanteLegal: true, responsableSst: true } });
-  return { nombres: [...t.map((x) => x.nombres), e.representanteLegal, (e.responsableSst as { nombre?: string } | null)?.nombre], docs: t.map((x) => x.documento) };
-}
 
 const esquemaAccion = z.object({
   causa: z.string().describe("Causa raíz probable del hallazgo, en una frase (por qué ocurre, no qué ocurre)"),

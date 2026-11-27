@@ -18,11 +18,13 @@ import { db } from "@/lib/db";
  */
 
 export type NivelIA = "basico" | "tecnico";
-export type TareaIA = "matriz" | "accidente" | "accion" | "observaciones" | "biblioteca";
+export type TareaIA = "matriz" | "accidente" | "accion" | "observaciones" | "biblioteca" | "asistente";
 
-export const MODELOS: Record<NivelIA, string> = {
+export const MODELOS: Record<NivelIA | "asistente", string> = {
   basico: process.env.IA_MODELO_BASICO || "claude-haiku-5-5",
   tecnico: process.env.IA_MODELO_TECNICO || "claude-haiku-5-5",
+  // Asistente flotante (docs/11-asistente-ia.md): conversa y consulta la base de PROCESST con herramientas.
+  asistente: process.env.IA_MODELO_ASISTENTE || "claude-haiku-5-5",
 };
 
 // USD por millón de tokens (entrada, salida). Tarifas de la API de Anthropic.
@@ -52,7 +54,42 @@ export async function gastoMesIA(consultoraId: string) {
   return { usd: r._sum.costoUsd ?? 0, usos: r._count };
 }
 
+/** Consumo de IA del mes de la consultora frente a su tope, con lo que gastó el asistente. */
+export async function consumoIA(consultoraId: string) {
+  const [c, total, asis] = await Promise.all([
+    db.consultora.findUnique({ where: { id: consultoraId }, select: { iaTopeMensualUsd: true } }),
+    gastoMesIA(consultoraId),
+    db.usoIa.aggregate({ where: { consultoraId, tarea: "asistente", creadoEn: { gte: inicioMes() } }, _sum: { costoUsd: true }, _count: true }),
+  ]);
+  const tope = c?.iaTopeMensualUsd ?? null;
+  return {
+    usd: total.usd, usos: total.usos, tope, pct: tope ? Math.min(100, Math.round((total.usd / tope) * 100)) : null,
+    disponible: tope != null ? Math.max(0, tope - total.usd) : null, asistenteUsd: asis._sum.costoUsd ?? 0, asistenteUsos: asis._count,
+  };
+}
+
 export class ErrorIA extends Error {}
+
+/** Lanza ErrorIA si la IA no está configurada o la consultora pasó su tope mensual. */
+export async function verificarTopeIA(consultoraId: string) {
+  if (!iaDisponible()) throw new ErrorIA("La IA no está configurada (falta ANTHROPIC_API_KEY).");
+  const c = await db.consultora.findUnique({ where: { id: consultoraId }, select: { iaTopeMensualUsd: true } });
+  if (c?.iaTopeMensualUsd != null) {
+    const { usd } = await gastoMesIA(consultoraId);
+    if (usd >= c.iaTopeMensualUsd) throw new ErrorIA(`Su consultora alcanzó el tope de IA de este mes (USD ${c.iaTopeMensualUsd.toFixed(2)}). Se usan las sugerencias de la biblioteca; el administrador de PROCESST puede ampliar el tope.`);
+  }
+}
+
+/** Registra una llamada en UsoIa con su costo (no falla si no se puede registrar). */
+export function registrarUsoIA(o: { consultoraId: string; usuarioId?: string | null; tarea: TareaIA; modelo: string; entrada: number; salida: number; ok: boolean; leidos?: number; escritos?: number }) {
+  return db.usoIa.create({ data: {
+    consultoraId: o.consultoraId, usuarioId: o.usuarioId ?? null, tarea: o.tarea, modelo: o.modelo, tokensEntrada: o.entrada, tokensSalida: o.salida,
+    costoUsd: costoUsd(o.modelo, o.entrada, o.salida, o.leidos ?? 0, o.escritos ?? 0), ok: o.ok,
+  } }).catch(() => null);
+}
+
+/** Modelo del proveedor configurado (API de Anthropic directa o AI Gateway). */
+export const modeloIA = (id: string) => modelo(id);
 
 /** Llama a la IA con salida estructurada, controla el tope y registra el uso. Lanza ErrorIA con un mensaje para mostrar. */
 export async function generarConIA<S extends z.ZodType>(o: {
@@ -61,16 +98,10 @@ export async function generarConIA<S extends z.ZodType>(o: {
   contexto?: string;
   effort?: "low" | "medium" | "high";
 }): Promise<z.infer<S>> {
-  if (!iaDisponible()) throw new ErrorIA("La IA no está configurada (falta ANTHROPIC_API_KEY).");
-  const c = await db.consultora.findUnique({ where: { id: o.consultoraId }, select: { iaTopeMensualUsd: true } });
-  if (c?.iaTopeMensualUsd != null) {
-    const { usd } = await gastoMesIA(o.consultoraId);
-    if (usd >= c.iaTopeMensualUsd) throw new ErrorIA(`Su consultora alcanzó el tope de IA de este mes (USD ${c.iaTopeMensualUsd.toFixed(2)}). Se usan las sugerencias de la biblioteca; el administrador de PROCESST puede ampliar el tope.`);
-  }
+  await verificarTopeIA(o.consultoraId);
   const id = MODELOS[o.nivel];
-  const registrar = (entrada: number, salida: number, ok: boolean, leidos = 0, escritos = 0) => db.usoIa.create({ data: {
-    consultoraId: o.consultoraId, usuarioId: o.usuarioId ?? null, tarea: o.tarea, modelo: id, tokensEntrada: entrada, tokensSalida: salida, costoUsd: costoUsd(id, entrada, salida, leidos, escritos), ok,
-  } }).catch(() => null);
+  const registrar = (entrada: number, salida: number, ok: boolean, leidos = 0, escritos = 0) =>
+    registrarUsoIA({ consultoraId: o.consultoraId, usuarioId: o.usuarioId, tarea: o.tarea, modelo: id, entrada, salida, ok, leidos, escritos });
   try {
     const r = await generateText({
       model: modelo(id),
@@ -110,4 +141,15 @@ export function anonimizar(texto: string, nombres: (string | null | undefined)[]
   }
   for (const p of [...partes].sort((a, b) => b.length - a.length)) t = t.replace(new RegExp(`(?<![\\p{L}])${esc(p)}(?![\\p{L}])`, "giu"), "[persona]");
   return t.replace(/\[persona\](\s+\[persona\])+/g, "[persona]");
+}
+
+/** Nombres y documentos de las personas de la empresa, para quitarlos de lo que se envía a la IA (Ley 1581/2012). */
+export async function personasDe(empresaId: string) {
+  const t = await db.trabajador.findMany({ where: { empresaId }, select: { nombres: true, documento: true } });
+  const e = await db.empresa.findUniqueOrThrow({ where: { id: empresaId }, select: { representanteLegal: true, responsableSst: true } });
+  const miembros = await db.comiteMiembro.findMany({ where: { comite: { empresaId } }, select: { nombre: true } }).catch(() => [] as { nombre: string }[]);
+  return {
+    nombres: [...t.map((x) => x.nombres), ...miembros.map((m) => m.nombre), e.representanteLegal, (e.responsableSst as { nombre?: string } | null)?.nombre],
+    docs: t.map((x) => x.documento),
+  };
 }

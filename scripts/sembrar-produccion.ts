@@ -19,6 +19,9 @@ async function main() {
   // 2. Empresas existentes: reglas, documentos y puntajes al día con lo sembrado.
   console.log("[sembrar] Actualizando empresas existentes…");
   execSync("npx tsx scripts/actualizar-empresas.ts", { stdio: "inherit" });
+  // 3. Base de conocimiento del asistente (normas, requisitos, estándares, manual, plazos, plantillas).
+  console.log("[sembrar] Indexando la base de conocimiento del asistente…");
+  execSync("npx tsx scripts/indexar-conocimiento.ts", { stdio: "inherit" });
 
   await usuarioInicial("ADMIN", "admin");
   await usuarioInicial("SUPERADMIN", "superadmin");

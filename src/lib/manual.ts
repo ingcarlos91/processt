@@ -412,6 +412,22 @@ export const MANUAL: SeccionManual[] = [
     resumen: "Su usuario: nombre, correo y contraseña.",
     partes: [{ titulo: "Datos y contraseña", que: "Cambie su nombre, correo o contraseña. Al cambiar la contraseña se cierran sus sesiones en otros equipos." }],
   },
+  {
+    // No es una pantalla: es el botón flotante disponible en todas. La ruta no coincide con ninguna página.
+    id: "asistente", titulo: "PrudencIA, el asistente (botón flotante)", ruta: /^$^/,
+    resumen: "Botón «PrudencIA» (el isotipo que gira) abajo a la derecha, en todas las pantallas: responde qué sigue, qué falta, cómo se hace algo en PROCESST y qué dice la norma. Usa solo la base de PROCESST (normas del catálogo, requisitos verificados, estándares, plazos, decisiones de la consultora, este manual) y los datos de sus empresas. No busca en internet ni cambia datos.",
+    partes: [
+      { titulo: "Contexto", que: "Sabe en qué pantalla y en qué empresa está: «¿qué me falta?» responde sobre la empresa abierta; sin empresa abierta responde sobre toda la cartera." },
+      { titulo: "Respuestas", que: "Cita norma y artículo, da enlaces a la pantalla donde se hace cada cosa y calcula fechas límite con los festivos de Colombia. Debajo muestra las fuentes consultadas. Si algo no está en la base, lo dice.", botones: [
+        { nombre: "Preguntas sugeridas", hace: "Atajos según la pantalla en la que está." },
+        { nombre: "Detener", hace: "Corta la respuesta en curso." },
+        { nombre: "Nueva conversación", hace: "Borra la conversación (se guarda solo en esta pestaña del navegador, no en la base)." },
+      ] },
+      { titulo: "Consumo de IA", que: "Debajo del título muestra lo gastado en IA este mes por la consultora (todas las funciones), el tope mensual y lo que queda; la barra pasa a amarillo desde el 70 % y a rojo desde el 90 %. También puede preguntarle «¿cuánto llevo gastado?». El tope lo fija el super administrador; si se alcanza, el asistente muestra los resultados de la base sin redactar." },
+      { titulo: "Privacidad", que: "No envía nombres, documentos ni datos de salud de los trabajadores (Ley 1581/2012)." },
+    ],
+    consejos: ["Pregunte en concreto: «¿qué exige la norma para el acta del COPASST?» funciona mejor que «ayuda».", "Verifique en la norma lo que vaya a firmar o presentar."],
+  },
 ];
 
 export function seccionDeRuta(pathname: string) {
@@ -435,3 +451,17 @@ export function buscarManual(q: string) {
   }
   return out.slice(0, 30);
 }
+
+// Enlace de cada sección del manual ("{empresa}" donde va el id de la empresa). Lo usa la base de conocimiento del
+// asistente (scripts/indexar-conocimiento.ts) para llevar a la pantalla que explica.
+const HREF_SECCION: Record<string, string> = {
+  inicio: "/", nueva: "/empresas/{empresa}/datos", resumen: "/empresas/{empresa}", matriz: "/empresas/{empresa}/matriz",
+  trabajadores: "/empresas/{empresa}/trabajadores", inspecciones: "/empresas/{empresa}/inspecciones", diagnostico: "/empresas/{empresa}/diagnostico",
+  auditoria: "/empresas/{empresa}/auditoria", versiones: "/empresas/{empresa}/matriz/versiones", "biblioteca-propia": "/empresas/{empresa}/biblioteca",
+  evaluacion: "/empresas/{empresa}/evaluacion", documentos: "/empresas/{empresa}/documentos", documento: "/empresas/{empresa}/documentos",
+  evidencias: "/empresas/{empresa}/evidencias", accidentes: "/empresas/{empresa}/accidentes", accidente: "/empresas/{empresa}/accidentes",
+  plan: "/empresas/{empresa}/plan", comites: "/empresas/{empresa}/comites", indicadores: "/empresas/{empresa}/indicadores",
+  planeador: "/planeador", biblioteca: "/biblioteca", plantillas: "/plantillas", normas: "/normas", consultora: "/configuracion",
+  usuarios: "/usuarios", cuenta: "/cuenta",
+};
+export const hrefSeccion = (id: string) => HREF_SECCION[id] ?? null;

@@ -165,6 +165,21 @@
 .isotipo-girando { animation: isotipo-giro 1.2s cubic-bezier(0.65, 0, 0.35, 1) infinite; }
 @media (prefers-reduced-motion: reduce) { .isotipo-girando { animation-duration: 3s; animation-timing-function: linear; } }
 
+/* Botón del asistente: el isotipo da una vuelta cada tanto (quieto el resto del tiempo) y un halo lo hace visible */
+@keyframes isotipo-ratos {
+  0%, 82% { transform: rotate(0deg) scale(1); }
+  90% { transform: rotate(200deg) scale(0.9); }
+  100% { transform: rotate(360deg) scale(1); }
+}
+@keyframes asistente-halo {
+  0%, 78% { box-shadow: 0 0 0 0 color-mix(in oklab, var(--primary) 45%, transparent); }
+  100% { box-shadow: 0 0 0 16px transparent; }
+}
+.isotipo-ratos { animation: isotipo-ratos 7s cubic-bezier(0.65, 0, 0.35, 1) infinite; }
+.asistente-halo { animation: asistente-halo 7s ease-out infinite; }
+.group:hover .isotipo-ratos { animation: isotipo-giro 1.2s cubic-bezier(0.65, 0, 0.35, 1) infinite; }
+@media (prefers-reduced-motion: reduce) { .isotipo-ratos, .asistente-halo { animation: none; } }
+
 /* Manito en todo lo que se puede pulsar (Tailwind 4 deja el cursor por defecto en los botones) */
 @layer base {
   button:not(:disabled),
